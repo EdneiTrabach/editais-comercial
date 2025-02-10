@@ -7,6 +7,10 @@ import { RouterView } from 'vue-router'
 </template>
 
 <style scoped>
+* {
+  font-family: 'JetBrains Mono';
+  box-sizing: border-box;
+}
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -77,6 +81,6 @@ html, body {
 
 #app {
   height: 100%;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono';
 }
 </style>

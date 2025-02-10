@@ -5,7 +5,7 @@
         {{ isExpanded ? '◀' : '▶' }}
       </button>
       
-      <div class="logo-section">
+      <div class="logo-container">
         <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
         <span v-if="isExpanded">Editais</span>
       </div>
@@ -17,41 +17,11 @@
             <span v-if="isExpanded" class="link-text">Home</span>
           </router-link>
         </li>
-        <li>
-          <router-link to="/dashboard">
-            <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
-            <span v-if="isExpanded" class="link-text">Dashboard</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/usuarios">
-            <img src="/icons/add-usuario.svg" alt="Cadastro de Usuário" class="icon" />
-            <span v-if="isExpanded" class="link-text">Cadastro de Alunos</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/lista-usuarios">
-            <img src="/icons/config-usuario.svg" alt="Gestão" class="icon" />
-            <span v-if="isExpanded" class="link-text">Gestão de Alunos</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/certificados">
-            <img src="/icons/certificado.svg" alt="Certificados" class="icon" />
-            <span v-if="isExpanded" class="link-text">Certificados</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/lista-cursos">
-            <img src="/icons/livros.svg" alt="Cursos" class="icon" />
-            <span v-if="isExpanded" class="link-text">Cursos</span>
-          </router-link>
-        </li>
       </ul>
 
       <div class="logout-section">
         <button @click="handleLogout" class="logout-btn">
-          <img src="/icons/logout.svg" alt="Sair" class="icon" />
+          <img src="/icons/sair.svg" alt="Sair" class="icon" />
           <span v-if="isExpanded" class="link-text">Sair</span>
         </button>
       </div>
@@ -63,6 +33,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+
+const emit = defineEmits(['sidebarToggle'])
 
 const router = useRouter()
 const isAdmin = ref(false)
@@ -83,6 +55,8 @@ const checkAdminStatus = async () => {
 
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value
+  // Emite evento para o componente pai
+  emit('sidebarToggle', isExpanded.value)
 }
 
 const handleLogout = async () => {
@@ -108,29 +82,32 @@ onMounted(() => {
 }
 
 .sidebar {
-  background-color: #193155;
+  background: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
   color: white;
   height: 100vh;
-  width: 250px;
+  width: 280px;
   position: fixed;
   left: 0;
   top: 0;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem 1rem;
 }
 
 .sidebar.collapsed {
-  width: 60px;
+  width: 80px;
+  padding: 1.5rem 0.5rem;
 }
 
 .toggle-btn {
   position: absolute;
-  right: 10px;
-  top: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  right: -15px;
+  top: 25px;
+  background: #ffffff;
+  color: #193155;
   border: none;
   width: 30px;
   height: 30px;
@@ -139,57 +116,67 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-.logo-section {
-  padding: 1rem;
-  padding-right: 3rem;
+.logo-container {
+  padding: 0.5rem;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo {
+  width: 35px;
+  height: 35px;
+  transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .logo {
   width: 30px;
   height: 30px;
 }
 
 .nav-links {
   list-style: none;
-  padding: 1rem 0;
+  padding: 0;
   margin: 0;
   flex: 1;
 }
 
 .nav-links li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .nav-links a {
-  color: white;
+  color: #ffffff;
   text-decoration: none;
-  padding: 0.75rem 1rem;
+  padding: 0.9rem 1.2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.2rem;
   transition: all 0.3s ease;
+  border-radius: 10px;
+  font-weight: 500;
 }
 
 .nav-links a:hover,
 .nav-links a.router-link-active {
-  background-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
 }
 
 .logout-section {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
+  padding-top: 1rem;
   margin-top: auto;
 }
 
@@ -197,31 +184,43 @@ onMounted(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  gap: 1.2rem;
+  padding: 0.9rem 1.2rem;
   background: none;
   border: none;
-  color: white;
+  color: #ffffff;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   transition: all 0.3s ease;
+  border-radius: 10px;
 }
 
 .logout-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
 }
 
 .icon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   width: 24px;
-  text-align: center;
+  height: 24px;
+  transition: all 0.3s ease;
   filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.nav-links a:hover .icon,
+.logout-btn:hover .icon {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .link-text {
   white-space: nowrap;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
 .collapsed .link-text {
@@ -232,12 +231,14 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 60px;
+    width: 70px;
+    padding: 1.5rem 0.5rem;
   }
   
   .sidebar.collapsed {
     width: 0;
     padding: 0;
+    opacity: 0;
   }
   
   .link-text {
@@ -245,7 +246,16 @@ onMounted(() => {
   }
   
   .toggle-btn {
-    top: 10px;
+    right: -12px;
+    top: 15px;
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+  }
+  
+  .logo {
+    width: 28px;
+    height: 28px;
   }
 }
 </style>
