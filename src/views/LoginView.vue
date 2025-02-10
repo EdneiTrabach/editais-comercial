@@ -37,9 +37,9 @@ const showToast = (message, type = 'success') => {
 
 const handleLogin = async () => {
   try {
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,
-      password: password.value
+      password: password.value 
     })
 
     if (authError) throw authError
