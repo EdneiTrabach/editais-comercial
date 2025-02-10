@@ -50,8 +50,6 @@ const handleLogin = async () => {
       password: password.value
     }
 
-    console.log('Tentando login com:', { email: credentials.email })
-
     const { data, error: authError } = await supabase.auth.signInWithPassword(credentials)
 
     if (authError) {
@@ -62,8 +60,7 @@ const handleLogin = async () => {
 
     console.log('Login bem sucedido:', data)
     showToast('Login realizado com sucesso!', 'success')
-    await router.push('/')
-
+    await router.push('/processos') // Alterado aqui
   } catch (err) {
     console.error('Erro detalhado:', err)
     error.value = 'Erro ao fazer login'

@@ -4,7 +4,7 @@
       <button class="toggle-btn" @click="toggleSidebar">
         {{ isExpanded ? '◀' : '▶' }}
       </button>
-      
+
       <div class="logo-container">
         <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
         <span v-if="isExpanded">Editais</span>
@@ -12,9 +12,27 @@
 
       <ul class="nav-links">
         <li>
-          <router-link to="/">
-            <img src="/icons/home.svg" alt="Home" class="icon" />
-            <span v-if="isExpanded" class="link-text">Home</span>
+          <router-link to="/processos">
+            <img src="/icons/certificado.svg" alt="Processos" class="icon" />
+            <span v-if="isExpanded" class="link-text">Processos</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/funcionalidades">
+            <img src="/icons/configuracoes.svg" alt="Funcionalidades" class="icon" />
+            <span v-if="isExpanded" class="link-text">Funcionalidades</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/editais">
+            <img src="/icons/certificado.svg" alt="Editais" class="icon" />
+            <span v-if="isExpanded" class="link-text">Novo Processo</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/dashboard">
+            <img src="/icons/configuracoes.svg" alt="Dashboard" class="icon" />
+            <span v-if="isExpanded" class="link-text">Dashboard</span>
           </router-link>
         </li>
       </ul>
@@ -48,7 +66,7 @@ const checkAdminStatus = async () => {
       .select('role')
       .eq('id', user.id)
       .single()
-    
+
     isAdmin.value = profile?.role === 'admin'
   }
 }
@@ -234,17 +252,17 @@ onMounted(() => {
     width: 70px;
     padding: 1.5rem 0.5rem;
   }
-  
+
   .sidebar.collapsed {
     width: 0;
     padding: 0;
     opacity: 0;
   }
-  
+
   .link-text {
     display: none;
   }
-  
+
   .toggle-btn {
     right: -12px;
     top: 15px;
@@ -252,7 +270,7 @@ onMounted(() => {
     height: 25px;
     font-size: 12px;
   }
-  
+
   .logo {
     width: 28px;
     height: 28px;

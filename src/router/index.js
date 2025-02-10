@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,20 +12,42 @@ const router = createRouter({
     },
     {
       path: '/',
-      name: 'home',
-      component: () => import('../views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      redirect: '/processos' // Redireciona / para /processos
     },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('../views/DashboardView.vue'),
+      component: HomeView,
       meta: { requiresAuth: true }
     },
     {
       path: '/reset-password',
       name: 'reset-password',
       component: () => import('../views/ResetPassword.vue')
+    },
+    {
+      path: '/funcionalidades',
+      name: 'funcionalidades',
+      component: () => import('../views/FuncionalidadesView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/editais/novo',
+      name: 'novo-edital',
+      component: () => import('../views/EditaisView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/editais',
+      name: 'editais',
+      component: () => import('../views/EditaisView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/processos',
+      name: 'processos',
+      component: () => import('../views/ProcessosView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
