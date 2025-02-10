@@ -5,23 +5,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// API de Autenticação
 export const authApi = {
   async login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
-    })
-    if (error) throw error
-    return data
-  },
-
-  async register(email, password, userData) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
     })
     if (error) throw error
     return data
@@ -35,6 +24,7 @@ export const authApi = {
   }
 }
 
+// API de Editais
 export const editaisApi = {
   async listar() {
     const { data, error } = await supabase
@@ -61,14 +51,7 @@ export const editaisApi = {
         ...edital,
         responsavel_id: user.data.user.id
       }])
-      .select(`
-        *,
-        profiles (
-          nome,
-          cargo,
-          departamento
-        )
-      `)
+      .select()
     
     if (error) throw error
     return data[0]
@@ -79,14 +62,7 @@ export const editaisApi = {
       .from('editais')
       .update(edital)
       .eq('id', id)
-      .select(`
-        *,
-        profiles (
-          nome,
-          cargo,
-          departamento
-        )
-      `)
+      .select()
     
     if (error) throw error
     return data[0]
@@ -101,24 +77,3 @@ export const editaisApi = {
     if (error) throw error
   }
 }
-
-import { editaisApi } from '@/lib/supabase'
-
-// Listar editais
-const editais = await editaisApi.listar()
-
-// Criar edital
-const novoEdital = await editaisApi.criar({
-  titulo: 'Novo Edital',
-  descricao: 'Descrição do edital',
-  data_limite: new Date().toISOString(),
-  status: 'ABERTO'
-})
-
-// Atualizar edital
-const editalAtualizado = await editaisApi.atualizar(id, {
-  status: 'FECHADO'
-})
-
-// Deletar edital
-await editaisApi.deletar(id)
