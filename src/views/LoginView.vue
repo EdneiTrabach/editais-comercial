@@ -40,42 +40,33 @@ const handleLogin = async () => {
     loading.value = true
     error.value = ''
 
-    // Validação básica
     if (!email.value || !password.value) {
       error.value = 'Email e senha são obrigatórios'
       return
     }
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
+    const credentials = {
       email: email.value,
-      password: password.value 
-    })
+      password: password.value
+    }
+
+    console.log('Tentando login com:', { email: credentials.email })
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword(credentials)
 
     if (authError) {
-      console.error('Detalhes do erro:', authError)
-      
-      if (authError.message === 'Invalid login credentials') {
-        error.value = 'Email ou senha incorretos'
-      } else {
-        error.value = 'Erro ao fazer login: ' + authError.message
-      }
+      console.error('Erro de autenticação:', authError)
+      error.value = 'Email ou senha incorretos'
       return
     }
 
-    // Verificar se o usuário existe
-    if (!data.user) {
-      error.value = 'Usuário não encontrado'
-      return
-    }
+    console.log('Login bem sucedido:', data)
+    showToast('Login realizado com sucesso!', 'success')
+    await router.push('/')
 
-    // Login bem sucedido
-    const intendedUrl = sessionStorage.getItem('intendedUrl')
-    router.push(intendedUrl || '/')
-    sessionStorage.removeItem('intendedUrl')
-
-  } catch (e) {
-    console.error('Erro detalhado:', e)
-    error.value = 'Erro ao fazer login. Tente novamente.'
+  } catch (err) {
+    console.error('Erro detalhado:', err)
+    error.value = 'Erro ao fazer login'
   } finally {
     loading.value = false
   }
@@ -99,6 +90,40 @@ const handleResetPassword = async () => {
     showToast('Email de recuperação enviado com sucesso!', 'success')
   } catch (err) {
     showToast('Erro ao enviar email: ' + err.message, 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSignUp = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+
+    const signUpData = {
+      email: email.value,
+      password: 'Flytolive97@',
+      options: {
+        data: {
+          role: 'user'
+        }
+      }
+    }
+
+    const { data, error } = await supabase.auth.signUp(signUpData)
+
+    if (error) {
+      console.error('Erro no cadastro:', error)
+      error.value = error.message
+      return
+    }
+
+    // Mostra as credenciais ao usuário
+    showToast(`Conta criada! Use o email: ${email.value} e senha: Flytolive97@`, 'success')
+    
+  } catch (err) {
+    console.error('Erro:', err)
+    error.value = 'Erro ao criar conta'
   } finally {
     loading.value = false
   }
@@ -134,26 +159,42 @@ const handleResetPassword = async () => {
         <div class="form-group">
           <div class="input-container">
             <span class="input-icon">👤</span>
-            <input type="text" v-model="email" placeholder=" " :class="{ error: error }" />
+            <input 
+              type="email" 
+              v-model="email" 
+              required
+              placeholder=" "
+            />
             <label>Email</label>
           </div>
-          <span class="error-message" v-if="error">{{ error }}</span>
         </div>
 
         <div class="form-group">
           <div class="input-container">
             <span class="input-icon">🔒</span>
-            <input type="password" v-model="password" placeholder=" " :class="{ error: error }" />
+            <input 
+              type="password" 
+              v-model="password" 
+              required
+              placeholder=" "
+            />
             <label>Senha</label>
           </div>
+          <span v-if="error" class="error-message">{{ error }}</span>
         </div>
 
         <div class="forgot-password">
           <a href="#" class="forgot-link" @click="handleForgotClick">Esqueci minha senha</a>
         </div>
 
-        <button type="submit" class="login-button">Entrar</button>
+        <button type="submit" class="login-button" :disabled="loading">
+          {{ loading ? 'Entrando...' : 'Entrar' }}
+        </button>
       </form>
+
+      <button @click="handleSignUp" class="signup-button" :disabled="loading">
+        Criar Conta
+      </button>
     </div>
 
     <!-- Modal de Recuperação de Senha -->
@@ -304,6 +345,23 @@ const handleResetPassword = async () => {
 }
 
 .login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
+}
+
+.signup-button {
+  background: linear-gradient(135deg, #193155 0%, #254677 100%);
+  color: white;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.signup-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
 }
