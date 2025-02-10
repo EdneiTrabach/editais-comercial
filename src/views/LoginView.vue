@@ -98,7 +98,7 @@ const handleResetPassword = async () => {
     <!-- Login Card -->
     <div class="login-card">
       <div class="logo-container">
-        <img src="/public/favicon.ico" alt="Logo" class="logo" />
+        <img src="/public/icons/logo-licitacao.svg" alt="Logo" class="logo" />
         <h1>Conecte-se</h1>
       </div>
 
