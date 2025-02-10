@@ -23,8 +23,8 @@
                 v-model="formData.ano" 
                 type="number" 
                 required
-                :min="currentYear"
-                :max="currentYear + 1"
+                :min="currentYear - 2"
+                :max="currentYear + 2"
                 placeholder="Ano"
               />
             </div>
