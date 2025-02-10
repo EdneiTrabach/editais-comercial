@@ -37,19 +37,47 @@ const showToast = (message, type = 'success') => {
 
 const handleLogin = async () => {
   try {
+    loading.value = true
+    error.value = ''
+
+    // Validação básica
+    if (!email.value || !password.value) {
+      error.value = 'Email e senha são obrigatórios'
+      return
+    }
+
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value 
     })
 
-    if (authError) throw authError
+    if (authError) {
+      console.error('Detalhes do erro:', authError)
+      
+      if (authError.message === 'Invalid login credentials') {
+        error.value = 'Email ou senha incorretos'
+      } else {
+        error.value = 'Erro ao fazer login: ' + authError.message
+      }
+      return
+    }
 
+    // Verificar se o usuário existe
+    if (!data.user) {
+      error.value = 'Usuário não encontrado'
+      return
+    }
+
+    // Login bem sucedido
     const intendedUrl = sessionStorage.getItem('intendedUrl')
     router.push(intendedUrl || '/')
     sessionStorage.removeItem('intendedUrl')
+
   } catch (e) {
-    console.error('Login error:', e)
-    error.value = 'Erro ao fazer login. Verifique suas credenciais.'
+    console.error('Erro detalhado:', e)
+    error.value = 'Erro ao fazer login. Tente novamente.'
+  } finally {
+    loading.value = false
   }
 }
 

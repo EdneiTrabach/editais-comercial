@@ -68,4 +68,15 @@ nav a:first-of-type {
     margin-top: 1rem;
   }
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+  font-family: 'JetBrains Mono', monospace;
+}
 </style>
