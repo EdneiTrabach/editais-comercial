@@ -13,6 +13,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
+  server: {
+    host: true
   }
 })
