@@ -47,7 +47,11 @@
               v-model="formData.hora_pregao" 
               type="time" 
               required
+              min="08:00"
+              max="18:00"
+              @change="validateTime"
             />
+            <small v-if="timeError" class="error-message">{{ timeError }}</small>
           </div>
 
           <div class="form-group">
@@ -342,9 +346,14 @@ const handleSidebarToggle = (expanded) => {
 
 const handleSubmit = async () => {
   try {
-    // Valida a data antes de prosseguir
+    // Valida a data e hora antes de prosseguir
     if (!validateDate()) {
       alert('Por favor, selecione uma data válida para o pregão.')
+      return
+    }
+    
+    if (!validateTime()) {
+      alert('Por favor, selecione um horário válido para o pregão (entre 08:00 e 18:00).')
       return
     }
     
@@ -534,6 +543,7 @@ const getNextBusinessDay = (date) => {
 
 // Adicione estas refs
 const dateError = ref('')
+const timeError = ref('')
 
 // Modifique também a função validateDate
 const validateDate = () => {
@@ -568,6 +578,24 @@ const validateDate = () => {
     return false
   }
 
+  return true
+}
+
+// Adicione a função de validação do horário
+const validateTime = () => {
+  if (!formData.value.hora_pregao) return false
+  
+  const [hours, minutes] = formData.value.hora_pregao.split(':').map(Number)
+  const time = hours * 60 + minutes // Converte para minutos
+  const minTime = 8 * 60  // 08:00
+  const maxTime = 18 * 60 // 18:00
+  
+  if (time < minTime || time > maxTime) {
+    timeError.value = 'O horário deve estar entre 08:00 e 18:00'
+    return false
+  }
+  
+  timeError.value = ''
   return true
 }
 </script>
