@@ -11,6 +11,11 @@ const router = createRouter({
       component: LoginView
     },
     {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/ResetPassword.vue')
+    },
+    {
       path: '/',
       name: 'home',
       component: HomeView,
@@ -25,9 +30,11 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
+router.beforeEach(async (to, from, next) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (to.matched.some(record => record.meta.requiresAuth) && !session) {
+    sessionStorage.setItem('intendedUrl', to.fullPath)
     next('/login')
   } else {
     next()
