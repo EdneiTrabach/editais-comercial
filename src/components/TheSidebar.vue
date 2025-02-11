@@ -35,6 +35,12 @@
             <span v-if="isExpanded" class="link-text">Dashboard</span>
           </router-link>
         </li>
+        <li>
+          <router-link to="/representantes">
+            <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
+            <span v-if="isExpanded" class="link-text">Representantes</span>
+          </router-link>
+        </li>
       </ul>
 
       <div class="logout-section">

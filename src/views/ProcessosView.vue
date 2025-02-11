@@ -35,22 +35,32 @@
                   :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
-                  <div class="filtro-container">
-                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
-                      <span>🔍</span>
+                  
+                  <!-- Botões de ordenação apenas para data do pregão -->
+                  <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
+                    <button 
+                      class="btn-sort" 
+                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
+                      @click="handleSort('data_pregao', 'asc')"
+                    >
+                      ▲
                     </button>
-                    <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown">
-                      <div class="filtro-opcoes">
-                        <label v-for="opcao in opcoesUnicas(coluna.campo)" :key="opcao">
-                          <input
-                            type="checkbox"
-                            :value="opcao"
-                            v-model="filtros[coluna.campo]"
-                          >
-                          {{ opcao }}
-                        </label>
-                      </div>
-                    </div>
+                    <button 
+                      class="btn-sort" 
+                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
+                      @click="handleSort('data_pregao', 'desc')"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  <!-- Filtro para outras colunas, exceto data e hora do pregão -->
+                  <div v-if="coluna.campo !== 'data_pregao' && coluna.campo !== 'hora_pregao'" 
+                       class="filtro-container">
+                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
+                      <img src="/icons/search-line.svg" alt="Filtrar" class="icon-filter" />
+                    </button>
+                    <!-- ... resto do código dos filtros ... -->
                   </div>
                 </div>
                 <!-- Handle para redimensionar coluna -->
@@ -174,9 +184,11 @@
               </td>
               <!-- Coluna de ações -->
               <td class="actions-cell">
-                <button class="btn-icon" @click="editProcess(processo)">Editar</button>
-                <button class="btn-icon" @click="viewDetails(processo)">Ver</button>
-                <button class="btn-icon delete" @click="deleteProcess(processo)">Excluir</button>
+                <div class="action-buttons">
+                  <button class="btn-icon delete" @click="handleDelete(processo)">
+                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon icon-delete" />
+                  </button>
+                </div>
               </td>
               <!-- Handle para redimensionar linha -->
               <div class="row-resize-handle"
@@ -193,6 +205,23 @@
           <div class="confirm-actions">
             <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
             <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adicione este componente para o balão de confirmação de exclusão -->
+      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
+        <div class="confirm-dialog">
+          <div class="confirm-content">
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir este processo?</p>
+            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+              <button class="btn-confirm delete" @click="confirmDelete">
+                Excluir
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -213,10 +242,22 @@ const isSidebarExpanded = ref(true)
 const processos = ref([])
 const loading = ref(false)
 
+// Adicione aos refs existentes
+const deleteConfirmDialog = ref({
+  show: false,
+  processo: null
+})
+
+// Adicione estes refs no início do script
+const sortConfig = ref({
+  field: 'data_pregao', // campo padrão de ordenação
+  direction: 'asc' // direção padrão
+})
+
 // Definição das colunas
 const colunas = [
   { titulo: 'Data do Pregão', campo: 'data_pregao' },
-  { titulo: 'Hora do Pregão', campo: 'hora_pregao' },
+  { titulo: 'Hora', campo: 'hora_pregao' },
   { titulo: 'Estado', campo: 'estado' },
   { titulo: 'Número do Processo', campo: 'numero_processo' },
   { titulo: 'Ano', campo: 'ano' },
@@ -328,8 +369,8 @@ const loadProcessos = async () => {
           nome
         )
       `)
-      .order('data_pregao', { ascending: true })
-      .order('hora_pregao', { ascending: true })
+      .order(sortConfig.value.field, { ascending: sortConfig.value.direction === 'asc' })
+      .order('hora_pregao', { ascending: true }) // ordenação secundária por hora
 
     if (error) throw error
     
@@ -362,20 +403,74 @@ const viewDetails = (processo) => {
   router.push(`/editais/${processo.id}`)
 }
 
-const deleteProcess = async (processo) => {
-  if (!confirm('Tem certeza que deseja excluir este processo?')) return
+// Função para mostrar o diálogo de confirmação de exclusão
+const handleDelete = (processo) => {
+  deleteConfirmDialog.value = {
+    show: true,
+    processo
+  }
+}
 
+// Função para confirmar a exclusão
+const confirmDelete = async () => {
   try {
+    const processo = deleteConfirmDialog.value.processo
+    
+    // Log da ação antes de excluir
+    await logSystemAction({
+      tipo: 'exclusao',
+      tabela: 'processos',
+      registro_id: processo.id,
+      dados_anteriores: processo
+    })
+
     const { error } = await supabase
       .from('processos')
       .delete()
       .eq('id', processo.id)
 
     if (error) throw error
-    await loadProcessos()
+
+    // Atualiza a lista local
+    processos.value = processos.value.filter(p => p.id !== processo.id)
+    
+    hideDeleteDialog()
   } catch (error) {
     console.error('Erro ao excluir:', error)
     alert('Erro ao excluir processo')
+  }
+}
+
+const hideDeleteDialog = () => {
+  deleteConfirmDialog.value = {
+    show: false,
+    processo: null
+  }
+}
+
+// Função para registrar logs
+const logSystemAction = async (dados) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    const logData = {
+      usuario_id: user.id,
+      usuario_email: user.email,
+      tipo: dados.tipo,
+      tabela: dados.tabela,
+      registro_id: dados.registro_id,
+      dados_anteriores: dados.dados_anteriores,
+      dados_novos: dados.dados_novos,
+      data_hora: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('system_logs')
+      .insert(logData)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Erro ao registrar log:', error)
   }
 }
 
@@ -764,6 +859,39 @@ const getPortalName = (url) => {
     return url
   }
 }
+
+// Script para manipular a ordenação
+// Note: sortConfig já foi declarado anteriormente
+
+// Função para ordenar
+const handleSort = async (field, direction) => {
+  // Se clicar no mesmo botão, mantém a ordenação atual
+  if (sortConfig.value.field === field && sortConfig.value.direction === direction) {
+    return
+  }
+
+  sortConfig.value = {
+    field,
+    direction
+  }
+
+  // Recarrega os dados com a nova ordenação
+  await loadProcessos()
+}
+
+// Adicione este ref no início do script
+const estadoSearch = ref('')
+
+// Computed para filtrar estados com base na busca
+const estadosFiltrados = computed(() => {
+  if (!estadoSearch.value) return estados.value
+  
+  const busca = estadoSearch.value.toLowerCase()
+  return estados.value.filter(estado => 
+    estado.nome.toLowerCase().includes(busca) || 
+    estado.uf.toLowerCase().includes(busca)
+  )
+})
 </script>
 
 <style scoped>
@@ -855,7 +983,6 @@ const getPortalName = (url) => {
 
 .excel-table th {
   background: #f8f9fa;
-  padding: 1rem;
   text-align: left;
   font-weight: 600;
   color: #193155;
@@ -863,6 +990,10 @@ const getPortalName = (url) => {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.th-content {
+    margin: 1rem;
 }
 
 /* Personalização da scrollbar */
@@ -927,126 +1058,111 @@ const getPortalName = (url) => {
 }
 
 .actions-cell {
+  width: 80px;
+  text-align: center;
+}
+
+.action-buttons {
   display: flex;
-  gap: 0.5rem;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-icon {
+  width: 32px;
+  height: 32px;
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-icon:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
+.btn-icon.delete {
+  background: #fee2e2;
 }
 
 .btn-icon.delete:hover {
   background: #dc3545;
+  transform: translateY(-2px);
 }
 
-.btn-icon.delete:hover img {
+.btn-icon.delete:hover .icon {
   filter: brightness(0) invert(1);
 }
 
-.btn-icon img {
+.icon {
   width: 16px;
   height: 16px;
+  transition: all 0.3s ease;
 }
 
-.link-site {
-  color: #007bff;
-  text-decoration: none;
-}
-
-.link-site:hover {
-  text-decoration: underline;
-}
-
-.objeto-cell {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.filtro-container {
-  position: relative;
-  display: inline-block;
-  margin-left: 8px;
-}
-
-.btn-filtro {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.btn-filtro:hover {
-  background: rgba(0,0,0,0.1);
-}
-
-.filtro-dropdown {
-  position: absolute;
-  top: 100%;
+/* Estilos do modal de confirmação */
+.modal-overlay {
+  position: fixed;
+  top: 0;
   left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
-  min-width: 200px;
-  max-height: 300px;
-  overflow-y: auto;
 }
 
-.filtro-opcoes {
-  padding: 8px;
+.confirm-dialog {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.filtro-opcoes label {
-  display: block;
-  padding: 4px 8px;
+.warning-text {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel, .btn-confirm {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
-.filtro-opcoes label:hover {
-  background: #f5f5f5;
+.btn-cancel {
+  background: #e9ecef;
+  color: #495057;
 }
 
-.filtro-opcoes input[type="checkbox"] {
-  margin-right: 8px;
+.btn-confirm.delete {
+  background: #dc3545;
+  color: white;
 }
 
-@media (max-width: 768px) {
-  .main-content {
-    margin-left: 70px;
-    padding: 1rem;
-  }
+.btn-cancel:hover, .btn-confirm:hover {
+  transform: translateY(-2px);
+}
 
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .actions {
-    width: 100%;
-  }
-
-  .btn-export, .btn-add {
-    flex: 1;
-  }
-
-  .table-container {
-    height: calc(100vh - 200px); /* Ajuste para mobile considerando header maior */
-  }
+.btn-confirm.delete:hover {
+  background: #c82333;
 }
 
 /* Estilos para redimensionamento */
@@ -1059,7 +1175,12 @@ const getPortalName = (url) => {
 .th-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 8px;
+}
+
+.th-content span {
+  flex: 1;
 }
 
 .column-resize-handle {
@@ -1108,8 +1229,8 @@ const getPortalName = (url) => {
 
 /* Garante que a última coluna (ações) tenha largura fixa */
 .actions-column {
-  width: 120px;
-  min-width: 120px;
+  width: 60px;
+  min-width: 60px;
 }
 
 /* Mantém o texto alinhado durante o redimensionamento */
@@ -1153,35 +1274,6 @@ td:hover::after {
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 12px;
-  color: #6c757d;
-  opacity: 0.5;
-}
-
-/* Estilos para o balão de confirmação */
-.confirm-dialog {
-  position: absolute;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 200px;
-  animation: fadeIn 0.2s ease;
-}
-
-.confirm-dialog::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 20px;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid white;
-}
-
-.confirm-content {
-  text-align: center;
 }
 
 .confirm-actions {
@@ -1360,5 +1452,263 @@ td select option {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Estilos para os botões de ordenação */
+.sort-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.btn-sort {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-sort:hover {
+  color: #193155;
+}
+
+.btn-sort.active {
+  color: #193155;
+  font-weight: bold;
+}
+
+/* Ajuste na estrutura do cabeçalho da coluna */
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+}
+
+.th-content span {
+  flex: 1;
+}
+
+.sort-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.btn-sort {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-sort:hover {
+  color: #193155;
+}
+
+.btn-sort.active {
+  color: #193155;
+  font-weight: bold;
+}
+
+/* Estilos para o filtro de estado */
+.filtro-container {
+  position: relative;
+}
+
+.filtro-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.estado-dropdown {
+  width: 250px;
+}
+
+.dropdown-header {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.estado-search {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.estados-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.estado-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.estado-option:hover {
+  background: #f8f9fa;
+}
+
+.estado-nome {
+  flex: 1;
+}
+
+.estado-uf {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Estilos para o dropdown de estados */
+.filtro-container {
+  position: relative;
+}
+
+.btn-filtro {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.btn-filtro:hover {
+  opacity: 1;
+}
+
+.icon-filter {
+  width: 16px;
+  height: 16px;
+}
+
+.estado-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 250px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 8px;
+  padding: 8px 0;
+  animation: fadeIn 0.2s ease;
+}
+
+.dropdown-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.estado-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.estado-search:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
+}
+
+.estados-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.estado-option {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 8px;
+}
+
+.estado-option:hover {
+  background: #f8f9fa;
+}
+
+.estado-nome {
+  flex: 1;
+}
+
+.estado-uf {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Estilização do checkbox */
+.estado-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.estado-option input[type="checkbox"]:checked {
+  background-color: #193155;
+  border-color: #193155;
+}
+
+/* Scrollbar personalizada para a lista de estados */
+.estados-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.estados-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.estados-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.estados-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>

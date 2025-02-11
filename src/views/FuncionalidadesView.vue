@@ -69,6 +69,12 @@ const features = [
     title: 'Configurações',
     description: 'Configure parâmetros do sistema',
     route: '/configuracoes'
+  },
+  {
+    icon: '/icons/cartao-usuario.svg',
+    title: 'Representantes',
+    description: 'Cadastre e gerencie representantes',
+    route: '/representantes'
   }
 ]
 

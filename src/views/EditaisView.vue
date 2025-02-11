@@ -36,6 +36,7 @@
               v-model="formData.data_pregao" 
               type="date" 
               required
+              :class="{ 'error': dateError }"
               @change="validateDate"
             />
             <small v-if="dateError" class="error-message">{{ dateError }}</small>
@@ -682,6 +683,49 @@ label,
   align-items: center;
 }
 
+/* Estilo base para inputs */
+input, select, textarea {
+  padding: 0.9rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Remove o estilo padrão de invalid */
+input[type="date"]:invalid {
+  border-color: #e9ecef;
+}
+
+/* Estilo para o estado de erro */
+input.error {
+  border-color: #dc3545;
+  background-color: #fff8f8;
+}
+
+/* Estilo para o foco */
+input:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  background: white;
+}
+
+/* Estilo para hover */
+input:hover:not(.error) {
+  border-color: #ced4da;
+}
+
+/* Mensagem de erro */
+.error-message {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
 input, select, textarea {
   padding: 0.9rem;
   border: 2px solid #e9ecef;
@@ -906,9 +950,26 @@ textarea {
 
 input[type="date"] {
   color: #495057;
+  border-color: #e9ecef !important; /* Força a cor padrão */
+  background: #f8f9fa;
 }
 
-input[type="date"]:invalid {
-  border-color: #dc3545;
+/* Aplica cor vermelha apenas quando houver erro validado */
+input[type="date"].error {
+  border-color: #dc3545 !important;
+  background-color: #fff8f8;
+}
+
+/* Estilo hover */
+input[type="date"]:hover:not(.error) {
+  border-color: #ced4da !important;
+}
+
+/* Estilo focus */
+input[type="date"]:focus:not(.error) {
+  outline: none;
+  border-color: #193155 !important;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  background: white;
 }
 </style>

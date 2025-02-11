@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import HomeView from '../views/HomeView.vue'
+import RepresentantesView from '@/views/RepresentantesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,6 +49,11 @@ const router = createRouter({
       name: 'processos',
       component: () => import('../views/ProcessosView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/representantes',
+      name: 'representantes',
+      component: RepresentantesView
     }
   ]
 })
