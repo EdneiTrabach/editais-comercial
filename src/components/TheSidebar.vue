@@ -13,7 +13,7 @@
       <ul class="nav-links">
         <li>
           <router-link to="/processos">
-            <img src="/icons/certificado.svg" alt="Processos" class="icon" />
+            <img src="/icons/livro.svg" alt="Processos" class="icon" />
             <span v-if="isExpanded" class="link-text">Processos</span>
           </router-link>
         </li>
@@ -31,7 +31,7 @@
         </li>
         <li>
           <router-link to="/dashboard">
-            <img src="/icons/configuracoes.svg" alt="Dashboard" class="icon" />
+            <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
             <span v-if="isExpanded" class="link-text">Dashboard</span>
           </router-link>
         </li>

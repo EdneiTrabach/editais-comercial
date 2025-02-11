@@ -168,15 +168,16 @@
                   <span v-else-if="coluna.campo === 'responsavel_nome'">
                     {{ processo.profiles?.nome || '-' }}
                   </span>
-                  <span v-else-if="coluna.campo === 'site_pregao'" class="portal-link">
+                  <template v-else-if="coluna.campo === 'site_pregao'" class="portal-link">
                     <a v-if="processo.site_pregao" 
                        :href="processo.site_pregao" 
                        target="_blank"
-                       rel="noopener noreferrer">
-                      {{ getPortalName(processo.site_pregao) }}
+                       rel="noopener noreferrer"
+                       class="portal-button">
+                      {{ getPlataformaNome(processo.site_pregao) }}
                     </a>
                     <span v-else>-</span>
-                  </span>
+                  </template>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -256,7 +257,7 @@ const sortConfig = ref({
 
 // Definição das colunas
 const colunas = [
-  { titulo: 'Data do Pregão', campo: 'data_pregao' },
+  { titulo: 'Data', campo: 'data_pregao' },
   { titulo: 'Hora', campo: 'hora_pregao' },
   { titulo: 'Estado', campo: 'estado' },
   { titulo: 'Número do Processo', campo: 'numero_processo' },
@@ -558,7 +559,7 @@ const startColumnResize = (event, campo) => {
   
   const handleMouseMove = (e) => {
     const dx = e.pageX - startX
-    const newWidth = Math.max(100, startWidth + dx)
+    const newWidth = Math.max(80, startWidth + dx)
     colunasWidth.value[campo] = `${newWidth}px`
     th.style.width = `${newWidth}px`
     document.body.style.cursor = 'col-resize'
@@ -892,6 +893,36 @@ const estadosFiltrados = computed(() => {
     estado.uf.toLowerCase().includes(busca)
   )
 })
+
+// Adicione este ref junto com os outros
+const plataformas = ref([])
+
+// Adicione esta função para carregar as plataformas
+const loadPlataformas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('plataformas')
+      .select('*')
+    
+    if (error) throw error
+    plataformas.value = data
+  } catch (error) {
+    console.error('Erro ao carregar plataformas:', error)
+  }
+}
+
+// Modifique a função onMounted para incluir o carregamento das plataformas
+onMounted(() => {
+  loadRepresentantes()
+  loadPlataformas()
+})
+
+// Adicione esta função para obter o nome da plataforma
+const getPlataformaNome = (url) => {
+  if (!url) return '-'
+  const plataforma = plataformas.value.find(p => p.url === url)
+  return plataforma ? plataforma.nome : url
+}
 </script>
 
 <style scoped>
@@ -1710,5 +1741,41 @@ td select option {
 
 .estados-list::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Estilo para o link do portal */
+.portal-link {
+  display: inline-block;
+  width: 100%;
+}
+
+.portal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #e3f2fd;
+  color: #193155;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.portal-button:hover {
+  background: #bbdefb;
+  transform: translateY(-1px);
+  border-color: #90caf9;
+}
+
+.portal-button::after {
+  content: '↗';
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.portal-button:hover::after {
+  opacity: 1;
 }
 </style>

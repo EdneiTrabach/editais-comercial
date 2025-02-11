@@ -174,29 +174,6 @@ onMounted(() => {
             </tbody>
           </table>
         </div>
-
-        <!-- Developer Card -->
-        <div class="developer-card">
-          <div class="developer-content">
-            <div class="developer-avatar">
-              <img src="/icons/logo-licitacao.svg" alt="Developer" />
-              <div class="status-indicator"></div>
-            </div>
-            <div class="developer-info">
-              <h3>Desenvolvido por</h3>
-              <h2>Ednei Trabach</h2>
-              <p>Desenvolvedor Full Stack</p>
-              <div class="social-links">
-                <a href="https://github.com/edneitrabach" target="_blank" rel="noopener">
-                  <i>🔗</i> GitHub
-                </a>
-                <a href="https://linkedin.com/in/edneitrabach" target="_blank" rel="noopener">
-                  <i>💼</i> LinkedIn
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
