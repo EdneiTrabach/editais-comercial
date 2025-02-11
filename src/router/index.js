@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import HomeView from '../views/HomeView.vue'
 import RepresentantesView from '@/views/RepresentantesView.vue'
+import PlataformasView from '@/views/PlataformasView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +55,12 @@ const router = createRouter({
       path: '/representantes',
       name: 'representantes',
       component: RepresentantesView
+    },
+    {
+      path: '/plataformas',
+      name: 'plataformas',
+      component: PlataformasView,
+      meta: { requiresAuth: true }
     }
   ]
 })

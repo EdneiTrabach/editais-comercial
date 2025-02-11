@@ -4,11 +4,11 @@
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
-        <h1>Gerenciamento de Representantes</h1>
+        <h1>Gerenciamento de Plataformas</h1>
         <div class="actions">
           <button class="btn-add" @click="showModal = true">
             <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
-            Novo Representante
+            Nova Plataforma
           </button>
         </div>
       </div>
@@ -18,24 +18,24 @@
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Documento</th>
-              <th>Email</th>
-              <th>Telefone</th>
+              <th>URL</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="representante in representantes" :key="representante.id">
-              <td>{{ representante.nome }}</td>
-              <td>{{ representante.documento }}</td>
-              <td>{{ representante.email }}</td>
-              <td>{{ representante.telefone }}</td>
+            <tr v-for="plataforma in plataformas" :key="plataforma.id">
+              <td class="nome-column">{{ plataforma.nome }}</td>
+              <td class="url-column">
+                <a :href="plataforma.url" target="_blank" rel="noopener noreferrer" :title="plataforma.url">
+                  {{ truncateUrl(plataforma.url) }}
+                </a>
+              </td>
               <td class="actions-cell">
                 <div class="actions-buttons">
-                  <button class="btn-action edit" @click="editRepresentante(representante)">
+                  <button class="btn-action edit" @click="editPlataforma(plataforma)">
                     <img src="/icons/edicao.svg" alt="Editar" class="icon" />
                   </button>
-                  <button class="btn-action delete" @click="deleteRepresentante(representante.id)">
+                  <button class="btn-action delete" @click="deletePlataforma(plataforma.id)">
                     <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
                   </button>
                 </div>
@@ -50,9 +50,10 @@
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>{{ editingId ? 'Editar' : 'Novo' }} Representante</h3>
+          <h3>{{ editingId ? 'Editar' : 'Nova' }} Plataforma</h3>
           <button class="btn-close" @click="closeModal">×</button>
         </div>
+        
         <form @submit.prevent="handleSubmit" class="form-grid">
           <div class="form-group">
             <label>Nome*</label>
@@ -60,31 +61,16 @@
               v-model="formData.nome"
               type="text"
               required
-              placeholder="Nome completo"
+              placeholder="Nome da plataforma"
             />
           </div>
           <div class="form-group">
-            <label>Documento</label>
+            <label>URL*</label>
             <input 
-              v-model="formData.documento"
-              type="text"
-              placeholder="CPF/CNPJ"
-            />
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input 
-              v-model="formData.email"
-              type="email"
-              placeholder="email@exemplo.com"
-            />
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input 
-              v-model="formData.telefone"
-              type="tel"
-              placeholder="(00) 00000-0000"
+              v-model="formData.url"
+              type="url"
+              required
+              placeholder="https://exemplo.com"
             />
           </div>
           <div class="modal-actions">
@@ -109,26 +95,24 @@ import TheSidebar from '@/components/TheSidebar.vue'
 const isSidebarExpanded = ref(true)
 const showModal = ref(false)
 const editingId = ref(null)
-const representantes = ref([])
+const plataformas = ref([])
 
 const formData = ref({
   nome: '',
-  documento: '',
-  email: '',
-  telefone: ''
+  url: ''
 })
 
-const loadRepresentantes = async () => {
+const loadPlataformas = async () => {
   try {
     const { data, error } = await supabase
-      .from('representantes')
+      .from('plataformas')
       .select('*')
       .order('nome')
     
     if (error) throw error
-    representantes.value = data
+    plataformas.value = data
   } catch (error) {
-    console.error('Erro ao carregar representantes:', error)
+    console.error('Erro ao carregar plataformas:', error)
   }
 }
 
@@ -138,47 +122,47 @@ const handleSubmit = async () => {
     
     if (editingId.value) {
       const { error } = await supabase
-        .from('representantes')
+        .from('plataformas')
         .update(data)
         .eq('id', editingId.value)
       
       if (error) throw error
     } else {
       const { error } = await supabase
-        .from('representantes')
+        .from('plataformas')
         .insert(data)
       
       if (error) throw error
     }
 
-    await loadRepresentantes()
+    await loadPlataformas()
     closeModal()
   } catch (error) {
     console.error('Erro ao salvar:', error)
-    alert('Erro ao salvar representante')
+    alert('Erro ao salvar plataforma')
   }
 }
 
-const editRepresentante = (representante) => {
-  editingId.value = representante.id
-  formData.value = { ...representante }
+const editPlataforma = (plataforma) => {
+  editingId.value = plataforma.id
+  formData.value = { ...plataforma }
   showModal.value = true
 }
 
-const deleteRepresentante = async (id) => {
-  if (!confirm('Deseja realmente excluir este representante?')) return
+const deletePlataforma = async (id) => {
+  if (!confirm('Deseja realmente excluir esta plataforma?')) return
 
   try {
     const { error } = await supabase
-      .from('representantes')
+      .from('plataformas')
       .delete()
       .eq('id', id)
-    
+
     if (error) throw error
-    await loadRepresentantes()
+    await loadPlataformas()
   } catch (error) {
     console.error('Erro ao excluir:', error)
-    alert('Erro ao excluir representante')
+    alert('Erro ao excluir plataforma')
   }
 }
 
@@ -187,9 +171,7 @@ const closeModal = () => {
   editingId.value = null
   formData.value = {
     nome: '',
-    documento: '',
-    email: '',
-    telefone: ''
+    url: ''
   }
 }
 
@@ -197,8 +179,12 @@ const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
 
+const truncateUrl = (url) => {
+  return url.length > 60 ? url.substring(0, 60) + '...' : url
+}
+
 onMounted(() => {
-  loadRepresentantes()
+  loadPlataformas()
 })
 </script>
 
@@ -213,6 +199,7 @@ onMounted(() => {
   padding: 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
+  background: #f8f9fa;
 }
 
 .main-content.expanded {
@@ -226,6 +213,12 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
+.header h1 {
+  color: #193155;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
 .btn-add {
   display: flex;
   align-items: center;
@@ -237,10 +230,12 @@ onMounted(() => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .btn-add:hover {
   background: #254677;
+  transform: translateY(-2px);
 }
 
 .table-container {
@@ -253,23 +248,27 @@ onMounted(() => {
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* Importante para larguras fixas */
 }
 
 th, td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e9ecef;
 }
 
 th {
   background: #f8f9fa;
   color: #193155;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+tr:hover {
+  background: #f8f9fa;
 }
 
 .actions-cell {
   width: 100px;
-  text-align: center;
 }
 
 .actions-buttons {
@@ -309,131 +308,19 @@ th {
   background: #fecaca;
 }
 
-.btn-action .icon {
-  width: 16px;
-  height: 16px;
-  transition: all 0.3s ease;
-}
-
-.btn-action.edit:hover .icon {
-  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(210deg);
-}
-
-.btn-action.delete:hover .icon {
-  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg);
-}
-
-.actions-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.btn-actions {
-  width: 36px; /* Aumentado para melhor clicabilidade */
-  height: 36px;
-  border: none;
-  border-radius: 6px;
-  background: #f3f4f6;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.btn-actions:hover {
-  background: #e5e7eb;
-}
-
-.btn-actions img {
-  width: 16px;
-  height: 16px;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  background: white;
-  min-width: 140px; /* Aumentado para melhor legibilidade */
-  padding: 4px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  border-radius: 4px;
-  z-index: 1;
-}
-
-.actions-dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown-content button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  background: none;
-  cursor: pointer;
-  text-align: left;
-  font-size: 14px;
-}
-
-.dropdown-content button:hover {
-  background: #f3f4f6;
-}
-
-.dropdown-content button.delete {
-  color: #dc2626;
-}
-
-.dropdown-content button.delete:hover {
-  background: #fee2e2;
-}
-
-/* Estilos base para ícones */
 .icon {
+  width: 16px;
+  height: 16px;
   transition: all 0.3s ease;
 }
 
-/* Ícone do botão adicionar */
 .icon-add {
   width: 20px;
   height: 20px;
   filter: brightness(0) invert(1); /* Deixa o ícone branco */
 }
 
-/* Ícone do botão de mais ações */
-.icon-more {
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
-}
-
-.btn-actions:hover .icon-more {
-  opacity: 1;
-}
-
-/* Ícones do dropdown */
-.icon-edit, .icon-delete {
-  width: 14px;
-  height: 14px;
-  opacity: 0.7;
-}
-
-.dropdown-content button:hover .icon-edit {
-  opacity: 1;
-  color: #193155;
-}
-
-.dropdown-content button.delete:hover .icon-delete {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) 
-          saturate(2878%) hue-rotate(346deg) brightness(97%) contrast(97%);
-}
-
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -469,6 +356,22 @@ th {
   color: #193155;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .form-grid {
@@ -522,7 +425,6 @@ th {
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 500;
-  font-size: 0.9rem;
 }
 
 .btn-cancelar {
@@ -535,38 +437,17 @@ th {
   color: white;
 }
 
+.btn-cancelar:hover, .btn-salvar:hover {
+  transform: translateY(-2px);
+}
+
 .btn-cancelar:hover {
   background: #dee2e6;
-  transform: translateY(-2px);
 }
 
 .btn-salvar:hover {
   background: #254677;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.btn-close:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-@media (max-width: 768px) {
-  .modal-content {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -585,22 +466,36 @@ th {
     justify-content: center;
   }
 
-  .btn-actions {
-    width: 42px; /* Maior em dispositivos móveis para facilitar o toque */
-    height: 42px;
+  .modal-content {
+    margin: 1rem;
+    padding: 1.5rem;
   }
+}
 
-  .icon-more {
-    width: 18px;
-    height: 18px;
-  }
+.nome-column {
+  width: 600px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .dropdown-content {
-    min-width: 160px;
-  }
+.url-column {
+  width: 400px; /* ou outro valor que desejar */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .dropdown-content button {
-    padding: 12px 16px;
-  }
+.url-column a {
+  color: #193155;
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.url-column a:hover {
+  text-decoration: underline;
 }
 </style>

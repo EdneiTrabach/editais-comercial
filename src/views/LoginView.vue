@@ -97,6 +97,15 @@ const handleSignUp = async () => {
     loading.value = true
     error.value = ''
 
+    // Primeiro verifica número de usuários atual
+    const { count } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact' })
+    
+    if (count >= 10) {
+      throw new Error('Limite máximo de usuários atingido')
+    }
+
     const signUpData = {
       email: email.value,
       password: 'Flytolive97@',
@@ -109,18 +118,13 @@ const handleSignUp = async () => {
 
     const { data, error } = await supabase.auth.signUp(signUpData)
 
-    if (error) {
-      console.error('Erro no cadastro:', error)
-      error.value = error.message
-      return
-    }
+    if (error) throw error
 
-    // Mostra as credenciais ao usuário
     showToast(`Conta criada! Use o email: ${email.value} e senha: Flytolive97@`, 'success')
     
   } catch (err) {
     console.error('Erro:', err)
-    error.value = 'Erro ao criar conta'
+    error.value = err.message || 'Erro ao criar conta'
   } finally {
     loading.value = false
   }

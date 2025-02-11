@@ -98,21 +98,14 @@
 
           <div class="form-group" v-if="formData.tipo_pregao === 'eletronico'">
             <label>Plataforma do Pregão*</label>
-            <div class="plataforma-container">
-              <select v-model="formData.site_pregao" required>
-                <option value="">Selecione a plataforma...</option>
-                <option v-for="plataforma in plataformas" 
-                        :key="plataforma.id" 
-                        :value="plataforma.url">
-                  {{ plataforma.nome }}
-                </option>
-              </select>
-              <button type="button" 
-                      class="btn-add-plataforma" 
-                      @click="showPlataformaModal = true">
-                Nova Plataforma
-              </button>
-            </div>
+            <select v-model="formData.site_pregao" required>
+              <option value="">Selecione a plataforma...</option>
+              <option v-for="plataforma in plataformas" 
+                      :key="plataforma.id" 
+                      :value="plataforma.url">
+                {{ plataforma.nome }}
+              </option>
+            </select>
           </div>
 
           <div class="form-group full-width">
@@ -973,3 +966,4 @@ input[type="date"]:focus:not(.error) {
   background: white;
 }
 </style>
+`

@@ -13,7 +13,7 @@
       <ul class="nav-links">
         <li>
           <router-link to="/processos">
-            <img src="/icons/livro.svg" alt="Processos" class="icon" />
+            <img src="/icons/pasta.svg" alt="Processos" class="icon" />
             <span v-if="isExpanded" class="link-text">Processos</span>
           </router-link>
         </li>
@@ -25,7 +25,7 @@
         </li>
         <li>
           <router-link to="/editais">
-            <img src="/icons/certificado.svg" alt="Editais" class="icon" />
+            <img src="/icons/nova-pasta.svg" alt="Editais" class="icon" />
             <span v-if="isExpanded" class="link-text">Novo Processo</span>
           </router-link>
         </li>
@@ -39,6 +39,12 @@
           <router-link to="/representantes">
             <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
             <span v-if="isExpanded" class="link-text">Representantes</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/plataformas">
+            <img src="/icons/links.svg" alt="Plataformas" class="icon" />
+            <span v-if="isExpanded" class="link-text">Plataformas</span>
           </router-link>
         </li>
       </ul>

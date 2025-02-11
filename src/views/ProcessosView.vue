@@ -141,6 +141,24 @@
                     <option value="leilao">Leilão</option>
                     <option value="dialogo_competitivo">Diálogo Competitivo</option>
                   </select>
+                  <select v-else-if="coluna.campo === 'status'"
+                    v-model="editingCell.value"
+                    @change="handleUpdate(processo)"
+                    @blur="handleUpdate(processo)"
+                    @keyup.esc="cancelEdit()"
+                    class="status-select"
+                  >
+                    <option value="em_analise">Em Análise</option>
+                    <option value="em_andamento">Em Andamento</option>
+                    <option value="ganhamos">Ganhamos</option>
+                    <option value="perdemos">Perdemos</option>
+                    <option value="suspenso">Suspenso</option>
+                    <option value="revogado">Revogado</option>
+                    <option value="adiado">Adiado</option>
+                    <option value="demonstracao">Demonstração</option>
+                    <option value="cancelado">Cancelado</option>
+                    <option value="nao_participar">Decidido Não Participar</option>
+                  </select>
                   <input v-else
                     type="text"
                     v-model="editingCell.value"
@@ -178,6 +196,9 @@
                     </a>
                     <span v-else>-</span>
                   </template>
+                  <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
+                    {{ formatStatus(processo.status) }}
+                  </span>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -260,7 +281,7 @@ const colunas = [
   { titulo: 'Data', campo: 'data_pregao' },
   { titulo: 'Hora', campo: 'hora_pregao' },
   { titulo: 'Estado', campo: 'estado' },
-  { titulo: 'Número do Processo', campo: 'numero_processo' },
+  { titulo: 'Processo Nº', campo: 'numero_processo' },
   { titulo: 'Ano', campo: 'ano' },
   { titulo: 'Órgão', campo: 'orgao' },
   { titulo: 'Status', campo: 'status' },
@@ -352,8 +373,14 @@ const formatStatus = (status) => {
   const statusMap = {
     'em_analise': 'Em Análise',
     'em_andamento': 'Em Andamento',
-    'concluido': 'Concluído',
-    'cancelado': 'Cancelado'
+    'ganhamos': 'Ganhamos',
+    'perdemos': 'Perdemos',
+    'suspenso': 'Suspenso',
+    'revogado': 'Revogado',
+    'adiado': 'Adiado',
+    'demonstracao': 'Demonstração',
+    'cancelado': 'Cancelado',
+    'nao_participar': 'Decidido Não Participar'
   }
   return statusMap[status] || status
 }
@@ -640,19 +667,18 @@ const editingCell = ref({
 
 // Função para lidar com duplo clique ajustada
 const handleDblClick = async (field, processo, event) => {
-  // Se já estiver editando esta célula, não faz nada
   if (editingCell.value.id === processo.id && editingCell.value.field === field) {
     return
   }
 
-  // Posiciona o balão próximo ao elemento clicado
-  const rect = event.target.getBoundingClientRect()
-  
+  const cell = event.target.closest('td')
+  const rect = cell.getBoundingClientRect()
+
   confirmDialog.value = {
     show: true,
     position: {
-      top: `${rect.bottom + window.scrollY + 10}px`,
-      left: `${rect.left + window.scrollX}px`
+      top: `${rect.bottom + 10}px`, // 20px abaixo do clique
+      left: `${rect.left}px` // Alinhado com a célula
     },
     callback: () => {
       editingCell.value = {
@@ -661,12 +687,10 @@ const handleDblClick = async (field, processo, event) => {
         value: processo[field]
       }
 
-      // Foca no input após a renderização
       nextTick(() => {
-        const input = event.target.querySelector('input, textarea, select')
+        const input = cell.querySelector('input, textarea, select')
         if (input) {
           input.focus()
-          // Se for input de texto, posiciona o cursor no final
           if (input.type === 'text') {
             input.selectionStart = input.selectionEnd = input.value.length
           }
@@ -1088,6 +1112,11 @@ const getPlataformaNome = (url) => {
   color: #721c24;
 }
 
+.status.nao_participar {
+  background: #bebc1b;
+  color: #495057;
+}
+
 .actions-cell {
   width: 80px;
   text-align: center;
@@ -1146,12 +1175,25 @@ const getPlataformaNome = (url) => {
 }
 
 .confirm-dialog {
+  position: absolute; /* Alterado de static para absolute */
   background: white;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
-  width: 100%;
-  max-width: 400px;
+  min-width: 200px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Adicione uma seta para cima no diálogo */
+.confirm-dialog::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
 }
 
 .warning-text {
@@ -1449,6 +1491,19 @@ td select option {
   max-width: 300px;
   white-space: normal; /* Permite quebra de linha */
   line-height: 1.4;
+}
+
+/* Estilo para o select de status */
+.status-select {
+  position: absolute;
+  z-index: 1000;
+  min-width: 90%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
 }
 
 /* Estilo para célula em edição */
@@ -1778,4 +1833,58 @@ td select option {
 .portal-button:hover::after {
   opacity: 1;
 }
+
+/* Estilos para os status */
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status.em_analise {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.em_andamento {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.status.ganhamos {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.perdemos {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status.suspenso {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.status.revogado {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status.adiado {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.demonstracao {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.status.cancelado {
+  background: #f8d7da;
+  color: #721c24;
+}
+
 </style>
