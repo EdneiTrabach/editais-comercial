@@ -351,7 +351,7 @@ const handleSubmit = async () => {
       alert('Por favor, selecione uma data válida para o pregão.')
       return
     }
-    
+    2
     if (!validateTime()) {
       alert('Por favor, selecione um horário válido para o pregão (entre 08:00 e 18:00).')
       return
@@ -359,6 +359,9 @@ const handleSubmit = async () => {
     
     loading.value = true
 
+    // Ajusta a data para meio-dia para evitar problemas de timezone
+    const dataPregao = new Date(formData.value.data_pregao + 'T12:00:00')
+    
     // Obter o usuário atual
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Usuário não autenticado')
@@ -367,7 +370,8 @@ const handleSubmit = async () => {
       numero_processo: formData.value.numero,  // Corrigido para usar o número
       ano: formData.value.ano,
       orgao: formData.value.orgao,
-      data_pregao: formData.value.data_pregao,
+      // Formata a data para salvar corretamente no Supabase
+      data_pregao: dataPregao.toISOString().split('T')[0],
       hora_pregao: formData.value.hora_pregao,
       estado: formData.value.estado,
       modalidade: formData.value.modalidade,

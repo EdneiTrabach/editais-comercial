@@ -147,13 +147,25 @@
                     {{ formatTime(processo[coluna.campo]) }}
                   </span>
                   <span v-else-if="coluna.campo === 'modalidade'" :class="['modalidade', processo[coluna.campo]]">
-                    {{ formatModalidade(processo[coluna.campo]) }}
+                    {{ formatModalidade(processo[coluna.campo], processo.tipo_pregao) }}
                   </span>
                   <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'" class="objeto-cell">
-                    {{ processo[coluna.campo] }}
+                    {{ processo[coluna.campo] || '-' }}
                   </span>
                   <span v-else-if="coluna.campo === 'representante'">
                     {{ processo.representantes?.nome || '-' }}
+                  </span>
+                  <span v-else-if="coluna.campo === 'responsavel_nome'">
+                    {{ processo.profiles?.nome || '-' }}
+                  </span>
+                  <span v-else-if="coluna.campo === 'site_pregao'" class="portal-link">
+                    <a v-if="processo.site_pregao" 
+                       :href="processo.site_pregao" 
+                       target="_blank"
+                       rel="noopener noreferrer">
+                      {{ getPortalName(processo.site_pregao) }}
+                    </a>
+                    <span v-else>-</span>
                   </span>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
@@ -206,44 +218,53 @@ const colunas = [
   { titulo: 'Data do Pregão', campo: 'data_pregao' },
   { titulo: 'Hora do Pregão', campo: 'hora_pregao' },
   { titulo: 'Estado', campo: 'estado' },
+  { titulo: 'Número do Processo', campo: 'numero_processo' },
+  { titulo: 'Ano', campo: 'ano' },
   { titulo: 'Órgão', campo: 'orgao' },
-  { titulo: 'Modalidade', campo: 'modalidade' },
+  { titulo: 'Status', campo: 'status' },
+  { titulo: 'Modalidade/Tipo', campo: 'modalidade' }, 
   { titulo: 'Objeto Resumido', campo: 'objeto_resumido' },
   { titulo: 'Responsável', campo: 'responsavel_nome' },
   { titulo: 'Objeto Completo', campo: 'objeto_completo' },
+  { titulo: 'Portal', campo: 'site_pregao' },
   { titulo: 'Representante', campo: 'representante' },
   { titulo: 'Campo Adicional 1', campo: 'campo_adicional1' },
   { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' }
 ]
 
-// Estado dos filtros
-const filtros = ref({
-  data_pregao: [],
-  hora_pregao: [],
-  estado: [],
-  orgao: [],
-  modalidade: [],
-  objeto_resumido: [],
-  responsavel_nome: [],
-  objeto_completo: [],
-  representante: [],
-  campo_adicional1: [],
-  campo_adicional2: []
-})
+// Inicialização dos filtros com todas as colunas
+const initializeFiltros = () => {
+  const filtrosIniciais = {}
+  colunas.forEach(coluna => {
+    filtrosIniciais[coluna.campo] = []
+  })
+  return filtrosIniciais
+}
+
+// Use a função para inicializar os filtros
+const filtros = ref(initializeFiltros())
 
 // Processos filtrados com todos os filtros
 const processosFiltrados = computed(() => {
+  if (!processos.value) return []
+  
   return processos.value.filter(processo => {
     return colunas.every(coluna => {
-      if (filtros.value[coluna.campo].length === 0) return true
+      if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
+        return true
+      }
       
       let valorProcesso = processo[coluna.campo]
+      if (!valorProcesso) return false
+      
       if (coluna.campo === 'data_pregao') {
         valorProcesso = formatDate(valorProcesso)
       } else if (coluna.campo === 'hora_pregao') {
         valorProcesso = formatTime(valorProcesso)
       } else if (coluna.campo === 'modalidade') {
-        valorProcesso = formatModalidade(valorProcesso)
+        valorProcesso = formatModalidade(valorProcesso, processo.tipo_pregao)
+      } else if (coluna.campo === 'representante') {
+        valorProcesso = processo.representantes?.nome || '-'
       }
       
       return filtros.value[coluna.campo].includes(valorProcesso)
@@ -255,17 +276,21 @@ const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
 
-const formatDate = (date) => {
-  if (!date) return '-'
-  return new Date(date).toLocaleDateString('pt-BR')
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  // Adiciona horário meio-dia para evitar problemas de timezone
+  const date = new Date(dateString + 'T12:00:00')
+  return date.toLocaleDateString('pt-BR')
 }
 
 const formatTime = (time) => {
   if (!time) return '-'
-  return time
+  // Pega apenas as horas e minutos da string de tempo
+  const [hours, minutes] = time.split(':')
+  return `${hours}:${minutes}`
 }
 
-const formatModalidade = (modalidade) => {
+const formatModalidade = (modalidade, tipo_pregao) => {
   const modalidades = {
     'pregao': 'Pregão',
     'concorrencia': 'Concorrência',
@@ -273,7 +298,12 @@ const formatModalidade = (modalidade) => {
     'leilao': 'Leilão',
     'dialogo_competitivo': 'Diálogo Competitivo'
   }
-  return modalidades[modalidade] || modalidade
+  
+  const tipoFormatado = tipo_pregao ? 
+    (tipo_pregao === 'eletronico' ? 'Eletrônico' : 'Presencial') : 
+    ''
+  
+  return `${modalidades[modalidade] || modalidade}${tipoFormatado ? ` - ${tipoFormatado}` : ''}`
 }
 
 const formatStatus = (status) => {
@@ -293,18 +323,28 @@ const loadProcessos = async () => {
       .from('processos')
       .select(`
         *,
-        representantes:representante (
-          id,
+        representantes!processos_representante_fkey (
+          id, 
           nome
         )
       `)
-      .order('created_at', { ascending: false })
+      .order('data_pregao', { ascending: true })
+      .order('hora_pregao', { ascending: true })
 
     if (error) throw error
-    processos.value = data
+    
+    processos.value = data?.map(processo => ({
+      ...processo,
+      responsavel_nome: '-', // Por enquanto, deixamos fixo
+      representante: processo.representantes?.nome || '-',
+      campo_adicional1: processo.campo_adicional1 || '-',
+      campo_adicional2: processo.campo_adicional2 || '-'
+    })) || []
+    
   } catch (error) {
     console.error('Erro ao carregar processos:', error)
-    alert('Erro ao carregar dados')
+    alert('Erro ao carregar dados') 
+    processos.value = []
   } finally {
     loading.value = false
   }
@@ -411,14 +451,13 @@ onMounted(() => {
 })
 
 // Estado para larguras das colunas e alturas das linhas
+const STORAGE_KEY = 'table-columns-width'
 const colunasWidth = ref({})
-const rowsHeight = ref({})
 
 // Funções para redimensionamento
 const startColumnResize = (event, campo) => {
   event.preventDefault()
   const th = event.target.closest('th')
-  const table = th.closest('table')
   const startWidth = th.offsetWidth
   const startX = event.pageX
   
@@ -434,12 +473,44 @@ const startColumnResize = (event, campo) => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
     document.body.style.cursor = ''
+    // Salva as configurações quando terminar o redimensionamento
+    saveColumnWidths()
   }
 
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 }
 
+// Função para carregar as larguras salvas
+const loadColumnWidths = () => {
+  try {
+    const savedWidths = localStorage.getItem(STORAGE_KEY)
+    if (savedWidths) {
+      colunasWidth.value = JSON.parse(savedWidths)
+    } else {
+      // Larguras padrão se não houver configuração salva
+      colunas.forEach(coluna => {
+        colunasWidth.value[coluna.campo] = '150px'
+      })
+    }
+  } catch (error) {
+    console.error('Erro ao carregar larguras das colunas:', error)
+  }
+}
+
+// Função para salvar as larguras
+const saveColumnWidths = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(colunasWidth.value))
+  } catch (error) {
+    console.error('Erro ao salvar larguras das colunas:', error)
+  }
+}
+
+// Estado para alturas das linhas
+const rowsHeight = ref({})
+
+// Funções para redimensionamento
 const startRowResize = (event, id) => {
   event.preventDefault()
   const tr = event.target.closest('tr')
@@ -540,7 +611,7 @@ const handleUpdate = async (processo) => {
   try {
     if (!editingCell.value.value) return cancelEdit()
 
-    // Validação do campo estado
+    // Validações específicas por campo
     if (editingCell.value.field === 'estado') {
       if (editingCell.value.value.length !== 2) {
         alert('O estado deve ter 2 caracteres')
@@ -549,41 +620,29 @@ const handleUpdate = async (processo) => {
       editingCell.value.value = editingCell.value.value.toUpperCase()
     }
 
-    // Log para debug
-    console.log('Atualizando:', {
-      campo: editingCell.value.field,
-      valor: editingCell.value.value,
-      processo_id: processo.id
-    })
+    const updateData = {
+      [editingCell.value.field]: editingCell.value.value,
+      updated_at: new Date().toISOString()
+    }
 
     const { error } = await supabase
       .from('processos')
-      .update({
-        [editingCell.value.field]: editingCell.value.value,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', processo.id)
-      .select()
 
-    if (error) {
-      console.error('Erro detalhado:', error)
-      throw error
-    }
+    if (error) throw error
 
-    // Atualiza o processo localmente
+    // Atualiza localmente
     const index = processos.value.findIndex(p => p.id === processo.id)
     if (index !== -1) {
       processos.value[index] = {
         ...processos.value[index],
-        [editingCell.value.field]: editingCell.value.value
+        ...updateData
       }
     }
 
-    // Limpa o estado de edição
     cancelEdit()
-
-    // Feedback visual de sucesso
-    alert('Registro atualizado com sucesso!')
+    await loadProcessos() // Recarrega os dados para garantir consistência
   } catch (error) {
     console.error('Erro ao atualizar:', error)
     alert(`Erro ao atualizar o registro: ${error.message}`)
@@ -630,10 +689,10 @@ const checkAdminStatus = async () => {
 }
 
 // Inicialize as larguras padrão das colunas
-onMounted(() => {
-  colunas.forEach(coluna => {
-    colunasWidth.value[coluna.campo] = '150px'
-  })
+onMounted(async () => {
+  await loadProcessos()
+  await loadRepresentantes()
+  loadColumnWidths()
 })
 
 // Adicione no início do script junto com outros refs
@@ -681,6 +740,7 @@ const loadRepresentantes = async () => {
     representantes.value = data
   } catch (error) {
     console.error('Erro ao carregar representantes:', error)
+    representantes.value = []
   }
 }
 
@@ -689,6 +749,21 @@ onMounted(() => {
   loadProcessos()
   loadRepresentantes()
 })
+
+const getPortalName = (url) => {
+  if (!url) return '-'
+  try {
+    const hostname = new URL(url).hostname
+    return hostname
+      .replace('www.', '')
+      .split('.')
+      .slice(0, -1)
+      .join('.')
+      .toUpperCase()
+  } catch (e) {
+    return url
+  }
+}
 </script>
 
 <style scoped>
@@ -1266,5 +1341,24 @@ td select option {
   height: 100%;
   box-sizing: border-box;
   border: 2px solid #193155;
+}
+
+.portal-link a {
+  color: #007bff;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.portal-link a:hover {
+  background: #e3f2fd;
+  text-decoration: underline;
+}
+
+.modalidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>
