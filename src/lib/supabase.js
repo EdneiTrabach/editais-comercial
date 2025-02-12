@@ -49,6 +49,22 @@ async function handleQuery(promise) {
   }
 }
 
+// Em supabase.js
+const makeRequest = async (url) => {
+  if (!url) {
+    console.error('URL inválida');
+    return null;
+  }
+  
+  try {
+    const response = await fetch(url);
+    return response;
+  } catch (error) {
+    console.error('Erro na requisição:', error);
+    return null;
+  }
+}
+
 // API de Autenticação
 export const authApi = {
   async signUp(email, password) {

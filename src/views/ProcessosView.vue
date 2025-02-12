@@ -1,11 +1,11 @@
 <template>
   <div class="layout">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
-    
+
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
         <h1>Processos Licitatórios</h1>
-        
+
         <div class="actions">
           <button class="btn-export" @click="exportToExcel">
             <!-- <img src="/icons/excel.svg" alt="Exportar" class="icon" /> -->
@@ -30,34 +30,27 @@
           <thead>
             <tr>
               <th class="row-number-cell"></th> <!-- Nova coluna -->
-              <th v-for="(coluna, index) in colunas" 
-                  :key="index"
-                  class="resizable-column"
-                  :style="{ width: colunasWidth[coluna.campo] }">
+              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column"
+                :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
-                  
+
                   <!-- Botões de ordenação apenas para data do pregão -->
                   <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
-                    <button 
-                      class="btn-sort" 
+                    <button class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
-                      @click="handleSort('data_pregao', 'asc')"
-                    >
+                      @click="handleSort('data_pregao', 'asc')">
                       ▲
                     </button>
-                    <button 
-                      class="btn-sort" 
+                    <button class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
-                      @click="handleSort('data_pregao', 'desc')"
-                    >
+                      @click="handleSort('data_pregao', 'desc')">
                       ▼
                     </button>
                   </div>
 
                   <!-- Filtro para outras colunas, exceto data e hora do pregão -->
-                  <div v-if="coluna.campo !== 'data_pregao' && coluna.campo !== 'hora_pregao'" 
-                       class="filtro-container">
+                  <div v-if="coluna.campo !== 'data_pregao' && coluna.campo !== 'hora_pregao'" class="filtro-container">
                     <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
                       <img src="/icons/search-line.svg" alt="Filtrar" class="icon-filter" />
                     </button>
@@ -65,93 +58,53 @@
                   </div>
                 </div>
                 <!-- Handle para redimensionar coluna -->
-                <div class="column-resize-handle"
-                     @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
+                <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
               <th class="actions-column">Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(processo, index) in processosFiltrados" 
-                :key="processo.id"
-                class="resizable-row"
-                :class="{ 'selected-row': selectedRow === processo.id }"
-                @click="selectRow(processo.id)"
-                :style="{ height: rowsHeight[processo.id] }">
+            <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
+              :class="{ 'selected-row': selectedRow === processo.id }" @click="selectRow(processo.id)"
+              :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td> <!-- Nova coluna -->
               <!-- Cada célula segue o mesmo padrão -->
-              <td v-for="coluna in colunas" 
-                  :key="coluna.campo"
-                  @dblclick="handleDblClick(coluna.campo, processo, $event)">
+              <td v-for="coluna in colunas" :key="coluna.campo"
+                @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Input específico baseado no tipo de campo -->
-                  <input v-if="coluna.campo === 'data_pregao'"
-                    ref="editInput"
-                    type="date"
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
-                  <input v-else-if="coluna.campo === 'hora_pregao'"
-                    type="time"
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
-                  <select v-else-if="coluna.campo === 'estado'"
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)"
-                    @blur="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
+                  <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o estado...</option>
-                    <option v-for="estado in estados" 
-                            :key="estado.uf" 
-                            :value="estado.uf">
+                    <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                       {{ estado.nome }}
                     </option>
                   </select>
-                  <select v-else-if="coluna.campo === 'representante'"
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)"
-                    @blur="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
+                  <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o representante...</option>
-                    <option v-for="rep in representantes" 
-                            :key="rep.id" 
-                            :value="rep.id">
+                    <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                       {{ rep.nome }}
                     </option>
                   </select>
-                  <textarea v-else-if="coluna.campo === 'objeto_completo'"
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                    rows="3"
-                  ></textarea>
-                  <select v-else-if="coluna.campo === 'modalidade'"
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)"
-                    @change="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
+                  <textarea v-else-if="coluna.campo === 'objeto_completo'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    rows="3"></textarea>
+                  <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="pregao">Pregão</option>
                     <option value="concorrencia">Concorrência</option>
                     <option value="concurso">Concurso</option>
                     <option value="leilao">Leilão</option>
                     <option value="dialogo_competitivo">Diálogo Competitivo</option>
                   </select>
-                  <select v-else-if="coluna.campo === 'status'"
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)"
-                    @blur="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                    class="status-select"
-                  >
+                  <select v-else-if="coluna.campo === 'status'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    class="status-select">
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
                     <option value="em_andamento">Em Andamento</option>
@@ -164,13 +117,8 @@
                     <option value="cancelado">Cancelado</option>
                     <option value="nao_participar">Decidido Não Participar</option>
                   </select>
-                  <input v-else
-                    type="text"
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                  >
+                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
                 <template v-else>
                   <span v-if="coluna.campo === 'data_pregao'">
@@ -179,12 +127,12 @@
                   <span v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo[coluna.campo]) }}
                   </span>
-                  <span v-else-if="coluna.campo === 'modalidade'" 
-                        :class="['modalidade', processo[coluna.campo]]"
-                        :title="formatModalidadeCompleta(processo[coluna.campo], processo.tipo_pregao)">
+                  <span v-else-if="coluna.campo === 'modalidade'" :class="['modalidade', processo[coluna.campo]]"
+                    :title="formatModalidadeCompleta(processo[coluna.campo], processo.tipo_pregao)">
                     {{ formatModalidade(processo[coluna.campo], processo.tipo_pregao) }}
                   </span>
-                  <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'" class="objeto-cell">
+                  <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
+                    class="objeto-cell">
                     {{ processo[coluna.campo] || '-' }}
                   </span>
                   <span v-else-if="coluna.campo === 'representante'">
@@ -194,11 +142,8 @@
                     {{ processo.profiles?.nome || '-' }}
                   </span>
                   <template v-else-if="coluna.campo === 'site_pregao'" class="portal-link">
-                    <a v-if="processo.site_pregao" 
-                       :href="processo.site_pregao" 
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="portal-button">
+                    <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
+                      rel="noopener noreferrer" class="portal-button">
                       {{ getPlataformaNome(processo.site_pregao) }}
                     </a>
                     <span v-else>-</span>
@@ -215,13 +160,13 @@
               <td class="actions-cell">
                 <div class="action-buttons">
                   <button class="btn-icon delete" @click="handleDelete(processo)">
-                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon icon-delete" />
+                    <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete"
+                      fallbackImage="icons/fallback.svg" />
                   </button>
                 </div>
               </td>
               <!-- Handle para redimensionar linha -->
-              <div class="row-resize-handle"
-                   @mousedown.stop="startRowResize($event, processo.id)"></div>
+              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
             </tr>
           </tbody>
         </table>
@@ -265,6 +210,8 @@ import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import * as XLSX from 'xlsx'
 import { writeFileXLSX, utils } from 'xlsx'
+import { buildUrl } from '@/utils/url'
+import BaseImage from '@/components/BaseImage.vue'
 
 const router = useRouter()
 const isSidebarExpanded = ref(false) // Alterado de true para false
@@ -290,7 +237,7 @@ const selectedRow = ref(null)
 const colunas = [
   { titulo: 'Data', campo: 'data_pregao' },
   { titulo: 'Hora', campo: 'hora_pregao' },
-  { titulo: 'Modalidade', campo: 'modalidade' }, 
+  { titulo: 'Modalidade', campo: 'modalidade' },
   { titulo: 'Estado', campo: 'estado' },
   { titulo: 'Nº Processo', campo: 'numero_processo' },
   { titulo: 'Ano', campo: 'ano' },
@@ -320,16 +267,16 @@ const filtros = ref(initializeFiltros())
 // Processos filtrados com todos os filtros
 const processosFiltrados = computed(() => {
   if (!processos.value) return []
-  
+
   return processos.value.filter(processo => {
     return colunas.every(coluna => {
       if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
         return true
       }
-      
+
       let valorProcesso = processo[coluna.campo]
       if (!valorProcesso) return false
-      
+
       if (coluna.campo === 'data_pregao') {
         valorProcesso = formatDate(valorProcesso)
       } else if (coluna.campo === 'hora_pregao') {
@@ -339,7 +286,7 @@ const processosFiltrados = computed(() => {
       } else if (coluna.campo === 'representante') {
         valorProcesso = processo.representantes?.nome || '-'
       }
-      
+
       return filtros.value[coluna.campo].includes(valorProcesso)
     })
   })
@@ -379,12 +326,12 @@ const formatModalidade = (modalidade, tipo_pregao) => {
     'manifestacao_interesse': 'PMI',
     'licitacao_internacional': 'LI'
   }
-  
+
   // Se for pregão, verifica o tipo
   if (modalidade === 'pregao' && tipo_pregao) {
     return modalidades[modalidade][tipo_pregao]
   }
-  
+
   // Para outras modalidades, retorna a sigla direta
   return modalidades[modalidade] || modalidade
 }
@@ -401,11 +348,11 @@ const formatModalidadeCompleta = (modalidade, tipo_pregao) => {
     'manifestacao_interesse': 'Procedimento de Manifestação de Interesse',
     'licitacao_internacional': 'Licitação Internacional'
   }
-  
-  const tipoFormatado = tipo_pregao ? 
-    (tipo_pregao === 'eletronico' ? 'Eletrônico' : 'Presencial') : 
+
+  const tipoFormatado = tipo_pregao ?
+    (tipo_pregao === 'eletronico' ? 'Eletrônico' : 'Presencial') :
     ''
-  
+
   return `${modalidades[modalidade] || modalidade}${tipoFormatado ? ` ${tipoFormatado}` : ''}`
 }
 
@@ -441,7 +388,7 @@ const loadProcessos = async () => {
       .order('hora_pregao', { ascending: true }) // ordenação secundária por hora
 
     if (error) throw error
-    
+
     processos.value = data?.map(processo => ({
       ...processo,
       responsavel_nome: '-', // Por enquanto, deixamos fixo
@@ -449,10 +396,10 @@ const loadProcessos = async () => {
       campo_adicional1: processo.campo_adicional1 || '-',
       campo_adicional2: processo.campo_adicional2 || '-'
     })) || []
-    
+
   } catch (error) {
     console.error('Erro ao carregar processos:', error)
-    alert('Erro ao carregar dados') 
+    alert('Erro ao carregar dados')
     processos.value = []
   } finally {
     loading.value = false
@@ -483,7 +430,7 @@ const handleDelete = (processo) => {
 const confirmDelete = async () => {
   try {
     const processo = deleteConfirmDialog.value.processo
-    
+
     // Log da ação antes de excluir
     await logSystemAction({
       tipo: 'exclusao',
@@ -501,7 +448,7 @@ const confirmDelete = async () => {
 
     // Atualiza a lista local
     processos.value = processos.value.filter(p => p.id !== processo.id)
-    
+
     hideDeleteDialog()
   } catch (error) {
     console.error('Erro ao excluir:', error)
@@ -520,7 +467,7 @@ const hideDeleteDialog = () => {
 const logSystemAction = async (dados) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     const logData = {
       usuario_id: user.id,
       usuario_email: user.email,
@@ -572,7 +519,7 @@ const opcoesUnicas = (coluna) => {
   const opcoes = new Set()
   processos.value.forEach(processo => {
     let valor = processo[coluna]
-    
+
     // Formatação especial para alguns campos
     if (coluna === 'data_pregao') {
       valor = formatDate(valor)
@@ -581,7 +528,7 @@ const opcoesUnicas = (coluna) => {
     } else if (coluna === 'modalidade') {
       valor = formatModalidade(valor)
     }
-    
+
     if (valor) opcoes.add(valor)
   })
   return Array.from(opcoes).sort()
@@ -623,7 +570,7 @@ const startColumnResize = (event, campo) => {
   const th = event.target.closest('th')
   const startWidth = th.offsetWidth
   const startX = event.pageX
-  
+
   const handleMouseMove = (e) => {
     const dx = e.pageX - startX
     const newWidth = Math.max(80, startWidth + dx)
@@ -744,7 +691,7 @@ const handleDblClick = async (field, processo, event) => {
 const handleConfirmEdit = () => {
   confirmDialog.value.callback?.()
   hideConfirmDialog()
-  
+
   // Foca no input após fechar o diálogo
   nextTick(() => {
     const input = document.querySelector('.editing-cell input, .editing-cell textarea, .editing-cell select')
@@ -895,7 +842,7 @@ const loadRepresentantes = async () => {
       .from('representantes')
       .select('*')
       .order('nome')
-    
+
     if (error) throw error
     representantes.value = data
   } catch (error) {
@@ -950,10 +897,10 @@ const estadoSearch = ref('')
 // Computed para filtrar estados com base na busca
 const estadosFiltrados = computed(() => {
   if (!estadoSearch.value) return estados.value
-  
+
   const busca = estadoSearch.value.toLowerCase()
-  return estados.value.filter(estado => 
-    estado.nome.toLowerCase().includes(busca) || 
+  return estados.value.filter(estado =>
+    estado.nome.toLowerCase().includes(busca) ||
     estado.uf.toLowerCase().includes(busca)
   )
 })
@@ -967,7 +914,7 @@ const loadPlataformas = async () => {
     const { data, error } = await supabase
       .from('plataformas')
       .select('*')
-    
+
     if (error) throw error
     plataformas.value = data
   } catch (error) {
@@ -1011,8 +958,10 @@ const selectRow = (id) => {
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   background: #f8f9fa;
-  height: 100vh; /* Altura total */
-  overflow: hidden; /* Previne scroll duplo */
+  height: 100vh;
+  /* Altura total */
+  overflow: hidden;
+  /* Previne scroll duplo */
   display: flex;
   flex-direction: column;
 }
@@ -1026,7 +975,8 @@ const selectRow = (id) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  flex-shrink: 0; /* Impede que o header encolha */
+  flex-shrink: 0;
+  /* Impede que o header encolha */
 }
 
 .header h1 {
@@ -1040,7 +990,8 @@ const selectRow = (id) => {
   gap: 1rem;
 }
 
-.btn-export, .btn-add {
+.btn-export,
+.btn-add {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1074,7 +1025,8 @@ const selectRow = (id) => {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: auto;
-  max-height: calc(100vh - 180px); /* Ajusta altura máxima considerando o header */
+  max-height: calc(100vh - 180px);
+  /* Ajusta altura máxima considerando o header */
   margin-bottom: 1rem;
   position: relative;
 }
@@ -1083,7 +1035,8 @@ const selectRow = (id) => {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #e9ecef;
-  min-width: 1500px; /* Força uma largura mínima para garantir o scroll horizontal */
+  min-width: 1500px;
+  /* Força uma largura mínima para garantir o scroll horizontal */
 }
 
 .excel-table th {
@@ -1098,7 +1051,7 @@ const selectRow = (id) => {
 }
 
 .th-content {
-    margin: 1rem;
+  margin: 1rem;
 }
 
 /* Personalização da scrollbar */
@@ -1128,13 +1081,20 @@ const selectRow = (id) => {
 
 /* Adicione estes estilos para permitir quebra de linha */
 .excel-table td {
-  white-space: normal; /* Permite quebra de linha */
-  word-wrap: break-word; /* Força quebra de palavras longas */
-  min-width: 100px; /* Largura mínima para cada célula */
-  max-width: 300px; /* Largura máxima para evitar células muito largas */
-  vertical-align: top; /* Alinha o conteúdo no topo */
-  height: auto; /* Altura automática */
-  padding: 10px; /* Padding adequado */
+  white-space: normal;
+  /* Permite quebra de linha */
+  word-wrap: break-word;
+  /* Força quebra de palavras longas */
+  min-width: 100px;
+  /* Largura mínima para cada célula */
+  max-width: 300px;
+  /* Largura máxima para evitar células muito largas */
+  vertical-align: top;
+  /* Alinha o conteúdo no topo */
+  height: auto;
+  /* Altura automática */
+  padding: 10px;
+  /* Padding adequado */
 }
 
 /* Ajuste para células específicas */
@@ -1148,7 +1108,8 @@ const selectRow = (id) => {
 .actions-column {
   width: 60px;
   min-width: 60px;
-  white-space: nowrap; /* Esta pode manter nowrap */
+  white-space: nowrap;
+  /* Esta pode manter nowrap */
 }
 
 /* Ajuste o container da tabela */
@@ -1160,7 +1121,8 @@ const selectRow = (id) => {
 /* Ajuste a tabela */
 .excel-table {
   width: 100%;
-  table-layout: fixed; /* Importante para respeitar as larguras */
+  table-layout: fixed;
+  /* Importante para respeitar as larguras */
 }
 
 /* Mantenha o número da linha com largura fixa */
@@ -1168,14 +1130,16 @@ const selectRow = (id) => {
   width: 50px !important;
   min-width: 50px !important;
   max-width: 50px !important;
-  white-space: nowrap !important; /* Esta precisa manter nowrap */
+  white-space: nowrap !important;
+  /* Esta precisa manter nowrap */
 }
 
 .excel-table tbody tr:hover {
   background: #f8f9fa;
 }
 
-.modalidade, .status {
+.modalidade,
+.status {
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
   font-size: 0.85rem;
@@ -1269,7 +1233,8 @@ const selectRow = (id) => {
 }
 
 .confirm-dialog {
-  position: absolute; /* Alterado de static para absolute */
+  position: absolute;
+  /* Alterado de static para absolute */
   background: white;
   padding: 1rem;
   border-radius: 8px;
@@ -1305,7 +1270,8 @@ const selectRow = (id) => {
   border-top: 1px solid #e5e7eb;
 }
 
-.btn-cancel, .btn-confirm {
+.btn-cancel,
+.btn-confirm {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 6px;
@@ -1324,7 +1290,8 @@ const selectRow = (id) => {
   color: white;
 }
 
-.btn-cancel:hover, .btn-confirm:hover {
+.btn-cancel:hover,
+.btn-confirm:hover {
   transform: translateY(-2px);
 }
 
@@ -1401,8 +1368,8 @@ const selectRow = (id) => {
 }
 
 /* Mantém o texto alinhado durante o redimensionamento */
-.excel-table td > *,
-.excel-table th > * {
+.excel-table td>*,
+.excel-table th>* {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1450,7 +1417,8 @@ td:hover::after {
   margin-top: 1rem;
 }
 
-.btn-confirm, .btn-cancel {
+.btn-confirm,
+.btn-cancel {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
@@ -1469,7 +1437,8 @@ td:hover::after {
   color: #495057;
 }
 
-.btn-confirm:hover, .btn-cancel:hover {
+.btn-confirm:hover,
+.btn-cancel:hover {
   transform: translateY(-1px);
 }
 
@@ -1478,6 +1447,7 @@ td:hover::after {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1583,7 +1553,8 @@ td select option {
 /* Ajuste para células com objetos longos */
 .objeto-cell {
   max-width: 300px;
-  white-space: normal; /* Permite quebra de linha */
+  white-space: normal;
+  /* Permite quebra de linha */
   line-height: 1.4;
 }
 
@@ -2007,12 +1978,14 @@ tbody .row-number-cell {
   position: sticky;
   left: 0;
   z-index: 3;
-  background: #f8f9fa; /* Mantém o fundo mesmo durante scroll */
+  background: #f8f9fa;
+  /* Mantém o fundo mesmo durante scroll */
 }
 
 /* Efeito hover mantendo o fundo */
 tbody tr:hover .row-number-cell {
-  background: #f0f0f0; /* Cor um pouco mais escura no hover */
+  background: #f0f0f0;
+  /* Cor um pouco mais escura no hover */
 }
 
 /* Ajuste no container da tabela */
@@ -2038,7 +2011,7 @@ tbody tr:hover .row-number-cell {
   right: -2px;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
 }
 
 /* Fixa o cabeçalho */
@@ -2055,7 +2028,8 @@ tbody tr:hover .row-number-cell {
   position: sticky;
   left: 0;
   top: 0;
-  z-index: 4; /* Maior z-index para ficar acima de tudo */
+  z-index: 4;
+  /* Maior z-index para ficar acima de tudo */
   background: #f8f9fa;
 }
 
@@ -2067,7 +2041,7 @@ tbody tr:hover .row-number-cell {
   right: 0;
   bottom: -2px;
   height: 2px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
 }
 
 /* Estilo para a linha selecionada */
@@ -2092,5 +2066,4 @@ tbody tr:hover .row-number-cell {
 .excel-table tr {
   transition: background-color 0.2s ease, border-left 0.2s ease;
 }
-
 </style>
