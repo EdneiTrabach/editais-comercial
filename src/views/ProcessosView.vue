@@ -439,7 +439,7 @@ const loadProcessos = async () => {
 }
 
 const handleNewProcess = () => {
-  router.push('/editais/novo')
+  router.push('/editais')
 }
 
 const editProcess = (processo) => {

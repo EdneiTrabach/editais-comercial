@@ -51,7 +51,7 @@ const features = [
     icon: '/icons/certificado.svg',
     title: 'Novo Processo',
     description: 'Cadastre e gerencie processos licitatórios',
-    route: '/editais/novo'
+    route: '/editais'
   },
   {
     icon: '/icons/grafico.svg',
