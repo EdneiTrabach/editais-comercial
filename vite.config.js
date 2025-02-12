@@ -14,7 +14,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     assetsDir: 'assets',
-    minify: 'terser',
+    minify: 'esbuild', // Usando esbuild ao invés de terser
     terserOptions: {
       compress: {
         drop_console: true,
