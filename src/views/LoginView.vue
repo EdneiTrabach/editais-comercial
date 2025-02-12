@@ -20,7 +20,7 @@ const toast = ref({
 
 const generateRandomChars = () => {
   return Array(20).fill(0)
-    .map(() => String.fromCharCode(33 + Math.floor(Math.random() * 94)))
+    .map(() => String.fromCharCode(33 + Math.random() * 94))
     .join('')
 }
 
@@ -97,10 +97,7 @@ const handleSignUp = async () => {
     loading.value = true
     console.log('Iniciando signup...')
     
-    // Verifica sessão atual
-    const { data: { session } } = await supabase.auth.getSession()
-    console.log('Sessão atual:', session)
-    
+    // Verifica se o email já existe
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('email')
@@ -111,19 +108,36 @@ const handleSignUp = async () => {
       throw new Error('Email já cadastrado')
     }
 
+    // Criar usuário
     const { data, error } = await supabase.auth.signUp({
       email: email.value,
-      password: 'Flytolive97@',
+      password: password.value, // Use a senha informada pelo usuário
       options: {
         data: {
           email: email.value,
           role: 'user'
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     })
 
     if (error) throw error
-    console.log('Usuário criado:', data)
+
+    // Criar perfil
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user.id,
+        email: email.value,
+        role: 'user',
+        created_at: new Date().toISOString()
+      })
+
+    if (profileError) {
+      console.error('Erro ao criar perfil:', profileError)
+      throw profileError
+    }
+
     showToast('Conta criada com sucesso!', 'success')
     
   } catch (err) {

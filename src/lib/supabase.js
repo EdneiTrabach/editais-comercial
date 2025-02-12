@@ -15,7 +15,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   realtime: {
     enabled: true
-  }
+  },
+  db: {
+    schema: 'public'
+  },
+  debug: true // Ativa logs detalhados
 })
 
 // API de Autenticação
