@@ -1130,6 +1130,7 @@ const getModalidadeSigla = (modalidade) => {
   /* Ajusta altura máxima considerando o header */
   margin-bottom: 1rem;
   position: relative;
+  user-select: text; /* Altera de 'none' para 'text' */
 }
 
 .excel-table {
@@ -1196,6 +1197,8 @@ const getModalidadeSigla = (modalidade) => {
   /* Altura automática */
   padding: 10px;
   /* Padding adequado */
+  user-select: text;
+  cursor: text;
 }
 
 /* Ajuste para células específicas */
@@ -1203,6 +1206,7 @@ const getModalidadeSigla = (modalidade) => {
   white-space: normal !important;
   word-wrap: break-word !important;
   line-height: 1.4;
+  user-select: text;
 }
 
 /* Mantenha a última coluna (ações) com largura fixa */
@@ -1244,6 +1248,8 @@ const getModalidadeSigla = (modalidade) => {
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
   font-size: 0.85rem;
+  user-select: text;
+  cursor: text;
 }
 
 .modalidade.pregao {
@@ -1448,13 +1454,14 @@ const getModalidadeSigla = (modalidade) => {
 
 /* Previne seleção de texto durante o redimensionamento */
 .table-container {
-  user-select: none;
+  user-select: text; /* Altera de 'none' para 'text' */
   overflow: auto;
   position: relative;
 }
 
 .table-container.resizing * {
   cursor: col-resize;
+  user-select: text !important;
 }
 
 /* Ajuste para o container da tabela */
@@ -1471,9 +1478,10 @@ const getModalidadeSigla = (modalidade) => {
 /* Mantém o texto alinhado durante o redimensionamento */
 .excel-table td>*,
 .excel-table th>* {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  user-select: text;
 }
 
 /* Estilos para células editáveis */
@@ -1657,6 +1665,7 @@ td select option {
   white-space: normal;
   /* Permite quebra de linha */
   line-height: 1.4;
+  user-select: text;
 }
 
 /* Estilo para o select de status */
@@ -2006,6 +2015,8 @@ td select option {
   border-radius: 50px;
   font-size: 0.85rem;
   font-weight: 500;
+  user-select: text;
+  cursor: text;
 }
 
 .status.em_analise {
@@ -2182,5 +2193,6 @@ th[data-field="objeto_completo"] {
   white-space: normal;
   line-height: 1.4;
   word-wrap: break-word;
+  user-select: text;
 }
 </style>
