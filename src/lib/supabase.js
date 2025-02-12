@@ -19,7 +19,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {
     schema: 'public'
   },
-  debug: true // Ativa logs detalhados
+  debug: true, // Ativa logs detalhados
+  global: {
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  }
 })
 
 // Adicione esta função de helper
@@ -29,6 +35,18 @@ const handleSupabaseError = (error) => {
     return null
   }
   throw error
+}
+
+// Função helper para consultas
+async function handleQuery(promise) {
+  try {
+    const { data, error } = await promise
+    if (error) throw error
+    return { data, error: null }
+  } catch (error) {
+    console.error('Erro na consulta:', error)
+    return { data: null, error }
+  }
 }
 
 // API de Autenticação
@@ -182,6 +200,37 @@ export const editaisApi = {
   }
 }
 
+// API de dados
+export const dataApi = {
+  async getProfile(userId) {
+    return handleQuery(
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+    )
+  },
+
+  async getPlataformas() {
+    return handleQuery(
+      supabase
+        .from('plataformas')
+        .select('*')
+        .order('nome', { ascending: true })
+    )
+  },
+
+  async getRepresentantes() {
+    return handleQuery(
+      supabase
+        .from('representantes')
+        .select('*')
+        .order('nome', { ascending: true })
+    )
+  }
+}
+
 const deleteUser = async (userId) => {
   try {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) {
@@ -201,5 +250,27 @@ const deleteUser = async (userId) => {
       error.message || 'Erro ao excluir usuário', 
       'error'
     )
+  }
+}
+
+const loadPlataformas = async () => {
+  try {
+    const { data, error } = await dataApi.getPlataformas()
+    if (error) throw error
+    plataformas.value = data || []
+  } catch (error) {
+    console.error('Erro ao carregar plataformas:', error)
+    showToast('Erro ao carregar plataformas', 'error')
+  }
+}
+
+const loadRepresentantes = async () => {
+  try {
+    const { data, error } = await dataApi.getRepresentantes()
+    if (error) throw error
+    representantes.value = data || []
+  } catch (error) {
+    console.error('Erro ao carregar representantes:', error)
+    showToast('Erro ao carregar representantes', 'error') 
   }
 }
