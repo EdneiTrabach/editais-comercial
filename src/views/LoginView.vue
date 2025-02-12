@@ -94,37 +94,41 @@ const handleResetPassword = async () => {
 
 const handleSignUp = async () => {
   try {
+    loading.value = true
     console.log('Iniciando signup...')
+    
+    // Verifica sessão atual
     const { data: { session } } = await supabase.auth.getSession()
     console.log('Sessão atual:', session)
     
-    // Primeiro verifica número de usuários atual
-    const { count } = await supabase
+    const { data: existingUser } = await supabase
       .from('profiles')
-      .select('*', { count: 'exact' })
-    
-    if (count >= 10) {
-      throw new Error('Limite máximo de usuários atingido')
+      .select('email')
+      .eq('email', email.value)
+      .single()
+
+    if (existingUser) {
+      throw new Error('Email já cadastrado')
     }
 
-    const signUpData = {
+    const { data, error } = await supabase.auth.signUp({
       email: email.value,
       password: 'Flytolive97@',
       options: {
         data: {
+          email: email.value,
           role: 'user'
         }
       }
-    }
-
-    const { data, error } = await supabase.auth.signUp(signUpData)
+    })
 
     if (error) throw error
-
-    showToast(`Conta criada! Use o email: ${email.value} e senha: Flytolive97@`, 'success')
+    console.log('Usuário criado:', data)
+    showToast('Conta criada com sucesso!', 'success')
     
   } catch (err) {
-    console.error('Erro detalhado:', err)
+    console.error('Erro completo:', err)
+    showToast(err.message, 'error')
   } finally {
     loading.value = false
   }
