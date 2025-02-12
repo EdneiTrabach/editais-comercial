@@ -10,6 +10,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --sidebar-bg-light: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
+  --sidebar-bg-dark: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+}
+
 html, 
 body {
   width: 100%;
@@ -17,6 +22,11 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden; /* Previne scrollbars */
+}
+
+body.dark-mode {
+  background-color: #111827;
+  color: #ffffff;
 }
 
 #app {

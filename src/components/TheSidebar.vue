@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar-container">
-    <nav class="sidebar" :class="{ 'collapsed': !isExpanded }">
+    <nav class="sidebar" :class="{ 'collapsed': !isExpanded, 'dark': isDarkMode }">
       <button class="toggle-btn" @click="toggleSidebar">
         {{ isExpanded ? '◀' : '▶' }}
       </button>
@@ -10,50 +10,59 @@
         <span v-if="isExpanded">Editais</span>
       </div>
 
-      <ul class="nav-links">
-        <li>
-          <router-link to="/processos">
-            <img src="/icons/pasta.svg" alt="Processos" class="icon" />
-            <span v-if="isExpanded" class="link-text">Processos</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/funcionalidades">
-            <img src="/icons/configuracoes.svg" alt="Funcionalidades" class="icon" />
-            <span v-if="isExpanded" class="link-text">Funcionalidades</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/editais">
-            <img src="/icons/nova-pasta.svg" alt="Editais" class="icon" />
-            <span v-if="isExpanded" class="link-text">Novo Processo</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/dashboard">
-            <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
-            <span v-if="isExpanded" class="link-text">Dashboard</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/representantes">
-            <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
-            <span v-if="isExpanded" class="link-text">Representantes</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/plataformas">
-            <img src="/icons/links.svg" alt="Plataformas" class="icon" />
-            <span v-if="isExpanded" class="link-text">Plataformas</span>
-          </router-link>
-        </li>
-      </ul>
+      <div class="nav-wrapper">
+        <ul class="nav-links">
+          <li>
+            <router-link to="/processos">
+              <img src="/icons/pasta.svg" alt="Processos" class="icon" />
+              <span v-if="isExpanded" class="link-text">Processos</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/funcionalidades">
+              <img src="/icons/configuracoes.svg" alt="Funcionalidades" class="icon" />
+              <span v-if="isExpanded" class="link-text">Funcionalidades</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/editais">
+              <img src="/icons/nova-pasta.svg" alt="Editais" class="icon" />
+              <span v-if="isExpanded" class="link-text">Novo Processo</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/dashboard">
+              <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
+              <span v-if="isExpanded" class="link-text">Dashboard</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/representantes">
+              <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
+              <span v-if="isExpanded" class="link-text">Representantes</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/plataformas">
+              <img src="/icons/links.svg" alt="Plataformas" class="icon" />
+              <span v-if="isExpanded" class="link-text">Plataformas</span>
+            </router-link>
+          </li>
+        </ul>
 
-      <div class="logout-section">
-        <button @click="handleLogout" class="logout-btn">
-          <img src="/icons/sair.svg" alt="Sair" class="icon" />
-          <span v-if="isExpanded" class="link-text">Sair</span>
-        </button>
+        <div class="bottom-section">
+          <button class="theme-toggle" @click="toggleDarkMode">
+            <img :src="isDarkMode ? '/icons/sun.svg' : '/icons/moon.svg'" 
+                 :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" 
+                 class="icon" />
+            <span v-if="isExpanded">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+          </button>
+
+          <button @click="handleLogout" class="logout-btn">
+            <img src="/icons/sair.svg" alt="Sair" class="icon" />
+            <span v-if="isExpanded" class="link-text">Sair</span>
+          </button>
+        </div>
       </div>
     </nav>
   </div>
@@ -69,6 +78,7 @@ const emit = defineEmits(['sidebarToggle'])
 const router = useRouter()
 const isAdmin = ref(false)
 const isExpanded = ref(true)
+const isDarkMode = ref(false)
 
 const checkAdminStatus = async () => {
   const { data: { user } } = await supabase.auth.getUser()
@@ -87,6 +97,11 @@ const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value
   // Emite evento para o componente pai
   emit('sidebarToggle', isExpanded.value)
+}
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+  document.body.classList.toggle('dark-mode')
 }
 
 const handleLogout = async () => {
@@ -125,6 +140,43 @@ onMounted(() => {
   flex-direction: column;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
   padding: 1.5rem 1rem;
+}
+
+.sidebar.dark {
+  background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+}
+
+.nav-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px);
+  justify-content: space-between;
+}
+
+.bottom-section {
+  padding: 1rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.theme-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.9rem 1.2rem;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .sidebar.collapsed {
@@ -286,6 +338,21 @@ onMounted(() => {
   .logo {
     width: 28px;
     height: 28px;
+  }
+
+  .bottom-section {
+    padding: 0.5rem;
+  }
+
+  .theme-toggle, 
+  .logout-btn {
+    padding: 0.7rem;
+    justify-content: center;
+  }
+
+  .theme-toggle span, 
+  .logout-btn span {
+    display: none;
   }
 }
 </style>

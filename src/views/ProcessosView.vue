@@ -308,28 +308,36 @@ const handleSidebarToggle = (expanded) => {
 
 // Ajuste a função formatDate
 const formatDate = (dateString) => {
-  if (!dateString) return '-'
+  if (!dateString) return '-';
   try {
-    // Pega apenas a data, removendo qualquer parte após T ou espaço
-    const date = dateString.split(/[T\s]/)[0]
-    // Converte para o formato brasileiro
-    const [year, month, day] = date.split('-')
-    return `${day}/${month}/${year}`
+    // Remove qualquer duplicação pegando só a primeira data
+    const cleanDate = dateString.split(/[T\s]/)[0].split('-');
+    if (cleanDate.length !== 3) return '-';
+    
+    // Retorna no formato dd/mm/yyyy
+    return `${cleanDate[2]}/${cleanDate[1]}/${cleanDate[0]}`;
   } catch (error) {
-    console.error('Erro ao formatar data:', error)
-    return '-' 
+    console.error('Erro ao formatar data:', error);
+    return '-';
   }
 }
 
 // Ajuste a função formatTime
 const formatTime = (time) => {
-  if (!time) return '-'
+  if (!time) return '-';
   try {
-    // Pega apenas as primeiras 5 posições (HH:mm)
-    return time.slice(0, 5)
+    // Remove qualquer duplicação pegando só os primeiros 5 caracteres (HH:mm)
+    const cleanTime = time.split(':').slice(0, 2).join(':');
+    
+    // Valida o formato HH:mm
+    if (!/^\d{2}:\d{2}$/.test(cleanTime)) {
+      return '-';
+    }
+    
+    return cleanTime;
   } catch (error) {
-    console.error('Erro ao formatar hora:', error)
-    return '-'
+    console.error('Erro ao formatar hora:', error);
+    return '-';
   }
 }
 
