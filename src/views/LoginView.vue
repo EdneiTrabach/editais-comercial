@@ -101,32 +101,30 @@ const handleSignUp = async () => {
       throw new Error('Email e senha são obrigatórios')
     }
 
-    // Criar usuário
+    // Criar usuário no auth
     const { data, error } = await supabase.auth.signUp({
       email: email.value,
       password: password.value,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
-          email: email.value,
           role: 'user'
         }
       }
     })
 
     if (error) throw error
-
     console.log('Usuário criado:', data)
 
-    // Criar perfil
     if (data.user) {
+      // Criar perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: data.user.id,
           email: data.user.email,
           role: 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date().toISOString()
         })
 
       if (profileError) {
@@ -135,7 +133,7 @@ const handleSignUp = async () => {
       }
     }
 
-    showToast('Conta criada com sucesso!', 'success')
+    showToast('Conta criada com sucesso! Verifique seu email.', 'success')
     
   } catch (err) {
     console.error('Erro completo:', err)
