@@ -74,9 +74,11 @@
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Input específico baseado no tipo de campo -->
                   <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                    :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value" min="08:00"
+                    max="18:00" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+                    @keyup.esc="cancelEdit()">
                   <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
                     @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o estado...</option>
@@ -131,7 +133,7 @@
                 </template>
                 <template v-else>
                   <span v-if="coluna.campo === 'data_pregao'">
-                    {{ formatDate(processo[coluna.campo]) }}
+                    {{ processo[coluna.campo] }}
                   </span>
                   <span v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo[coluna.campo]) }}
@@ -311,19 +313,12 @@ const handleSidebarToggle = (expanded) => {
 
 // Ajuste a função formatDate
 const formatDate = (dateString) => {
-  if (!dateString) return '-';
+  if (!dateString) return '-'
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '-';
-    
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${day}/${month}/${year}`;
+    return dateString
   } catch (error) {
-    console.error('Erro ao formatar data:', error);
-    return '-';
+    console.error('Erro ao formatar data:', error)
+    return '-'
   }
 }
 
@@ -383,7 +378,7 @@ const formatModalidadeCompleta = (modalidade) => {
     'srp_eletronico': 'SRP Eletrônico',
     'srp_internacional': 'SRP Internacional'
   }
-  
+
   return modalidades[modalidade] || modalidade
 }
 
@@ -527,7 +522,6 @@ const exportToExcel = () => {
     'Número do Processo': processo.numero_processo,
     'Ano': processo.ano,
     'Órgão': processo.orgao,
-    'Data do Pregão': formatDate(processo.data_pregao),
     'Modalidade': formatModalidade(processo.modalidade),
     'Tipo': processo.tipo_pregao || '-',
     'Site': processo.site_pregao || '-',
@@ -756,11 +750,11 @@ const handleUpdate = async (processo) => {
     // Formatação específica para data e hora
     if (editingCell.value.field === 'data_pregao') {
       // Garante que a data seja salva no formato YYYY-MM-DD
-      const date = new Date(updateValue);
-      updateValue = date.toISOString().split('T')[0];
+      const [day, month, year] = updateValue.split('/');
+      updateValue = `${year}-${month}-${day}`;
     } else if (editingCell.value.field === 'hora_pregao') {
       // Garante que a hora seja salva no formato HH:mm
-      updateValue = updateValue.substring(0, 5);
+      updateValue = updateValue.split(':').slice(0, 2).join(':');
     }
 
     const updateData = {
@@ -775,20 +769,12 @@ const handleUpdate = async (processo) => {
 
     if (error) throw error;
 
-    // Atualiza localmente
-    const index = processos.value.findIndex(p => p.id === processo.id);
-    if (index !== -1) {
-      processos.value[index] = {
-        ...processos.value[index],
-        ...updateData
-      }
-    }
+    // Atualiza o valor localmente após sucesso
+    processo[editingCell.value.field] = updateValue;
 
-    cancelEdit();
-    await loadProcessos();
   } catch (error) {
     console.error('Erro ao atualizar:', error);
-    alert(`Erro ao atualizar o registro: ${error.message}`);
+  } finally {
     cancelEdit();
   }
 }
@@ -998,10 +984,10 @@ const handleModalidadeChange = () => {
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     // Ajusta a data para meio-dia para evitar problemas de timezone
     const dataPregao = new Date(formData.value.data_pregao + 'T12:00:00')
-    
+
     const processoData = {
       numero_processo: `${formData.value.numero}/${formData.value.ano}`,
       ano: formData.value.ano,
@@ -1016,6 +1002,11 @@ const handleSubmit = async () => {
       responsavel: user.id,
       representante: formData.value.representante
     }
+
+    console.log('Dados a serem inseridos:', {
+      data_pregao: dataPregao.toISOString().split('T')[0],
+      hora_pregao: formData.value.hora_pregao
+    });
 
     const { error } = await supabase
       .from('processos')
@@ -1136,7 +1127,8 @@ const getModalidadeSigla = (modalidade) => {
   /* Ajusta altura máxima considerando o header */
   margin-bottom: 1rem;
   position: relative;
-  user-select: text; /* Altera de 'none' para 'text' */
+  user-select: text;
+  /* Altera de 'none' para 'text' */
 }
 
 .excel-table {
@@ -1460,7 +1452,8 @@ const getModalidadeSigla = (modalidade) => {
 
 /* Previne seleção de texto durante o redimensionamento */
 .table-container {
-  user-select: text; /* Altera de 'none' para 'text' */
+  user-select: text;
+  /* Altera de 'none' para 'text' */
   overflow: auto;
   position: relative;
 }
