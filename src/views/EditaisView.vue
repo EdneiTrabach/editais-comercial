@@ -86,17 +86,13 @@
               <option value="concurso">Concurso</option>
               <option value="leilao">Leilão</option>
               <option value="dialogo_competitivo">Diálogo Competitivo</option>
-              <option value="credenciamento">Credenciamento</option>
-              <option value="pre_qualificacao">Pré-Qualificação</option>
-              <option value="manifestacao_interesse">Manifestação de Interesse</option>
-              <option value="licitacao_internacional">Licitação Internacional</option>
-              <option value="outros">Tomada de Preços</option>
-              <option value="outros">Chamamento Público</option>
-              <option value="outros">RDC</option>
-              <option value="outros">RDC Eletrônico</option>
-              <option value="outros">SRP</option>
-              <option value="outros">SRP Eletrônico</option>
-              <option value="outros">SRP Internacional</option>
+              <option value="tomada_precos">Tomada de Preços</option>
+              <option value="chamamento_publico">Chamamento Público</option>
+              <option value="rdc">RDC</option>
+              <option value="rdc_eletronico">RDC Eletrônico</option>
+              <option value="srp">SRP</option>
+              <option value="srp_eletronico">SRP Eletrônico</option>
+              <option value="srp_internacional">SRP Internacional</option>
             </select>
           </div>
 
@@ -345,6 +341,12 @@ const handleSidebarToggle = (expanded) => {
 
 const handleSubmit = async () => {
   try {
+    // Log para debug
+    console.log('Dados do processo:', {
+      ...formData.value,
+      modalidade: formData.value.modalidade
+    });
+
     // Valida a data e hora antes de prosseguir
     if (!validateDate()) {
       alert('Por favor, selecione uma data válida para o pregão.')
@@ -391,7 +393,7 @@ const handleSubmit = async () => {
     alert('Processo cadastrado com sucesso!')
     router.push('/processos')
   } catch (error) {
-    console.error('Erro:', error)
+    console.error('Erro detalhado:', error)
     alert('Erro ao cadastrar processo')
   } finally {
     loading.value = false
