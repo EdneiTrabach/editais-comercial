@@ -31,7 +31,7 @@
             <tr>
               <th class="row-number-cell"></th> <!-- Nova coluna -->
               <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column"
-                :style="{ width: colunasWidth[coluna.campo] }">
+                :data-field="coluna.campo" :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
 
@@ -69,7 +69,7 @@
               :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td> <!-- Nova coluna -->
               <!-- Cada célula segue o mesmo padrão -->
-              <td v-for="coluna in colunas" :key="coluna.campo"
+              <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Input específico baseado no tipo de campo -->
@@ -214,7 +214,7 @@ import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
 
 const router = useRouter()
-const isSidebarExpanded = ref(false) // Alterado de true para false
+const isSidebarExpanded = ref(true) // Alterado de true para false
 const processos = ref([])
 const loading = ref(false)
 
@@ -2112,5 +2112,21 @@ tbody tr:hover .row-number-cell {
 /* Efeito de transição suave */
 .excel-table tr {
   transition: background-color 0.2s ease, border-left 0.2s ease;
+}
+
+/* Estilo específico para a coluna de Objeto Completo */
+td[data-field="objeto_completo"],
+th[data-field="objeto_completo"] {
+  min-width: 500px !important;
+  width: 500px !important;
+}
+
+/* Ajuste para o conteúdo */
+.objeto-cell {
+  max-width: 500px;
+  min-width: 500px;
+  white-space: normal;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 </style>
