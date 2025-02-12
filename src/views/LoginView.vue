@@ -101,7 +101,18 @@ const handleSignUp = async () => {
       throw new Error('Email e senha são obrigatórios')
     }
 
-    // Criar usuário no auth
+    // Verificar se o usuário já existe
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email.value)
+      .single()
+
+    if (existingProfile) {
+      throw new Error('Este email já está cadastrado')
+    }
+
+    // Criar usuário
     const { data, error } = await supabase.auth.signUp({
       email: email.value,
       password: password.value,
@@ -117,19 +128,31 @@ const handleSignUp = async () => {
     console.log('Usuário criado:', data)
 
     if (data.user) {
-      // Criar perfil
-      const { error: profileError } = await supabase
+      // Verificar se já existe um perfil para este usuário
+      const { data: existingUserProfile } = await supabase
         .from('profiles')
-        .insert({
-          id: data.user.id,
-          email: data.user.email,
-          role: 'user',
-          created_at: new Date().toISOString()
-        })
+        .select('id')
+        .eq('id', data.user.id)
+        .single()
 
-      if (profileError) {
-        console.error('Erro ao criar perfil:', profileError)
-        throw profileError
+      if (!existingUserProfile) {
+        // Criar perfil apenas se não existir
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: data.user.email,
+            role: 'user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single()
+
+        if (profileError) {
+          console.error('Erro ao criar perfil:', profileError)
+          throw profileError
+        }
       }
     }
 
