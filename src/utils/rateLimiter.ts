@@ -3,11 +3,13 @@ export class RateLimiter {
      private attempts: Map<string, number[]>
      private maxAttempts: number
      private timeWindow: number
+     private static readonly CLEANUP_INTERVAL = 5 * 60 * 1000 // Limpar a cada 5 minutos
 
      constructor(maxAttempts = 5, timeWindow = 60000) {
           this.attempts = new Map()
           this.maxAttempts = maxAttempts
           this.timeWindow = timeWindow
+          setInterval(() => this.cleanup(), RateLimiter.CLEANUP_INTERVAL)
      }
 
      isRateLimited(key: string): boolean {
@@ -26,6 +28,18 @@ export class RateLimiter {
           recentAttempts.push(now)
           this.attempts.set(key, recentAttempts)
           return false
+     }
+
+     private cleanup(): void {
+          const now = Date.now()
+          Array.from(this.attempts.entries()).forEach(([key, attempts]) => {
+               const valid = attempts.filter(time => now - time < this.timeWindow)
+               if (valid.length === 0) {
+                    this.attempts.delete(key)
+               } else {
+                    this.attempts.set(key, valid)
+               }
+          })
      }
 }
 

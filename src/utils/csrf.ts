@@ -1,13 +1,24 @@
 // src/utils/csrf.ts
 import axios from 'axios';
 
+// Armazenamento mais seguro
 const secureStorage = {
-    get: (key: string): string | null => localStorage.getItem(key),
-    set: (key: string, value: string): void => localStorage.setItem(key, value)
+  get: (key: string): string | null => {
+    const value = sessionStorage.getItem(key)
+    return value ? decodeURIComponent(value) : null
+  },
+  set: (key: string, value: string): void => {
+    sessionStorage.setItem(key, encodeURIComponent(value))
+  }
 };
 
+// Melhorar geração do token CSRF
 export function generateCSRFToken(): string {
-     return Math.random().toString(36).substring(2)
+  const buffer = new Uint8Array(32)
+  crypto.getRandomValues(buffer)
+  return Array.from(buffer)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 // Adicionar token nas requisições

@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/public/icons/logo-licitacao.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <author name="Ednei Trabach" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <title>Controle de Licitações</title>
+    <title>Sistema de Editais Comerciais</title>
   </head>
   <body style="margin: 0">
     <div id="app"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => console.log('ServiceWorker registrado'))
+          .catch((error) => console.error('Erro no registro:', error));
+      }
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -14,9 +14,28 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     assetsDir: 'assets',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      },
+      mangle: {
+        // Ofuscar nomes de variáveis e funções
+        toplevel: true,
+        safari10: true
+      },
+      format: {
+        comments: false
+      }
+    },
     rollupOptions: {
       output: {
-        manualChunks: undefined // Remove o chunk automático
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
       }
     },
     chunkSizeWarningLimit: 1000 // Aumenta o limite de tamanho do chunk
