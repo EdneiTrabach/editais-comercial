@@ -30,8 +30,8 @@
           <thead>
             <tr>
               <th class="row-number-cell"></th> <!-- Nova coluna -->
-              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column"
-                :data-field="coluna.campo" :style="{ width: colunasWidth[coluna.campo] }">
+              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column" :data-field="coluna.campo"
+                :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
 
@@ -96,11 +96,20 @@
                     rows="3"></textarea>
                   <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
                     @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                    <option value="pregao">Pregão</option>
+                    <option value="pregao_eletronico">Pregão Eletrônico</option>
+                    <option value="pregao_presencial">Pregão Presencial</option>
+                    <option value="credenciamento">Credenciamento</option>
                     <option value="concorrencia">Concorrência</option>
                     <option value="concurso">Concurso</option>
                     <option value="leilao">Leilão</option>
                     <option value="dialogo_competitivo">Diálogo Competitivo</option>
+                    <option value="tomada_precos">Tomada de Preços</option>
+                    <option value="chamamento_publico">Chamamento Público</option>
+                    <option value="rdc">RDC</option>
+                    <option value="rdc_eletronico">RDC Eletrônico</option>
+                    <option value="srp">SRP</option>
+                    <option value="srp_eletronico">SRP Eletrônico</option>
+                    <option value="srp_internacional">SRP Internacional</option>
                   </select>
                   <select v-else-if="coluna.campo === 'status'" v-model="editingCell.value"
                     @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()"
@@ -127,10 +136,11 @@
                   <span v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo[coluna.campo]) }}
                   </span>
-                  <span v-else-if="coluna.campo === 'modalidade'" :class="['modalidade', processo[coluna.campo]]"
-                    :title="formatModalidadeCompleta(processo[coluna.campo], processo.tipo_pregao)">
-                    {{ formatModalidade(processo[coluna.campo], processo.tipo_pregao) }}
-                  </span>
+                  <template v-if="coluna.campo === 'modalidade'">
+                    <span :title="formatModalidadeCompleta(processo.modalidade)">
+                      {{ getModalidadeSigla(processo.modalidade) }}
+                    </span>
+                  </template>
                   <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
                     class="objeto-cell">
                     {{ processo[coluna.campo] || '-' }}
@@ -296,18 +306,31 @@ const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
 
+// Ajuste a função formatDate
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  // Adiciona horário meio-dia para evitar problemas de timezone
-  const date = new Date(dateString + 'T12:00:00')
-  return date.toLocaleDateString('pt-BR')
+  try {
+    // Pega apenas a data, removendo qualquer parte após T ou espaço
+    const date = dateString.split(/[T\s]/)[0]
+    // Converte para o formato brasileiro
+    const [year, month, day] = date.split('-')
+    return `${day}/${month}/${year}`
+  } catch (error) {
+    console.error('Erro ao formatar data:', error)
+    return '-' 
+  }
 }
 
+// Ajuste a função formatTime
 const formatTime = (time) => {
   if (!time) return '-'
-  // Pega apenas as horas e minutos da string de tempo
-  const [hours, minutes] = time.split(':')
-  return `${hours}:${minutes}`
+  try {
+    // Pega apenas as primeiras 5 posições (HH:mm)
+    return time.slice(0, 5)
+  } catch (error) {
+    console.error('Erro ao formatar hora:', error)
+    return '-'
+  }
 }
 
 const formatModalidade = (modalidade, tipo_pregao) => {
@@ -336,24 +359,25 @@ const formatModalidade = (modalidade, tipo_pregao) => {
   return modalidades[modalidade] || modalidade
 }
 
-const formatModalidadeCompleta = (modalidade, tipo_pregao) => {
+const formatModalidadeCompleta = (modalidade) => {
   const modalidades = {
-    'pregao': 'Pregão',
+    'pregao_eletronico': 'Pregão Eletrônico',
+    'pregao_presencial': 'Pregão Presencial',
+    'credenciamento': 'Credenciamento',
     'concorrencia': 'Concorrência',
     'concurso': 'Concurso',
     'leilao': 'Leilão',
     'dialogo_competitivo': 'Diálogo Competitivo',
-    'credenciamento': 'Credenciamento',
-    'pre_qualificacao': 'Pré-Qualificação',
-    'manifestacao_interesse': 'Procedimento de Manifestação de Interesse',
-    'licitacao_internacional': 'Licitação Internacional'
+    'tomada_precos': 'Tomada de Preços',
+    'chamamento_publico': 'Chamamento Público',
+    'rdc': 'Regime Diferenciado de Contratações',
+    'rdc_eletronico': 'RDC Eletrônico',
+    'srp': 'Sistema de Registro de Preços',
+    'srp_eletronico': 'SRP Eletrônico',
+    'srp_internacional': 'SRP Internacional'
   }
-
-  const tipoFormatado = tipo_pregao ?
-    (tipo_pregao === 'eletronico' ? 'Eletrônico' : 'Presencial') :
-    ''
-
-  return `${modalidades[modalidade] || modalidade}${tipoFormatado ? ` ${tipoFormatado}` : ''}`
+  
+  return modalidades[modalidade] || modalidade
 }
 
 const formatStatus = (status) => {
@@ -991,6 +1015,28 @@ const handleSubmit = async () => {
     alert('Erro ao cadastrar processo');
   }
 };
+
+// No arquivo ProcessosView.vue, adicione esta função no <script setup>
+const getModalidadeSigla = (modalidade) => {
+  const modalidades = {
+    'pregao_eletronico': 'PE',
+    'pregao_presencial': 'PP',
+    'credenciamento': 'CR',
+    'concorrencia': 'CC',
+    'concurso': 'CS',
+    'leilao': 'LL',
+    'dialogo_competitivo': 'DC',
+    'tomada_precos': 'TP',
+    'chamamento_publico': 'CP',
+    'rdc': 'RDC',
+    'rdc_eletronico': 'RDC-E',
+    'srp': 'SRP',
+    'srp_eletronico': 'SRP-E',
+    'srp_internacional': 'SRP-I'
+  }
+
+  return modalidades[modalidade] || modalidade
+}
 </script>
 
 <style scoped>

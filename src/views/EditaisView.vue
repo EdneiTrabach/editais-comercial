@@ -82,6 +82,7 @@
               <option value="">Selecione...</option>
               <option value="pregao_eletronico">Pregão Eletrônico</option>
               <option value="pregao_presencial">Pregão Presencial</option>
+              <option value="credenciamento">Credenciamento</option>
               <option value="concorrencia">Concorrência</option>
               <option value="concurso">Concurso</option>
               <option value="leilao">Leilão</option>
