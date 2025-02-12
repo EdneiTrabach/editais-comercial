@@ -38,31 +38,22 @@ const showToast = (message, type = 'success') => {
 const handleLogin = async () => {
   try {
     loading.value = true
-    error.value = ''
-
+    
     if (!email.value || !password.value) {
       error.value = 'Email e senha são obrigatórios'
       return
     }
 
-    const credentials = {
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value
-    }
+    })
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword(credentials)
+    if (authError) throw authError
 
-    if (authError) {
-      console.error('Erro de autenticação:', authError)
-      error.value = 'Email ou senha incorretos'
-      return
-    }
-
-    console.log('Login bem sucedido:', data)
-    showToast('Login realizado com sucesso!', 'success')
-    await router.push('/processos') // Alterado aqui
+    await router.push('/processos') // Aguarda o redirecionamento
   } catch (err) {
-    console.error('Erro detalhado:', err)
+    console.error('Erro ao fazer login:', err)
     error.value = 'Erro ao fazer login'
   } finally {
     loading.value = false

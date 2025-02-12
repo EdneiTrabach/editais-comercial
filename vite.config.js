@@ -16,9 +16,10 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        manualChunks: undefined // Remove o chunk automático
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000 // Aumenta o limite de tamanho do chunk
   },
   server: {
     host: true

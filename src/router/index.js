@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import HomeView from '../views/HomeView.vue'
 import RepresentantesView from '@/views/RepresentantesView.vue'
 import PlataformasView from '@/views/PlataformasView.vue'
+import ProcessosView from '../views/ProcessosView.vue' // Importe diretamente
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,7 +49,7 @@ const router = createRouter({
     {
       path: '/processos',
       name: 'processos',
-      component: () => import('../views/ProcessosView.vue'),
+      component: ProcessosView, // Use o componente diretamente ao invés de importação dinâmica
       meta: { requiresAuth: true }
     },
     {
