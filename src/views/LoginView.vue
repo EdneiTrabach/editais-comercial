@@ -97,46 +97,17 @@ const handleSignUp = async () => {
     loading.value = true
     console.log('Iniciando signup...')
     
-    // Verifica se o email já existe
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('email', email.value)
-      .single()
-
-    if (existingUser) {
-      throw new Error('Email já cadastrado')
+    const signUpData = {
+      email: email.value,
+      password: password.value
     }
 
-    // Criar usuário
-    const { data, error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value, // Use a senha informada pelo usuário
-      options: {
-        data: {
-          email: email.value,
-          role: 'user'
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
+    const { data, error } = await authApi.signUp(
+      signUpData.email, 
+      signUpData.password
+    )
 
     if (error) throw error
-
-    // Criar perfil
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        email: email.value,
-        role: 'user',
-        created_at: new Date().toISOString()
-      })
-
-    if (profileError) {
-      console.error('Erro ao criar perfil:', profileError)
-      throw profileError
-    }
 
     showToast('Conta criada com sucesso!', 'success')
     

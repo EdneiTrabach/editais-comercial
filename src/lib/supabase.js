@@ -22,8 +22,52 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   debug: true // Ativa logs detalhados
 })
 
+// Adicione esta função de helper
+const handleSupabaseError = (error) => {
+  console.error('Supabase error:', error)
+  if (error.code === '42P07') { // Relation already exists
+    return null
+  }
+  throw error
+}
+
 // API de Autenticação
 export const authApi = {
+  async signUp(email, password) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: 'user'
+          }
+        }
+      })
+
+      if (error) throw error
+
+      // Criar perfil apenas se o usuário for criado com sucesso
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            role: 'user',
+            created_at: new Date().toISOString()
+          })
+          .single()
+
+        if (profileError) handleSupabaseError(profileError)
+      }
+
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
+  },
+
   async login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
