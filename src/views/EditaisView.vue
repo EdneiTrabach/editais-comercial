@@ -75,29 +75,34 @@
             />
           </div>
 
+          <!-- Modifique o select de modalidade -->
           <div class="form-group">
             <label>Modalidade*</label>
-            <select v-model="formData.modalidade" required>
+            <select v-model="formData.modalidade" required @change="handleModalidadeChange">
               <option value="">Selecione...</option>
-              <option value="pregao">Pregão - Art. 28</option>
-              <option value="concorrencia">Concorrência - Art. 28</option>
-              <option value="concurso">Concurso - Art. 28</option>
-              <option value="leilao">Leilão - Art. 28</option>
-              <option value="dialogo_competitivo">Diálogo Competitivo - Art. 28</option>
+              <option value="pregao_eletronico">Pregão Eletrônico</option>
+              <option value="pregao_presencial">Pregão Presencial</option>
+              <option value="concorrencia">Concorrência</option>
+              <option value="concurso">Concurso</option>
+              <option value="leilao">Leilão</option>
+              <option value="dialogo_competitivo">Diálogo Competitivo</option>
+              <option value="credenciamento">Credenciamento</option>
+              <option value="pre_qualificacao">Pré-Qualificação</option>
+              <option value="manifestacao_interesse">Manifestação de Interesse</option>
+              <option value="licitacao_internacional">Licitação Internacional</option>
+              <option value="outros">Tomada de Preços</option>
+              <option value="outros">Chamamento Público</option>
+              <option value="outros">RDC</option>
+              <option value="outros">RDC Eletrônico</option>
+              <option value="outros">SRP</option>
+              <option value="outros">SRP Eletrônico</option>
+              <option value="outros">SRP Internacional</option>
             </select>
           </div>
 
-          <div class="form-group" v-if="formData.modalidade === 'pregao'">
-            <label>Tipo de Pregão*</label>
-            <select v-model="formData.tipo_pregao" required>
-              <option value="">Selecione...</option>
-              <option value="presencial">Presencial</option>
-              <option value="eletronico">Eletrônico</option>
-            </select>
-          </div>
-
-          <div class="form-group" v-if="formData.tipo_pregao === 'eletronico'">
-            <label>Plataforma do Pregão*</label>
+          <!-- Remova o select de tipo_pregao e substitua por: -->
+          <div class="form-group" v-if="showPlataformaField">
+            <label>Plataforma*</label>
             <select v-model="formData.site_pregao" required>
               <option value="">Selecione a plataforma...</option>
               <option v-for="plataforma in plataformas" 
@@ -268,7 +273,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -297,11 +302,11 @@ const formData = ref({
   hora_pregao: '',
   estado: '',
   modalidade: '',
-  tipo_pregao: '',
-  site_pregao: '',
+  site_pregao: '', // Agora usado diretamente para todas as modalidades eletrônicas
   objeto_resumido: '',
   objeto_completo: '',
-  representante: ''
+  representante: '',
+  status: '' // Certifique-se que está vazio aqui
 })
 
 const estados = [
@@ -595,6 +600,45 @@ const validateTime = () => {
   
   timeError.value = ''
   return true
+}
+
+const formatModalidade = (modalidade) => {
+  const modalidades = {
+    'pregao': 'Pregão',
+    'concorrencia': 'Concorrência',
+    'concurso': 'Concurso',
+    'leilao': 'Leilão',
+    'dialogo_competitivo': 'Diálogo Competitivo',
+    'credenciamento': 'Credenciamento',
+    'pre_qualificacao': 'Pré-Qualificação',
+    'manifestacao_interesse': 'Procedimento de Manifestação de Interesse',
+    'licitacao_internacional': 'Licitação Internacional',
+    'outros': 'Outros',
+    'pregao_eletronico': 'Pregão Eletrônico',
+    'pregao_presencial': 'Pregão Presencial',
+    'tomada_precos': 'Tomada de Preços',
+    'chamamento_publico': 'Chamamento Público',
+    'rdc': 'Regime Diferenciado de Contratações',
+    'rdc_eletronico': 'Regime Diferenciado de Contratações Eletrônico',
+    'srp': 'Sistema de Registro de Preços',
+    'srp_eletronico': 'Sistema de Registro de Preços Eletrônico',
+    'srp_internacional': 'Sistema de Registro de Preços Internacional',
+  }
+  
+  return modalidades[modalidade] || modalidade
+}
+
+// Computed property para controlar a visibilidade do campo de plataforma
+const showPlataformaField = computed(() => {
+  return formData.value.modalidade && formData.value.modalidade !== 'pregao_presencial'
+})
+
+// Função para lidar com a mudança de modalidade
+const handleModalidadeChange = () => {
+  // Limpa o campo de plataforma se mudar para pregão presencial
+  if (formData.value.modalidade === 'pregao_presencial') {
+    formData.value.site_pregao = ''
+  }
 }
 </script>
 
@@ -966,4 +1010,3 @@ input[type="date"]:focus:not(.error) {
   background: white;
 }
 </style>
-`

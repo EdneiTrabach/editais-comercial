@@ -29,6 +29,7 @@
         <table class="excel-table resizable">
           <thead>
             <tr>
+              <th class="row-number-cell"></th> <!-- Nova coluna -->
               <th v-for="(coluna, index) in colunas" 
                   :key="index"
                   class="resizable-column"
@@ -71,10 +72,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="processo in processosFiltrados" 
+            <tr v-for="(processo, index) in processosFiltrados" 
                 :key="processo.id"
                 class="resizable-row"
+                :class="{ 'selected-row': selectedRow === processo.id }"
+                @click="selectRow(processo.id)"
                 :style="{ height: rowsHeight[processo.id] }">
+              <td class="row-number-cell">{{ index + 1 }}</td> <!-- Nova coluna -->
               <!-- Cada célula segue o mesmo padrão -->
               <td v-for="coluna in colunas" 
                   :key="coluna.campo"
@@ -148,6 +152,7 @@
                     @keyup.esc="cancelEdit()"
                     class="status-select"
                   >
+                    <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
                     <option value="em_andamento">Em Andamento</option>
                     <option value="ganhamos">Ganhamos</option>
@@ -174,7 +179,9 @@
                   <span v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo[coluna.campo]) }}
                   </span>
-                  <span v-else-if="coluna.campo === 'modalidade'" :class="['modalidade', processo[coluna.campo]]">
+                  <span v-else-if="coluna.campo === 'modalidade'" 
+                        :class="['modalidade', processo[coluna.campo]]"
+                        :title="formatModalidadeCompleta(processo[coluna.campo], processo.tipo_pregao)">
                     {{ formatModalidade(processo[coluna.campo], processo.tipo_pregao) }}
                   </span>
                   <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'" class="objeto-cell">
@@ -260,7 +267,7 @@ import * as XLSX from 'xlsx'
 import { writeFileXLSX, utils } from 'xlsx'
 
 const router = useRouter()
-const isSidebarExpanded = ref(true)
+const isSidebarExpanded = ref(false) // Alterado de true para false
 const processos = ref([])
 const loading = ref(false)
 
@@ -276,16 +283,19 @@ const sortConfig = ref({
   direction: 'asc' // direção padrão
 })
 
+// Adicione aos refs existentes
+const selectedRow = ref(null)
+
 // Definição das colunas
 const colunas = [
   { titulo: 'Data', campo: 'data_pregao' },
   { titulo: 'Hora', campo: 'hora_pregao' },
+  { titulo: 'Modalidade', campo: 'modalidade' }, 
   { titulo: 'Estado', campo: 'estado' },
-  { titulo: 'Processo Nº', campo: 'numero_processo' },
+  { titulo: 'Nº Processo', campo: 'numero_processo' },
   { titulo: 'Ano', campo: 'ano' },
   { titulo: 'Órgão', campo: 'orgao' },
   { titulo: 'Status', campo: 'status' },
-  { titulo: 'Modalidade/Tipo', campo: 'modalidade' }, 
   { titulo: 'Objeto Resumido', campo: 'objeto_resumido' },
   { titulo: 'Responsável', campo: 'responsavel_nome' },
   { titulo: 'Objeto Completo', campo: 'objeto_completo' },
@@ -354,19 +364,49 @@ const formatTime = (time) => {
 }
 
 const formatModalidade = (modalidade, tipo_pregao) => {
+  // Mapeamento de modalidades para siglas
+  const modalidades = {
+    'pregao': {
+      'presencial': 'PP',
+      'eletronico': 'PE'
+    },
+    'concorrencia': 'CONC',
+    'concurso': 'CNC',
+    'leilao': 'LEI',
+    'dialogo_competitivo': 'DC',
+    'credenciamento': 'CR',
+    'pre_qualificacao': 'PQ',
+    'manifestacao_interesse': 'PMI',
+    'licitacao_internacional': 'LI'
+  }
+  
+  // Se for pregão, verifica o tipo
+  if (modalidade === 'pregao' && tipo_pregao) {
+    return modalidades[modalidade][tipo_pregao]
+  }
+  
+  // Para outras modalidades, retorna a sigla direta
+  return modalidades[modalidade] || modalidade
+}
+
+const formatModalidadeCompleta = (modalidade, tipo_pregao) => {
   const modalidades = {
     'pregao': 'Pregão',
     'concorrencia': 'Concorrência',
     'concurso': 'Concurso',
     'leilao': 'Leilão',
-    'dialogo_competitivo': 'Diálogo Competitivo'
+    'dialogo_competitivo': 'Diálogo Competitivo',
+    'credenciamento': 'Credenciamento',
+    'pre_qualificacao': 'Pré-Qualificação',
+    'manifestacao_interesse': 'Procedimento de Manifestação de Interesse',
+    'licitacao_internacional': 'Licitação Internacional'
   }
   
   const tipoFormatado = tipo_pregao ? 
     (tipo_pregao === 'eletronico' ? 'Eletrônico' : 'Presencial') : 
     ''
   
-  return `${modalidades[modalidade] || modalidade}${tipoFormatado ? ` - ${tipoFormatado}` : ''}`
+  return `${modalidades[modalidade] || modalidade}${tipoFormatado ? ` ${tipoFormatado}` : ''}`
 }
 
 const formatStatus = (status) => {
@@ -947,6 +987,16 @@ const getPlataformaNome = (url) => {
   const plataforma = plataformas.value.find(p => p.url === url)
   return plataforma ? plataforma.nome : url
 }
+
+// Adicione este ref no início do script
+const formData = ref({
+  status: null // Alterado de '' para null
+})
+
+// Adicione a função para selecionar a linha
+const selectRow = (id) => {
+  selectedRow.value = id
+}
 </script>
 
 <style scoped>
@@ -1024,7 +1074,7 @@ const getPlataformaNome = (url) => {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: auto;
-  height: calc(100vh - 150px); /* Altura total da viewport menos o header */
+  max-height: calc(100vh - 180px); /* Ajusta altura máxima considerando o header */
   margin-bottom: 1rem;
   position: relative;
 }
@@ -1071,10 +1121,54 @@ const getPlataformaNome = (url) => {
   background: #254677;
 }
 
-.excel-table td {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e9ecef;
+/* Remova ou comente estas propriedades que impedem a quebra de linha */
+/* .excel-table td {
   white-space: nowrap;
+} */
+
+/* Adicione estes estilos para permitir quebra de linha */
+.excel-table td {
+  white-space: normal; /* Permite quebra de linha */
+  word-wrap: break-word; /* Força quebra de palavras longas */
+  min-width: 100px; /* Largura mínima para cada célula */
+  max-width: 300px; /* Largura máxima para evitar células muito largas */
+  vertical-align: top; /* Alinha o conteúdo no topo */
+  height: auto; /* Altura automática */
+  padding: 10px; /* Padding adequado */
+}
+
+/* Ajuste para células específicas */
+.objeto-cell {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.4;
+}
+
+/* Mantenha a última coluna (ações) com largura fixa */
+.actions-column {
+  width: 60px;
+  min-width: 60px;
+  white-space: nowrap; /* Esta pode manter nowrap */
+}
+
+/* Ajuste o container da tabela */
+.table-container {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
+}
+
+/* Ajuste a tabela */
+.excel-table {
+  width: 100%;
+  table-layout: fixed; /* Importante para respeitar as larguras */
+}
+
+/* Mantenha o número da linha com largura fixa */
+.row-number-cell {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+  white-space: nowrap !important; /* Esta precisa manter nowrap */
 }
 
 .excel-table tbody tr:hover {
@@ -1885,6 +1979,118 @@ td select option {
 .status.cancelado {
   background: #f8d7da;
   color: #721c24;
+}
+
+/* Estilo para a coluna de numeração */
+.row-number-cell {
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  background: #f8f9fa;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 2px solid #e9ecef !important;
+}
+
+/* Ajuste para quando a célula de numeração encontra o cabeçalho fixo */
+thead .row-number-cell {
+  z-index: 3;
+  background: #f8f9fa;
+}
+
+/* Ajuste para células fixas no corpo da tabela */
+tbody .row-number-cell {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #f8f9fa; /* Mantém o fundo mesmo durante scroll */
+}
+
+/* Efeito hover mantendo o fundo */
+tbody tr:hover .row-number-cell {
+  background: #f0f0f0; /* Cor um pouco mais escura no hover */
+}
+
+/* Ajuste no container da tabela */
+.table-container {
+  overflow: auto;
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajuste na tabela */
+.excel-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Sombra sutil para indicar scroll */
+.row-number-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0));
+}
+
+/* Fixa o cabeçalho */
+.excel-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 2;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* Ajuste especial para a célula de numeração no cabeçalho */
+.excel-table thead th.row-number-cell {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 4; /* Maior z-index para ficar acima de tudo */
+  background: #f8f9fa;
+}
+
+/* Sombra sutil no cabeçalho para indicar scroll */
+.excel-table thead th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0));
+}
+
+/* Estilo para a linha selecionada */
+.selected-row {
+  background-color: #19315594 !important;
+  border-left: 4px solid #193155 !important;
+}
+
+/* Mantém o highlight mesmo no hover */
+.selected-row:hover {
+  background-color: rgba(25, 49, 85, 0.08) !important;
+}
+
+/* Ajuste para a célula de numeração na linha selecionada */
+.selected-row .row-number-cell {
+  background-color: rgb(25, 49, 85) !important;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Efeito de transição suave */
+.excel-table tr {
+  transition: background-color 0.2s ease, border-left 0.2s ease;
 }
 
 </style>
