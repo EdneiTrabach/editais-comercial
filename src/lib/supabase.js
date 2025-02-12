@@ -82,6 +82,40 @@ export const authApi = {
       redirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL
     })
     if (error) throw error
+  },
+
+  async deleteUser(userId) {
+    try {
+      // Primeiro verifica se é admin
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile.role !== 'admin') {
+        throw new Error('Apenas administradores podem deletar usuários')
+      }
+
+      // Remove o perfil primeiro
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+
+      if (profileError) throw profileError
+
+      // Remove o usuário do auth
+      const { error: userError } = await supabase.auth.admin.deleteUser(userId)
+
+      if (userError) throw userError
+
+      return { success: true }
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error)
+      throw error
+    }
   }
 }
 
@@ -136,5 +170,22 @@ export const editaisApi = {
       .eq('id', id)
     
     if (error) throw error
+  }
+}
+
+const deleteUser = async (userId) => {
+  try {
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) {
+      return
+    }
+
+    await authApi.deleteUser(userId)
+    showToast('Usuário excluído com sucesso', 'success')
+    
+    // Recarregar lista de usuários
+    await loadUsers()
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error)
+    showToast(error.message, 'error')
   }
 }
