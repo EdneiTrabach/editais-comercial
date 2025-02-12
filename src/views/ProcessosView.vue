@@ -8,11 +8,11 @@
 
         <div class="actions">
           <button class="btn-export" @click="exportToExcel">
-            <!-- <img src="/icons/excel.svg" alt="Exportar" class="icon" /> -->
+            <img src="/icons/excel.svg" alt="Exportar" class="icon" />
             Exportar
           </button>
           <button class="btn-add" @click="handleNewProcess">
-            <!-- <img src="/icons/adicao.svg" alt="Novo" class="icon" /> -->
+            <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
             Novo Processo
           </button>
         </div>
@@ -287,14 +287,17 @@ const processosFiltrados = computed(() => {
       let valorProcesso = processo[coluna.campo]
       if (!valorProcesso) return false
 
-      if (coluna.campo === 'data_pregao') {
-        valorProcesso = formatDate(valorProcesso)
-      } else if (coluna.campo === 'hora_pregao') {
-        valorProcesso = formatTime(valorProcesso)
-      } else if (coluna.campo === 'modalidade') {
-        valorProcesso = formatModalidade(valorProcesso, processo.tipo_pregao)
-      } else if (coluna.campo === 'representante') {
-        valorProcesso = processo.representantes?.nome || '-'
+      // Formatação específica para cada tipo de campo
+      switch (coluna.campo) {
+        case 'data_pregao':
+          valorProcesso = formatDate(valorProcesso)
+          break
+        case 'hora_pregao':
+          valorProcesso = formatTime(valorProcesso)
+          break
+        case 'modalidade':
+          valorProcesso = formatModalidade(valorProcesso)
+          break
       }
 
       return filtros.value[coluna.campo].includes(valorProcesso)
@@ -310,31 +313,27 @@ const handleSidebarToggle = (expanded) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    // Remove qualquer duplicação pegando só a primeira data
-    const cleanDate = dateString.split(/[T\s]/)[0].split('-');
-    if (cleanDate.length !== 3) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
     
-    // Retorna no formato dd/mm/yyyy
-    return `${cleanDate[2]}/${cleanDate[1]}/${cleanDate[0]}`;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   } catch (error) {
     console.error('Erro ao formatar data:', error);
     return '-';
   }
 }
 
-// Ajuste a função formatTime
+// Função para formatar hora (HH:mm)
 const formatTime = (time) => {
   if (!time) return '-';
   try {
-    // Remove qualquer duplicação pegando só os primeiros 5 caracteres (HH:mm)
-    const cleanTime = time.split(':').slice(0, 2).join(':');
-    
-    // Valida o formato HH:mm
-    if (!/^\d{2}:\d{2}$/.test(cleanTime)) {
-      return '-';
-    }
-    
-    return cleanTime;
+    // Pega apenas HH:mm da string de hora
+    const [hours, minutes] = time.split(':');
+    return `${hours}:${minutes}`;
   } catch (error) {
     console.error('Erro ao formatar hora:', error);
     return '-';
@@ -523,6 +522,8 @@ const logSystemAction = async (dados) => {
 
 const exportToExcel = () => {
   const dataToExport = processos.value.map(processo => ({
+    'Data do Pregão': formatDate(processo.data_pregao),
+    'Hora do Pregão': formatTime(processo.hora_pregao),
     'Número do Processo': processo.numero_processo,
     'Ano': processo.ano,
     'Órgão': processo.orgao,
@@ -748,19 +749,22 @@ const hideConfirmDialog = () => {
 // Função para atualizar o registro
 const handleUpdate = async (processo) => {
   try {
-    if (!editingCell.value.value) return cancelEdit()
+    if (!editingCell.value.value) return cancelEdit();
 
-    // Validações específicas por campo
-    if (editingCell.value.field === 'estado') {
-      if (editingCell.value.value.length !== 2) {
-        alert('O estado deve ter 2 caracteres')
-        return cancelEdit()
-      }
-      editingCell.value.value = editingCell.value.value.toUpperCase()
+    let updateValue = editingCell.value.value;
+
+    // Formatação específica para data e hora
+    if (editingCell.value.field === 'data_pregao') {
+      // Garante que a data seja salva no formato YYYY-MM-DD
+      const date = new Date(updateValue);
+      updateValue = date.toISOString().split('T')[0];
+    } else if (editingCell.value.field === 'hora_pregao') {
+      // Garante que a hora seja salva no formato HH:mm
+      updateValue = updateValue.substring(0, 5);
     }
 
     const updateData = {
-      [editingCell.value.field]: editingCell.value.value,
+      [editingCell.value.field]: updateValue,
       updated_at: new Date().toISOString()
     }
 
@@ -769,10 +773,10 @@ const handleUpdate = async (processo) => {
       .update(updateData)
       .eq('id', processo.id)
 
-    if (error) throw error
+    if (error) throw error;
 
     // Atualiza localmente
-    const index = processos.value.findIndex(p => p.id === processo.id)
+    const index = processos.value.findIndex(p => p.id === processo.id);
     if (index !== -1) {
       processos.value[index] = {
         ...processos.value[index],
@@ -780,12 +784,12 @@ const handleUpdate = async (processo) => {
       }
     }
 
-    cancelEdit()
-    await loadProcessos() // Recarrega os dados para garantir consistência
+    cancelEdit();
+    await loadProcessos();
   } catch (error) {
-    console.error('Erro ao atualizar:', error)
-    alert(`Erro ao atualizar o registro: ${error.message}`)
-    cancelEdit()
+    console.error('Erro ao atualizar:', error);
+    alert(`Erro ao atualizar o registro: ${error.message}`);
+    cancelEdit();
   }
 }
 
@@ -993,13 +997,16 @@ const handleModalidadeChange = () => {
 // Adicione esta função no script
 const handleSubmit = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    // Ajusta a data para meio-dia para evitar problemas de timezone
+    const dataPregao = new Date(formData.value.data_pregao + 'T12:00:00')
+    
     const processoData = {
       numero_processo: `${formData.value.numero}/${formData.value.ano}`,
       ano: formData.value.ano,
       orgao: formData.value.orgao,
-      data_pregao: formData.value.data_pregao,
+      data_pregao: dataPregao.toISOString().split('T')[0], // Formato YYYY-MM-DD
       hora_pregao: formData.value.hora_pregao,
       estado: formData.value.estado,
       modalidade: formData.value.modalidade,
@@ -1008,19 +1015,18 @@ const handleSubmit = async () => {
       objeto_completo: formData.value.objeto_completo,
       responsavel: user.id,
       representante: formData.value.representante
-    };
+    }
 
     const { error } = await supabase
       .from('processos')
-      .insert(processoData);
+      .insert(processoData)
 
-    if (error) throw error;
-
-    alert('Processo cadastrado com sucesso!');
-    router.push('/processos');
+    if (error) throw error
+    alert('Processo cadastrado com sucesso!')
+    router.push('/processos')
   } catch (error) {
-    console.error('Erro:', error);
-    alert('Erro ao cadastrar processo');
+    console.error('Erro:', error)
+    alert('Erro ao cadastrar processo')
   }
 };
 
@@ -2191,6 +2197,7 @@ th[data-field="objeto_completo"] {
   max-width: 500px;
   min-width: 500px;
   white-space: normal;
+  /* Permite quebra de linha */
   line-height: 1.4;
   word-wrap: break-word;
   user-select: text;
