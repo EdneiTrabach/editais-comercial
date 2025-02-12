@@ -86,7 +86,7 @@ export const authApi = {
 
   async deleteUser(userId) {
     try {
-      // Primeiro verifica se é admin
+      // Verifica se é admin
       const { data: { user } } = await supabase.auth.getUser()
       const { data: profile } = await supabase
         .from('profiles')
@@ -98,7 +98,14 @@ export const authApi = {
         throw new Error('Apenas administradores podem deletar usuários')
       }
 
-      // Remove o perfil primeiro
+      // 1. Primeiro remove todas as referências do usuário
+      const { error: refsError } = await supabase.rpc('cleanup_user_references', {
+        user_id: userId
+      })
+
+      if (refsError) throw refsError
+
+      // 2. Remove o perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -106,8 +113,10 @@ export const authApi = {
 
       if (profileError) throw profileError
 
-      // Remove o usuário do auth
-      const { error: userError } = await supabase.auth.admin.deleteUser(userId)
+      // 3. Remove o usuário via função RPC
+      const { error: userError } = await supabase.rpc('delete_user', {
+        user_id: userId
+      })
 
       if (userError) throw userError
 
@@ -179,13 +188,18 @@ const deleteUser = async (userId) => {
       return
     }
 
-    await authApi.deleteUser(userId)
-    showToast('Usuário excluído com sucesso', 'success')
+    const { error } = await authApi.deleteUser(userId)
     
-    // Recarregar lista de usuários
-    await loadUsers()
+    if (error) throw error
+    
+    showToast('Usuário excluído com sucesso', 'success')
+    await loadUsers() // Recarrega a lista
+    
   } catch (error) {
     console.error('Erro ao excluir usuário:', error)
-    showToast(error.message, 'error')
+    showToast(
+      error.message || 'Erro ao excluir usuário', 
+      'error'
+    )
   }
 }
