@@ -944,6 +944,53 @@ const formData = ref({
 const selectRow = (id) => {
   selectedRow.value = id
 }
+
+// Adicione este ref no início do script
+const showPlataformaField = computed(() => {
+  return formData.value.modalidade === 'pregao_eletronico';
+});
+
+// Adicione esta função no script
+const handleModalidadeChange = () => {
+  // Limpa o campo de plataforma se não for pregão eletrônico
+  if (formData.value.modalidade !== 'pregao_eletronico') {
+    formData.value.site_pregao = '';
+  }
+};
+
+// Adicione esta função no script
+const handleSubmit = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const processoData = {
+      numero_processo: `${formData.value.numero}/${formData.value.ano}`,
+      ano: formData.value.ano,
+      orgao: formData.value.orgao,
+      data_pregao: formData.value.data_pregao,
+      hora_pregao: formData.value.hora_pregao,
+      estado: formData.value.estado,
+      modalidade: formData.value.modalidade,
+      site_pregao: formData.value.site_pregao,
+      objeto_resumido: formData.value.objeto_resumido,
+      objeto_completo: formData.value.objeto_completo,
+      responsavel: user.id,
+      representante: formData.value.representante
+    };
+
+    const { error } = await supabase
+      .from('processos')
+      .insert(processoData);
+
+    if (error) throw error;
+
+    alert('Processo cadastrado com sucesso!');
+    router.push('/processos');
+  } catch (error) {
+    console.error('Erro:', error);
+    alert('Erro ao cadastrar processo');
+  }
+};
 </script>
 
 <style scoped>
