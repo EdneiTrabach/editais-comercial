@@ -94,9 +94,10 @@ const handleResetPassword = async () => {
 
 const handleSignUp = async () => {
   try {
-    loading.value = true
-    error.value = ''
-
+    console.log('Iniciando signup...')
+    const { data: { session } } = await supabase.auth.getSession()
+    console.log('Sessão atual:', session)
+    
     // Primeiro verifica número de usuários atual
     const { count } = await supabase
       .from('profiles')
@@ -123,10 +124,47 @@ const handleSignUp = async () => {
     showToast(`Conta criada! Use o email: ${email.value} e senha: Flytolive97@`, 'success')
     
   } catch (err) {
-    console.error('Erro:', err)
-    error.value = err.message || 'Erro ao criar conta'
+    console.error('Erro detalhado:', err)
   } finally {
     loading.value = false
+  }
+}
+
+// Adicione logs para debug
+const checkUserLimit = async () => {
+  const { data, count, error } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact' })
+  
+  console.log('Total users:', count)
+  console.log('Profiles data:', data)
+  
+  if (error) {
+    console.error('Error checking user limit:', error)
+    throw error
+  }
+  
+  return count
+}
+
+const createUser = async (userData) => {
+  try {
+    console.log('Iniciando criação de usuário')
+    const userCount = await checkUserLimit()
+    console.log('Número atual de usuários:', userCount)
+    
+    // Tenta criar o usuário
+    const { data, error } = await supabase.auth.signUp(userData)
+    
+    if (error) {
+      console.error('Erro detalhado:', error)
+      throw error
+    }
+    
+    return data
+  } catch (err) {
+    console.error('Erro completo:', err)
+    throw err
   }
 }
 </script>
