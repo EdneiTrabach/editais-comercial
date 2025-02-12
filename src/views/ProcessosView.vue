@@ -132,13 +132,14 @@
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
                 <template v-else>
-                  <span v-if="coluna.campo === 'data_pregao'">
-                    {{ processo[coluna.campo] }}
-                  </span>
-                  <span v-else-if="coluna.campo === 'hora_pregao'">
-                    {{ formatTime(processo[coluna.campo]) }}
-                  </span>
-                  <template v-if="coluna.campo === 'modalidade'">
+                  <!-- Ajuste na exibição de data e hora -->
+                  <template v-if="coluna.campo === 'data_pregao'">
+                    {{ formatDate(processo.data_pregao) }}
+                  </template>
+                  <template v-else-if="coluna.campo === 'hora_pregao'">
+                    {{ formatTime(processo.hora_pregao) }}
+                  </template>
+                  <template v-else-if="coluna.campo === 'modalidade'">
                     <span :title="formatModalidadeCompleta(processo.modalidade)">
                       {{ getModalidadeSigla(processo.modalidade) }}
                     </span>
@@ -313,12 +314,21 @@ const handleSidebarToggle = (expanded) => {
 
 // Ajuste a função formatDate
 const formatDate = (dateString) => {
-  if (!dateString) return '-'
+  if (!dateString) return '-';
   try {
-    return dateString
+    // Remove qualquer formatação anterior que possa estar duplicada
+    const cleanDate = dateString.split('T')[0]; // Pega apenas a parte da data
+    const date = new Date(cleanDate);
+    if (isNaN(date.getTime())) return '-';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   } catch (error) {
-    console.error('Erro ao formatar data:', error)
-    return '-'
+    console.error('Erro ao formatar data:', error);
+    return '-';
   }
 }
 
@@ -326,9 +336,9 @@ const formatDate = (dateString) => {
 const formatTime = (time) => {
   if (!time) return '-';
   try {
-    // Pega apenas HH:mm da string de hora
-    const [hours, minutes] = time.split(':');
-    return `${hours}:${minutes}`;
+    // Remove qualquer formatação anterior que possa estar duplicada
+    const cleanTime = time.split(':').slice(0, 2).join(':');
+    return cleanTime;
   } catch (error) {
     console.error('Erro ao formatar hora:', error);
     return '-';
@@ -410,14 +420,17 @@ const loadProcessos = async () => {
           nome
         )
       `)
-      .order(sortConfig.value.field, { ascending: sortConfig.value.direction === 'asc' })
-      .order('hora_pregao', { ascending: true }) // ordenação secundária por hora
 
     if (error) throw error
 
+    // Log para debug
+    console.log('Dados recebidos:', data)
+
     processos.value = data?.map(processo => ({
       ...processo,
-      responsavel_nome: '-', // Por enquanto, deixamos fixo
+      data_pregao: processo.data_pregao, // Garante que a data está no formato correto
+      hora_pregao: processo.hora_pregao, // Garante que a hora está no formato correto
+      responsavel_nome: '-',
       representante: processo.representantes?.nome || '-',
       campo_adicional1: processo.campo_adicional1 || '-',
       campo_adicional2: processo.campo_adicional2 || '-'
@@ -517,8 +530,8 @@ const logSystemAction = async (dados) => {
 
 const exportToExcel = () => {
   const dataToExport = processos.value.map(processo => ({
-    'Data do Pregão': formatDate(processo.data_pregao),
-    'Hora do Pregão': formatTime(processo.hora_pregao),
+    'Data': formatDate(processo.data_pregao),
+    'Hora': formatTime(processo.hora_pregao),
     'Número do Processo': processo.numero_processo,
     'Ano': processo.ano,
     'Órgão': processo.orgao,
@@ -749,12 +762,9 @@ const handleUpdate = async (processo) => {
 
     // Formatação específica para data e hora
     if (editingCell.value.field === 'data_pregao') {
-      // Garante que a data seja salva no formato YYYY-MM-DD
-      const [day, month, year] = updateValue.split('/');
-      updateValue = `${year}-${month}-${day}`;
+      updateValue = updateValue.split('T')[0]; // Garante apenas a parte da data
     } else if (editingCell.value.field === 'hora_pregao') {
-      // Garante que a hora seja salva no formato HH:mm
-      updateValue = updateValue.split(':').slice(0, 2).join(':');
+      updateValue = updateValue.split(':').slice(0, 2).join(':'); // Garante apenas HH:mm
     }
 
     const updateData = {
