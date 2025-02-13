@@ -1,0 +1,926 @@
+/* src/assets/dark-mode.css */
+
+/* Variáveis do tema escuro */
+:root[data-theme="dark"] {
+    /* Cores de fundo */
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
+    
+    /* Cores de texto */
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb;
+    --text-muted: #9ca3af;
+    
+    /* Cores de borda */
+    --border-color: #374151;
+    --border-color-hover: #4b5563;
+    
+    /* Cores de ação */
+    --action-primary: #3b82f6;
+    --action-primary-hover: #2563eb;
+    --action-secondary: #6b7280;
+    --action-secondary-hover: #4b5563;
+    
+    /* Cores de status */
+    --status-success: #059669;
+    --status-warning: #d97706;
+    --status-error: #dc2626;
+    --status-info: #3b82f6;
+  }
+  
+  /* Estilos base para modo escuro */
+  [data-theme="dark"] {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  
+  /* Ajustes para o modo escuro */
+  [data-theme="dark"] body {
+    background-color: #0f172a;
+    color: #f9fafb;
+  }
+  
+  /* Sidebar no modo escuro */
+  [data-theme="dark"] .sidebar {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    border-right: 1px solid #2d3748;
+  }
+  
+  [data-theme="dark"] .sidebar-trigger {
+    background-color: #1e293b;
+    color: #f9fafb;
+  }
+  
+  [data-theme="dark"] .sidebar-header {
+    border-bottom-color: #2d3748;
+  }
+  
+  [data-theme="dark"] .sidebar-menu-link:hover {
+    background-color: #2d3748;
+  }
+  
+  [data-theme="dark"] .nav-links::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  [data-theme="dark"] .nav-links::-webkit-scrollbar-thumb {
+    background: #2d3748;
+  }
+  
+  /* Cards e containers */
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .container {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+  
+  /* Tabelas */
+  [data-theme="dark"] table {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+  
+  [data-theme="dark"] td {
+    border-color: var(--border-color);
+  }
+  
+  [data-theme="dark"] tr:hover {
+    background-color: var(--bg-tertiary);
+  }
+  
+  /* Formulários */
+  [data-theme="dark"] input,
+  [data-theme="dark"] select,
+  [data-theme="dark"] textarea {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] input:focus,
+  [data-theme="dark"] select:focus,
+  [data-theme="dark"] textarea:focus {
+    border-color: var(--action-primary);
+    outline: none;
+  }
+  
+  /* Botões */
+  [data-theme="dark"] .btn-primary {
+    background-color: var(--action-primary);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .btn-primary:hover {
+    background-color: var(--action-primary-hover);
+  }
+  
+  [data-theme="dark"] .btn-secondary {
+    background-color: var(--action-secondary);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .btn-secondary:hover {
+    background-color: var(--action-secondary-hover);
+  }
+  
+  /* Modais e diálogos */
+  [data-theme="dark"] .modal,
+  [data-theme="dark"] .dialog {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+  
+  /* Scrollbars personalizadas */
+  [data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  [data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+  }
+  
+  [data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--action-secondary);
+    border-radius: 4px;
+  }
+  
+  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--action-secondary-hover);
+  }
+  
+  /* Status badges */
+  [data-theme="dark"] .badge-success {
+    background-color: var(--status-success);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .badge-warning {
+    background-color: var (--status-warning);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .badge-error {
+    background-color: var(--status-error);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .badge-info {
+    background-color: var(--status-info);
+    color: var(--text-primary);
+  }
+  
+  /* Links */
+  [data-theme="dark"] a {
+    color: var(--action-primary);
+  }
+  
+  [data-theme="dark"] a:hover {
+    color: var(--action-primary-hover);
+  }
+  
+  /* Sombras */
+  [data-theme="dark"] .shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  }
+  
+  [data-theme="dark"] .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Estilos específicos para a página de processos no modo escuro */
+  [data-theme="dark"] .main-content {
+    background-color: #0f172a;
+  }
+  
+  [data-theme="dark"] .header h1 {
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .table-container {
+    background-color: #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #2d3748;
+  }
+  
+  [data-theme="dark"] .excel-table {
+    border-color: #2d3748;
+    background-color: #1e293b;
+  }
+  
+  [data-theme="dark"] .excel-table th {
+    background-color: #334155;
+    color: var(--text-primary);
+    border-color: #2d3748;
+    background-color: #0f172a !important;
+    color: #f9fafb;
+  }
+  
+  [data-theme="dark"] .excel-table td {
+    border-color: #2d3748;
+    color: var(--text-secondary);
+    background-color: #1e293b !important;
+    color: #f9fafb;
+  }
+  
+  [data-theme="dark"] .excel-table tbody tr:hover {
+    background-color: #2d3748;
+  }
+  
+  [data-theme="dark"] .excel-table tbody tr:hover td {
+    background-color: #2d3748 !important;
+  }
+  
+  [data-theme="dark"] .row-number-cell {
+    background-color: #334155;
+    color: var(--text-secondary);
+    border-right-color: #2d3748 !important;
+    background-color: #0f172a !important;
+    color: #94a3b8;
+  }
+  
+  [data-theme="dark"] .excel-table tbody tr:hover .row-number-cell {
+    background-color: #475569;
+  }
+  
+  /* Status badges no modo escuro */
+  [data-theme="dark"] .status {
+    opacity: 0.9;
+  }
+  
+  [data-theme="dark"] .status.em_analise {
+    background: #334155;
+    color: #94a3b8;
+  }
+  
+  [data-theme="dark"] .status.em_andamento {
+    background: #854d0e;
+    color: #fde68a;
+  }
+  
+  [data-theme="dark"] .status.ganhamos {
+    background: #166534;
+    color: #bbf7d0;
+  }
+  
+  [data-theme="dark"] .status.perdemos {
+    background: #991b1b;
+    color: #fecaca;
+  }
+  
+  [data-theme="dark"] .status.suspenso {
+    background: #1e40af;
+    color: #bfdbfe;
+  }
+  
+  [data-theme="dark"] .status.demonstracao {
+    background: #b45309;
+    color: #fed7aa;
+  }
+  
+  [data-theme="dark"] .status.cancelado {
+    background: #7f1d1d;
+    color: #fecaca;
+  }
+  
+  [data-theme="dark"] .status.nao_participar {
+    background: #713f12;
+    color: #fef3c7;
+  }
+  
+  /* Botões e ações no modo escuro */
+  [data-theme="dark"] .btn-export {
+    background: #065f46;
+    color: white;
+  }
+  
+  [data-theme="dark"] .btn-add {
+    background: #1e40af;
+    color: white;
+  }
+  
+  [data-theme="dark"] .btn-icon.delete {
+    background: #450a0a;
+  }
+  
+  [data-theme="dark"] .btn-icon.delete:hover {
+    background: #991b1b;
+  }
+  
+  /* Portal links no modo escuro */
+  [data-theme="dark"] .portal-button {
+    background: #1e293b;
+    color: #60a5fa;
+    border-color: #2d3748;
+  }
+  
+  [data-theme="dark"] .portal-button:hover {
+    background: #334155;
+    border-color: #3b82f6;
+  }
+  
+  /* Células em edição no modo escuro */
+  [data-theme="dark"] .editing-cell {
+    background-color: #1e293b;
+  }
+  
+  [data-theme="dark"] td input,
+  [data-theme="dark"] td select,
+  [data-theme="dark"] td textarea {
+    background-color: #1e293b;
+    border-color: #3b82f6;
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] td input:focus,
+  [data-theme="dark"] td select:focus,
+  [data-theme="dark"] td textarea:focus {
+    border-color: #60a5fa;
+    background-color: #2d3748;
+  }
+  
+  /* Diálogos e modais no modo escuro */
+  [data-theme="dark"] .confirm-dialog {
+    background-color: #1e293b;
+    border: 1px solid #2d3748;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+  
+  [data-theme="dark"] .confirm-dialog::before {
+    border-bottom-color: #1e293b;
+  }
+  
+  [data-theme="dark"] .btn-confirm {
+    background-color: #1e40af;
+    color: white;
+  }
+  
+  [data-theme="dark"] .btn-cancel {
+    background-color: #334155;
+    color: var(--text-secondary);
+  }
+  
+  /* Scrollbars personalizadas no modo escuro */
+  [data-theme="dark"] .table-container::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  [data-theme="dark"] .table-container::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+  
+  [data-theme="dark"] .table-container::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+  
+  /* Linhas selecionadas no modo escuro */
+  [data-theme="dark"] .selected-row {
+    background-color: #1e40af30 !important;
+  }
+  
+  [data-theme="dark"] .selected-row:hover {
+    background-color: #1e40af40 !important;
+  }
+  
+  /* Estilos para células de objetos no modo escuro */
+  [data-theme="dark"] .objeto-cell {
+    color: var(--text-secondary);
+  }
+  
+  /* Filtros e dropdowns no modo escuro */
+  [data-theme="dark"] .filtro-dropdown {
+    background-color: #1e293b;
+    border-color: #2d3748;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+  
+  [data-theme="dark"] .estado-search {
+    background-color: #2d3748;
+    border-color: #3b82f6;
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .estado-option:hover {
+    background-color: #334155;
+  }
+
+  /* Ajustes gerais da página no modo escuro */
+  [data-theme="dark"] .layout {
+    background-color: #0f172a;
+  }
+  
+  [data-theme="dark"] .main-content {
+    background-color: #0f172a;
+    color: var(--text-primary);
+  }
+  
+  [data-theme="dark"] .header {
+    background-color: #1e293b;
+    border-bottom: 1px solid #2d3748;
+  }
+  
+  [data-theme="dark"] .header h1 {
+    color: var(--text-primary);
+  }
+  
+  /* Botões do cabeçalho */
+  [data-theme="dark"] .btn-export,
+  [data-theme="dark"] .btn-add {
+    background-color: #1e293b;
+    color: var(--text-primary);
+    border: 1px solid #3b82f6;
+  }
+  
+  [data-theme="dark"] .btn-export:hover,
+  [data-theme="dark"] .btn-add:hover {
+    background-color: #2d3748;
+  }
+  
+  /* Container da tabela */
+  [data-theme="dark"] .table-container {
+    background-color: #1e293b;
+    border: 1px solid #2d3748;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Cabeçalho da tabela */
+  [data-theme="dark"] .excel-table thead th {
+    background-color: #1e293b;
+    color: var(--text-primary);
+    border-bottom: 2px solid #2d3748;
+  }
+  
+  /* Células da tabela */
+  [data-theme="dark"] .excel-table td {
+    background-color: #1e293b;
+    color: var(--text-primary);
+    border-color: #2d3748;
+  }
+  
+  /* Hover nas linhas */
+  [data-theme="dark"] .excel-table tbody tr:hover td {
+    background-color: #1e293b !important;
+    transition: all 0.2s ease;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="em_analise"]:hover td {
+    background-color: #334155 !important;
+    border-left: 4px solid #94a3b8;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="em_andamento"]:hover td {
+    background-color: #451a03 !important;
+    border-left: 4px solid #f59e0b;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="ganhamos"]:hover td {
+    background-color: #064e3b !important;
+    border-left: 4px solid #10b981;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="perdemos"]:hover td {
+    background-color: #7f1d1d !important;
+    border-left: 4px solid #ef4444;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="suspenso"]:hover td {
+    background-color: #1e3a8a !important;
+    border-left: 4px solid #3b82f6;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="demonstracao"]:hover td {
+    background-color: #92400e !important;
+    border-left: 4px solid #f59e0b;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="cancelado"]:hover td {
+    background-color: #1e3a8a !important;
+    border-left: 4px solid #3b82f6;
+  }
+
+  [data-theme="dark"] .excel-table tbody tr[data-status="nao_participar"]:hover td {
+    background-color: #78350f !important;
+    border-left: 4px solid #d97706;
+  }
+
+  /* Ajuste para células específicas durante o hover */
+  [data-theme="dark"] .excel-table tbody tr:hover .row-number-cell {
+    background-color: #1e293b !important;
+    color: #f9fafb;
+    border-right: 2px solid #3b82f6 !important;
+  }
+
+  /* Estilos para linhas selecionadas com hover */
+  [data-theme="dark"] .selected-row td {
+    background-color: #1e40af30 !important;
+  }
+
+  [data-theme="dark"] .selected-row:hover td {
+    background-color: #1e40af50 !important;
+    border-left: 4px solid #3b82f6;
+  }
+
+  /* Transições suaves */
+  [data-theme="dark"] .excel-table tbody tr,
+  [data-theme="dark"] .excel-table tbody tr td {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Célula com número da linha */
+  [data-theme="dark"] .row-number-cell {
+    background-color: #1e293b !important;
+    color: var(--text-secondary);
+    border-right: 2px solid #2d3748 !important;
+  }
+  
+  /* Linhas selecionadas */
+  [data-theme="dark"] .selected-row td {
+    background-color: #2d3748 !important;
+  }
+  
+  [data-theme="dark"] .selected-row:hover td {
+    background-color: #374151 !important;
+  }
+  
+  /* Filtros e dropdowns */
+  [data-theme="dark"] .filtro-container .btn-filtro {
+    color: var(--text-secondary);
+  }
+  
+  [data-theme="dark"] .filtro-dropdown {
+    background-color: #1e293b;
+    border: 1px solid #2d3748;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Modal de confirmação */
+  [data-theme="dark"] .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  [data-theme="dark"] .confirm-dialog {
+    background-color: #1e293b;
+    border: 1px solid #2d3748;
+  }
+  
+  /* Botões de ação */
+  [data-theme="dark"] .action-buttons .btn-icon {
+    background-color: #2d3748;
+    border: 1px solid #3b82f6;
+  }
+  
+  [data-theme="dark"] .action-buttons .btn-icon:hover {
+    background-color: #374151;
+  }
+  
+  /* Scrollbar personalizada */
+  [data-theme="dark"] .table-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  [data-theme="dark"] .table-container::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  [data-theme="dark"] .table-container::-webkit-scrollbar-thumb {
+    background: #2d3748;
+    border-radius: 5px;
+  }
+  
+  [data-theme="dark"] .table-container::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+  }
+  
+  /* Inputs e campos de edição */
+  [data-theme="dark"] input,
+  [data-theme="dark"] select,
+  [data-theme="dark"] textarea {
+    background-color: #1e293b;
+    color: var(--text-primary);
+    border: 1px solid #2d3748;
+  }
+  
+  [data-theme="dark"] input:focus,
+  [data-theme="dark"] select:focus,
+  [data-theme="dark"] textarea:focus {
+    border-color: #3b82f6;
+    background-color: #2d3748;
+  }
+  
+  /* Correção para os ícones */
+  [data-theme="dark"] .icon {
+    filter: invert(1);
+  }
+  
+  /* Status das licitações */
+  [data-theme="dark"] .status {
+    border: 1px solid transparent;
+  }
+  
+  /* Ajuste para o texto dos objetos */
+  [data-theme="dark"] .objeto-cell {
+    color: var(--text-primary);
+  }
+  
+  /* Links dos portais */
+  [data-theme="dark"] .portal-button {
+    background-color: #2d3748;
+    border: 1px solid #3b82f6;
+    color: #60a5fa;
+  }
+  
+  [data-theme="dark"] .portal-button:hover {
+    background-color: #374151;
+  }
+  
+  /* Botões de ordenação */
+  [data-theme="dark"] .btn-sort {
+    color: var(--text-secondary);
+  }
+  
+  [data-theme="dark"] .btn-sort.active {
+    color: #3b82f6;
+  }
+
+  /* Ajustes para o main-content no modo escuro */
+  [data-theme="dark"] .main-content {
+    background-color: #0f172a !important;
+    color: #f9fafb;
+  }
+
+  [data-theme="dark"] .layout {
+    background-color: #0f172a !important;
+  }
+
+  /* Ajustes para elementos dentro do main-content */
+  [data-theme="dark"] .header {
+    background-color: #1e293b;
+    border-bottom: 1px solid #2d3748;
+  }
+
+  [data-theme="dark"] .header h1 {
+    color: #f9fafb;
+  }
+
+  [data-theme="dark"] .actions {
+    background-color: #1e293b;
+  }
+
+  [data-theme="dark"] .actions button {
+    background-color: #2d3748;
+    color: #f9fafb;
+    border: 1px solid #3b82f6;
+  }
+
+  [data-theme="dark"] .actions button:hover {
+    background-color: #374151;
+  }
+
+  [data-theme="dark"] .filtros-ativos {
+    background-color: #1e293b;
+    color: #f9fafb;
+    border: 1px solid #2d3748;
+  }
+
+  [data-theme="dark"] .btn-limpar-filtros {
+    color: #60a5fa;
+    border-color: #3b82f6;
+  }
+
+  [data-theme="dark"] .btn-limpar-filtros:hover {
+    background-color: #2d3748;
+  }
+
+  [data-theme="dark"] .main-content::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="dark"] .main-content::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+
+  [data-theme="dark"] .main-content::-webkit-scrollbar-thumb {
+    background: #2d3748;
+    border-radius: 5px;
+  }
+
+  [data-theme="dark"] .main-content::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+  }
+
+  /* Forçar o modo escuro em componentes internos */
+  [data-theme="dark"] .main-content * {
+    border-color: #2d3748;
+  }
+
+  [data-theme="dark"] .main-content input,
+  [data-theme="dark"] .main-content select,
+  [data-theme="dark"] .main-content textarea {
+    background-color: #1e293b;
+    color: #f9fafb;
+    border: 1px solid #2d3748;
+  }
+
+  [data-theme="dark"] .main-content input:focus,
+  [data-theme="dark"] .main-content select:focus,
+  [data-theme="dark"] .main-content textarea:focus {
+    border-color: #3b82f6;
+    background-color: #2d3748;
+  }
+
+  /* Ajustes para linhas selecionadas no modo escuro */
+  [data-theme="dark"] .selected-row[data-status="em_analise"] {
+    background-color: rgba(73, 80, 87, 0.2) !important;
+    border: 2px solid #94a3b8 !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="em_andamento"] {
+    background-color: rgba(239, 108, 0, 0.2) !important;
+    border: 2px solid #f59e0b !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="ganhamos"] {
+    background-color: rgba(21, 87, 36, 0.2) !important;
+    border: 2px solid #10b981 !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="perdemos"] {
+    background-color: rgba(198, 40, 40, 0.2) !important;
+    border: 2px solid #ef4444 !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="suspenso"] {
+    background-color: rgba(25, 118, 210, 0.2) !important;
+    border: 2px solid #3b82f6 !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="demonstracao"] {
+    background-color: rgba(239, 108, 0, 0.2) !important;
+    border: 2px solid #f59e0b !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="cancelado"] {
+    background-color: rgba(26, 35, 126, 0.2) !important;
+    border: 2px solid #3b82f6 !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="nao_participar"] {
+    background-color: rgba(249, 168, 37, 0.2) !important;
+    border: 2px solid #d97706 !important;
+  }
+
+  /* Hover em linhas selecionadas */
+  [data-theme="dark"] .selected-row[data-status="em_analise"]:hover td {
+    background-color: rgba(73, 80, 87, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="em_andamento"]:hover td {
+    background-color: rgba(239, 108, 0, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="ganhamos"]:hover td {
+    background-color: rgba(21, 87, 36, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="perdemos"]:hover td {
+    background-color: rgba(198, 40, 40, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="suspenso"]:hover td {
+    background-color: rgba(25, 118, 210, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="demonstracao"]:hover td {
+    background-color: rgba(239, 108, 0, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="cancelado"]:hover td {
+    background-color: rgba(26, 35, 126, 0.3) !important;
+  }
+
+  [data-theme="dark"] .selected-row[data-status="nao_participar"]:hover td {
+    background-color: rgba(249, 168, 37, 0.3) !important;
+  }
+
+  /* Ajustes para números das linhas selecionadas */
+  [data-theme="dark"] .selected-row .row-number-cell {
+    background-color: inherit !important;
+    color: #f9fafb !important;
+    font-weight: 600;
+  }
+
+  /* Transições suaves */
+  [data-theme="dark"] .excel-table tbody tr {
+    transition: background-color 0.2s ease, border 0.2s ease;
+  }
+
+  [data-theme="dark"] .selected-row td {
+    transition: background-color 0.2s ease;
+  }
+
+  /* Correção para linhas selecionadas no modo escuro */
+  [data-theme="dark"] .selected-row td {
+    background-color: transparent !important;
+  }
+
+  /* Cores específicas por status para linhas selecionadas */
+  [data-theme="dark"] tr.selected-row[data-status="em_analise"] td {
+    background-color: rgba(73, 80, 87, 0.3) !important;
+    border-top: 1px solid #94a3b8;
+    border-bottom: 1px solid #94a3b8;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="em_andamento"] td {
+    background-color: rgba(239, 108, 0, 0.3) !important;
+    border-top: 1px solid #f59e0b;
+    border-bottom: 1px solid #f59e0b;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="ganhamos"] td {
+    background-color: rgba(21, 87, 36, 0.3) !important;
+    border-top: 1px solid #10b981;
+    border-bottom: 1px solid #10b981;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="perdemos"] td {
+    background-color: rgba(198, 40, 40, 0.3) !important;
+    border-top: 1px solid #ef4444;
+    border-bottom: 1px solid #ef4444;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="suspenso"] td {
+    background-color: rgba(25, 118, 210, 0.3) !important;
+    border-top: 1px solid #3b82f6;
+    border-bottom: 1px solid #3b82f6;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="demonstracao"] td {
+    background-color: rgba(239, 108, 0, 0.3) !important;
+    border-top: 1px solid #f59e0b;
+    border-bottom: 1px solid #f59e0b;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="cancelado"] td {
+    background-color: rgba(26, 35, 126, 0.3) !important;
+    border-top: 1px solid #3b82f6;
+    border-bottom: 1px solid #3b82f6;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="nao_participar"] td {
+    background-color: rgba(249, 168, 37, 0.3) !important;
+    border-top: 1px solid #d97706;
+    border-bottom: 1px solid #d97706;
+  }
+
+  /* Primeira célula da linha selecionada (borda esquerda) */
+  [data-theme="dark"] tr.selected-row[data-status] td:first-child {
+    border-left: 4px solid transparent;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="em_analise"] td:first-child {
+    border-left-color: #94a3b8;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="em_andamento"] td:first-child {
+    border-left-color: #f59e0b;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="ganhamos"] td:first-child {
+    border-left-color: #10b981;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="perdemos"] td:first-child {
+    border-left-color: #ef4444;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="suspenso"] td:first-child {
+    border-left-color: #3b82f6;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="demonstracao"] td:first-child {
+    border-left-color: #f59e0b;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="cancelado"] td:first-child {
+    border-left-color: #3b82f6;
+  }
+
+  [data-theme="dark"] tr.selected-row[data-status="nao_participar"] td:first-child {
+    border-left-color: #d97706;
+  }
+
+  /* Ajuste do número da linha para linhas selecionadas */
+  [data-theme="dark"] tr.selected-row .row-number-cell {
+    background-color: transparent !important;
+    color: #f9fafb !important;
+    font-weight: 600;
+    border-right: 2px solid currentColor !important;
+  }
