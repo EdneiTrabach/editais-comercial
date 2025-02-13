@@ -13,7 +13,13 @@ const securityMiddleware = (app) => {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", process.env.SUPABASE_URL]
+        connectSrc: [
+          "'self'",
+          "https://*.supabase.co",  // Permite conexões Supabase
+          "wss://*.supabase.co"     // Permite WebSocket Supabase
+        ],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        formAction: ["'self'"]
       }
     },
     crossOriginEmbedderPolicy: true,
