@@ -1128,6 +1128,7 @@ const getEmpresaNome = (empresaId) => {
   margin-bottom: 1rem;
   position: relative;
   user-select: text;
+  height: 100%;
 }
 
 .excel-table {

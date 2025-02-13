@@ -398,24 +398,33 @@ const handleSidebarToggle = (isExpanded) => {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden; /* Impede scroll horizontal */
-  padding-right: 4px;
+  padding-right: 8px; /* Aumentado para acomodar a scrollbar */
   padding-left: 0;
   width: 100%; /* Garante que ocupe toda a largura disponível */
   margin: 0; /* Remove margens */
+  scrollbar-width: thin; /* Para Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1); /* Para Firefox */
 }
 
 /* Scrollbar personalizada */
 .nav-links::-webkit-scrollbar {
-  width: 4px;
+  width: 6px; /* Largura da scrollbar */
 }
 
 .nav-links::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1); /* Fundo do trilho */
+  border-radius: 3px;
 }
 
 .nav-links::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.5); /* Cor da barra de rolagem */
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Hover na scrollbar */
+.nav-links::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .sidebar-menu-item {

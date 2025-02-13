@@ -72,10 +72,10 @@ const features = [
     route: '/plataformas'
   },
   {
-    icon: '/icons/adicao.svg',
-    title: 'Documentos',
-    description: 'Controle seus documentos e certificados',
-    route: '/documentos'
+    icon: '/icons/empresa.svg',
+    title: 'Empresas',
+    description: 'Cadastre e gerencie empresas',
+    route: '/empresas'
   },
   {
     icon: '/icons/check.svg',

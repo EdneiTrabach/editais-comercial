@@ -6,7 +6,7 @@
       <div class="header">
         <h1>Empresas</h1>
         <button class="btn-add" @click="showModal = true">
-          <img src="/icons/adicao.svg" alt="Adicionar" class="icon" />
+          <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
           Nova Empresa
         </button>
       </div>
@@ -34,7 +34,7 @@
               <td>{{ empresa.email }}</td>
               <td>
                 <div class="action-buttons">
-                  <button class="btn-icon delete" @click="handleDelete(empresa)">
+                  <button class="btn-action delete" @click="handleDelete(empresa)">
                     <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
                   </button>
                 </div>
@@ -297,6 +297,7 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: auto;
   flex: 1;
+  height: 100%;
 }
 
 .excel-table {
@@ -333,17 +334,16 @@ onMounted(() => {
   background: transparent;
 }
 
-.btn-icon.delete {
-  color: #dc2626;
-}
-
-.btn-icon.delete:hover {
-  background: #fee2e2;
-}
-
 .icon {
+  width: 16px;
+  height: 16px;
+  transition: all 0.3s ease;
+}
+
+.icon-add {
   width: 20px;
   height: 20px;
+  filter: brightness(0) invert(1); /* Deixa o ícone branco */
 }
 
 .modal-overlay {
@@ -438,6 +438,34 @@ onMounted(() => {
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
+}
+
+.btn-action {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-action.edit {
+  background: #e3f2fd;
+}
+
+.btn-action.delete {
+  background: #fee2e2;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+}
+
+.btn-action.edit:hover {
+  background: #bbdefb;
 }
 
 .btn-cancel {
