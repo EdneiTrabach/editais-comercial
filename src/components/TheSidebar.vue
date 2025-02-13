@@ -126,7 +126,6 @@ const toggleSidebar = () => {
   } else {
     // Se não está ativo, expande o sidebar
     isActive.value = true
-    isPinned.value = false
   }
   
   emit('sidebarToggle', isActive.value)
@@ -181,15 +180,6 @@ const handleLogout = async () => {
     console.error('Erro ao fazer logout:', error)
     alert('Erro ao sair do sistema. Tente novamente.')
   }
-}
-
-const togglePin = () => {
-  isPinned.value = !isPinned.value
-  if (isPinned.value) {
-    isActive.value = true
-  }
-  adjustMainContent()
-  emit('sidebarToggle', isPinned.value)
 }
 
 const toggleNotifications = () => {
@@ -288,6 +278,7 @@ const handleSidebarToggle = (isExpanded) => {
 
 .sidebar.pinned .sidebar-trigger {
   background: var(--company-red, #193155);
+  display: flex;
 }
 
 /* Ajuste main-content */
@@ -363,11 +354,34 @@ const handleSidebarToggle = (isExpanded) => {
   font-weight: 600;
 }
 
-.pin-icon {
-  width: 20px;
-  height: 20px;
-  opacity: 0.7;
+
+/* Ajuste do trigger */
+.sidebar-trigger {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--company-red, #193155);
+  width: 35px;
+  height: 75px;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
+}
+
+.sidebar-trigger:hover {
+  background: #1f2937;
+  width: 40px;
+}
+
+/* Modifique a visibilidade e estilo do trigger */
+.sidebar.active:not(.pinned) .sidebar-trigger {
+  background: #1f2937;
 }
 
 /* Ajuste do menu para scroll */
@@ -531,10 +545,5 @@ const handleSidebarToggle = (isExpanded) => {
 
 .sidebar.pinned {
   left: 0;
-}
-
-/* Ajuste do trigger quando pinado */
-.sidebar.pinned .sidebar-trigger {
-  display: none;
 }
 </style>
