@@ -2,7 +2,8 @@
   <div class="sidebar-container">
     <nav class="sidebar" :class="{
       'active': isActive,
-      'dark': isDarkMode
+      'dark': isDarkMode,
+      'pinned': isPinned
     }">
       <div class="sidebar-trigger" @click="toggleSidebar">
         <span>{{ isActive ? '◀' : '▶' }}</span>
@@ -53,6 +54,12 @@
               <span class="link-text">Plataformas</span>
             </router-link>
           </li>
+          <li class="sidebar-menu-item">
+            <router-link to="/empresas" class="sidebar-menu-link">
+              <img src="/icons/empresa.svg" alt="Empresas" class="icon" />
+              <span class="link-text">Empresas</span>
+            </router-link>
+          </li>
         </ul>
 
         <div class="bottom-section">
@@ -60,6 +67,15 @@
             <img :src="isDarkMode ? '/icons/sun.svg' : '/icons/moon.svg'" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'"
               class="icon" />
             <span class="link-text">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+          </button>
+
+          <!-- Novo botão de notificações -->
+          <button class="notifications-btn sidebar-menu-link" @click="toggleNotifications">
+            <div class="notification-icon-wrapper">
+              <img src="/icons/bell.svg" alt="Notificações" class="icon" />
+              <span v-if="unreadNotifications" class="notification-badge">{{ unreadNotifications }}</span>
+            </div>
+            <span class="link-text">Notificações</span>
           </button>
 
           <button @click="handleLogout" class="logout-btn sidebar-menu-link">
@@ -84,6 +100,7 @@ const isAdmin = ref(false)
 const isActive = ref(false)
 const isDarkMode = ref(false)
 const isPinned = ref(false) // Novo estado para controlar se está fixado
+const unreadNotifications = ref(0)
 
 const checkAdminStatus = async () => {
   const { data: { user } } = await supabase.auth.getUser()
@@ -99,15 +116,35 @@ const checkAdminStatus = async () => {
 }
 
 const toggleSidebar = () => {
-  isActive.value = !isActive.value
-  emit('sidebarToggle', isActive.value)
-  // Persistir o estado no localStorage
-  localStorage.setItem('sidebarState', isActive.value.toString())
+  if (isActive.value) {
+    // Se já está ativo, alterna entre fixo e não fixo
+    isPinned.value = !isPinned.value
+    if (!isPinned.value) {
+      // Se desafixou, fecha o sidebar
+      isActive.value = false
+    }
+  } else {
+    // Se não está ativo, expande o sidebar
+    isActive.value = true
+    isPinned.value = false
+  }
   
-  // Ajustar margin do main-content
+  emit('sidebarToggle', isActive.value)
+  localStorage.setItem('sidebarState', isActive.value.toString())
+  localStorage.setItem('sidebarPinned', isPinned.value.toString())
+  
+  adjustMainContent()
+}
+
+// Nova função para ajustar o main-content
+const adjustMainContent = () => {
   const mainContents = document.querySelectorAll('.main-content')
   mainContents.forEach(content => {
-    content.style.marginLeft = isActive.value ? '260px' : '0'
+    if (isActive.value || isPinned.value) {
+      content.style.marginLeft = '330px'
+    } else {
+      content.style.marginLeft = '0'
+    }
     content.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
   })
 }
@@ -115,10 +152,18 @@ const toggleSidebar = () => {
 // Recuperar estado ao montar
 onMounted(() => {
   const savedState = localStorage.getItem('sidebarState')
+  const savedPinned = localStorage.getItem('sidebarPinned')
+  
   if (savedState === 'true') {
     isActive.value = true
   }
+  if (savedPinned === 'true') {
+    isPinned.value = true
+  }
+  
+  adjustMainContent()
   checkAdminStatus()
+  checkNotifications()
 })
 
 const toggleDarkMode = () => {
@@ -143,15 +188,48 @@ const togglePin = () => {
   if (isPinned.value) {
     isActive.value = true
   }
+  adjustMainContent()
   emit('sidebarToggle', isPinned.value)
+}
+
+const toggleNotifications = () => {
+  // Aqui você pode adicionar a lógica para abrir/fechar o painel de notificações
+  console.log('Toggle notifications')
+}
+
+// Adicione esta função para buscar notificações
+const checkNotifications = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('count')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .single()
+
+      if (error) throw error
+      unreadNotifications.value = data?.count || 0
+    }
+  } catch (error) {
+    console.error('Erro ao buscar notificações:', error)
+  }
 }
 
 // Fechar sidebar quando clicar fora
 document.addEventListener('click', (e) => {
   const sidebar = document.querySelector('.sidebar')
   const trigger = document.querySelector('.sidebar-trigger')
-  if (sidebar && trigger && !sidebar.contains(e.target) && !trigger.contains(e.target) && !isPinned.value) {
-    isActive.value = false
+  
+  if (sidebar && trigger && 
+      !sidebar.contains(e.target) && 
+      !trigger.contains(e.target)) {
+    if (!isPinned.value) {
+      // Só fecha se não estiver fixo
+      isActive.value = false
+      adjustMainContent()
+    }
   }
 })
 
@@ -172,16 +250,20 @@ const handleSidebarToggle = (isExpanded) => {
 </script>
 
 <style scoped>
+/* Reset e container */
 .sidebar-container {
   position: relative;
+  height: 100%;
+  min-height: 100vh;
 }
 
+/* Sidebar principal */
 .sidebar {
   position: fixed;
-  left: -290px;
+  left: -330px;
   top: 0;
   height: 100vh;
-  width: 260px; /* Ajustado para 260px para manter consistência */
+  width: 260px;
   background: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -189,16 +271,39 @@ const handleSidebarToggle = (isExpanded) => {
   z-index: 1000;
   padding: 2rem 1rem;
   box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar.active {
+.sidebar.active,
+.sidebar.pinned {
   left: 0;
   box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
 }
 
-/* Remova o hover que expande o sidebar */
-.sidebar:hover {
-  /* Removido para não expandir no hover */
+/* Modifique a visibilidade do trigger */
+.sidebar.active:not(.pinned) .sidebar-trigger {
+  background: #1f2937;
+}
+
+.sidebar.pinned .sidebar-trigger {
+  background: var(--company-red, #193155);
+}
+
+/* Ajuste main-content */
+:deep(.main-content) {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0;
+}
+
+:deep(.main-content.expanded) {
+  margin-left: 260px;
+}
+
+@media (min-width: 1536px) {
+  :deep(.main-content.expanded) {
+    margin-left: 280px;
+  }
 }
 
 .sidebar.dark {
@@ -214,7 +319,7 @@ const handleSidebarToggle = (isExpanded) => {
   right: -32px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--company-red, #193155); /* Cor principal do projeto */
+  background: var(--company-red, #193155);
   width: 35px;
   height: 75px;
   border-radius: 0 8px 8px 0;
@@ -265,21 +370,45 @@ const handleSidebarToggle = (isExpanded) => {
   transition: all 0.3s ease;
 }
 
+/* Ajuste do menu para scroll */
 .sidebar-menu {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 200px);
-  justify-content: space-between;
+  flex: 1;
+  min-height: 0;
+  /* Importante para permitir scroll */
+  overflow-y: auto;
 }
 
 .nav-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* Impede scroll horizontal */
+  padding-right: 4px;
+  padding-left: 0;
+  width: 100%; /* Garante que ocupe toda a largura disponível */
+  margin: 0; /* Remove margens */
+}
+
+/* Scrollbar personalizada */
+.nav-links::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-links::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-links::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
 }
 
 .sidebar-menu-item {
   margin-bottom: 0.5rem;
+  list-style-type: none;
+  /* Garante que não haja marcadores */
+
 }
 
 .sidebar-menu-link {
@@ -291,6 +420,8 @@ const handleSidebarToggle = (isExpanded) => {
   text-decoration: none;
   border-radius: 10px;
   transition: all 0.3s ease;
+  white-space: nowrap; /* Evita quebra de texto */
+  width: 80%; /* Ocupa toda largura disponível */
 }
 
 .sidebar-menu-link:hover,
@@ -306,10 +437,12 @@ const handleSidebarToggle = (isExpanded) => {
   opacity: 0.9;
 }
 
+/* Bottom section sempre visível */
 .bottom-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1rem;
   margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: inherit;
 }
 
 .theme-toggle,
@@ -321,6 +454,58 @@ const handleSidebarToggle = (isExpanded) => {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
+}
+
+.notification-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc2626;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notifications-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+/* Media queries ajustadas */
+@media (min-width: 1536px) {
+  .sidebar {
+    width: 280px;
+    /* Aumenta levemente a largura */
+    padding: 2rem 1.5rem;
+    /* Mais espaço interno */
+  }
+
+  .sidebar-menu-link {
+    padding: 1rem 1.4rem;
+    /* Mais espaço para itens */
+  }
+
+  .icon {
+    width: 26px;
+    /* Ícones um pouco maiores */
+    height: 26px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -342,5 +527,14 @@ const handleSidebarToggle = (isExpanded) => {
     width: 30px;
     height: 30px;
   }
+}
+
+.sidebar.pinned {
+  left: 0;
+}
+
+/* Ajuste do trigger quando pinado */
+.sidebar.pinned .sidebar-trigger {
+  display: none;
 }
 </style>

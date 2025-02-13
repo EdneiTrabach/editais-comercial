@@ -62,6 +62,11 @@ const router = createRouter({
       name: 'plataformas',
       component: PlataformasView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/empresas',
+      name: 'empresas',
+      component: () => import('../views/EmpresasView.vue')
     }
   ]
 })

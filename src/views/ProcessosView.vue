@@ -119,6 +119,7 @@
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
                     <option value="em_andamento">Em Andamento</option>
+                    <option value="vamos_participar">Vamos Participar</option>
                     <option value="ganhamos">Ganhamos</option>
                     <option value="perdemos">Perdemos</option>
                     <option value="suspenso">Suspenso</option>
@@ -164,6 +165,33 @@
                   <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
                     {{ formatStatus(processo.status) }}
                   </span>
+                  <template v-else-if="coluna.campo === 'empresa'">
+                    <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                      <select 
+                        v-model="editingCell.value" 
+                        @change="handleUpdate(processo)"
+                        @blur="handleUpdate(processo)" 
+                        @keyup.esc="cancelEdit()"
+                        class="empresa-select"
+                      >
+                        <option value="">Selecione uma empresa</option>
+                        <option 
+                          v-for="empresa in empresas" 
+                          :key="empresa.id" 
+                          :value="empresa.id"
+                        >
+                          {{ empresa.nome }} ({{ empresa.cnpj }})
+                        </option>
+                      </select>
+                    </template>
+                    <span 
+                      v-else 
+                      @dblclick="handleDblClick(coluna.campo, processo, $event)"
+                      class="empresa-display"
+                    >
+                      {{ getEmpresaNome(processo.empresa_id) }}
+                    </span>
+                  </template>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -261,8 +289,9 @@ const colunas = [
   { titulo: 'Objeto Completo', campo: 'objeto_completo' },
   { titulo: 'Portal', campo: 'site_pregao' },
   { titulo: 'Representante', campo: 'representante' },
+  { titulo: 'Empresa Participante', campo: 'empresa' },
   { titulo: 'Campo Adicional 1', campo: 'campo_adicional1' },
-  { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' }
+  { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' },
 ]
 
 // Inicialização dos filtros com todas as colunas
@@ -394,6 +423,7 @@ const formatModalidadeCompleta = (modalidade) => {
 
 const formatStatus = (status) => {
   const statusMap = {
+    'vamos_participar': 'Vamos Participar',
     'em_analise': 'Em Análise',
     'em_andamento': 'Em Andamento',
     'ganhamos': 'Ganhamos',
@@ -711,18 +741,8 @@ const handleDblClick = async (field, processo, event) => {
       editingCell.value = {
         id: processo.id,
         field,
-        value: processo[field]
+        value: field === 'empresa' ? processo.empresa_id : processo[field]
       }
-
-      nextTick(() => {
-        const input = cell.querySelector('input, textarea, select')
-        if (input) {
-          input.focus()
-          if (input.type === 'text') {
-            input.selectionStart = input.selectionEnd = input.value.length
-          }
-        }
-      })
     }
   }
 }
@@ -756,36 +776,24 @@ const hideConfirmDialog = () => {
 // Função para atualizar o registro
 const handleUpdate = async (processo) => {
   try {
-    if (!editingCell.value.value) return cancelEdit();
+    if (editingCell.value.field === 'empresa') {
+      const { error } = await supabase
+        .from('processos')
+        .update({ empresa_id: editingCell.value.value })
+        .eq('id', processo.id)
 
-    let updateValue = editingCell.value.value;
-
-    // Formatação específica para data e hora
-    if (editingCell.value.field === 'data_pregao') {
-      updateValue = updateValue.split('T')[0]; // Garante apenas a parte da data
-    } else if (editingCell.value.field === 'hora_pregao') {
-      updateValue = updateValue.split(':').slice(0, 2).join(':'); // Garante apenas HH:mm
+      if (error) throw error
+      
+      // Atualiza o valor localmente
+      processo.empresa_id = editingCell.value.value
+      
+      // Atualiza a lista de processos
+      await loadProcessos()
     }
-
-    const updateData = {
-      [editingCell.value.field]: updateValue,
-      updated_at: new Date().toISOString()
-    }
-
-    const { error } = await supabase
-      .from('processos')
-      .update(updateData)
-      .eq('id', processo.id)
-
-    if (error) throw error;
-
-    // Atualiza o valor localmente após sucesso
-    processo[editingCell.value.field] = updateValue;
-
   } catch (error) {
-    console.error('Erro ao atualizar:', error);
+    console.error('Erro ao atualizar:', error)
   } finally {
-    cancelEdit();
+    cancelEdit()
   }
 }
 
@@ -1051,6 +1059,58 @@ const getModalidadeSigla = (modalidade) => {
   }
 
   return modalidades[modalidade] || modalidade
+}
+
+// Adicione no início do script junto com outros refs
+const empresas = ref([])
+
+// Adicione este computed
+const empresasCadastradas = computed(() => {
+  return empresas.value.filter(empresa => empresa.id) // Filtra apenas empresas válidas
+})
+
+// Modifique a função loadEmpresas
+const loadEmpresas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('id, nome, cnpj')
+      .order('nome')
+
+    if (error) throw error
+    empresas.value = data || []
+  } catch (error) {
+    console.error('Erro ao carregar empresas:', error)
+    empresas.value = []
+  }
+}
+
+const handleEmpresaChange = async (processo) => {
+  try {
+    const { error } = await supabase
+      .from('processos')
+      .update({ empresa_id: processo.empresa_id })
+      .eq('id', processo.id)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Erro ao atualizar empresa:', error)
+    alert('Erro ao atualizar empresa')
+  }
+}
+
+// Adicione no onMounted
+onMounted(async () => {
+  await Promise.all([
+    loadProcessos(),
+    loadEmpresas()
+  ])
+})
+
+// Adicione esta função junto com as outras
+const getEmpresaNome = (empresaId) => {
+  const empresa = empresas.value.find(e => e.id === empresaId)
+  return empresa ? empresa.nome : '-'
 }
 </script>
 
@@ -2073,6 +2133,18 @@ td select option {
   color: #721c24;
 }
 
+/* Adicione junto com os outros estilos de status */
+.status.vamos_participar {
+  background: #193155; /* Azul marinho */
+  color: white;
+  font-weight: 500;
+}
+
+/* Opcional: Adicione um hover effect */
+.status.vamos_participar:hover {
+  background: #1f3d6b;
+}
+
 /* Estilo para a coluna de numeração */
 .row-number-cell {
   width: 50px;
@@ -2204,5 +2276,55 @@ th[data-field="objeto_completo"] {
   line-height: 1.4;
   word-wrap: break-word;
   user-select: text;
+}
+
+/* Adicione no <style scoped> */
+td[data-field="empresa"] span {
+  display: block;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+td[data-field="empresa"]:hover span {
+  background: rgba(25, 49, 85, 0.05);
+  cursor: pointer;
+}
+
+td[data-field="empresa"] select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #193155;
+  border-radius: 4px;
+  background: white;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.empresa-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #193155;
+  border-radius: 4px;
+  background: white;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.empresa-select:focus {
+  outline: none;
+  border-color: #254677;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
+}
+
+.empresa-display {
+  display: block;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+td[data-field="empresa"]:hover .empresa-display {
+  background: rgba(25, 49, 85, 0.05);
+  cursor: pointer;
 }
 </style>

@@ -16,13 +16,14 @@
   --company-red: #ff0000; /* Substitua pela sua cor */
 }
 
+/* Garantir que html e body tenham altura total */
 html, 
 body {
-  width: 100%;
   height: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Previne scrollbars */
+  overflow-x: hidden;
 }
 
 body.dark-mode {
@@ -30,14 +31,30 @@ body.dark-mode {
   color: #ffffff;
 }
 
+/* Ajuste do app principal */
 #app {
-  width: 100vw;     /* Força largura total */
-  height: 100vh;    /* Força altura total */
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
   max-width: 100%;  /* Remove limite máximo */
   margin: 0;
   padding: 0;
   font-weight: normal;
   overflow: hidden; /* Previne scrollbars */
+}
+
+/* Container principal */
+.main-content {
+  flex: 1;
+  min-height: 100vh;
+  margin-left: 260px; /* Largura da sidebar */
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 1536px) {
+  .main-content {
+    margin-left: 280px; /* Ajusta para nova largura da sidebar */
+  }
 }
 
 a,
