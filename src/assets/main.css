@@ -13,6 +13,7 @@
 :root {
   --sidebar-bg-light: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
   --sidebar-bg-dark: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+  --company-red: #ff0000; /* Substitua pela sua cor */
 }
 
 html, 

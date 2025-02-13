@@ -1,66 +1,70 @@
 <template>
   <div class="sidebar-container">
-    <nav class="sidebar" :class="{ 'collapsed': !isExpanded, 'dark': isDarkMode }">
-      <button class="toggle-btn" @click="toggleSidebar">
-        {{ isExpanded ? '◀' : '▶' }}
-      </button>
-
-      <div class="logo-container">
-        <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
-        <span v-if="isExpanded">Editais</span>
+    <nav class="sidebar" :class="{
+      'active': isActive,
+      'dark': isDarkMode
+    }">
+      <div class="sidebar-trigger" @click="toggleSidebar">
+        <span>{{ isActive ? '◀' : '▶' }}</span>
       </div>
 
-      <div class="nav-wrapper">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
+        </div>
+        <div class="sidebar-title">Editais</div>
+      </div>
+
+      <div class="sidebar-menu">
         <ul class="nav-links">
-          <li>
-            <router-link to="/processos">
+          <li class="sidebar-menu-item">
+            <router-link to="/processos" class="sidebar-menu-link">
               <img src="/icons/pasta.svg" alt="Processos" class="icon" />
-              <span v-if="isExpanded" class="link-text">Processos</span>
+              <span class="link-text">Processos</span>
             </router-link>
           </li>
-          <li>
-            <router-link to="/funcionalidades">
+          <li class="sidebar-menu-item">
+            <router-link to="/funcionalidades" class="sidebar-menu-link">
               <img src="/icons/configuracoes.svg" alt="Funcionalidades" class="icon" />
-              <span v-if="isExpanded" class="link-text">Funcionalidades</span>
+              <span class="link-text">Funcionalidades</span>
             </router-link>
           </li>
-          <li>
-            <router-link to="/editais">
+          <li class="sidebar-menu-item">
+            <router-link to="/editais" class="sidebar-menu-link">
               <img src="/icons/nova-pasta.svg" alt="Editais" class="icon" />
-              <span v-if="isExpanded" class="link-text">Novo Processo</span>
+              <span class="link-text">Novo Processo</span>
             </router-link>
           </li>
-          <li>
-            <router-link to="/dashboard">
+          <li class="sidebar-menu-item">
+            <router-link to="/dashboard" class="sidebar-menu-link">
               <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
-              <span v-if="isExpanded" class="link-text">Dashboard</span>
+              <span class="link-text">Dashboard</span>
             </router-link>
           </li>
-          <li>
-            <router-link to="/representantes">
+          <li class="sidebar-menu-item">
+            <router-link to="/representantes" class="sidebar-menu-link">
               <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
-              <span v-if="isExpanded" class="link-text">Representantes</span>
+              <span class="link-text">Representantes</span>
             </router-link>
           </li>
-          <li>
-            <router-link to="/plataformas">
+          <li class="sidebar-menu-item">
+            <router-link to="/plataformas" class="sidebar-menu-link">
               <img src="/icons/links.svg" alt="Plataformas" class="icon" />
-              <span v-if="isExpanded" class="link-text">Plataformas</span>
+              <span class="link-text">Plataformas</span>
             </router-link>
           </li>
         </ul>
 
         <div class="bottom-section">
-          <button class="theme-toggle" @click="toggleDarkMode">
-            <img :src="isDarkMode ? '/icons/sun.svg' : '/icons/moon.svg'" 
-                 :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" 
-                 class="icon" />
-            <span v-if="isExpanded">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+          <button class="theme-toggle sidebar-menu-link" @click="toggleDarkMode">
+            <img :src="isDarkMode ? '/icons/sun.svg' : '/icons/moon.svg'" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'"
+              class="icon" />
+            <span class="link-text">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
           </button>
 
-          <button @click="handleLogout" class="logout-btn">
+          <button @click="handleLogout" class="logout-btn sidebar-menu-link">
             <img src="/icons/sair.svg" alt="Sair" class="icon" />
-            <span v-if="isExpanded" class="link-text">Sair</span>
+            <span class="link-text">Sair</span>
           </button>
         </div>
       </div>
@@ -77,8 +81,9 @@ const emit = defineEmits(['sidebarToggle'])
 
 const router = useRouter()
 const isAdmin = ref(false)
-const isExpanded = ref(true)
+const isActive = ref(false)
 const isDarkMode = ref(false)
+const isPinned = ref(false) // Novo estado para controlar se está fixado
 
 const checkAdminStatus = async () => {
   const { data: { user } } = await supabase.auth.getUser()
@@ -94,10 +99,27 @@ const checkAdminStatus = async () => {
 }
 
 const toggleSidebar = () => {
-  isExpanded.value = !isExpanded.value
-  // Emite evento para o componente pai
-  emit('sidebarToggle', isExpanded.value)
+  isActive.value = !isActive.value
+  emit('sidebarToggle', isActive.value)
+  // Persistir o estado no localStorage
+  localStorage.setItem('sidebarState', isActive.value.toString())
+  
+  // Ajustar margin do main-content
+  const mainContents = document.querySelectorAll('.main-content')
+  mainContents.forEach(content => {
+    content.style.marginLeft = isActive.value ? '260px' : '0'
+    content.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+  })
 }
+
+// Recuperar estado ao montar
+onMounted(() => {
+  const savedState = localStorage.getItem('sidebarState')
+  if (savedState === 'true') {
+    isActive.value = true
+  }
+  checkAdminStatus()
+})
 
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
@@ -116,9 +138,37 @@ const handleLogout = async () => {
   }
 }
 
-onMounted(() => {
-  checkAdminStatus()
+const togglePin = () => {
+  isPinned.value = !isPinned.value
+  if (isPinned.value) {
+    isActive.value = true
+  }
+  emit('sidebarToggle', isPinned.value)
+}
+
+// Fechar sidebar quando clicar fora
+document.addEventListener('click', (e) => {
+  const sidebar = document.querySelector('.sidebar')
+  const trigger = document.querySelector('.sidebar-trigger')
+  if (sidebar && trigger && !sidebar.contains(e.target) && !trigger.contains(e.target) && !isPinned.value) {
+    isActive.value = false
+  }
 })
+
+// Fechar sidebar com ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !isPinned.value) {
+    isActive.value = false
+  }
+})
+
+const handleSidebarToggle = (isExpanded) => {
+  // Ajustar classe do main-content
+  const mainContent = document.querySelector('.main-content')
+  if (mainContent) {
+    mainContent.style.marginLeft = isExpanded ? '260px' : '0'
+  }
+}
 </script>
 
 <style scoped>
@@ -127,188 +177,150 @@ onMounted(() => {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
-  color: white;
-  height: 100vh;
-  width: 280px;
   position: fixed;
-  left: 0;
+  left: -290px;
   top: 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100vh;
+  width: 260px; /* Ajustado para 260px para manter consistência */
+  background: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem 1rem;
+  padding: 2rem 1rem;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar.active {
+  left: 0;
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Remova o hover que expande o sidebar */
+.sidebar:hover {
+  /* Removido para não expandir no hover */
 }
 
 .sidebar.dark {
   background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
 }
 
-.nav-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 100px);
-  justify-content: space-between;
+.sidebar.pinned {
+  left: 0;
 }
 
-.bottom-section {
-  padding: 1rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: auto;
-}
-
-.theme-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.9rem 1.2rem;
-  background: none;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  border-radius: 10px;
-  margin-bottom: 0.5rem;
-}
-
-.theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.sidebar.collapsed {
-  width: 80px;
-  padding: 1.5rem 0.5rem;
-}
-
-.toggle-btn {
+.sidebar-trigger {
   position: absolute;
-  right: -15px;
-  top: 25px;
-  background: #ffffff;
-  color: #193155;
-  border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--company-red, #193155); /* Cor principal do projeto */
+  width: 35px;
+  height: 75px;
+  border-radius: 0 8px 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+.sidebar-trigger:hover {
+  background: #1f2937;
+  width: 40px;
 }
 
-.logo-container {
-  padding: 0.5rem;
-  margin-bottom: 2rem;
+.sidebar-header {
   display: flex;
   align-items: center;
   gap: 1rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
 }
 
 .logo {
-  width: 35px;
-  height: 35px;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar-title {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.pin-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
   transition: all 0.3s ease;
 }
 
-.sidebar.collapsed .logo {
-  width: 30px;
-  height: 30px;
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  justify-content: space-between;
 }
 
 .nav-links {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex: 1;
 }
 
-.nav-links li {
-  margin-bottom: 0.75rem;
+.sidebar-menu-item {
+  margin-bottom: 0.5rem;
 }
 
-.nav-links a {
-  color: #ffffff;
+.sidebar-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  color: white;
   text-decoration: none;
-  padding: 0.9rem 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  transition: all 0.3s ease;
   border-radius: 10px;
-  font-weight: 500;
-}
-
-.nav-links a:hover,
-.nav-links a.router-link-active {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(5px);
-}
-
-.logout-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1rem;
-  margin-top: auto;
-}
-
-.logout-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.9rem 1.2rem;
-  background: none;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  font-family: 'JetBrains Mono', monospace;
   transition: all 0.3s ease;
-  border-radius: 10px;
 }
 
-.logout-btn:hover {
+.sidebar-menu-link:hover,
+.sidebar-menu-link.router-link-active {
   background: rgba(255, 255, 255, 0.15);
   transform: translateX(5px);
 }
 
 .icon {
-  font-size: 1.3rem;
   width: 24px;
   height: 24px;
-  transition: all 0.3s ease;
   filter: brightness(0) invert(1);
   opacity: 0.9;
 }
 
-.nav-links a:hover .icon,
-.logout-btn:hover .icon {
-  opacity: 1;
-  transform: scale(1.1);
+.bottom-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  margin-top: auto;
 }
 
-.link-text {
-  white-space: nowrap;
-  opacity: 1;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-  letter-spacing: 0.3px;
-}
-
-.collapsed .link-text {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+.theme-toggle,
+.logout-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
 }
 
 @media (max-width: 768px) {
@@ -317,42 +329,18 @@ onMounted(() => {
     padding: 1.5rem 0.5rem;
   }
 
-  .sidebar.collapsed {
-    width: 0;
-    padding: 0;
-    opacity: 0;
-  }
-
-  .link-text {
+  .sidebar-trigger {
     display: none;
   }
 
-  .toggle-btn {
-    right: -12px;
-    top: 15px;
-    width: 25px;
-    height: 25px;
-    font-size: 12px;
-  }
-
-  .logo {
-    width: 28px;
-    height: 28px;
-  }
-
-  .bottom-section {
-    padding: 0.5rem;
-  }
-
-  .theme-toggle, 
-  .logout-btn {
-    padding: 0.7rem;
-    justify-content: center;
-  }
-
-  .theme-toggle span, 
-  .logout-btn span {
+  .link-text,
+  .sidebar-title {
     display: none;
+  }
+
+  .sidebar-logo {
+    width: 30px;
+    height: 30px;
   }
 }
 </style>

@@ -195,7 +195,7 @@ onMounted(() => {
 }
 
 .main-content {
-  margin-left: 300px;
+  /* margin-left: 300px; */
   padding: 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
@@ -203,7 +203,7 @@ onMounted(() => {
 }
 
 .main-content.expanded {
-  margin-left: 80px;
+  margin-left: 0px;
 }
 
 .header {
