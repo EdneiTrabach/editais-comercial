@@ -67,6 +67,9 @@
               <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    placeholder="Digite o código">
                   <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
                     :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
@@ -162,28 +165,15 @@
                   </span>
                   <template v-else-if="coluna.campo === 'empresa'">
                     <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                      <select 
-                        v-model="editingCell.value" 
-                        @change="handleUpdate(processo)"
-                        @blur="handleUpdate(processo)" 
-                        @keyup.esc="cancelEdit()"
-                        class="empresa-select"
-                      >
+                      <select v-model="editingCell.value" @change="handleUpdate(processo)"
+                        @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()" class="empresa-select">
                         <option value="">Selecione uma empresa</option>
-                        <option 
-                          v-for="empresa in empresas" 
-                          :key="empresa.id" 
-                          :value="empresa.id"
-                        >
+                        <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
                           {{ empresa.nome }} ({{ empresa.cnpj }})
                         </option>
                       </select>
                     </template>
-                    <span 
-                      v-else 
-                      @dblclick="handleDblClick(coluna.campo, processo, $event)"
-                      class="empresa-display"
-                    >
+                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="empresa-display">
                       {{ getEmpresaNome(processo.empresa_id) }}
                     </span>
                   </template>
@@ -204,6 +194,19 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="anos-tabs">
+        <div class="tabs-header">
+          <button 
+            v-for="ano in anosDisponiveis" 
+            :key="ano"
+            :class="['tab-button', { active: anoSelecionado === ano }]"
+            @click="selecionarAno(ano)"
+          >
+            {{ ano }}
+          </button>
+        </div>
       </div>
 
       <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
@@ -269,7 +272,7 @@ const colunas = [
   { titulo: 'Modalidade', campo: 'modalidade' },
   { titulo: 'Estado', campo: 'estado' },
   { titulo: 'Nº Processo', campo: 'numero_processo' },
-  { titulo: 'Ano', campo: 'ano' },
+  { titulo: 'Código Análise', campo: 'codigo_analise' }, // Nova coluna
   { titulo: 'Órgão', campo: 'orgao' },
   { titulo: 'Status', campo: 'status' },
   { titulo: 'Objeto Resumido', campo: 'objeto_resumido' },
@@ -292,34 +295,46 @@ const initializeFiltros = () => {
 
 const filtros = ref(initializeFiltros())
 
+const anoSelecionado = ref(new Date().getFullYear())
+const anosDisponiveis = computed(() => {
+  const anos = new Set(processos.value.map(p => p.ano))
+  return Array.from(anos).sort((a, b) => b - a) // Ordena decrescente
+})
+
 const processosFiltrados = computed(() => {
   if (!processos.value) return []
 
-  return processos.value.filter(processo => {
-    return colunas.every(coluna => {
-      if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
-        return true
-      }
+  return processos.value
+    .filter(processo => processo.ano === anoSelecionado.value)
+    .filter(processo => {
+      return colunas.every(coluna => {
+        if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
+          return true
+        }
 
-      let valorProcesso = processo[coluna.campo]
-      if (!valorProcesso) return false
+        let valorProcesso = processo[coluna.campo]
+        if (!valorProcesso) return false
 
-      switch (coluna.campo) {
-        case 'data_pregao':
-          valorProcesso = formatDate(valorProcesso)
-          break
-        case 'hora_pregao':
-          valorProcesso = formatTime(valorProcesso)
-          break
-        case 'modalidade':
-          valorProcesso = formatModalidade(valorProcesso)
-          break
-      }
+        switch (coluna.campo) {
+          case 'data_pregao':
+            valorProcesso = formatDate(valorProcesso)
+            break
+          case 'hora_pregao':
+            valorProcesso = formatTime(valorProcesso)
+            break
+          case 'modalidade':
+            valorProcesso = formatModalidade(valorProcesso)
+            break
+        }
 
-      return filtros.value[coluna.campo].includes(valorProcesso)
+        return filtros.value[coluna.campo].includes(valorProcesso)
+      })
     })
-  })
 })
+
+const selecionarAno = (ano) => {
+  anoSelecionado.value = ano
+}
 
 const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
@@ -331,11 +346,11 @@ const formatDate = (dateString) => {
     const cleanDate = dateString.split('T')[0];
     const date = new Date(cleanDate);
     if (isNaN(date.getTime())) return '-';
-    
+
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   } catch (error) {
     console.error('Erro ao formatar data:', error);
@@ -532,6 +547,7 @@ const exportToExcel = () => {
     'Data': formatDate(processo.data_pregao),
     'Hora': formatTime(processo.hora_pregao),
     'Número do Processo': processo.numero_processo,
+    'Código Análise': processo.codigo_analise || '-',  // Novo campo
     'Ano': processo.ano,
     'Órgão': processo.orgao,
     'Modalidade': formatModalidade(processo.modalidade),
@@ -949,6 +965,7 @@ const handleSubmit = async () => {
       orgao: formData.value.orgao,
       data_pregao: dataPregao.toISOString().split('T')[0],
       hora_pregao: formData.value.hora_pregao,
+      codigo_analise: formData.value.codigo_analise,
       estado: formData.value.estado,
       modalidade: formData.value.modalidade,
       site_pregao: formData.value.site_pregao,
@@ -1972,8 +1989,8 @@ td select option {
 }
 
 .status.em_andamento {
-  background: #cce5ff;
-  color: #004085;
+  background: #ffe0b2;
+  color: #ef6c00;
 }
 
 .status.ganhamos {
@@ -2352,5 +2369,57 @@ th[data-field="objeto_completo"] {
   background-color: rgba(249, 168, 37, 0.15) !important;
   border-color: #f9a825 !important;
   box-shadow: inset 0 0 0 2px #f9a825;
+}
+.anos-tabs {
+  margin-top: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  background: #e5e7eb;
+}
+
+.tab-button.active {
+  background: #193155;
+  color: white;
+}
+
+/* Adicione estilos para scrollbar horizontal nas abas se necessário */
+.tabs-header::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-header::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.tabs-header::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.tabs-header::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>

@@ -924,3 +924,21 @@
     font-weight: 600;
     border-right: 2px solid currentColor !important;
   }
+
+  [data-theme="dark"] .anos-tabs {
+    background: #1e293b;
+  }
+  
+  [data-theme="dark"] .tab-button {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  [data-theme="dark"] .tab-button:hover {
+    background: #374151;
+  }
+  
+  [data-theme="dark"] .tab-button.active {
+    background: #3b82f6;
+    color: white;
+  }
