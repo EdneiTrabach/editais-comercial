@@ -69,7 +69,7 @@
           <li v-if="isAdmin" class="sidebar-menu-item">
             <router-link to="/configuracoes" class="sidebar-menu-link">
               <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
-              <span class="link-text">Administração de Usuários</span>
+              <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
         </ul>
@@ -101,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 
@@ -115,15 +115,55 @@ const isPinned = ref(false) // Novo estado para controlar se está fixado
 const unreadNotifications = ref(0)
 
 const checkAdminStatus = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data: profile } = await supabase
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      isAdmin.value = false
+      return
+    }
+
+    // Buscar perfil do usuário
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    if (error) {
+      // Se o perfil não existir, criar um
+      if (error.code === 'PGRST116') {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            role: 'admin' // ou 'user' dependendo da sua lógica
+          })
+          .select('role')
+          .single()
+
+        if (createError) {
+          console.error('Erro ao criar perfil:', createError)
+          isAdmin.value = false
+          return
+        }
+
+        isAdmin.value = newProfile.role === 'admin'
+        localStorage.setItem('userRole', newProfile.role)
+        return
+      }
+
+      console.error('Erro ao verificar perfil:', error)
+      isAdmin.value = false
+      return
+    }
+
     isAdmin.value = profile?.role === 'admin'
+    localStorage.setItem('userRole', profile?.role || '')
+  } catch (error) {
+    console.error('Erro ao verificar status de admin:', error)
+    isAdmin.value = false
   }
 }
 
@@ -175,6 +215,17 @@ onMounted(() => {
   adjustMainContent()
   checkAdminStatus()
   checkNotifications()
+})
+
+onMounted(async () => {
+  // Primeiro tenta pegar do localStorage para resposta rápida
+  const cachedRole = localStorage.getItem('userRole')
+  if (cachedRole) {
+    isAdmin.value = cachedRole === 'admin'
+  }
+
+  // Depois verifica com o servidor
+  await checkAdminStatus()
 })
 
 const toggleDarkMode = () => {
@@ -256,6 +307,23 @@ const handleSidebarToggle = (isExpanded) => {
     mainContent.style.marginLeft = isExpanded ? '260px' : '0'
   }
 }
+
+import { watch } from 'vue'
+
+// Observar mudanças na autenticação
+const unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN') {
+    await checkAdminStatus()
+  } else if (event === 'SIGNED_OUT') {
+    isAdmin.value = false
+    localStorage.removeItem('userRole')
+  }
+})
+
+// Limpar o listener quando o componente for destruído
+onUnmounted(() => {
+  unsubscribe.data.subscription.unsubscribe()
+})
 </script>
 
 <style scoped>
@@ -292,7 +360,7 @@ const handleSidebarToggle = (isExpanded) => {
 
 /* Modifique a visibilidade do trigger */
 .sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #1f2937;
+  background: #1f293765;
 }
 
 .sidebar.pinned .sidebar-trigger {
@@ -398,10 +466,7 @@ const handleSidebarToggle = (isExpanded) => {
   width: 40px;
 }
 
-/* Modifique a visibilidade e estilo do trigger */
-.sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #1f2937;
-}
+
 
 /* Ajuste do menu para scroll */
 .sidebar-menu {

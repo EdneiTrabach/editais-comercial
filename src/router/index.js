@@ -6,6 +6,7 @@ import PlataformasView from '@/views/PlataformasView.vue'
 import ProcessosView from '../views/ProcessosView.vue' // Importe diretamente
 import RelatoriosView from '@/views/RelatoriosView.vue'
 import EmpresasView from '../views/EmpresasView.vue'
+import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -76,6 +77,12 @@ const router = createRouter({
       name: 'relatorios',
       component: RelatoriosView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/configuracoes',
+      name: 'configuracoes',
+      component: ConfiguracoesView,
+      meta: { requiresAuth: true, requiresAdmin: true }
     }
   ]
 })
@@ -88,6 +95,29 @@ router.beforeEach(async (to, from, next) => {
   } else {
     next()
   }
+})
+
+// Guarda de rota para área administrativa
+router.beforeEach(async (to, from, next) => {
+  if (to.path === '/configuracoes') {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      next('/login')
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      next('/processos') // Redireciona para área permitida
+      return
+    }
+  }
+  next()
 })
 
 export default router
