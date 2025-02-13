@@ -113,6 +113,7 @@
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
                     <option value="em_andamento">Em Andamento</option>
+                    <option value="vamos_participar">Vamos Participar</option>
                     <option value="ganhamos">Ganhamos</option>
                     <option value="perdemos">Perdemos</option>
                     <option value="suspenso">Suspenso</option>
@@ -159,6 +160,33 @@
                   <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
                     {{ formatStatus(processo.status) }}
                   </span>
+                  <template v-else-if="coluna.campo === 'empresa'">
+                    <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                      <select 
+                        v-model="editingCell.value" 
+                        @change="handleUpdate(processo)"
+                        @blur="handleUpdate(processo)" 
+                        @keyup.esc="cancelEdit()"
+                        class="empresa-select"
+                      >
+                        <option value="">Selecione uma empresa</option>
+                        <option 
+                          v-for="empresa in empresas" 
+                          :key="empresa.id" 
+                          :value="empresa.id"
+                        >
+                          {{ empresa.nome }} ({{ empresa.cnpj }})
+                        </option>
+                      </select>
+                    </template>
+                    <span 
+                      v-else 
+                      @dblclick="handleDblClick(coluna.campo, processo, $event)"
+                      class="empresa-display"
+                    >
+                      {{ getEmpresaNome(processo.empresa_id) }}
+                    </span>
+                  </template>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -248,8 +276,9 @@ const colunas = [
   { titulo: 'Objeto Completo', campo: 'objeto_completo' },
   { titulo: 'Portal', campo: 'site_pregao' },
   { titulo: 'Representante', campo: 'representante' },
+  { titulo: 'Empresa Participante', campo: 'empresa' },
   { titulo: 'Campo Adicional 1', campo: 'campo_adicional1' },
-  { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' }
+  { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' },
 ]
 
 const initializeFiltros = () => {
@@ -370,6 +399,7 @@ const formatModalidadeCompleta = (modalidade) => {
 
 const formatStatus = (status) => {
   const statusMap = {
+    'vamos_participar': 'Vamos Participar',
     'em_analise': 'Em Análise',
     'em_andamento': 'Em Andamento',
     'ganhamos': 'Ganhamos',
@@ -666,18 +696,8 @@ const handleDblClick = async (field, processo, event) => {
       editingCell.value = {
         id: processo.id,
         field,
-        value: processo[field]
+        value: field === 'empresa' ? processo.empresa_id : processo[field]
       }
-
-      nextTick(() => {
-        const input = cell.querySelector('input, textarea, select')
-        if (input) {
-          input.focus()
-          if (input.type === 'text') {
-            input.selectionStart = input.selectionEnd = input.value.length
-          }
-        }
-      })
     }
   }
 }
@@ -732,9 +752,9 @@ const handleUpdate = async (processo) => {
     processo[editingCell.value.field] = updateValue;
 
   } catch (error) {
-    console.error('Erro ao atualizar:', error);
+    console.error('Erro ao atualizar:', error)
   } finally {
-    cancelEdit();
+    cancelEdit()
   }
 }
 
@@ -974,6 +994,58 @@ const getModalidadeSigla = (modalidade) => {
   }
 
   return modalidades[modalidade] || modalidade
+}
+
+// Adicione no início do script junto com outros refs
+const empresas = ref([])
+
+// Adicione este computed
+const empresasCadastradas = computed(() => {
+  return empresas.value.filter(empresa => empresa.id) // Filtra apenas empresas válidas
+})
+
+// Modifique a função loadEmpresas
+const loadEmpresas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('id, nome, cnpj')
+      .order('nome')
+
+    if (error) throw error
+    empresas.value = data || []
+  } catch (error) {
+    console.error('Erro ao carregar empresas:', error)
+    empresas.value = []
+  }
+}
+
+const handleEmpresaChange = async (processo) => {
+  try {
+    const { error } = await supabase
+      .from('processos')
+      .update({ empresa_id: processo.empresa_id })
+      .eq('id', processo.id)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Erro ao atualizar empresa:', error)
+    alert('Erro ao atualizar empresa')
+  }
+}
+
+// Adicione no onMounted
+onMounted(async () => {
+  await Promise.all([
+    loadProcessos(),
+    loadEmpresas()
+  ])
+})
+
+// Adicione esta função junto com as outras
+const getEmpresaNome = (empresaId) => {
+  const empresa = empresas.value.find(e => e.id === empresaId)
+  return empresa ? empresa.nome : '-'
 }
 </script>
 
