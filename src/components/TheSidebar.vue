@@ -178,9 +178,16 @@ onMounted(() => {
 })
 
 const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value
-  document.body.classList.toggle('dark-mode')
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark')
+  localStorage.setItem('theme', isDark ? 'light' : 'dark')
 }
+
+// Recuperar preferência salva
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme') || 'light'
+  document.documentElement.setAttribute('data-theme', savedTheme)
+})
 
 const handleLogout = async () => {
   try {

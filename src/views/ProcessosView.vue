@@ -244,6 +244,7 @@ import * as XLSX from 'xlsx'
 import { writeFileXLSX, utils } from 'xlsx'
 import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
+import '../assets/styles/dark-mode.css'
 
 const router = useRouter()
 const isSidebarExpanded = ref(true)
