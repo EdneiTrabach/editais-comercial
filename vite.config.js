@@ -41,6 +41,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000 // Aumenta o limite de tamanho do chunk
   },
   server: {
-    host: true
+    host: true,
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost'
+    }
   }
 })

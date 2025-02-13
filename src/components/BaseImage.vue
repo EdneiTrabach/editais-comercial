@@ -33,6 +33,7 @@ const validateImagePath = (path) => {
 }
 
 const handleImageError = (e) => {
+  console.warn(`Imagem não encontrada: ${e.target.src}`);
   e.target.src = props.fallbackImage
 }
 </script>

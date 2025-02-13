@@ -60,6 +60,18 @@
               <span class="link-text">Empresas</span>
             </router-link>
           </li>
+          <li class="sidebar-menu-item">
+            <router-link to="/relatorios" class="sidebar-menu-link">
+              <img src="/icons/check.svg" alt="Relatórios" class="icon" />
+              <span class="link-text">Relatórios</span>
+            </router-link>
+          </li>
+          <li v-if="isAdmin" class="sidebar-menu-item">
+            <router-link to="/configuracoes" class="sidebar-menu-link">
+              <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
+              <span class="link-text">Administração de Usuários</span>
+            </router-link>
+          </li>
         </ul>
 
         <div class="bottom-section">
@@ -127,11 +139,11 @@ const toggleSidebar = () => {
     // Se não está ativo, expande o sidebar
     isActive.value = true
   }
-  
+
   emit('sidebarToggle', isActive.value)
   localStorage.setItem('sidebarState', isActive.value.toString())
   localStorage.setItem('sidebarPinned', isPinned.value.toString())
-  
+
   adjustMainContent()
 }
 
@@ -152,14 +164,14 @@ const adjustMainContent = () => {
 onMounted(() => {
   const savedState = localStorage.getItem('sidebarState')
   const savedPinned = localStorage.getItem('sidebarPinned')
-  
+
   if (savedState === 'true') {
     isActive.value = true
   }
   if (savedPinned === 'true') {
     isPinned.value = true
   }
-  
+
   adjustMainContent()
   checkAdminStatus()
   checkNotifications()
@@ -211,10 +223,10 @@ const checkNotifications = async () => {
 document.addEventListener('click', (e) => {
   const sidebar = document.querySelector('.sidebar')
   const trigger = document.querySelector('.sidebar-trigger')
-  
-  if (sidebar && trigger && 
-      !sidebar.contains(e.target) && 
-      !trigger.contains(e.target)) {
+
+  if (sidebar && trigger &&
+    !sidebar.contains(e.target) &&
+    !trigger.contains(e.target)) {
     if (!isPinned.value) {
       // Só fecha se não estiver fixo
       isActive.value = false
@@ -397,27 +409,36 @@ const handleSidebarToggle = (isExpanded) => {
 .nav-links {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* Impede scroll horizontal */
-  padding-right: 8px; /* Aumentado para acomodar a scrollbar */
+  overflow-x: hidden;
+  /* Impede scroll horizontal */
+  padding-right: 8px;
+  /* Aumentado para acomodar a scrollbar */
   padding-left: 0;
-  width: 100%; /* Garante que ocupe toda a largura disponível */
-  margin: 0; /* Remove margens */
-  scrollbar-width: thin; /* Para Firefox */
-  scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1); /* Para Firefox */
+  width: 100%;
+  /* Garante que ocupe toda a largura disponível */
+  margin: 0;
+  /* Remove margens */
+  scrollbar-width: thin;
+  /* Para Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
+  /* Para Firefox */
 }
 
 /* Scrollbar personalizada */
 .nav-links::-webkit-scrollbar {
-  width: 6px; /* Largura da scrollbar */
+  width: 6px;
+  /* Largura da scrollbar */
 }
 
 .nav-links::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1); /* Fundo do trilho */
+  background: rgba(255, 255, 255, 0.1);
+  /* Fundo do trilho */
   border-radius: 3px;
 }
 
 .nav-links::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.5); /* Cor da barra de rolagem */
+  background: rgba(255, 255, 255, 0.5);
+  /* Cor da barra de rolagem */
   border-radius: 3px;
   cursor: pointer;
 }
@@ -443,8 +464,10 @@ const handleSidebarToggle = (isExpanded) => {
   text-decoration: none;
   border-radius: 10px;
   transition: all 0.3s ease;
-  white-space: nowrap; /* Evita quebra de texto */
-  width: 80%; /* Ocupa toda largura disponível */
+  white-space: nowrap;
+  /* Evita quebra de texto */
+  width: 80%;
+  /* Ocupa toda largura disponível */
 }
 
 .sidebar-menu-link:hover,

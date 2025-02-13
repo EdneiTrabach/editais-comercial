@@ -84,12 +84,6 @@ const features = [
     route: '/relatorios'
   },
   {
-    icon: '/icons/add-usuario.svg',
-    title: 'Usuários',
-    description: 'Gerencie usuários e permissões',
-    route: '/usuarios'
-  },
-  {
     icon: '/icons/config-usuario.svg',
     title: 'Administração de Usuários',
     description: 'Gerencie usuários e permissões',

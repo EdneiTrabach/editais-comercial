@@ -1,26 +1,35 @@
 // public/service-worker.js
 const CACHE_NAME = 'editais-comerciais-v1';
+const ASSETS = [
+  '/',
+  '/index.html',
+  '/icons/pdf.svg',
+  '/icons/excel.svg',
+  '/icons/fallback.svg'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/main.js',
-        '/style.css'
-      ]);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .catch(error => console.error('Erro no cache:', error))
   );
 });
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-      return fetch(event.request);
-    })
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request).catch(() => {
+          // Retorna imagem fallback para ícones que falharem
+          if (event.request.url.includes('/icons/')) {
+            return caches.match('/icons/fallback.svg');
+          }
+          throw new Error('Network error');
+        });
+      })
   );
 });

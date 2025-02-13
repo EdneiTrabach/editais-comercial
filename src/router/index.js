@@ -4,6 +4,8 @@ import HomeView from '../views/HomeView.vue'
 import RepresentantesView from '@/views/RepresentantesView.vue'
 import PlataformasView from '@/views/PlataformasView.vue'
 import ProcessosView from '../views/ProcessosView.vue' // Importe diretamente
+import RelatoriosView from '@/views/RelatoriosView.vue'
+import EmpresasView from '../views/EmpresasView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,7 +68,14 @@ const router = createRouter({
     {
       path: '/empresas',
       name: 'empresas',
-      component: () => import('../views/EmpresasView.vue')
+      component: EmpresasView, // <- CORRIGIDO: no singular
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/relatorios',
+      name: 'relatorios',
+      component: RelatoriosView,
+      meta: { requiresAuth: true }
     }
   ]
 })
