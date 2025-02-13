@@ -29,13 +29,12 @@
         <table class="excel-table resizable">
           <thead>
             <tr>
-              <th class="row-number-cell"></th> <!-- Nova coluna -->
+              <th class="row-number-cell"></th>
               <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column" :data-field="coluna.campo"
                 :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
 
-                  <!-- Botões de ordenação apenas para data do pregão -->
                   <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
                     <button class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
@@ -49,15 +48,12 @@
                     </button>
                   </div>
 
-                  <!-- Filtro para outras colunas, exceto data e hora do pregão -->
                   <div v-if="coluna.campo !== 'data_pregao' && coluna.campo !== 'hora_pregao'" class="filtro-container">
                     <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
                       <img src="/icons/search-line.svg" alt="Filtrar" class="icon-filter" />
                     </button>
-                    <!-- ... resto do código dos filtros ... -->
                   </div>
                 </div>
-                <!-- Handle para redimensionar coluna -->
                 <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
               <th class="actions-column">Ações</th>
@@ -65,14 +61,12 @@
           </thead>
           <tbody>
             <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
-              :class="{ 'selected-row': selectedRow === processo.id }" @click="selectRow(processo.id)"
-              :style="{ height: rowsHeight[processo.id] }">
-              <td class="row-number-cell">{{ index + 1 }}</td> <!-- Nova coluna -->
-              <!-- Cada célula segue o mesmo padrão -->
+              :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
+              @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
+              <td class="row-number-cell">{{ index + 1 }}</td>
               <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                  <!-- Input específico baseado no tipo de campo -->
                   <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
                     :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
@@ -132,7 +126,6 @@
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
                 <template v-else>
-                  <!-- Ajuste na exibição de data e hora -->
                   <template v-if="coluna.campo === 'data_pregao'">
                     {{ formatDate(processo.data_pregao) }}
                   </template>
@@ -154,12 +147,14 @@
                   <span v-else-if="coluna.campo === 'responsavel_nome'">
                     {{ processo.profiles?.nome || '-' }}
                   </span>
-                  <template v-else-if="coluna.campo === 'site_pregao'" class="portal-link">
-                    <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
-                      rel="noopener noreferrer" class="portal-button">
-                      {{ getPlataformaNome(processo.site_pregao) }}
-                    </a>
-                    <span v-else>-</span>
+                  <template v-else-if="coluna.campo === 'site_pregao'">
+                    <div class="portal-link">
+                      <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
+                        rel="noopener noreferrer" class="portal-button">
+                        {{ getPlataformaNome(processo.site_pregao) }}
+                      </a>
+                      <span v-else>-</span>
+                    </div>
                   </template>
                   <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
                     {{ formatStatus(processo.status) }}
@@ -169,7 +164,6 @@
                   </span>
                 </template>
               </td>
-              <!-- Coluna de ações -->
               <td class="actions-cell">
                 <div class="action-buttons">
                   <button class="btn-icon delete" @click="handleDelete(processo)">
@@ -178,14 +172,12 @@
                   </button>
                 </div>
               </td>
-              <!-- Handle para redimensionar linha -->
               <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Adicione este componente para o balão de confirmação -->
       <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
         <div class="confirm-content">
           <p>Deseja editar este campo?</p>
@@ -196,7 +188,6 @@
         </div>
       </div>
 
-      <!-- Adicione este componente para o balão de confirmação de exclusão -->
       <div v-if="deleteConfirmDialog.show" class="modal-overlay">
         <div class="confirm-dialog">
           <div class="confirm-content">
@@ -227,26 +218,22 @@ import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
 
 const router = useRouter()
-const isSidebarExpanded = ref(true) // Alterado de true para false
+const isSidebarExpanded = ref(true)
 const processos = ref([])
 const loading = ref(false)
 
-// Adicione aos refs existentes
 const deleteConfirmDialog = ref({
   show: false,
   processo: null
 })
 
-// Adicione estes refs no início do script
 const sortConfig = ref({
-  field: 'data_pregao', // campo padrão de ordenação
-  direction: 'asc' // direção padrão
+  field: 'data_pregao',
+  direction: 'asc'
 })
 
-// Adicione aos refs existentes
 const selectedRow = ref(null)
 
-// Definição das colunas
 const colunas = [
   { titulo: 'Data', campo: 'data_pregao' },
   { titulo: 'Hora', campo: 'hora_pregao' },
@@ -265,7 +252,6 @@ const colunas = [
   { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' }
 ]
 
-// Inicialização dos filtros com todas as colunas
 const initializeFiltros = () => {
   const filtrosIniciais = {}
   colunas.forEach(coluna => {
@@ -274,10 +260,8 @@ const initializeFiltros = () => {
   return filtrosIniciais
 }
 
-// Use a função para inicializar os filtros
 const filtros = ref(initializeFiltros())
 
-// Processos filtrados com todos os filtros
 const processosFiltrados = computed(() => {
   if (!processos.value) return []
 
@@ -290,7 +274,6 @@ const processosFiltrados = computed(() => {
       let valorProcesso = processo[coluna.campo]
       if (!valorProcesso) return false
 
-      // Formatação específica para cada tipo de campo
       switch (coluna.campo) {
         case 'data_pregao':
           valorProcesso = formatDate(valorProcesso)
@@ -312,12 +295,10 @@ const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
 
-// Ajuste a função formatDate
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    // Remove qualquer formatação anterior que possa estar duplicada
-    const cleanDate = dateString.split('T')[0]; // Pega apenas a parte da data
+    const cleanDate = dateString.split('T')[0];
     const date = new Date(cleanDate);
     if (isNaN(date.getTime())) return '-';
     
@@ -332,11 +313,9 @@ const formatDate = (dateString) => {
   }
 }
 
-// Função para formatar hora (HH:mm)
 const formatTime = (time) => {
   if (!time) return '-';
   try {
-    // Remove qualquer formatação anterior que possa estar duplicada
     const cleanTime = time.split(':').slice(0, 2).join(':');
     return cleanTime;
   } catch (error) {
@@ -346,7 +325,6 @@ const formatTime = (time) => {
 }
 
 const formatModalidade = (modalidade, tipo_pregao) => {
-  // Mapeamento de modalidades para siglas
   const modalidades = {
     'pregao': {
       'presencial': 'PP',
@@ -362,12 +340,10 @@ const formatModalidade = (modalidade, tipo_pregao) => {
     'licitacao_internacional': 'LI'
   }
 
-  // Se for pregão, verifica o tipo
   if (modalidade === 'pregao' && tipo_pregao) {
     return modalidades[modalidade][tipo_pregao]
   }
 
-  // Para outras modalidades, retorna a sigla direta
   return modalidades[modalidade] || modalidade
 }
 
@@ -423,13 +399,10 @@ const loadProcessos = async () => {
 
     if (error) throw error
 
-    // Log para debug
-    console.log('Dados recebidos:', data)
-
     processos.value = data?.map(processo => ({
       ...processo,
-      data_pregao: processo.data_pregao, // Garante que a data está no formato correto
-      hora_pregao: processo.hora_pregao, // Garante que a hora está no formato correto
+      data_pregao: processo.data_pregao,
+      hora_pregao: processo.hora_pregao,
       responsavel_nome: '-',
       representante: processo.representantes?.nome || '-',
       campo_adicional1: processo.campo_adicional1 || '-',
@@ -457,7 +430,6 @@ const viewDetails = (processo) => {
   router.push(`/editais/${processo.id}`)
 }
 
-// Função para mostrar o diálogo de confirmação de exclusão
 const handleDelete = (processo) => {
   deleteConfirmDialog.value = {
     show: true,
@@ -465,12 +437,10 @@ const handleDelete = (processo) => {
   }
 }
 
-// Função para confirmar a exclusão
 const confirmDelete = async () => {
   try {
     const processo = deleteConfirmDialog.value.processo
 
-    // Log da ação antes de excluir
     await logSystemAction({
       tipo: 'exclusao',
       tabela: 'processos',
@@ -485,7 +455,6 @@ const confirmDelete = async () => {
 
     if (error) throw error
 
-    // Atualiza a lista local
     processos.value = processos.value.filter(p => p.id !== processo.id)
 
     hideDeleteDialog()
@@ -502,7 +471,6 @@ const hideDeleteDialog = () => {
   }
 }
 
-// Função para registrar logs
 const logSystemAction = async (dados) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -554,13 +522,11 @@ const toggleFiltro = (coluna) => {
   mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna]
 }
 
-// Função para obter opções únicas para cada coluna
 const opcoesUnicas = (coluna) => {
   const opcoes = new Set()
   processos.value.forEach(processo => {
     let valor = processo[coluna]
 
-    // Formatação especial para alguns campos
     if (coluna === 'data_pregao') {
       valor = formatDate(valor)
     } else if (coluna === 'hora_pregao') {
@@ -584,7 +550,6 @@ const limparFiltros = () => {
   })
 }
 
-// Fechar filtros quando clicar fora
 onMounted(() => {
   document.addEventListener('click', (e) => {
     const isFilterClick = e.target.closest('.filtro-container')
@@ -600,11 +565,9 @@ onMounted(() => {
   loadProcessos()
 })
 
-// Estado para larguras das colunas e alturas das linhas
 const STORAGE_KEY = 'table-columns-width'
 const colunasWidth = ref({})
 
-// Funções para redimensionamento
 const startColumnResize = (event, campo) => {
   event.preventDefault()
   const th = event.target.closest('th')
@@ -623,7 +586,6 @@ const startColumnResize = (event, campo) => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
     document.body.style.cursor = ''
-    // Salva as configurações quando terminar o redimensionamento
     saveColumnWidths()
   }
 
@@ -631,14 +593,12 @@ const startColumnResize = (event, campo) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-// Função para carregar as larguras salvas
 const loadColumnWidths = () => {
   try {
     const savedWidths = localStorage.getItem(STORAGE_KEY)
     if (savedWidths) {
       colunasWidth.value = JSON.parse(savedWidths)
     } else {
-      // Larguras padrão se não houver configuração salva
       colunas.forEach(coluna => {
         colunasWidth.value[coluna.campo] = '150px'
       })
@@ -648,7 +608,6 @@ const loadColumnWidths = () => {
   }
 }
 
-// Função para salvar as larguras
 const saveColumnWidths = () => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(colunasWidth.value))
@@ -657,10 +616,8 @@ const saveColumnWidths = () => {
   }
 }
 
-// Estado para alturas das linhas
 const rowsHeight = ref({})
 
-// Funções para redimensionamento
 const startRowResize = (event, id) => {
   event.preventDefault()
   const tr = event.target.closest('tr')
@@ -685,14 +642,12 @@ const startRowResize = (event, id) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-// Estado para controlar a edição
 const editingCell = ref({
   id: null,
   field: null,
   value: null
 })
 
-// Função para lidar com duplo clique ajustada
 const handleDblClick = async (field, processo, event) => {
   if (editingCell.value.id === processo.id && editingCell.value.field === field) {
     return
@@ -704,8 +659,8 @@ const handleDblClick = async (field, processo, event) => {
   confirmDialog.value = {
     show: true,
     position: {
-      top: `${rect.bottom + 10}px`, // 20px abaixo do clique
-      left: `${rect.left}px` // Alinhado com a célula
+      top: `${rect.bottom + 10}px`,
+      left: `${rect.left}px`
     },
     callback: () => {
       editingCell.value = {
@@ -727,17 +682,14 @@ const handleDblClick = async (field, processo, event) => {
   }
 }
 
-// Funções para o diálogo de confirmação
 const handleConfirmEdit = () => {
   confirmDialog.value.callback?.()
   hideConfirmDialog()
 
-  // Foca no input após fechar o diálogo
   nextTick(() => {
     const input = document.querySelector('.editing-cell input, .editing-cell textarea, .editing-cell select')
     if (input) {
       input.focus()
-      // Se for input de texto, posiciona o cursor no final
       if (input.type === 'text') {
         input.selectionStart = input.selectionEnd = input.value.length
       }
@@ -753,18 +705,16 @@ const hideConfirmDialog = () => {
   }
 }
 
-// Função para atualizar o registro
 const handleUpdate = async (processo) => {
   try {
     if (!editingCell.value.value) return cancelEdit();
 
     let updateValue = editingCell.value.value;
 
-    // Formatação específica para data e hora
     if (editingCell.value.field === 'data_pregao') {
-      updateValue = updateValue.split('T')[0]; // Garante apenas a parte da data
+      updateValue = updateValue.split('T')[0];
     } else if (editingCell.value.field === 'hora_pregao') {
-      updateValue = updateValue.split(':').slice(0, 2).join(':'); // Garante apenas HH:mm
+      updateValue = updateValue.split(':').slice(0, 2).join(':');
     }
 
     const updateData = {
@@ -779,7 +729,6 @@ const handleUpdate = async (processo) => {
 
     if (error) throw error;
 
-    // Atualiza o valor localmente após sucesso
     processo[editingCell.value.field] = updateValue;
 
   } catch (error) {
@@ -789,7 +738,6 @@ const handleUpdate = async (processo) => {
   }
 }
 
-// Função para cancelar edição
 const cancelEdit = () => {
   editingCell.value = {
     id: null,
@@ -798,7 +746,6 @@ const cancelEdit = () => {
   }
 }
 
-// Adicione esta definição logo após os outros refs
 const confirmDialog = ref({
   show: false,
   position: {},
@@ -827,14 +774,12 @@ const checkAdminStatus = async () => {
   }
 }
 
-// Inicialize as larguras padrão das colunas
 onMounted(async () => {
   await loadProcessos()
   await loadRepresentantes()
   loadColumnWidths()
 })
 
-// Adicione no início do script junto com outros refs
 const estados = ref([
   { uf: 'AC', nome: 'Acre' },
   { uf: 'AL', nome: 'Alagoas' },
@@ -867,7 +812,6 @@ const estados = ref([
 
 const representantes = ref([])
 
-// Função para carregar representantes
 const loadRepresentantes = async () => {
   try {
     const { data, error } = await supabase
@@ -883,7 +827,6 @@ const loadRepresentantes = async () => {
   }
 }
 
-// Carregar representantes quando montar o componente
 onMounted(() => {
   loadProcessos()
   loadRepresentantes()
@@ -904,12 +847,7 @@ const getPortalName = (url) => {
   }
 }
 
-// Script para manipular a ordenação
-// Note: sortConfig já foi declarado anteriormente
-
-// Função para ordenar
 const handleSort = async (field, direction) => {
-  // Se clicar no mesmo botão, mantém a ordenação atual
   if (sortConfig.value.field === field && sortConfig.value.direction === direction) {
     return
   }
@@ -919,14 +857,11 @@ const handleSort = async (field, direction) => {
     direction
   }
 
-  // Recarrega os dados com a nova ordenação
   await loadProcessos()
 }
 
-// Adicione este ref no início do script
 const estadoSearch = ref('')
 
-// Computed para filtrar estados com base na busca
 const estadosFiltrados = computed(() => {
   if (!estadoSearch.value) return estados.value
 
@@ -937,10 +872,8 @@ const estadosFiltrados = computed(() => {
   )
 })
 
-// Adicione este ref junto com os outros
 const plataformas = ref([])
 
-// Adicione esta função para carregar as plataformas
 const loadPlataformas = async () => {
   try {
     const { data, error } = await supabase
@@ -954,55 +887,46 @@ const loadPlataformas = async () => {
   }
 }
 
-// Modifique a função onMounted para incluir o carregamento das plataformas
 onMounted(() => {
   loadRepresentantes()
   loadPlataformas()
 })
 
-// Adicione esta função para obter o nome da plataforma
 const getPlataformaNome = (url) => {
   if (!url) return '-'
   const plataforma = plataformas.value.find(p => p.url === url)
   return plataforma ? plataforma.nome : url
 }
 
-// Adicione este ref no início do script
 const formData = ref({
-  status: null // Alterado de '' para null
+  status: null
 })
 
-// Adicione a função para selecionar a linha
 const selectRow = (id) => {
   selectedRow.value = id
 }
 
-// Adicione este ref no início do script
 const showPlataformaField = computed(() => {
   return formData.value.modalidade === 'pregao_eletronico';
 });
 
-// Adicione esta função no script
 const handleModalidadeChange = () => {
-  // Limpa o campo de plataforma se não for pregão eletrônico
   if (formData.value.modalidade !== 'pregao_eletronico') {
     formData.value.site_pregao = '';
   }
 };
 
-// Adicione esta função no script
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Ajusta a data para meio-dia para evitar problemas de timezone
     const dataPregao = new Date(formData.value.data_pregao + 'T12:00:00')
 
     const processoData = {
       numero_processo: `${formData.value.numero}/${formData.value.ano}`,
       ano: formData.value.ano,
       orgao: formData.value.orgao,
-      data_pregao: dataPregao.toISOString().split('T')[0], // Formato YYYY-MM-DD
+      data_pregao: dataPregao.toISOString().split('T')[0],
       hora_pregao: formData.value.hora_pregao,
       estado: formData.value.estado,
       modalidade: formData.value.modalidade,
@@ -1031,7 +955,6 @@ const handleSubmit = async () => {
   }
 };
 
-// No arquivo ProcessosView.vue, adicione esta função no <script setup>
 const getModalidadeSigla = (modalidade) => {
   const modalidades = {
     'pregao_eletronico': 'PE',
@@ -1061,15 +984,12 @@ const getModalidadeSigla = (modalidade) => {
 }
 
 .main-content {
-  /* margin-left: 300px; */
   padding: 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   background: #f8f9fa;
   height: 100vh;
-  /* Altura total */
   overflow: hidden;
-  /* Previne scroll duplo */
   display: flex;
   flex-direction: column;
 }
@@ -1084,7 +1004,6 @@ const getModalidadeSigla = (modalidade) => {
   align-items: center;
   margin-bottom: 2rem;
   flex-shrink: 0;
-  /* Impede que o header encolha */
 }
 
 .header h1 {
@@ -1134,11 +1053,9 @@ const getModalidadeSigla = (modalidade) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: auto;
   max-height: calc(100vh - 180px);
-  /* Ajusta altura máxima considerando o header */
   margin-bottom: 1rem;
   position: relative;
   user-select: text;
-  /* Altera de 'none' para 'text' */
 }
 
 .excel-table {
@@ -1146,7 +1063,6 @@ const getModalidadeSigla = (modalidade) => {
   border-collapse: collapse;
   border: 1px solid #e9ecef;
   min-width: 1500px;
-  /* Força uma largura mínima para garantir o scroll horizontal */
 }
 
 .excel-table th {
@@ -1164,7 +1080,6 @@ const getModalidadeSigla = (modalidade) => {
   margin: 1rem;
 }
 
-/* Personalização da scrollbar */
 .table-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1184,32 +1099,20 @@ const getModalidadeSigla = (modalidade) => {
   background: #254677;
 }
 
-/* Remova ou comente estas propriedades que impedem a quebra de linha */
-/* .excel-table td {
-  white-space: nowrap;
-} */
-
-/* Adicione estes estilos para permitir quebra de linha */
 .excel-table td {
   white-space: normal;
-  /* Permite quebra de linha */
   word-wrap: break-word;
-  /* Força quebra de palavras longas */
   min-width: 100px;
-  /* Largura mínima para cada célula */
   max-width: 300px;
-  /* Largura máxima para evitar células muito largas */
   vertical-align: top;
-  /* Alinha o conteúdo no topo */
   height: auto;
-  /* Altura automática */
   padding: 10px;
-  /* Padding adequado */
   user-select: text;
   cursor: text;
+  text-align: center;
+  vertical-align: middle;
 }
 
-/* Ajuste para células específicas */
 .objeto-cell {
   white-space: normal !important;
   word-wrap: break-word !important;
@@ -1217,34 +1120,27 @@ const getModalidadeSigla = (modalidade) => {
   user-select: text;
 }
 
-/* Mantenha a última coluna (ações) com largura fixa */
 .actions-column {
   width: 60px;
   min-width: 60px;
   white-space: nowrap;
-  /* Esta pode manter nowrap */
 }
 
-/* Ajuste o container da tabela */
 .table-container {
   max-height: calc(100vh - 180px);
   overflow: auto;
 }
 
-/* Ajuste a tabela */
 .excel-table {
   width: 100%;
   table-layout: fixed;
-  /* Importante para respeitar as larguras */
 }
 
-/* Mantenha o número da linha com largura fixa */
 .row-number-cell {
   width: 50px !important;
   min-width: 50px !important;
   max-width: 50px !important;
   white-space: nowrap !important;
-  /* Esta precisa manter nowrap */
 }
 
 .excel-table tbody tr:hover {
@@ -1333,7 +1229,6 @@ const getModalidadeSigla = (modalidade) => {
   transition: all 0.3s ease;
 }
 
-/* Estilos do modal de confirmação */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1349,7 +1244,6 @@ const getModalidadeSigla = (modalidade) => {
 
 .confirm-dialog {
   position: absolute;
-  /* Alterado de static para absolute */
   background: white;
   padding: 1rem;
   border-radius: 8px;
@@ -1359,7 +1253,6 @@ const getModalidadeSigla = (modalidade) => {
   animation: fadeIn 0.2s ease;
 }
 
-/* Adicione uma seta para cima no diálogo */
 .confirm-dialog::before {
   content: '';
   position: absolute;
@@ -1414,7 +1307,6 @@ const getModalidadeSigla = (modalidade) => {
   background: #c82333;
 }
 
-/* Estilos para redimensionamento */
 .resizable-column {
   position: relative;
   user-select: none;
@@ -1452,7 +1344,6 @@ const getModalidadeSigla = (modalidade) => {
   background: rgba(25, 49, 85, 0.3);
 }
 
-/* Garante que o texto não quebre durante o redimensionamento */
 .excel-table th,
 .excel-table td {
   white-space: nowrap;
@@ -1460,10 +1351,8 @@ const getModalidadeSigla = (modalidade) => {
   text-overflow: ellipsis;
 }
 
-/* Previne seleção de texto durante o redimensionamento */
 .table-container {
   user-select: text;
-  /* Altera de 'none' para 'text' */
   overflow: auto;
   position: relative;
 }
@@ -1473,18 +1362,15 @@ const getModalidadeSigla = (modalidade) => {
   user-select: text !important;
 }
 
-/* Ajuste para o container da tabela */
 .table-container {
   position: relative;
 }
 
-/* Garante que a última coluna (ações) tenha largura fixa */
 .actions-column {
   width: 60px;
   min-width: 60px;
 }
 
-/* Mantém o texto alinhado durante o redimensionamento */
 .excel-table td>*,
 .excel-table th>* {
   white-space: normal;
@@ -1493,7 +1379,6 @@ const getModalidadeSigla = (modalidade) => {
   user-select: text;
 }
 
-/* Estilos para células editáveis */
 td {
   position: relative;
 }
@@ -1515,7 +1400,6 @@ td input:focus {
   box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
 }
 
-/* Indicador visual para células editáveis */
 td:hover {
   position: relative;
 }
@@ -1572,7 +1456,6 @@ td:hover::after {
   }
 }
 
-/* Estilos para redimensionamento de linhas */
 .row-resize-handle {
   position: absolute;
   left: 0;
@@ -1589,7 +1472,6 @@ td:hover::after {
   background: rgba(25, 49, 85, 0.2);
 }
 
-/* Ajustes na tabela */
 .excel-table {
   table-layout: fixed;
   border-collapse: separate;
@@ -1603,7 +1485,6 @@ td:hover::after {
   border: 1px solid #e9ecef;
 }
 
-/* Indicadores visuais durante o redimensionamento */
 .resizing {
   border-right: 2px solid #193155 !important;
 }
@@ -1612,7 +1493,6 @@ td:hover::after {
   border-bottom: 2px solid #193155 !important;
 }
 
-/* Garantir que o conteúdo não interfira no redimensionamento */
 .th-content,
 .td-content {
   overflow: hidden;
@@ -1620,7 +1500,6 @@ td:hover::after {
   white-space: nowrap;
 }
 
-/* Corrigir z-index para garantir que os handles fiquem visíveis */
 .resizable-column {
   position: relative;
   z-index: 1;
@@ -1632,7 +1511,6 @@ td:hover::after {
   min-height: 40px;
 }
 
-/* Ajustes para campos específicos */
 td textarea {
   width: 100%;
   min-height: 60px;
@@ -1662,22 +1540,18 @@ td select:focus {
   box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
 }
 
-/* Estilo para as opções do select */
 td select option {
   padding: 0.5rem;
   font-family: inherit;
 }
 
-/* Ajuste para células com objetos longos */
 .objeto-cell {
   max-width: 300px;
   white-space: normal;
-  /* Permite quebra de linha */
   line-height: 1.4;
   user-select: text;
 }
 
-/* Estilo para o select de status */
 .status-select {
   position: absolute;
   z-index: 1000;
@@ -1690,12 +1564,10 @@ td select option {
   margin-top: 4px;
 }
 
-/* Estilo para célula em edição */
 .editing-cell {
   background-color: rgba(25, 49, 85, 0.05);
 }
 
-/* Ajuste no input dentro da célula em edição */
 .editing-cell input,
 .editing-cell textarea,
 .editing-cell select {
@@ -1724,7 +1596,6 @@ td select option {
   gap: 0.5rem;
 }
 
-/* Estilos para os botões de ordenação */
 .sort-buttons {
   display: flex;
   flex-direction: column;
@@ -1756,7 +1627,6 @@ td select option {
   font-weight: bold;
 }
 
-/* Ajuste na estrutura do cabeçalho da coluna */
 .th-content {
   display: flex;
   align-items: center;
@@ -1799,7 +1669,6 @@ td select option {
   font-weight: bold;
 }
 
-/* Estilos para o filtro de estado */
 .filtro-container {
   position: relative;
 }
@@ -1865,7 +1734,6 @@ td select option {
   font-size: 0.85rem;
 }
 
-/* Estilos para o dropdown de estados */
 .filtro-container {
   position: relative;
 }
@@ -1949,7 +1817,6 @@ td select option {
   font-size: 0.85rem;
 }
 
-/* Estilização do checkbox */
 .estado-option input[type="checkbox"] {
   width: 16px;
   height: 16px;
@@ -1963,7 +1830,6 @@ td select option {
   border-color: #193155;
 }
 
-/* Scrollbar personalizada para a lista de estados */
 .estados-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -1982,7 +1848,6 @@ td select option {
   background: #a8a8a8;
 }
 
-/* Estilo para o link do portal */
 .portal-link {
   display: inline-block;
   width: 100%;
@@ -2018,7 +1883,6 @@ td select option {
   opacity: 1;
 }
 
-/* Estilos para os status */
 .status {
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
@@ -2044,8 +1908,8 @@ td select option {
 }
 
 .status.perdemos {
-  background: #f8d7da;
-  color: #721c24;
+  background: #ffc2c2;
+  color: #e90b0b;
 }
 
 .status.suspenso {
@@ -2073,7 +1937,6 @@ td select option {
   color: #721c24;
 }
 
-/* Estilo para a coluna de numeração */
 .row-number-cell {
   width: 50px;
   min-width: 50px;
@@ -2088,28 +1951,22 @@ td select option {
   border-right: 2px solid #e9ecef !important;
 }
 
-/* Ajuste para quando a célula de numeração encontra o cabeçalho fixo */
 thead .row-number-cell {
   z-index: 3;
   background: #f8f9fa;
 }
 
-/* Ajuste para células fixas no corpo da tabela */
 tbody .row-number-cell {
   position: sticky;
   left: 0;
   z-index: 3;
   background: #f8f9fa;
-  /* Mantém o fundo mesmo durante scroll */
 }
 
-/* Efeito hover mantendo o fundo */
 tbody tr:hover .row-number-cell {
   background: #f0f0f0;
-  /* Cor um pouco mais escura no hover */
 }
 
-/* Ajuste no container da tabela */
 .table-container {
   overflow: auto;
   position: relative;
@@ -2118,13 +1975,11 @@ tbody tr:hover .row-number-cell {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Ajuste na tabela */
 .excel-table {
   border-collapse: separate;
   border-spacing: 0;
 }
 
-/* Sombra sutil para indicar scroll */
 .row-number-cell::after {
   content: '';
   position: absolute;
@@ -2135,7 +1990,6 @@ tbody tr:hover .row-number-cell {
   background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
 }
 
-/* Fixa o cabeçalho */
 .excel-table thead th {
   position: sticky;
   top: 0;
@@ -2144,17 +1998,14 @@ tbody tr:hover .row-number-cell {
   border-bottom: 2px solid #e9ecef;
 }
 
-/* Ajuste especial para a célula de numeração no cabeçalho */
 .excel-table thead th.row-number-cell {
   position: sticky;
   left: 0;
   top: 0;
   z-index: 4;
-  /* Maior z-index para ficar acima de tudo */
   background: #f8f9fa;
 }
 
-/* Sombra sutil no cabeçalho para indicar scroll */
 .excel-table thead th::after {
   content: '';
   position: absolute;
@@ -2165,44 +2016,267 @@ tbody tr:hover .row-number-cell {
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
 }
 
-/* Estilo para a linha selecionada */
 .selected-row {
   background-color: #19315594 !important;
   border-left: 4px solid #193155 !important;
 }
 
-/* Mantém o highlight mesmo no hover */
 .selected-row:hover {
   background-color: rgba(25, 49, 85, 0.08) !important;
 }
 
-/* Ajuste para a célula de numeração na linha selecionada */
 .selected-row .row-number-cell {
   background-color: rgb(25, 49, 85) !important;
   font-weight: 600;
   color: #ffffff;
 }
 
-/* Efeito de transição suave */
 .excel-table tr {
   transition: background-color 0.2s ease, border-left 0.2s ease;
 }
 
-/* Estilo específico para a coluna de Objeto Completo */
 td[data-field="objeto_completo"],
 th[data-field="objeto_completo"] {
   min-width: 500px !important;
   width: 500px !important;
 }
 
-/* Ajuste para o conteúdo */
 .objeto-cell {
   max-width: 500px;
   min-width: 500px;
   white-space: normal;
-  /* Permite quebra de linha */
   line-height: 1.4;
   word-wrap: break-word;
   user-select: text;
+}
+
+.status.em_analise {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.status.em_andamento {
+  background: #ffe0b2;
+  color: #ef6c00;
+}
+
+.status.ganhamos {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.perdemos {
+  background: #ffc2c2;
+  color: #e90b0b;
+}
+
+.status.suspenso {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status.revogado {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.status.adiado {
+  background: #e1f5fe;
+  color: #0288d1;
+}
+
+.status.demonstracao {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.status.cancelado {
+  background: #1a237e;
+  color: #ffffff;
+}
+
+.status.nao_participar {
+  background: #fff9c4;
+  color: #f9a825;
+}
+
+.excel-table tbody tr[data-status="em_analise"]:hover {
+  background-color: rgba(173, 181, 189, 0.6) !important;
+  border-left: 4px solid #495057 !important;
+}
+
+.excel-table tbody tr[data-status="em_andamento"]:hover {
+  background-color: rgba(255, 224, 178, 0.6) !important;
+  border-left: 4px solid #ef6c00 !important;
+}
+
+.excel-table tbody tr[data-status="ganhamos"]:hover {
+  background-color: rgba(212, 237, 218, 0.6) !important;
+  border-left: 4px solid #155724 !important;
+}
+
+.excel-table tbody tr[data-status="perdemos"]:hover {
+  background-color: rgba(255, 213, 213, 0.6) !important;
+  border-left: 4px solid #c62828 !important;
+}
+
+.excel-table tbody tr[data-status="suspenso"]:hover {
+  background-color: rgba(227, 242, 253, 0.6) !important;
+  border-left: 4px solid #1976d2 !important;
+}
+
+.excel-table tbody tr[data-status="revogado"]:hover {
+  background-color: rgba(187, 222, 251, 0.6) !important;
+  border-left: 4px solid #1565c0 !important;
+}
+
+.excel-table tbody tr[data-status="adiado"]:hover {
+  background-color: rgba(225, 245, 254, 0.6) !important;
+  border-left: 4px solid #0288d1 !important;
+}
+
+.excel-table tbody tr[data-status="demonstracao"]:hover {
+  background-color: rgba(255, 152, 0, 0.6) !important;
+  border-left: 4px solid #ef6c00 !important;
+}
+
+.excel-table tbody tr[data-status="cancelado"]:hover {
+  background-color: rgba(26, 35, 126, 0.6) !important;
+  border-left: 4px solid #1a237e !important;
+}
+
+.excel-table tbody tr[data-status="nao_participar"]:hover {
+  background-color: rgba(255, 249, 196, 0.6) !important;
+  border-left: 4px solid #f9a825 !important;
+}
+
+.excel-table tbody tr {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.selected-row {
+  border-left: 4px solid transparent !important;
+}
+
+.selected-row[data-status="em_analise"] {
+  background-color: rgba(73, 80, 87, 0.15) !important;
+  border-left-color: #495057 !important;
+}
+
+.selected-row[data-status="em_andamento"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-left-color: #ef6c00 !important;
+}
+
+.selected-row[data-status="ganhamos"] {
+  background-color: rgba(21, 87, 36, 0.15) !important;
+  border-left-color: #155724 !important;
+}
+
+.selected-row[data-status="perdemos"] {
+  background-color: rgba(198, 40, 40, 0.15) !important;
+  border-left-color: #c62828 !important;
+}
+
+.selected-row[data-status="suspenso"] {
+  background-color: rgba(25, 118, 210, 0.15) !important;
+  border-left-color: #1976d2 !important;
+}
+
+.selected-row[data-status="revogado"] {
+  background-color: rgba(21, 101, 192, 0.15) !important;
+  border-left-color: #1565c0 !important;
+}
+
+.selected-row[data-status="adiado"] {
+  background-color: rgba(2, 136, 209, 0.15) !important;
+  border-left-color: #0288d1 !important;
+}
+
+.selected-row[data-status="demonstracao"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-left-color: #ef6c00 !important;
+}
+
+.selected-row[data-status="cancelado"] {
+  background-color: rgba(26, 35, 126, 0.15) !important;
+  border-left-color: #1a237e !important;
+}
+
+.selected-row[data-status="nao_participar"] {
+  background-color: rgba(249, 168, 37, 0.15) !important;
+  border-left-color: #f9a825 !important;
+}
+
+.selected-row .row-number-cell {
+  background-color: transparent !important;
+  color: inherit;
+  font-weight: 600;
+}
+
+.selected-row {
+  border: 2px solid transparent !important;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+
+.selected-row[data-status="em_analise"] {
+  background-color: rgba(73, 80, 87, 0.15) !important;
+  border-color: #495057 !important;
+  box-shadow: inset 0 0 0 2px #495057;
+}
+
+.selected-row[data-status="em_andamento"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-color: #ef6c00 !important;
+  box-shadow: inset 0 0 0 2px #ef6c00;
+}
+
+.selected-row[data-status="ganhamos"] {
+  background-color: rgba(21, 87, 36, 0.15) !important;
+  border-color: #155724 !important;
+  box-shadow: inset 0 0 0 2px #155724;
+}
+
+.selected-row[data-status="perdemos"] {
+  background-color: rgba(198, 40, 40, 0.15) !important;
+  border-color: #c62828 !important;
+  box-shadow: inset 0 0 0 2px #c62828;
+}
+
+.selected-row[data-status="suspenso"] {
+  background-color: rgba(25, 118, 210, 0.15) !important;
+  border-color: #1976d2 !important;
+  box-shadow: inset 0 0 0 2px #1976d2;
+}
+
+.selected-row[data-status="revogado"] {
+  background-color: rgba(21, 101, 192, 0.15) !important;
+  border-color: #1565c0 !important;
+  box-shadow: inset 0 0 0 2px #1565c0;
+}
+
+.selected-row[data-status="adiado"] {
+  background-color: rgba(2, 136, 209, 0.15) !important;
+  border-color: #0288d1 !important;
+  box-shadow: inset 0 0 0 2px #0288d1;
+}
+
+.selected-row[data-status="demonstracao"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-color: #ef6c00 !important;
+  box-shadow: inset 0 0 0 2px #ef6c00;
+}
+
+.selected-row[data-status="cancelado"] {
+  background-color: rgba(26, 35, 126, 0.15) !important;
+  border-color: #1a237e !important;
+  box-shadow: inset 0 0 0 2px #1a237e;
+}
+
+.selected-row[data-status="nao_participar"] {
+  background-color: rgba(249, 168, 37, 0.15) !important;
+  border-color: #f9a825 !important;
+  box-shadow: inset 0 0 0 2px #f9a825;
 }
 </style>
