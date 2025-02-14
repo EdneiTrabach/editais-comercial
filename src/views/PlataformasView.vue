@@ -7,7 +7,7 @@
         <h1>Gerenciamento de Plataformas</h1>
         <div class="actions">
           <button class="btn-add" @click="showModal = true">
-            <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
+            <img src="/icons/adicao.svg" alt="Adicionar" />
             Nova Plataforma
           </button>
         </div>
@@ -17,10 +17,10 @@
       <EmpresasSelector @empresa-selected="handleEmpresaSelected" />
 
       <!-- Header da tabela com informação da empresa selecionada -->
-      <div v-if="selectedEmpresa" class="table-header">
+      <div v-if="selectedEmpresa" class="filter-info">
         <h3>Plataformas vinculadas à {{ selectedEmpresa.nome }}</h3>
-        <button class="btn-view-all" @click="clearEmpresaSelection">
-          Ver todas as plataformas
+        <button class="btn-clear" @click="clearEmpresaSelection">
+          Ver todas
         </button>
       </div>
 
@@ -30,6 +30,12 @@
             <tr>
               <th>Nome</th>
               <th>URL</th>
+              <th>Responsável</th>
+              <th>Detalhes</th>
+              <th>Data Cadastro</th>
+              <th>Última Atualização</th>
+              <th>Validade</th>
+              <th>Observações</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -37,18 +43,27 @@
             <tr v-for="plataforma in plataformasFiltradas" :key="plataforma.id">
               <td>{{ plataforma.nome }}</td>
               <td>
-                <a :href="plataforma.url" target="_blank">{{ truncateUrl(plataforma.url) }}</a>
+                <a :href="plataforma.url" target="_blank" class="url-link">
+                  {{ truncateUrl(plataforma.url) }}
+                </a>
+              </td>
+              <td>{{ plataforma.responsavel || '-' }}</td>
+              <td>{{ plataforma.detalhes || '-' }}</td>
+              <td>{{ formatDate(plataforma.data_cadastro) }}</td>
+              <td>{{ formatDate(plataforma.ultima_atualizacao) }}</td>
+              <td>
+                <span :class="getValidadeClass(plataforma.data_validade)">
+                  {{ formatDate(plataforma.data_validade) || '-' }}
+                </span>
+              </td>
+              <td>
+                <span class="observacoes" :title="plataforma.observacoes">
+                  {{ truncateText(plataforma.observacoes) || '-' }}
+                </span>
               </td>
               <td class="actions">
                 <button class="btn-action edit" @click="editPlataforma(plataforma)">
                   <img src="/icons/edicao.svg" alt="Editar" />
-                </button>
-                <button 
-                  v-if="selectedEmpresa" 
-                  class="btn-action unlink" 
-                  @click="desvincularEmpresa(plataforma.id)"
-                >
-                  <span class="unlink-text">×</span>
                 </button>
                 <button class="btn-action delete" @click="deletePlataforma(plataforma.id)">
                   <img src="/icons/lixeira.svg" alt="Excluir" />
@@ -56,7 +71,7 @@
               </td>
             </tr>
             <tr v-if="plataformasFiltradas.length === 0">
-              <td colspan="3" class="empty-state">
+              <td colspan="9" class="empty-state"> <!-- Ajuste o colspan para o número total de colunas -->
                 {{ getEmptyStateMessage() }}
               </td>
             </tr>
@@ -111,6 +126,33 @@
             </div>
           </div>
 
+          <div class="form-group">
+            <label>Detalhes</label>
+            <textarea 
+              v-model="formData.detalhes"
+              rows="3"
+              placeholder="Detalhes da plataforma"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Data de Validade</label>
+            <input 
+              v-model="formData.data_validade"
+              type="date"
+              :min="new Date().toISOString().split('T')[0]"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Observações</label>
+            <textarea 
+              v-model="formData.observacoes"
+              rows="3"
+              placeholder="Observações adicionais"
+            ></textarea>
+          </div>
+
           <div class="modal-actions">
             <button type="button" class="btn-cancelar" @click="closeModal">
               Cancelar
@@ -139,6 +181,9 @@ const plataformas = ref([])
 const formData = ref({
   nome: '',
   url: '',
+  detalhes: '',
+  data_validade: '',
+  observacoes: '',
   empresas: [] // Novo campo para armazenar empresas relacionadas
 })
 
@@ -154,31 +199,22 @@ const loadPlataformas = async (empresaId = null) => {
       .from('plataformas')
       .select(`
         *,
-        empresa_plataforma:empresa_plataforma(
-          empresa_id,
-          plataforma_id
+        empresa_plataforma (
+          empresa_id
         )
       `)
       .order('nome')
 
     if (empresaId) {
-      // Se uma empresa está selecionada, filtra as plataformas vinculadas
       query = query.eq('empresa_plataforma.empresa_id', empresaId)
     }
 
     const { data, error } = await query
     
     if (error) throw error
-
-    // Log para debug
-    console.log('Dados retornados:', data)
-
-    plataformas.value = data?.map(plataforma => ({
-      ...plataforma,
-      vinculada: plataforma.empresa_plataforma?.length > 0
-    })) || []
     
-    console.log('Plataformas processadas:', plataformas.value)
+    console.log('Dados carregados:', data)
+    plataformas.value = data || []
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
   }
@@ -297,28 +333,29 @@ const editPlataforma = async (plataforma) => {
   showModal.value = true
 }
 
-// Modificar handleSubmit para salvar vinculações
+// Modificar handleSubmit para incluir os novos campos
 const handleSubmit = async () => {
   try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    const plataformaData = {
+      ...formData.value,
+      responsavel_id: user.id
+    }
+
     let plataformaId = editingId.value
 
     if (editingId.value) {
       const { error } = await supabase
         .from('plataformas')
-        .update({
-          nome: formData.value.nome,
-          url: formData.value.url
-        })
+        .update(plataformaData)
         .eq('id', editingId.value)
 
       if (error) throw error
     } else {
       const { data, error } = await supabase
         .from('plataformas')
-        .insert({
-          nome: formData.value.nome,
-          url: formData.value.url
-        })
+        .insert(plataformaData)
         .select()
 
       if (error) throw error
@@ -398,15 +435,29 @@ const truncateUrl = (url) => {
   return url.length > 60 ? url.substring(0, 60) + '...' : url
 }
 
+const truncateText = (text, length = 60) => {
+  if (!text) return ''
+  return text.length > length ? text.substring(0, length) + '...' : text
+}
+
+// Adicione no computed plataformasFiltradas
 const plataformasFiltradas = computed(() => {
+  console.log('Estado atual:', {
+    todasPlataformas: plataformas.value.length,
+    empresaSelecionada: selectedEmpresa.value?.nome,
+    filtradas: plataformas.value.filter(p => !selectedEmpresa.value).length
+  })
+  
   if (!selectedEmpresa.value) {
     return plataformas.value
   }
-  return plataformas.value.filter(plataforma => 
-    plataforma.empresa_plataforma?.some(ep => 
+  
+  // Filtra apenas quando há uma empresa selecionada
+  return plataformas.value.filter(plataforma => {
+    return plataforma.empresa_plataforma?.some(ep => 
       ep.empresa_id === selectedEmpresa.value.id
     )
-  )
+  })
 })
 
 const getEmptyStateMessage = () => {
@@ -421,9 +472,29 @@ const clearEmpresaSelection = () => {
   loadPlataformas()
 }
 
-onMounted(() => {
-  loadPlataformas()
-  loadEmpresas()
+// Função para formatar datas
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('pt-BR')
+}
+
+// Função para definir classe CSS baseada na validade
+const getValidadeClass = (data) => {
+  if (!data) return 'validade-indefinida'
+  
+  const hoje = new Date()
+  const validade = new Date(data)
+  const diasRestantes = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24))
+  
+  if (diasRestantes < 0) return 'validade-expirada'
+  if (diasRestantes <= 30) return 'validade-proxima'
+  return 'validade-ok'
+}
+
+onMounted(async () => {
+  console.log('Iniciando carregamento...')
+  await loadPlataformas() // Primeiro carrega todas as plataformas
+  await loadEmpresas()  // Depois carrega as empresas
 })
 </script>
 
@@ -479,32 +550,80 @@ onMounted(() => {
 
 .table-container {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 1rem;
   overflow: auto;
-  height: 100%;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Importante para larguras fixas */
 }
 
 th, td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 th {
   background: #f8f9fa;
-  color: #193155;
   font-weight: 600;
+  color: #374151;
 }
 
-tr:hover {
+.url-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.url-link:hover {
+  text-decoration: underline;
+}
+
+.validade-expirada {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.validade-proxima {
+  color: #d97706;
+  font-weight: 500;
+}
+
+.validade-ok {
+  color: #059669;
+}
+
+.observacoes {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
   background: #f8f9fa;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.btn-clear {
+  padding: 0.5rem 1rem;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-clear:hover {
+  background: #d1d5db;
 }
 
 .actions-cell {
@@ -854,5 +973,36 @@ tr:hover {
   padding: 2rem;
   color: #6c757d;
   font-style: italic;
+}
+
+.validade-expirada {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.validade-proxima {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.validade-ok {
+  color: #28a745;
+}
+
+.validade-indefinida {
+  color: #6c757d;
+  font-style: italic;
+}
+
+table td {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td.actions {
+  white-space: nowrap;
+  width: 120px;
 }
 </style>
