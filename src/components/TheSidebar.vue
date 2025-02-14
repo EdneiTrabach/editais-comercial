@@ -339,9 +339,9 @@ onUnmounted(() => {
   position: fixed;
   left: -330px;
   top: 0;
-  height: 100vh;
+  height: 95%;
   width: 260px;
-  background: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
+  background: linear-gradient(180deg, #722F37 0%, #521920 100%); /* Bordô elegante */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -360,12 +360,11 @@ onUnmounted(() => {
 
 /* Modifique a visibilidade do trigger */
 .sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #1f293765;
+  background: #722F37; /* Mantém consistente com o sidebar */
 }
 
 .sidebar.pinned .sidebar-trigger {
-  background: var(--company-red, #193155);
-  display: flex;
+  background: #521920; /* Tom mais escuro quando fixado */
 }
 
 /* Ajuste main-content */
@@ -385,7 +384,7 @@ onUnmounted(() => {
 }
 
 .sidebar.dark {
-  background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+  background: linear-gradient(180deg, #461D22 0%, #2D1013 100%); /* Bordô escuro para modo dark */
 }
 
 .sidebar.pinned {
@@ -397,7 +396,7 @@ onUnmounted(() => {
   right: -32px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--company-red, #193155);
+  background: #722F37 !important; /* Mesma cor do topo do sidebar */
   width: 35px;
   height: 75px;
   border-radius: 0 8px 8px 0;
@@ -408,20 +407,21 @@ onUnmounted(() => {
   color: white;
   font-size: 1.2rem;
   transition: all 0.3s ease;
+  z-index: 999;
 }
 
 .sidebar-trigger:hover {
-  background: #1f2937;
+  background: #8B4B52; /* Tom mais claro para hover */
   width: 40px;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding-bottom: 2rem;
+  gap: 5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   position: relative;
 }
 
@@ -431,7 +431,7 @@ onUnmounted(() => {
 }
 
 .logo {
-  width: 100%;
+  width: 90px;
   height: 100%;
 }
 
@@ -503,21 +503,19 @@ onUnmounted(() => {
 }
 
 .nav-links::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  /* Fundo do trilho */
+  background: rgba(181, 102, 111, 0.1); /* Track em bordô sutil */
   border-radius: 3px;
 }
 
 .nav-links::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.5);
-  /* Cor da barra de rolagem */
+  background: rgba(181, 102, 111, 0.3); /* Thumb em bordô */
   border-radius: 3px;
   cursor: pointer;
 }
 
 /* Hover na scrollbar */
 .nav-links::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(181, 102, 111, 0.5); /* Hover em bordô mais forte */
 }
 
 .sidebar-menu-item {
@@ -544,8 +542,9 @@ onUnmounted(() => {
 
 .sidebar-menu-link:hover,
 .sidebar-menu-link.router-link-active {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(5px);
+  background: rgba(181, 102, 111, 0.25); /* Bordô transparente para hover */
+  border-left: 3px solid #D98E77; /* Detalhe em cobre */
+  padding-left: calc(1.2rem - 3px); /* Compensa a borda */
 }
 
 .icon {
@@ -558,9 +557,9 @@ onUnmounted(() => {
 /* Bottom section sempre visível */
 .bottom-section {
   margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: inherit;
+  border-radius: 10px;
+  border-top: 1px solid rgba(217, 142, 119, 0.2); /* Separador em cobre sutil */
+  background: linear-gradient(180deg, rgba(114, 47, 55, 0.95) 0%, rgba(82, 25, 32, 0.95) 100%);
 }
 
 .theme-toggle,
@@ -583,7 +582,7 @@ onUnmounted(() => {
   position: absolute;
   top: -8px;
   right: -8px;
-  background-color: #dc2626;
+  background-color: #D98E77; /* Notificações em cobre */
   color: white;
   border-radius: 50%;
   padding: 2px 6px;

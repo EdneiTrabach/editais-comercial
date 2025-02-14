@@ -1302,7 +1302,7 @@ const getEmpresaNome = (empresaId) => {
 }
 
 .btn-icon.delete {
-  background: #fee2e2;
+  background: #ca4848;
 }
 
 .btn-icon.delete:hover {

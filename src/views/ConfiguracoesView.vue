@@ -526,7 +526,7 @@ select:disabled {
 /* Botões de ação */
 .btn-delete {
   padding: 0.5rem;
-  background: #fee2e2;
+  background: #fa8888;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -862,127 +862,5 @@ select:disabled {
   }
 }
 
-/* Ajuste do Dark Mode para o Toast */
-:deep(.dark-mode) {
-  .toast-success {
-    background: #059669;
-  }
-  
-  .toast-error {
-    background: #dc2626;
-  }
-}
 
-/* Dark Mode */
-:deep(.dark-mode) {
-  .main-content {
-    background: #111827;
-  }
-
-  .config-header h1 {
-    color: white;
-  }
-
-  .config-header {
-    border-color: #374151;
-  }
-
-  .users-table {
-    background: #1f2937;
-  }
-
-  .users-table th {
-    background: #111827;
-    color: #9ca3af;
-  }
-
-  .users-table td {
-    color: #e5e7eb;
-    border-color: #374151;
-  }
-
-  select {
-    background: #374151;
-    border-color: #4b5563;
-    color: white;
-  }
-
-  .modal-content {
-    background: #1f2937;
-  }
-
-  .modal-content h2 {
-    color: white;
-  }
-
-  .form-group label {
-    color: #e5e7eb;
-  }
-
-  .form-group input,
-  .form-group select {
-    background: #374151;
-    border-color: #4b5563;
-    color: white;
-  }
-
-  .btn-cancel {
-    background: #374151;
-    color: #e5e7eb;
-  }
-
-  .btn-cancel:hover {
-    background: #4b5563;
-  }
-
-  .modal-actions {
-    border-color: #374151;
-  }
-
-  .confirm-dialog {
-    background: #1f2937;
-  }
-
-  .confirm-content h3 {
-    color: white;
-  }
-
-  .confirm-content p {
-    color: #e5e7eb;
-  }
-
-  .btn-secondary {
-    background: #374151;
-    color: #e5e7eb;
-  }
-
-  .btn-secondary:hover {
-    background: #4b5563;
-  }
-
-  .btn-danger {
-    background: #b91c1c;
-  }
-
-  .btn-danger:hover {
-    background: #991b1b;
-  }
-  
-  .confirm-dialog {
-    background: #1f2937;
-  }
-  
-  .confirm-content h3 {
-    color: white;
-  }
-  
-  .confirm-content p {
-    color: #e5e7eb;
-  }
-  
-  .btn-secondary {
-    background: #374151;
-    color: #e5e7eb;
-  }
-}
 </style>

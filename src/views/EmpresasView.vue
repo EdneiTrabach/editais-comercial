@@ -453,11 +453,11 @@ onMounted(() => {
 }
 
 .btn-action.edit {
-  background: #e3f2fd;
+  background: #a5daff;
 }
 
 .btn-action.delete {
-  background: #fee2e2;
+  background: #f17b7b;
 }
 
 .btn-action:hover {

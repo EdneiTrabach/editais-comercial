@@ -291,11 +291,11 @@ th {
 }
 
 .btn-action.edit {
-  background: #e3f2fd;
+  background: #9fd5fc;
 }
 
 .btn-action.delete {
-  background: #fee2e2;
+  background: #f77777;
 }
 
 .btn-action:hover {

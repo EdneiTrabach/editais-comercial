@@ -10,7 +10,7 @@
       <div class="form-container">
         <form @submit.prevent="handleSubmit" class="form-grid">
           <div class="form-group">
-            <label>Número do Processo*</label>
+            <RequiredLabel text="Número do Processo" :isRequired="true" />
             <div class="processo-input">
               <input 
                 v-model="formData.numero" 
@@ -31,7 +31,7 @@
           </div>
 
           <div class="form-group">
-            <label>Data do Pregão*</label>
+            <RequiredLabel text="Data do Pregão" :isRequired="true" />
             <input 
               v-model="formData.data_pregao" 
               type="date" 
@@ -43,7 +43,7 @@
           </div>
 
           <div class="form-group">
-            <label>Hora do Pregão*</label>
+            <RequiredLabel text="Hora do Pregão" :isRequired="true" />
             <input 
               v-model="formData.hora_pregao" 
               type="time" 
@@ -56,7 +56,7 @@
           </div>
 
           <div class="form-group">
-            <label>Estado*</label>
+            <RequiredLabel text="Estado" :isRequired="true" />
             <select v-model="formData.estado" required>
               <option value="">Selecione o estado...</option>
               <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
@@ -66,7 +66,7 @@
           </div>
 
           <div class="form-group">
-            <label>Órgão*</label>
+            <RequiredLabel text="Órgão" :isRequired="true" />
             <input 
               v-model="formData.orgao" 
               type="text" 
@@ -77,7 +77,7 @@
 
           <!-- Modifique o select de modalidade -->
           <div class="form-group">
-            <label>Modalidade*</label>
+            <RequiredLabel text="Modalidade" :isRequired="true" />
             <select v-model="formData.modalidade" required @change="handleModalidadeChange">
               <option value="">Selecione...</option>
               <option value="pregao_eletronico">Pregão Eletrônico</option>
@@ -99,7 +99,7 @@
 
           <!-- Remova o select de tipo_pregao e substitua por: -->
           <div class="form-group" v-if="showPlataformaField">
-            <label>Plataforma*</label>
+            <RequiredLabel text="Plataforma" :isRequired="true" />
             <select v-model="formData.site_pregao" required>
               <option value="">Selecione a plataforma...</option>
               <option v-for="plataforma in plataformas" 
@@ -111,7 +111,7 @@
           </div>
 
           <div class="form-group full-width">
-            <label>Objeto Resumido* (máx. 200 caracteres)</label>
+            <RequiredLabel text="Objeto Resumido (máx. 200 caracteres)" :isRequired="true" />
             <input 
               v-model="formData.objeto_resumido" 
               type="text"
@@ -123,7 +123,7 @@
           </div>
 
           <div class="form-group full-width">
-            <label>Objeto Completo*</label>
+            <RequiredLabel text="Objeto Completo" :isRequired="true" />
             <textarea 
               v-model="formData.objeto_completo" 
               rows="4"
@@ -133,7 +133,7 @@
           </div>
 
           <div class="form-group">
-            <label>Representante*</label>
+            <RequiredLabel text="Representante" :isRequired="true" />
             <div class="representante-container">
               <select v-model="formData.representante" required>
                 <option value="">Selecione o representante...</option>
@@ -152,7 +152,7 @@
           </div>
 
           <div class="form-group">
-            <label>Campo Adicional 1</label>
+            <RequiredLabel text="Campo Adicional 1" :isRequired="false" />
             <input 
               v-model="formData.campo_adicional1"
               type="text" 
@@ -161,7 +161,7 @@
           </div>
 
           <div class="form-group">
-            <label>Campo Adicional 2</label>
+            <RequiredLabel text="Campo Adicional 2" :isRequired="false" />
             <input 
               v-model="formData.campo_adicional2"
               type="text" 
@@ -170,7 +170,7 @@
           </div>
 
           <div class="form-group">
-            <label>Responsável</label>
+            <RequiredLabel text="Responsável" :isRequired="false" />
             <input 
               type="text" 
               :value="'(definir)'"
@@ -197,11 +197,11 @@
       <h3>Nova Plataforma</h3>
       <form @submit.prevent="handleAddPlataforma">
         <div class="form-group">
-          <label>Nome da Plataforma*</label>
+          <RequiredLabel text="Nome da Plataforma" :isRequired="true" />
           <input v-model="novaPlatforma.nome" required type="text">
         </div>
         <div class="form-group">
-          <label>URL da Plataforma*</label>
+          <RequiredLabel text="URL da Plataforma" :isRequired="true" />
           <input v-model="novaPlatforma.url" required type="url">
         </div>
         <div class="modal-actions">
@@ -222,7 +222,7 @@
       <h3>Novo Representante</h3>
       <form @submit.prevent="handleAddRepresentante" class="form-grid">
         <div class="form-group">
-          <label>Nome*</label>
+          <RequiredLabel text="Nome" :isRequired="true" />
           <input 
             v-model="novoRepresentante.nome"
             type="text"
@@ -231,7 +231,7 @@
           />
         </div>
         <div class="form-group">
-          <label>Documento</label>
+          <RequiredLabel text="Documento" :isRequired="false" />
           <input 
             v-model="novoRepresentante.documento"
             type="text"
@@ -239,7 +239,7 @@
           />
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <RequiredLabel text="Email" :isRequired="false" />
           <input 
             v-model="novoRepresentante.email"
             type="email"
@@ -247,7 +247,7 @@
           />
         </div>
         <div class="form-group">
-          <label>Telefone</label>
+          <RequiredLabel text="Telefone" :isRequired="false" />
           <input 
             v-model="novoRepresentante.telefone"
             type="tel"
@@ -274,6 +274,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
+import RequiredLabel from '@/components/RequiredLabel.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -822,12 +823,6 @@ input:focus, select:focus, textarea:focus {
 .btn-salvar:hover {
   background: #254677;
   box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
-}
-
-label {
-  font-weight: 500;
-  color: #193155;
-  font-size: 0.95rem;
 }
 
 small {

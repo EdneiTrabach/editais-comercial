@@ -1,9 +1,13 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import NavigationButtons from './components/NavigationButtons.vue'
 </script>
 
 <template>
-  <RouterView />
+  <div class="app-container">
+    <RouterView />
+    <NavigationButtons />
+  </div>
 </template>
 
 <style scoped>
@@ -79,8 +83,15 @@ html, body {
   height: 100%;
 }
 
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 #app {
   height: 100%;
   font-family: 'JetBrains Mono';
+  position: relative;
 }
 </style>
