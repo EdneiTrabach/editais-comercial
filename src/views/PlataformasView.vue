@@ -508,7 +508,7 @@ onMounted(async () => {
 }
 
 .main-content {
-  padding: 2rem;
+  padding: 2rem 0rem 2rem 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   background: #f8f9fa;
