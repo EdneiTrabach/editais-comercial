@@ -51,10 +51,31 @@ const handleLogin = async () => {
 
     if (authError) throw authError
 
-    await router.push('/processos') // Aguarda o redirecionamento
+    if (data) {
+      console.log('✅ Login bem sucedido:', {
+        email: email.value,
+        userId: data.user.id
+      })
+
+      // Buscar perfil para confirmar role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError)
+      } else {
+        localStorage.setItem('userRole', profile?.role || '')
+        console.log('Role definida:', profile?.role)
+      }
+
+      await router.push('/processos')
+    }
   } catch (err) {
-    console.error('Erro ao fazer login:', err)
-    error.value = 'Erro ao fazer login'
+    console.error('❌ Erro no login:', err)
+    error.value = 'Email ou senha incorretos'
   } finally {
     loading.value = false
   }
@@ -80,118 +101,6 @@ const handleResetPassword = async () => {
     showToast('Erro ao enviar email: ' + err.message, 'error')
   } finally {
     loading.value = false
-  }
-}
-
-const handleSignUp = async () => {
-  try {
-    loading.value = true
-    console.log('Iniciando signup...')
-    
-    if (!email.value || !password.value) {
-      throw new Error('Email e senha são obrigatórios')
-    }
-
-    // Verificar se o usuário já existe
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email.value)
-      .single()
-
-    if (existingProfile) {
-      throw new Error('Este email já está cadastrado')
-    }
-
-    // Criar usuário
-    const { data, error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          role: 'user'
-        }
-      }
-    })
-
-    if (error) throw error
-    console.log('Usuário criado:', data)
-
-    if (data.user) {
-      // Verificar se já existe um perfil para este usuário
-      const { data: existingUserProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user.id)
-        .single()
-
-      if (!existingUserProfile) {
-        // Criar perfil apenas se não existir
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: data.user.email,
-            role: 'user',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single()
-
-        if (profileError) {
-          console.error('Erro ao criar perfil:', profileError)
-          throw profileError
-        }
-      }
-    }
-
-    showToast('Conta criada com sucesso! Verifique seu email.', 'success')
-    
-  } catch (err) {
-    console.error('Erro completo:', err)
-    showToast(err.message, 'error')
-  } finally {
-    loading.value = false
-  }
-}
-
-// Adicione logs para debug
-const checkUserLimit = async () => {
-  const { data, count, error } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact' })
-  
-  console.log('Total users:', count)
-  console.log('Profiles data:', data)
-  
-  if (error) {
-    console.error('Error checking user limit:', error)
-    throw error
-  }
-  
-  return count
-}
-
-const createUser = async (userData) => {
-  try {
-    console.log('Iniciando criação de usuário')
-    const userCount = await checkUserLimit()
-    console.log('Número atual de usuários:', userCount)
-    
-    // Tenta criar o usuário
-    const { data, error } = await supabase.auth.signUp(userData)
-    
-    if (error) {
-      console.error('Erro detalhado:', error)
-      throw error
-    }
-    
-    return data
-  } catch (err) {
-    console.error('Erro completo:', err)
-    throw err
   }
 }
 </script>
@@ -257,10 +166,6 @@ const createUser = async (userData) => {
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
-
-      <button @click="handleSignUp" class="signup-button" :disabled="loading">
-        Criar Conta
-      </button>
     </div>
 
     <!-- Modal de Recuperação de Senha -->
@@ -414,24 +319,6 @@ const createUser = async (userData) => {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
 }
-
-.signup-button {
-  background: linear-gradient(135deg, #193155 0%, #254677 100%);
-  color: white;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 8px;
-  font-family: 'JetBrains Mono', monospace;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-}
-
-.signup-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
-}
-
 .logo-container {
   text-align: center;
   margin-bottom: 2rem;

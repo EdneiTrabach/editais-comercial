@@ -34,3 +34,37 @@ export const authUtils = {
     router.push('/login')
   }
 }
+
+// Em src/utils/auth.js ou onde preferir
+export const debugUserState = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    console.log('====== DEBUG USER STATE ======')
+    console.log('Sessão:', {
+      active: !!session,
+      token: session?.access_token ? 'Presente' : 'Ausente'
+    })
+    
+    console.log('Usuário:', {
+      id: user?.id,
+      email: user?.email
+    })
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+        
+      console.log('Perfil:', {
+        role: profile?.role,
+        status: profile?.status
+      })
+    }
+  } catch (error) {
+    console.error('❌ Erro ao debugar estado:', error)
+  }
+}

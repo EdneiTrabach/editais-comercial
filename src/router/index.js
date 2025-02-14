@@ -8,6 +8,45 @@ import RelatoriosView from '@/views/RelatoriosView.vue'
 import EmpresasView from '../views/EmpresasView.vue'
 import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
 
+const requireAdmin = async (to, from, next) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log('Verificando permissões para:', user?.email)
+    
+    if (!user) {
+      console.log('Usuário não autenticado')
+      next({ path: '/login' })
+      return
+    }
+
+    // Busca apenas os campos necessários
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    console.log('Perfil encontrado:', profile)
+
+    if (error) {
+      console.error('Erro ao buscar perfil:', error)
+      throw error
+    }
+
+    if (profile?.role === 'admin') {
+      console.log('Acesso permitido - usuário é admin')
+      next()
+    } else {
+      console.log('Acesso negado - usuário não é admin')
+      alert(`Acesso negado para ${user.email}. Você não tem permissão de administrador.`)
+      next({ path: from.path })
+    }
+  } catch (error) {
+    console.error('Erro na verificação de permissão:', error)
+    next({ path: from.path })
+  }
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -82,7 +121,11 @@ const router = createRouter({
       path: '/configuracoes',
       name: 'configuracoes',
       component: ConfiguracoesView,
-      meta: { requiresAuth: true, requiresAdmin: true }
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true
+      },
+      beforeEnter: requireAdmin
     }
   ]
 })
@@ -90,33 +133,39 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
   
-  if (to.matched.some(record => record.meta.requiresAuth) && !session) {
-    next('/login')
-  } else {
-    next()
+  console.log('Router Guard:', {
+    path: to.path,
+    requiresAuth: to.meta.requiresAuth,
+    hasSession: !!session
+  })
+  
+  if (to.path === '/login' && session) {
+    next('/processos')
+    return
   }
-})
-
-// Guarda de rota para área administrativa
-router.beforeEach(async (to, from, next) => {
-  if (to.path === '/configuracoes') {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+  
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!session) {
+      console.log('❌ Redirecionando para login - sem sessão')
       next('/login')
       return
     }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      next('/processos') // Redireciona para área permitida
-      return
+    
+    if (to.meta.requiresAdmin) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+        
+      if (error || profile?.role !== 'admin') {
+        console.log('❌ Acesso negado - não é admin')
+        next(from.path || '/')
+        return
+      }
     }
   }
+  
   next()
 })
 

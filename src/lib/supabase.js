@@ -11,7 +11,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: window.localStorage
   },
   realtime: {
     enabled: true
@@ -62,6 +63,33 @@ const makeRequest = async (url) => {
   } catch (error) {
     console.error('Erro na requisição:', error);
     return null;
+  }
+}
+
+// Helper para verificar se é admin
+export const checkIsAdmin = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return false
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Erro ao verificar admin:', error)
+      return false
+    }
+
+    const isAdmin = profile?.role === 'admin'
+    localStorage.setItem('userRole', profile?.role || '')
+    return isAdmin
+
+  } catch (error) {
+    console.error('Erro ao verificar admin:', error)
+    return false
   }
 }
 
@@ -289,4 +317,17 @@ const loadRepresentantes = async () => {
     console.error('Erro ao carregar representantes:', error)
     showToast('Erro ao carregar representantes', 'error') 
   }
+}
+
+async function exportAllTables() {
+  const { data, error } = await supabase.rpc('export_all_tables');
+  
+  if (error) {
+    console.error('Erro ao exportar dados:', error);
+    throw error;
+  }
+  
+  // Salvar o JSON
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  saveAs(blob, 'database_export.json');
 }
