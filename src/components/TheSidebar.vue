@@ -66,9 +66,19 @@
               <span class="link-text">Relatórios</span>
             </router-link>
           </li>
-          <li v-if="isAdmin" class="sidebar-menu-item">
-            <router-link to="/configuracoes" class="sidebar-menu-link">
-              <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
+          <li class="sidebar-menu-item">
+            <router-link 
+              to="/configuracoes" 
+              class="sidebar-menu-link"
+              v-slot="{ isActive }"
+              :class="{ 'disabled': !isAdmin }"
+              @click.prevent="handleAdminClick"
+            >
+              <img 
+                src="/icons/config-usuario.svg" 
+                alt="Administração" 
+                class="icon" 
+              />
               <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
@@ -116,54 +126,32 @@ const unreadNotifications = ref(0)
 
 const checkAdminStatus = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
       isAdmin.value = false
-      return
+      return false
     }
 
-    // Buscar perfil do usuário
-    const { data: profile, error } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (error) {
-      // Se o perfil não existir, criar um
-      if (error.code === 'PGRST116') {
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email,
-            role: 'admin' // ou 'user' dependendo da sua lógica
-          })
-          .select('role')
-          .single()
-
-        if (createError) {
-          console.error('Erro ao criar perfil:', createError)
-          isAdmin.value = false
-          return
-        }
-
-        isAdmin.value = newProfile.role === 'admin'
-        localStorage.setItem('userRole', newProfile.role)
-        return
-      }
-
-      console.error('Erro ao verificar perfil:', error)
-      isAdmin.value = false
-      return
-    }
+      .eq('id', session.user.id)
+      .maybeSingle()
 
     isAdmin.value = profile?.role === 'admin'
     localStorage.setItem('userRole', profile?.role || '')
+    
+    console.log('Status admin:', {
+      email: session.user.email,
+      role: profile?.role,
+      isAdmin: isAdmin.value
+    })
+
+    return isAdmin.value
   } catch (error) {
-    console.error('Erro ao verificar status de admin:', error)
+    console.error('Erro ao verificar status admin:', error)
     isAdmin.value = false
+    return false
   }
 }
 
@@ -320,10 +308,75 @@ const unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
   }
 })
 
+// Adicione esta função para debug
+const checkAuthToken = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  console.log('Sessão atual:', session)
+  
+  if (session) {
+    const decoded = JSON.parse(atob(session.access_token.split('.')[1]))
+    console.log('Token decodificado:', decoded)
+  }
+}
+
+// Adicione estas funções de debug
+const debugPermissions = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session?.user?.id)
+    .single()
+
+  console.log('Debug Permissions:', {
+    session: !!session,
+    userId: session?.user?.id,
+    profile,
+    isAdmin: profile?.role === 'admin',
+    storedRole: localStorage.getItem('userRole')
+  })
+}
+
+onMounted(async () => {
+  try {
+    // Verificar sessão atual
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    // Verificar status admin
+    await checkAdminStatus()
+    
+    // Debug
+    console.log('Montagem concluída:', {
+      isAdmin: isAdmin.value,
+      role: localStorage.getItem('userRole')
+    })
+  } catch (error) {
+    console.error('Erro na montagem:', error)
+  }
+})
+
+// Chame no onMounted
+onMounted(async () => {
+  await debugPermissions()
+  // ... resto do código
+})
+
 // Limpar o listener quando o componente for destruído
 onUnmounted(() => {
   unsubscribe.data.subscription.unsubscribe()
 })
+
+const handleAdminClick = (e) => {
+  if (!isAdmin.value) {
+    alert('Você não tem permissão para acessar esta área')
+    return
+  }
+  router.push('/configuracoes')
+}
 </script>
 
 <style scoped>
@@ -648,5 +701,14 @@ onUnmounted(() => {
 
 .sidebar.pinned {
   left: 0;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disabled:hover {
+  background-color: transparent;
 }
 </style>

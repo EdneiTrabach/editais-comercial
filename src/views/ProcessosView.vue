@@ -792,22 +792,30 @@ const confirmDialog = ref({
 const checkAdminStatus = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('Usuário atual:', user?.email)
+    
     if (user) {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*') // Selecionar todos os campos para debug
         .eq('id', user.id)
         .single()
 
+      console.log('Perfil encontrado:', profile)
+      console.log('Erro:', error)
+
       if (error) {
         console.error('Erro ao verificar perfil:', error)
-        return
+        return false
       }
 
       isAdmin.value = profile?.role === 'admin'
+      console.log('É admin?', isAdmin.value)
+      return isAdmin.value
     }
   } catch (error) {
     console.error('Erro ao verificar status de admin:', error)
+    return false
   }
 }
 

@@ -17,6 +17,7 @@
         <table v-else class="users-table">
           <thead>
             <tr>
+              <th>Nome</th>
               <th>Email</th>
               <th>Função</th>
               <th>Status</th>
@@ -26,6 +27,15 @@
           </thead>
           <tbody>
             <tr v-for="user in users" :key="user.id">
+              <td>
+                <input 
+                  :value="user.nome || ''"
+                  @blur="handleNameUpdate(user, $event.target.value)"
+                  type="text"
+                  placeholder="Digite o nome"
+                  class="name-input"
+                />
+              </td>
               <td>{{ formatUserDisplay(user) }}</td>
               <td>
                 <select 
@@ -78,6 +88,15 @@
               type="password" 
               required 
               minlength="6"
+            />
+          </div>
+          <div class="form-group">
+            <label>Nome</label>
+            <input 
+              v-model="newUser.nome" 
+              type="text" 
+              required 
+              placeholder="Digite o nome completo"
             />
           </div>
           <div class="form-group">
@@ -137,6 +156,9 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const loading = ref(false)
 const users = ref([])
@@ -153,55 +175,95 @@ const toastConfig = ref({
 })
 
 const newUser = ref({
+  nome: '',
   email: '',
   password: '',
   role: 'user'
 })
 
-const loadUsers = async () => {
+// Função para atualizar o nome do usuário
+const handleNameUpdate = async (user, newName) => {
+  if (user.nome === newName) return
+
   try {
-    const { data, error } = await supabase
+    // Atualiza apenas na tabela profiles
+    const { error: profileError } = await supabase
       .from('profiles')
-      .select('*')
-      .order('status', { ascending: true }) // ACTIVE primeiro
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    users.value = data
+      .update({ 
+        nome: newName,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+
+    if (profileError) throw profileError
+
+    // Atualiza localmente
+    user.nome = newName
+    showToastMessage('Nome atualizado com sucesso!')
   } catch (error) {
-    console.error('Erro ao carregar usuários:', error)
+    console.error('Erro ao atualizar nome:', error)
+    showToastMessage('Erro ao atualizar nome', 'error')
   }
 }
 
+// Função para criar novo usuário
 const handleAddUser = async () => {
   try {
-    loading.value = true
-    
-    const { data, error } = await supabase.auth.signUp({
+    // 1. Criar usuário no Auth
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email: newUser.value.email,
       password: newUser.value.password,
-      options: {
-        data: {
-          role: newUser.value.role
-        }
-      }
-    })
+      email_confirm: true
+    });
 
-    if (error) throw error
+    if (authError) throw authError;
 
-    // Criar perfil
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      email: newUser.value.email,
-      role: newUser.value.role
-    })
+    // 2. Criar perfil vinculado
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: authUser.user.id,
+        email: newUser.value.email,
+        role: 'user',
+        status: 'ACTIVE',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-    showAddUserModal.value = false
-    await loadUsers()
+    if (profileError) {
+      // Rollback - deletar usuário do Auth se falhar criar perfil
+      await supabase.auth.admin.deleteUser(authUser.user.id);
+      throw profileError;
+    }
+
   } catch (error) {
-    console.error('Erro ao criar usuário:', error)
-  } finally {
-    loading.value = false
+    console.error('Erro:', error);
+    throw error;
+  }
+};
+
+// Modifique a função loadUsers para não depender da API de admin
+const loadUsers = async () => {
+  try {
+    console.log('Iniciando carregamento de usuários...')
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('status', { ascending: true })
+      .order('created_at', { ascending: false })
+    
+    console.log('Resposta do servidor:', { profilesData, profilesError })
+
+    if (profilesError) throw profilesError
+
+    users.value = profilesData.map(profile => ({
+      ...profile,
+      nome: profile.nome || '',
+      email: profile.email || ''
+    }))
+  } catch (error) {
+    console.error('Erro ao carregar usuários:', error)
+    showToastMessage('Erro ao carregar usuários', 'error')
   }
 }
 
@@ -221,34 +283,32 @@ const updateUserRole = async (user) => {
 // Função melhorada para deletar usuário
 const deleteUser = async (user) => {
   if (user.id === currentUser.value?.id) {
-    showToastMessage('Não é possível desativar seu próprio usuário', 'error')
+    showToastMessage('Não é possível excluir seu próprio usuário', 'error')
     return
   }
 
   dialogConfig.value = {
-    title: 'Confirmar Desativação',
-    message: `Deseja realmente desativar o usuário ${user.email}?`,
-    warning: 'O usuário não poderá mais acessar o sistema!',
-    confirmText: 'Desativar',
+    title: 'Confirmar Exclusão',
+    message: `Deseja realmente excluir o usuário ${user.email}?`,
+    warning: 'Esta ação é irreversível!',
+    confirmText: 'Excluir',
     onConfirm: async () => {
       try {
-        // Atualizar status para desativado
-        const { error } = await supabase
-          .from('profiles')
-          .update({ 
-            status: 'DISABLED',
-            updated_at: new Date().toISOString()
+        // Chama a função RPC para deletar o usuário
+        const { data, error } = await supabase
+          .rpc('delete_user_secure', {
+            user_id: user.id
           })
-          .eq('id', user.id)
-        
+
         if (error) throw error
-        
+        if (!data.success) throw new Error(data.message)
+
         await loadUsers()
         showConfirmDialog.value = false
-        showToastMessage('Usuário desativado com sucesso!')
+        showToastMessage('Usuário excluído com sucesso!')
       } catch (error) {
-        console.error('Erro ao desativar usuário:', error)
-        showToastMessage('Erro ao desativar usuário', 'error')
+        console.error('Erro ao excluir usuário:', error)
+        showToastMessage('Erro ao excluir usuário', 'error')
       }
     },
     onCancel: () => {
@@ -334,10 +394,115 @@ const handleRoleChange = (user, newRole) => {
   showConfirmDialog.value = true
 }
 
+const syncUserData = async (userId, userData) => {
+  try {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        ...userData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+
+    if (profileError) throw profileError
+    
+    return true
+  } catch (error) {
+    console.error('Erro ao sincronizar dados:', error)
+    return false
+  }
+}
+
+const checkAdminAccess = async () => {
+  try {
+    console.log('Verificando acesso admin...');
+    
+    // 1. Obter usuário atual
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não autenticado');
+      router.push('/login');
+      return false;
+    }
+
+    // 2. Buscar perfil do usuário
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar perfil:', error);
+      return false;
+    }
+
+    // 3. Verificar se é admin
+    const isAdmin = profile?.role === 'admin';
+    console.log('Role do usuário:', profile?.role);
+
+    if (!isAdmin) {
+      console.log('Acesso negado - usuário não é admin');
+      router.push('/');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro na verificação de acesso:', error);
+    return false;
+  }
+};
+
+const debugAccess = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log('Usuário autenticado:', user)
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    console.log('Perfil do usuário:', profile)
+    console.log('Role do usuário:', profile?.role)
+    console.log('Role no localStorage:', localStorage.getItem('userRole'))
+
+    return profile?.role === 'admin'
+  } catch (error) {
+    console.error('Erro ao verificar acesso:', error)
+    return false
+  }
+}
+
 onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  currentUser.value = user
-  await loadUsers()
+  const isAdmin = await debugAccess()
+  console.log('Usuário é admin?', isAdmin)
+  
+  if (!isAdmin) {
+    router.push('/')
+    return
+  }
+  
+  try {
+    console.log('Componente montado, verificando acesso...')
+    const hasAccess = await checkAdminAccess()
+    console.log('Tem acesso?', hasAccess)
+    
+    if (!hasAccess) {
+      console.log('Sem acesso, retornando...')
+      return
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    currentUser.value = user
+    await loadUsers()
+  } catch (error) {
+    console.error('Erro no onMounted:', error)
+    showToastMessage('Erro ao carregar página', 'error')
+  }
 })
 </script>
 
