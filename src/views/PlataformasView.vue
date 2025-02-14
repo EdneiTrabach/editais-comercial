@@ -7,7 +7,7 @@
         <h1>Gerenciamento de Plataformas</h1>
         <div class="actions">
           <button class="btn-add" @click="showModal = true">
-            <img src="/icons/adicao.svg" alt="Adicionar" />
+            <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
             Nova Plataforma
           </button>
         </div>
@@ -24,7 +24,7 @@
         </button>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" :class="{ 'sidebar-expanded': isSidebarExpanded }">
         <table>
           <thead>
             <tr>
@@ -61,13 +61,15 @@
                   {{ truncateText(plataforma.observacoes) || '-' }}
                 </span>
               </td>
-              <td class="actions">
-                <button class="btn-action edit" @click="editPlataforma(plataforma)">
-                  <img src="/icons/edicao.svg" alt="Editar" />
-                </button>
-                <button class="btn-action delete" @click="deletePlataforma(plataforma.id)">
-                  <img src="/icons/lixeira.svg" alt="Excluir" />
-                </button>
+              <td class="actions-cell">
+                <div class="actions-buttons">
+                  <button class="btn-action edit" @click="editPlataforma(plataforma)">
+                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
+                  </button>
+                  <button class="btn-action delete" @click="deletePlataforma(plataforma.id)">
+                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="plataformasFiltradas.length === 0">
@@ -109,7 +111,7 @@
           </div>
 
           <!-- Nova seção de empresas -->
-          <div class="form-group">
+          <div class="form-group full-width">
             <label>Vincular Empresas</label>
             <div class="empresas-grid">
               <button
@@ -144,7 +146,7 @@
             />
           </div>
 
-          <div class="form-group">
+          <div class="form-group full-width">
             <label>Observações</label>
             <textarea 
               v-model="formData.observacoes"
@@ -499,35 +501,35 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Ajuste do layout principal */
 .layout {
   display: flex;
   min-height: 100vh;
 }
 
 .main-content {
-  /* margin-left: 300px; */
   padding: 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   background: #f8f9fa;
 }
 
-.main-content.expanded {
-  margin-left: 0px;
-}
-
+/* Header com estilo padrão */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(114, 47, 55, 0.2); /* Bordô sutil */
 }
 
 .header h1 {
-  color: #193155;
-  font-size: 1.8rem;
+  color: #722F37; /* Bordô principal */
+  font-size: 1.875rem;
   font-weight: 600;
 }
+
 
 .btn-add {
   display: flex;
@@ -540,12 +542,115 @@ onMounted(async () => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-weight: 500;
 }
 
 .btn-add:hover {
   background: #254677;
+}
+
+/* Modal melhorado */
+.modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 900px;
+  box-shadow: 0 8px 32px rgba(82, 25, 32, 0.15);
+}
+
+/* Grid de duas colunas para o formulário */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+/* Campos que ocupam largura total */
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Estilização dos inputs e labels */
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #722F37;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.9rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  background: white;
+}
+
+/* Ajuste da seção de empresas */
+.empresas-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+}
+
+/* Botões do modal */
+.modal-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancelar,
+.btn-salvar {
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancelar {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-salvar {
+  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
+  color: white;
+}
+
+.btn-cancelar:hover,
+.btn-salvar:hover {
   transform: translateY(-2px);
+}
+
+.btn-salvar:hover {
+  background: linear-gradient(180deg, #8B4B52 0%, #722F37 100%);
+  box-shadow: 0 4px 12px rgba(82, 25, 32, 0.2);
 }
 
 .table-container {
@@ -574,7 +679,7 @@ th {
 }
 
 .url-link {
-  color: #2563eb;
+  color: #722F37;
   text-decoration: none;
 }
 
@@ -628,6 +733,7 @@ th {
 
 .actions-cell {
   width: 100px;
+  text-align: center;
 }
 
 .actions-buttons {
@@ -655,30 +761,57 @@ th {
   background: #f77777;
 }
 
-.btn-action.unlink {
-  background: #e9ecef;
+.btn-action:hover {
+  transform: translateY(-2px);
 }
 
-.btn-action.unlink:hover {
-  background: #dee2e6;
+.btn-action.edit:hover {
+  background: #bbdefb;
 }
 
-.unlink-text {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #6c757d;
+.btn-action.delete:hover {
+  background: #fecaca;
 }
 
-.btn-action.unlink:hover .unlink-text {
-  color: #495057;
+.btn-action .icon {
+  width: 16px;
+  height: 16px;
+  transition: all 0.3s ease;
 }
 
-.btn-action.link {
-  background: #d1fae5;
+.btn-action.edit:hover .icon {
+  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(210deg);
 }
 
-.btn-action.link:hover {
-  background: #a7f3d0;
+.btn-action.delete:hover .icon {
+  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg);
+}
+
+.actions-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-actions {
+  width: 36px; /* Aumentado para melhor clicabilidade */
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: #f3f4f6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-actions:hover {
+  background: #e5e7eb;
+}
+
+.btn-actions img {
+  width: 16px;
+  height: 16px;
 }
 
 .link-text {
@@ -696,11 +829,11 @@ th {
 }
 
 .btn-action.edit:hover {
-  background: #bbdefb;
+  background: rgba(114, 47, 55, 0.2);
 }
 
 .btn-action.delete:hover {
-  background: #fecaca;
+  background: rgba(220, 38, 38, 0.2);
 }
 
 .icon {
@@ -710,8 +843,8 @@ th {
 }
 
 .icon-add {
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   filter: brightness(0) invert(1); /* Deixa o ícone branco */
 }
 
@@ -727,15 +860,6 @@ th {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
@@ -769,21 +893,10 @@ th {
   color: #374151;
 }
 
-.form-grid {
-  display: grid;
-  gap: 1.8rem;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-}
-
-.form-group label {
-  color: #193155;
-  font-weight: 500;
-  font-size: 0.95rem;
 }
 
 .form-group input {
@@ -802,47 +915,6 @@ th {
   border-color: #193155;
   box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
   background: white;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.btn-cancelar, .btn-salvar {
-  padding: 0.9rem 2rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.btn-cancelar {
-  background: #e9ecef;
-  color: #495057;
-}
-
-.btn-salvar {
-  background: #193155;
-  color: white;
-}
-
-.btn-cancelar:hover, .btn-salvar:hover {
-  transform: translateY(-2px);
-}
-
-.btn-cancelar:hover {
-  background: #dee2e6;
-}
-
-.btn-salvar:hover {
-  background: #254677;
-  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
 }
 
 @media (max-width: 768px) {
@@ -894,18 +966,6 @@ th {
   text-decoration: underline;
 }
 
-.empresas-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px solid #e9ecef;
-}
-
 .empresa-chip {
   display: flex;
   flex-direction: column;
@@ -920,8 +980,8 @@ th {
 }
 
 .empresa-chip.selected {
-  border-color: #193155;
-  background: #193155;
+  border-color: #722F37;
+  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
   color: white;
 }
 
