@@ -527,26 +527,24 @@ const handleAdminClick = (e) => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  /* Importante para permitir scroll */
+  overflow-x: hidden; /* Adiciona overflow-x: hidden */
   overflow-y: auto;
+  width: 100%; /* Garante largura total */
+  box-sizing: border-box; /* Inclui padding no cálculo */
 }
 
 .nav-links {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  /* Impede scroll horizontal */
   padding-right: 8px;
-  /* Aumentado para acomodar a scrollbar */
   padding-left: 0;
   width: 100%;
-  /* Garante que ocupe toda a largura disponível */
   margin: 0;
-  /* Remove margens */
   scrollbar-width: thin;
-  /* Para Firefox */
   scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
-  /* Para Firefox */
 }
 
 /* Scrollbar personalizada */
@@ -589,8 +587,10 @@ const handleAdminClick = (e) => {
   transition: all 0.3s ease;
   white-space: nowrap;
   /* Evita quebra de texto */
-  width: 80%;
-  /* Ocupa toda largura disponível */
+  width: 100%; /* Alterado de 80% para 100% */
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-menu-link:hover,
@@ -613,6 +613,19 @@ const handleAdminClick = (e) => {
   border-radius: 10px;
   border-top: 1px solid rgba(217, 142, 119, 0.2); /* Separador em cobre sutil */
   background: linear-gradient(180deg, rgba(114, 47, 55, 0.95) 0%, rgba(82, 25, 32, 0.95) 100%);
+  overflow-x: hidden; /* Previne scroll horizontal */
+  width: 100%; /* Garante largura total */
+  padding: 0.5rem; /* Adiciona um pequeno padding */
+  box-sizing: border-box; /* Inclui padding no cálculo da largura */
+}
+
+/* Ajuste os links dentro do bottom-section */
+.bottom-section .sidebar-menu-link {
+  width: 100%; /* Faz os links ocuparem toda a largura */
+  box-sizing: border-box; /* Inclui padding no cálculo */
+  white-space: nowrap; /* Mantém texto em uma linha */
+  overflow: hidden; /* Esconde overflow */
+  text-overflow: ellipsis; /* Adiciona ... quando texto é muito longo */
 }
 
 .theme-toggle,
