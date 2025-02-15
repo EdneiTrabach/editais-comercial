@@ -111,7 +111,6 @@
               v-model="newUser.nome" 
               type="text" 
               required 
-              placeholder="Digite o nome completo"
             />
           </div>
           <div class="form-group">
@@ -190,9 +189,9 @@ const toastConfig = ref({
 })
 
 const newUser = ref({
-  nome: '',
   email: '',
   password: '',
+  nome: '',
   role: 'user'
 })
 
@@ -224,51 +223,57 @@ const handleNameUpdate = async (user, newName) => {
 // Função para criar novo usuário
 const handleAddUser = async () => {
   try {
-    loading.value = true;
+    loading.value = true
 
     // 1. Criar usuário no Auth
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    const { data, error } = await supabase.auth.signUp({
       email: newUser.value.email,
       password: newUser.value.password,
-      email_confirm: true,
-      user_metadata: {
-        nome: newUser.value.nome
+      options: {
+        data: {
+          nome: newUser.value.nome
+        }
       }
-    });
+    })
 
-    if (authError) throw authError;
+    if (error) throw error
 
-    // 2. Criar perfil na tabela profiles
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: authUser.user.id,
-        email: newUser.value.email,
-        nome: newUser.value.nome,
-        role: newUser.value.role,
-        status: 'ACTIVE',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+    // 2. Criar perfil do usuário
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email: data.user.email,
+          nome: newUser.value.nome,
+          role: newUser.value.role,
+          status: 'ACTIVE',
+          created_at: new Date().toISOString()
+        })
 
-    if (profileError) {
-      // Rollback - deletar usuário se falhar em criar perfil
-      await supabase.auth.admin.deleteUser(authUser.user.id);
-      throw profileError;
+      if (profileError) throw profileError
     }
 
-    await loadUsers();
-    showToastMessage('Usuário criado com sucesso!');
-    showAddUserModal.value = false;
-    newUser.value = { nome: '', email: '', password: '', role: 'user' };
+    // 3. Feedback e limpeza
+    showToastMessage('Usuário criado com sucesso!')
+    showAddUserModal.value = false
+    await loadUsers()
+
+    // 4. Resetar form
+    newUser.value = {
+      email: '',
+      password: '',
+      nome: '',
+      role: 'user'
+    }
 
   } catch (error) {
-    console.error('Erro ao criar usuário:', error);
-    showToastMessage(error.message || 'Erro ao criar usuário', 'error');
+    console.error('Erro ao criar usuário:', error)
+    showToastMessage(error.message || 'Erro ao criar usuário', 'error')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // Modifique a função loadUsers para não depender da API de admin
 const loadUsers = async () => {
