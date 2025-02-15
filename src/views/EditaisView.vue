@@ -111,15 +111,15 @@
           </div>
 
           <div class="form-group full-width">
-            <RequiredLabel text="Objeto Resumido (máx. 200 caracteres)" :isRequired="true" />
+            <RequiredLabel text="Objeto Resumido (máx. 700 caracteres)" :isRequired="false" />
             <input 
               v-model="formData.objeto_resumido" 
-              type="text"
-              maxlength="200"
+              type="string"
+              maxlength="700"
               required
               placeholder="Breve descrição do objeto"
             />
-            <small>{{ formData.objeto_resumido?.length || 0 }}/200</small>
+            <small>{{ formData.objeto_resumido?.length || 0 }}/700</small>
           </div>
 
           <div class="form-group full-width">
@@ -143,20 +143,15 @@
                   {{ rep.nome }}
                 </option>
               </select>
-              <button type="button" 
-                      class="btn-add-representante" 
-                      @click="handleOpenRepresentanteModal">
-                Novo Representante
-              </button>
             </div>
           </div>
 
           <div class="form-group">
-            <RequiredLabel text="Campo Adicional 1" :isRequired="false" />
+            <RequiredLabel text="Observações" :isRequired="false" />
             <input 
               v-model="formData.campo_adicional1"
               type="text" 
-              placeholder="Campo opcional 1"
+              placeholder="Obesevarções adicionais"
             />
           </div>
 
