@@ -126,6 +126,12 @@ const router = createRouter({
         requiresAdmin: true
       },
       beforeEnter: requireAdmin
+    },
+    {
+      path: '/sistemas',
+      name: 'sistemas',
+      component: () => import('../views/SistemasView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

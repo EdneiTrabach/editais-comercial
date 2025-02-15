@@ -36,6 +36,12 @@
               <span class="link-text">Novo Processo</span>
             </router-link>
           </li>
+          <li>
+            <router-link to="/sistemas" class="sidebar-menu-link" v-slot="{ isActive }">
+              <img src="/icons/app.svg" alt="Sistemas" class="icon" />
+              <span class="link-text">Sistemas</span>
+            </router-link>
+          </li>
           <li class="sidebar-menu-item">
             <router-link to="/dashboard" class="sidebar-menu-link">
               <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
@@ -67,18 +73,9 @@
             </router-link>
           </li>
           <li class="sidebar-menu-item">
-            <router-link 
-              to="/configuracoes" 
-              class="sidebar-menu-link"
-              v-slot="{ isActive }"
-              :class="{ 'disabled': !isAdmin }"
-              @click.prevent="handleAdminClick"
-            >
-              <img 
-                src="/icons/config-usuario.svg" 
-                alt="Administração" 
-                class="icon" 
-              />
+            <router-link to="/configuracoes" class="sidebar-menu-link" v-slot="{ isActive }"
+              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
+              <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
               <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
@@ -140,7 +137,7 @@ const checkAdminStatus = async () => {
 
     isAdmin.value = profile?.role === 'admin'
     localStorage.setItem('userRole', profile?.role || '')
-    
+
     console.log('Status admin:', {
       email: session.user.email,
       role: profile?.role,
@@ -312,7 +309,7 @@ const unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
 const checkAuthToken = async () => {
   const { data: { session } } = await supabase.auth.getSession()
   console.log('Sessão atual:', session)
-  
+
   if (session) {
     const decoded = JSON.parse(atob(session.access_token.split('.')[1]))
     console.log('Token decodificado:', decoded)
@@ -348,7 +345,7 @@ onMounted(async () => {
 
     // Verificar status admin
     await checkAdminStatus()
-    
+
     // Debug
     console.log('Montagem concluída:', {
       isAdmin: isAdmin.value,
@@ -394,7 +391,8 @@ const handleAdminClick = (e) => {
   top: 0;
   height: 95%;
   width: 260px;
-  background: linear-gradient(180deg, #722F37 0%, #521920 100%); /* Bordô elegante */
+  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
+  /* Bordô elegante */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -413,11 +411,13 @@ const handleAdminClick = (e) => {
 
 /* Modifique a visibilidade do trigger */
 .sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #722F37; /* Mantém consistente com o sidebar */
+  background: #722F37;
+  /* Mantém consistente com o sidebar */
 }
 
 .sidebar.pinned .sidebar-trigger {
-  background: #521920; /* Tom mais escuro quando fixado */
+  background: #521920;
+  /* Tom mais escuro quando fixado */
 }
 
 /* Ajuste main-content */
@@ -437,7 +437,8 @@ const handleAdminClick = (e) => {
 }
 
 .sidebar.dark {
-  background: linear-gradient(180deg, #461D22 0%, #2D1013 100%); /* Bordô escuro para modo dark */
+  background: linear-gradient(180deg, #461D22 0%, #2D1013 100%);
+  /* Bordô escuro para modo dark */
 }
 
 .sidebar.pinned {
@@ -449,7 +450,8 @@ const handleAdminClick = (e) => {
   right: -32px;
   top: 50%;
   transform: translateY(-50%);
-  background: #722F37 !important; /* Mesma cor do topo do sidebar */
+  background: #722F37 !important;
+  /* Mesma cor do topo do sidebar */
   width: 35px;
   height: 75px;
   border-radius: 0 8px 8px 0;
@@ -464,7 +466,8 @@ const handleAdminClick = (e) => {
 }
 
 .sidebar-trigger:hover {
-  background: #8B4B52; /* Tom mais claro para hover */
+  background: #8B4B52;
+  /* Tom mais claro para hover */
   width: 40px;
 }
 
@@ -527,10 +530,13 @@ const handleAdminClick = (e) => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow-x: hidden; /* Adiciona overflow-x: hidden */
+  overflow-x: hidden;
+  /* Adiciona overflow-x: hidden */
   overflow-y: auto;
-  width: 100%; /* Garante largura total */
-  box-sizing: border-box; /* Inclui padding no cálculo */
+  width: 100%;
+  /* Garante largura total */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo */
 }
 
 .nav-links {
@@ -554,19 +560,22 @@ const handleAdminClick = (e) => {
 }
 
 .nav-links::-webkit-scrollbar-track {
-  background: rgba(181, 102, 111, 0.1); /* Track em bordô sutil */
+  background: rgba(181, 102, 111, 0.1);
+  /* Track em bordô sutil */
   border-radius: 3px;
 }
 
 .nav-links::-webkit-scrollbar-thumb {
-  background: rgba(181, 102, 111, 0.3); /* Thumb em bordô */
+  background: rgba(181, 102, 111, 0.3);
+  /* Thumb em bordô */
   border-radius: 3px;
   cursor: pointer;
 }
 
 /* Hover na scrollbar */
 .nav-links::-webkit-scrollbar-thumb:hover {
-  background: rgba(181, 102, 111, 0.5); /* Hover em bordô mais forte */
+  background: rgba(181, 102, 111, 0.5);
+  /* Hover em bordô mais forte */
 }
 
 .sidebar-menu-item {
@@ -587,7 +596,8 @@ const handleAdminClick = (e) => {
   transition: all 0.3s ease;
   white-space: nowrap;
   /* Evita quebra de texto */
-  width: 100%; /* Alterado de 80% para 100% */
+  width: 100%;
+  /* Alterado de 80% para 100% */
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -595,9 +605,12 @@ const handleAdminClick = (e) => {
 
 .sidebar-menu-link:hover,
 .sidebar-menu-link.router-link-active {
-  background: rgba(181, 102, 111, 0.25); /* Bordô transparente para hover */
-  border-left: 3px solid #D98E77; /* Detalhe em cobre */
-  padding-left: calc(1.2rem - 3px); /* Compensa a borda */
+  background: rgba(181, 102, 111, 0.25);
+  /* Bordô transparente para hover */
+  border-left: 3px solid #D98E77;
+  /* Detalhe em cobre */
+  padding-left: calc(1.2rem - 3px);
+  /* Compensa a borda */
 }
 
 .icon {
@@ -611,21 +624,31 @@ const handleAdminClick = (e) => {
 .bottom-section {
   margin-top: auto;
   border-radius: 10px;
-  border-top: 1px solid rgba(217, 142, 119, 0.2); /* Separador em cobre sutil */
+  border-top: 1px solid rgba(217, 142, 119, 0.2);
+  /* Separador em cobre sutil */
   background: linear-gradient(180deg, rgba(114, 47, 55, 0.95) 0%, rgba(82, 25, 32, 0.95) 100%);
-  overflow-x: hidden; /* Previne scroll horizontal */
-  width: 100%; /* Garante largura total */
-  padding: 0.5rem; /* Adiciona um pequeno padding */
-  box-sizing: border-box; /* Inclui padding no cálculo da largura */
+  overflow-x: hidden;
+  /* Previne scroll horizontal */
+  width: 100%;
+  /* Garante largura total */
+  padding: 0.5rem;
+  /* Adiciona um pequeno padding */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo da largura */
 }
 
 /* Ajuste os links dentro do bottom-section */
 .bottom-section .sidebar-menu-link {
-  width: 100%; /* Faz os links ocuparem toda a largura */
-  box-sizing: border-box; /* Inclui padding no cálculo */
-  white-space: nowrap; /* Mantém texto em uma linha */
-  overflow: hidden; /* Esconde overflow */
-  text-overflow: ellipsis; /* Adiciona ... quando texto é muito longo */
+  width: 100%;
+  /* Faz os links ocuparem toda a largura */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo */
+  white-space: nowrap;
+  /* Mantém texto em uma linha */
+  overflow: hidden;
+  /* Esconde overflow */
+  text-overflow: ellipsis;
+  /* Adiciona ... quando texto é muito longo */
 }
 
 .theme-toggle,
@@ -648,7 +671,8 @@ const handleAdminClick = (e) => {
   position: absolute;
   top: -8px;
   right: -8px;
-  background-color: #D98E77; /* Notificações em cobre */
+  background-color: #D98E77;
+  /* Notificações em cobre */
   color: white;
   border-radius: 50%;
   padding: 2px 6px;

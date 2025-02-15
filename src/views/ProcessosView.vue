@@ -83,6 +83,9 @@
                       {{ estado.nome }}
                     </option>
                   </select>
+                  <textarea v-if="coluna.campo === 'impugnacoes'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    rows="3" placeholder="Digite as impugnações..."></textarea>
                   <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
                     @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o representante...</option>
@@ -198,12 +201,8 @@
 
       <div class="anos-tabs">
         <div class="tabs-header">
-          <button 
-            v-for="ano in anosDisponiveis" 
-            :key="ano"
-            :class="['tab-button', { active: anoSelecionado === ano }]"
-            @click="selecionarAno(ano)"
-          >
+          <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+            @click="selecionarAno(ano)">
             {{ ano }}
           </button>
         </div>
@@ -280,6 +279,7 @@ const colunas = [
   { titulo: 'Objeto Completo', campo: 'objeto_completo' },
   { titulo: 'Portal', campo: 'site_pregao' },
   { titulo: 'Representante', campo: 'representante' },
+  { titulo: 'Impugnações', campo: 'impugnacoes' },
   { titulo: 'Empresa Participante', campo: 'empresa' },
   { titulo: 'Campo Adicional 1', campo: 'campo_adicional1' },
   { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' },
@@ -452,6 +452,7 @@ const loadProcessos = async () => {
       hora_pregao: processo.hora_pregao,
       responsavel_nome: '-',
       representante: processo.representantes?.nome || '-',
+      impugnacoes: processo.impugnacoes || '-', // Adicione este campo
       campo_adicional1: processo.campo_adicional1 || '-',
       campo_adicional2: processo.campo_adicional2 || '-'
     })) || []
@@ -794,7 +795,7 @@ const checkAdminStatus = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     console.log('Usuário atual:', user?.email)
-    
+
     if (user) {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -2379,11 +2380,12 @@ th[data-field="objeto_completo"] {
   border-color: #f9a825 !important;
   box-shadow: inset 0 0 0 2px #f9a825;
 }
+
 .anos-tabs {
   margin-top: 1rem;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .tabs-header {
@@ -2431,4 +2433,19 @@ th[data-field="objeto_completo"] {
 .tabs-header::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+td[data-field="impugnacoes"] {
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.impugnacoes-cell {
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.4;
+  word-wrap: break-word;
+  user-select: text;
+}
+
 </style>

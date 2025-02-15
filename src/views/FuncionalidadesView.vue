@@ -53,6 +53,12 @@ const features = [
     description: 'Cadastre e gerencie processos licitatórios',
     route: '/editais'
   },
+    {
+    icon: '/icons/app.svg',
+    title: 'Sistemas',
+    description: 'Conheça nossos sistemas e soluções',
+    route: '/sistemas'
+  },
   {
     icon: '/icons/grafico.svg',
     title: 'Dashboard',
