@@ -442,6 +442,7 @@ const loadProcessos = async () => {
           nome
         )
       `)
+      .order('data_pregao', { ascending: true }) // Adicione esta linha para ordenação padrão
 
     if (error) throw error
 
