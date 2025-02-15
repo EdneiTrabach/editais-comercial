@@ -24,10 +24,19 @@ const goToNext = () => {
     router.push(sidebarRoutes[currentIndex.value + 1].path)
   }
 }
+
+// Lista de rotas públicas onde os botões não devem aparecer
+const publicRoutes = ['/login', '/reset-password', '/forgot-password']
+
+// Computed property para verificar se está em uma rota pública
+const isPublicRoute = computed(() => {
+  return publicRoutes.includes(route.path)
+})
 </script>
 
 <template>
-  <div class="navigation-buttons">
+  <!-- Renderiza os botões apenas se não estiver em uma rota pública -->
+  <div class="navigation-buttons" v-if="!isPublicRoute">
     <button 
       @click="goToPrevious" 
       :disabled="!hasPrevious"
