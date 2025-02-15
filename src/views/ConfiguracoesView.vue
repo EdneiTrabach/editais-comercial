@@ -3,18 +3,20 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
-      <div class="config-header">
+      <div class="header">
         <h1>Administração de Usuários</h1>
-        <button @click="showAddUserModal = true" class="btn-add">
-          <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
-          Novo Usuário
-        </button>
+        <div class="actions">
+          <button @click="showAddUserModal = true" class="btn-add">
+            <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
+            Novo Usuário
+          </button>
+        </div>
       </div>
 
-      <div class="users-grid">
+      <div class="table-container">
         <div v-if="loading" class="loading">Carregando usuários...</div>
         
-        <table v-else class="users-table">
+        <table v-else class="excel-table">
           <thead>
             <tr>
               <th>Nome</th>
@@ -22,7 +24,7 @@
               <th>Função</th>
               <th>Status</th>
               <th>Criado em</th>
-              <th>Ações</th>
+              <th class="actions-column">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -42,24 +44,37 @@
                   :value="user.role"
                   @change="handleRoleChange(user, $event.target.value)"
                   :disabled="user.id === currentUser?.id"
+                  class="role-select"
                 >
                   <option value="user">Usuário</option>
                   <option value="admin">Administrador</option>
                 </select>
               </td>
               <td>
-                <span :class="['status-badge', user.status]">
+                <span :class="['status', user.status?.toLowerCase()]">
                   {{ formatStatus(user.status) }}
                 </span>
+                <button 
+                  @click="toggleUserStatus(user)"
+                  class="btn-toggle-status"
+                  :disabled="user.id === currentUser?.id"
+                  :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
+                >
+                  <img 
+                    :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
+                    :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
+                    class="icon-status"
+                  />
+                </button>
               </td>
               <td>{{ formatDate(user.created_at) }}</td>
-              <td class="actions">
+              <td class="actions-cell">
                 <button 
                   @click="deleteUser(user)" 
-                  class="btn-delete"
+                  class="btn-icon delete"
                   :disabled="user.id === currentUser?.id"
                 >
-                  <img src="/icons/lixeira.svg" alt="Excluir" class="btn-action" />
+                  <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
                 </button>
               </td>
             </tr>
@@ -209,36 +224,49 @@ const handleNameUpdate = async (user, newName) => {
 // Função para criar novo usuário
 const handleAddUser = async () => {
   try {
+    loading.value = true;
+
     // 1. Criar usuário no Auth
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email: newUser.value.email,
       password: newUser.value.password,
-      email_confirm: true
+      email_confirm: true,
+      user_metadata: {
+        nome: newUser.value.nome
+      }
     });
 
     if (authError) throw authError;
 
-    // 2. Criar perfil vinculado
+    // 2. Criar perfil na tabela profiles
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
         id: authUser.user.id,
         email: newUser.value.email,
-        role: 'user',
+        nome: newUser.value.nome,
+        role: newUser.value.role,
         status: 'ACTIVE',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
 
     if (profileError) {
-      // Rollback - deletar usuário do Auth se falhar criar perfil
+      // Rollback - deletar usuário se falhar em criar perfil
       await supabase.auth.admin.deleteUser(authUser.user.id);
       throw profileError;
     }
 
+    await loadUsers();
+    showToastMessage('Usuário criado com sucesso!');
+    showAddUserModal.value = false;
+    newUser.value = { nome: '', email: '', password: '', role: 'user' };
+
   } catch (error) {
-    console.error('Erro:', error);
-    throw error;
+    console.error('Erro ao criar usuário:', error);
+    showToastMessage(error.message || 'Erro ao criar usuário', 'error');
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -317,6 +345,43 @@ const deleteUser = async (user) => {
   }
   showConfirmDialog.value = true
 }
+
+const toggleUserStatus = async (user) => {
+  const newStatus = user.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+  
+  try {
+    // Atualizar status na tabela profiles
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (profileError) throw profileError;
+
+    // Atualizar status no Auth (desativar/reativar)
+    if (newStatus === 'DISABLED') {
+      await supabase.auth.admin.updateUserById(user.id, {
+        ban_duration: '87600h' // 10 anos
+      });
+    } else {
+      await supabase.auth.admin.updateUserById(user.id, {
+        ban_duration: '0h'
+      });
+    }
+
+    // Atualizar UI
+    user.status = newStatus;
+    showToastMessage(`Usuário ${newStatus === 'ACTIVE' ? 'ativado' : 'desativado'} com sucesso!`);
+    await loadUsers();
+
+  } catch (error) {
+    console.error('Erro ao alterar status:', error);
+    showToastMessage('Erro ao alterar status do usuário', 'error');
+  }
+};
 
 const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
@@ -521,59 +586,148 @@ onMounted(async () => {
 }
 
 /* Cabeçalho */
-.config-header {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #e5e7eb;
 }
 
-.config-header h1 {
-  font-size: 1.875rem;
+.header h1 {
+  color: #193155;
+  font-size: 1.8rem;
   font-weight: 600;
-  color: #1f2937;
 }
 
 /* Botão Adicionar */
 .btn-add {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--company-red, #193155);
+  background: #193155;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(25, 49, 85, 0.2);
 }
 
-.icon {
+.icon-add {
   width: 20px;
   height: 20px;
   filter: brightness(0) invert(1);
 }
 
+/* Tabela de Usuários */
+.table-container {
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: auto;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.excel-table th {
+  background: #f8f9fa;
+  padding: 1rem;
+  font-weight: 600;
+  text-align: left;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.excel-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.name-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.role-select {
+  width: 100%;
+  padding: 0.9rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #495057;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  background: white;
+}
+
+.role-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #e9ecef;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.disabled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-toggle-status {
+  background-color: transparent;
+  border: none;
+}
+
+.icon-status {
+  width: 20px;
+  height: 20px;
+
+}
 
 .actions-cell {
-  width: 100px;
+  width: 80px;
+  text-align: center;
 }
 
-.actions-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-action {
+.btn-icon {
   width: 32px;
   height: 32px;
   display: flex;
@@ -585,107 +739,25 @@ onMounted(async () => {
   transition: all 0.3s ease;
 }
 
-.btn-action.edit {
-  background: #e3f2fd;
+.btn-icon.delete {
+  background: #f77777;
 }
 
-.btn-action.delete {
-  background: #fee2e2;
-}
-
-.btn-action:hover {
+.btn-icon.delete:hover {
+  background: #fecaca;
   transform: translateY(-2px);
 }
 
-.btn-action.edit:hover {
-  background: #bbdefb;
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.btn-action.delete:hover {
-  background: #fecaca;
-}
-
-.icon {
+.btn-icon .icon {
   width: 16px;
   height: 16px;
   transition: all 0.3s ease;
-}
-
-.icon-add {
-  width: 20px;
-  height: 20px;
-  filter: brightness(0) invert(1); /* Deixa o ícone branco */
-}
-
-/* Tabela de Usuários */
-.users-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.users-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  padding: 1rem 1.5rem;
-}
-
-.users-table td {
-  padding: 1rem 1.5rem;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* Status badges */
-.status-badge {
-  padding: 0.375rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.status-badge.ACTIVE {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.status-badge.DISABLED {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.status-badge.PENDING {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-/* Seletor de função */
-select {
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #f8fafc;
-  color: #334155;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-select:hover:not(:disabled) {
-  border-color: #94a3b8;
-}
-
-select:disabled {
-  background: #f1f5f9;
-  cursor: not-allowed;
 }
 
 /* Botões de ação */
@@ -1027,5 +1099,28 @@ select:disabled {
   }
 }
 
+/* Dark mode */
+[data-theme="dark"] .role-select {
+  background: #1e293b;
+  color: #f9fafb;
+  border-color: #2d3748;
+}
 
+[data-theme="dark"] .role-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .role-select:disabled {
+  background: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .btn-icon.delete {
+  background: #991b1b;
+}
+
+[data-theme="dark"] .btn-icon.delete:hover {
+  background: #b91c1c;
+}
 </style>
