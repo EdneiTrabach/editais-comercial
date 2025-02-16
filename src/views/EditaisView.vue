@@ -3,6 +3,10 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
+      <!-- Loading overlay -->
+      <div v-if="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+      </div>
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
       </div>
@@ -68,14 +72,28 @@
             </select>
           </div>
 
+          <!-- Campo de Plataforma -->
           <div class="form-group" v-if="showPlataformaField">
             <RequiredLabel text="Plataforma" :isRequired="true" />
-            <select v-model="formData.site_pregao" required>
-              <option value="">Selecione a plataforma...</option>
-              <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
-                {{ plataforma.nome }}
-              </option>
-            </select>
+            <div class="plataforma-container">
+              <select v-model="formData.site_pregao" required>
+                <option value="">Selecione a plataforma...</option>
+                <option 
+                  v-for="plataforma in plataformas" 
+                  :key="plataforma.id" 
+                  :value="plataforma.url"
+                >
+                  {{ plataforma.nome }}
+                </option>
+              </select>
+              <button 
+                type="button" 
+                class="btn-add-plataforma" 
+                @click="showPlataformaModal = true"
+              >
+                <img src="/icons/adicao.svg" alt="Nova Plataforma" class="icon" />
+              </button>
+            </div>
           </div>
 
           <div class="form-group full-width">
@@ -104,15 +122,27 @@
               placeholder="Descrição completa do objeto conforme Art. 40"></textarea>
           </div>
 
+          <!-- Campo de Representante -->
           <div class="form-group">
             <RequiredLabel text="Representante" :isRequired="true" />
             <div class="representante-container">
               <select v-model="formData.representante" required>
                 <option value="">Selecione o representante...</option>
-                <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                <option 
+                  v-for="rep in representantes" 
+                  :key="rep.id" 
+                  :value="rep.id"
+                >
                   {{ rep.nome }}
                 </option>
               </select>
+              <button 
+                type="button" 
+                class="btn-add-representante" 
+                @click="showRepresentanteModal = true"
+              >
+                <img src="/icons/adicao.svg" alt="Novo Representante" class="icon" />
+              </button>
             </div>
           </div>
 
@@ -204,14 +234,152 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
+import debounce from 'lodash/debounce' // Importação correta do debounce
+
+// Estado reativo para controle de carregamento e subscription
+const loading = ref(false)
+const realtimeSubscription = ref(null)
+
+// Configuração do listener realtime
+const setupRealtimeListener = () => {
+  realtimeSubscription.value = supabase
+    .channel('processos-changes')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'processos' 
+      }, 
+      () => {
+        loadData()
+      }
+    )
+    .subscribe()
+}
+
+// Função para carregar dados debounced
+const loadData = debounce(async () => {
+  try {
+    loading.value = true
+    
+    // Carregamento paralelo dos dados necessários
+    const [processosResponse, plataformasResponse, representantesResponse] = await Promise.all([
+      supabase.from('processos').select('*'),
+      supabase.from('plataformas').select('*'),
+      supabase.from('representantes').select('*')
+    ])
+
+    if (processosResponse.error) throw processosResponse.error
+    if (plataformasResponse.error) throw plataformasResponse.error
+    if (representantesResponse.error) throw representantesResponse.error
+
+    plataformas.value = plataformasResponse.data
+    representantes.value = representantesResponse.data
+
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
+  } finally {
+    loading.value = false
+  }
+}, 300)
+
+// Função para validar formulário
+const validateForm = () => {
+  const errors = []
+  
+  if (!formData.value.numero) errors.push('Número do processo é obrigatório')
+  if (!formData.value.orgao) errors.push('Órgão é obrigatório')
+  if (!formData.value.data_pregao) errors.push('Data do pregão é obrigatória')
+  if (!formData.value.hora_pregao) errors.push('Hora do pregão é obrigatória')
+  if (!formData.value.modalidade) errors.push('Modalidade é obrigatória')
+  
+  return errors
+}
+
+// Modifique a função handleSubmit no EditaisView.vue
+const handleSubmit = async () => {
+  try {
+    loading.value = true
+    const processData = {
+      numero_processo: `${formData.numero}/${formData.ano}`,
+      orgao: formData.orgao,
+      data_pregao: formData.data_pregao,
+      hora_pregao: formData.hora_pregao,
+      estado: formData.estado,
+      modalidade: formData.modalidade,
+      site_pregao: formData.site_pregao,
+      objeto_resumido: formData.objeto_resumido,
+      objeto_completo: formData.objeto_completo,
+      representante: formData.representante,
+      status: formData.status || '',
+      responsavel_id: user.value.id,
+      sistemasAtivos: formData.sistemasAtivos || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('processos')
+      .insert(processData)
+
+    if (error) throw error
+
+    router.push('/editais')
+  } catch (error) {
+    console.error('Erro ao salvar processo:', error)
+    alert('Erro ao salvar processo: ' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+// Adicione esta função de carregamento de sistemas
+const loadSistemas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('sistemas')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('nome')
+
+    if (error) throw error
+    sistemasAtivos.value = data
+  } catch (error) {
+    console.error('Erro ao carregar sistemas:', error)
+  }
+}
+
+// Modifique o onMounted para carregar tudo de uma vez
+onMounted(() => {
+  Promise.all([
+    loadData(),
+    loadPlataformas(),
+    loadRepresentantes(),
+    loadSistemas()
+  ]).catch(error => {
+    console.error('Erro ao carregar dados iniciais:', error)
+  })
+  setupRealtimeListener()
+  startAutoRefresh()
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  loadData()
+  setupRealtimeListener()
+})
+
+onUnmounted(() => {
+  if (realtimeSubscription.value) {
+    supabase.removeChannel(realtimeSubscription.value)
+  }
+})
 
 const router = useRouter()
-const loading = ref(false)
 const isSidebarExpanded = ref(true)
 const currentYear = new Date().getFullYear()
 const plataformas = ref([])
@@ -276,63 +444,6 @@ const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
 
-const handleSubmit = async () => {
-  try {
-    loading.value = true;
-
-    // 1. Obter usuário atual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuário não autenticado');
-
-    // 2. Criar o processo
-    const { data: processo, error: processoError } = await supabase
-      .from('processos')
-      .insert({
-        numero_processo: `${formData.value.numero}/${formData.value.ano}`,
-        ano: formData.value.ano,
-        orgao: formData.value.orgao,
-        data_pregao: formData.value.data_pregao,
-        hora_pregao: formData.value.hora_pregao,
-        estado: formData.value.estado,
-        modalidade: formData.value.modalidade,
-        site_pregao: formData.value.site_pregao,
-        objeto_resumido: formData.value.objeto_resumido,
-        objeto_completo: formData.value.objeto_completo,
-        responsavel_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (processoError) throw processoError;
-
-    // 3. Inserir vinculações com sistemas selecionados
-    if (sistemasSelecionados.value.length > 0) {
-      const { error: vinculacaoError } = await supabase
-        .from('processo_sistema')
-        .insert(
-          sistemasSelecionados.value.map(sistemaId => ({
-            processo_id: processo.id,
-            sistema_id: sistemaId
-          }))
-        );
-
-      if (vinculacaoError) throw vinculacaoError;
-    }
-
-    // 4. Feedback e redirecionamento
-    alert('Processo cadastrado com sucesso!');
-    router.push('/processos');
-
-  } catch (error) {
-    console.error('Erro ao cadastrar processo:', error);
-    alert('Erro ao cadastrar processo: ' + error.message);
-  } finally {
-    loading.value = false;
-  }
-};
-
 const loadPlataformas = async () => {
   try {
     const { data, error } = await supabase
@@ -341,14 +452,32 @@ const loadPlataformas = async () => {
       .order('nome')
 
     if (error) throw error
-    plataformas.value = data
+    plataformas.value = data || []
+    console.log('Plataformas carregadas:', plataformas.value)
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
   }
 }
 
+const loadRepresentantes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('representantes')
+      .select('*')
+      .order('nome')
+
+    if (error) throw error
+    representantes.value = data || []
+    console.log('Representantes carregados:', representantes.value)
+  } catch (error) {
+    console.error('Erro ao carregar representantes:', error)
+  }
+}
+
+// Garantir que os dados sejam carregados quando o componente montar
 onMounted(() => {
   loadPlataformas()
+  loadRepresentantes()
 })
 
 const handleAddPlataforma = async () => {
@@ -372,20 +501,6 @@ const handleAddPlataforma = async () => {
   } catch (error) {
     console.error('Erro ao adicionar plataforma:', error)
     alert('Erro ao adicionar plataforma')
-  }
-}
-
-const loadRepresentantes = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('representantes')
-      .select('*')
-      .order('nome')
-
-    if (error) throw error
-    representantes.value = data
-  } catch (error) {
-    console.error('Erro ao carregar representantes:', error)
   }
 }
 
@@ -565,7 +680,12 @@ const formatModalidade = (modalidade) => {
 
 // Computed property para controlar a visibilidade do campo de plataforma
 const showPlataformaField = computed(() => {
-  return formData.value.modalidade && formData.value.modalidade !== 'pregao_presencial'
+  return [
+    'pregao_eletronico',
+    'rdc_eletronico',
+    'srp_eletronico',
+    'srp_internacional'
+  ].includes(formData.value.modalidade)
 })
 
 // Função para lidar com a mudança de modalidade
@@ -613,6 +733,89 @@ const toggleSistema = (sistemaId) => {
 onMounted(() => {
   loadSistemas()
 })
+
+onMounted(() => {
+  Promise.all([
+    loadSistemas(),
+    loadPlataformas(),
+    loadRepresentantes()
+  ]).catch(error => {
+    console.error('Erro ao carregar dados iniciais:', error)
+  })
+})
+
+// Em EditaisView.vue
+const refreshInterval = ref(null)
+
+const startAutoRefresh = () => {
+  refreshInterval.value = setInterval(() => {
+    loadProcessos()
+  }, 30000) // Atualiza a cada 30 segundos
+}
+
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+  }
+}
+
+// Monitore visibilidade da página
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopAutoRefresh()
+  } else {
+    startAutoRefresh()
+    loadProcessos() // Recarrega imediatamente ao voltar
+  }
+})
+
+onMounted(() => {
+  startAutoRefresh()
+})
+
+onUnmounted(() => {
+  stopAutoRefresh()
+})
+
+// Em EditaisView.vue
+const processos = ref([])
+
+const loadProcessos = debounce(async () => {
+  try {
+    loading.value = true
+    const { data, error } = await supabase
+      .from('processos')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    processos.value = data
+  } catch (error) {
+    console.error('Erro ao carregar processos:', error)
+  } finally {
+    loading.value = false
+  }
+}, 300)
+
+// Cache para melhorar performance
+const processosCache = new Map()
+
+const getProcesso = async (id) => {
+  if (processosCache.has(id)) {
+    return processosCache.get(id)
+  }
+  
+  const { data } = await supabase
+    .from('processos')
+    .select('*')
+    .eq('id', id)
+    .single()
+    
+  if (data) {
+    processosCache.set(id, data)
+  }
+  return data
+}
 </script>
 
 <style scoped>
@@ -1050,5 +1253,32 @@ input[type="date"]:focus:not(.error) {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #193155;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
