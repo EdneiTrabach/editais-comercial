@@ -18,7 +18,12 @@
             @click="selectProcesso(processo)"
           >
             <h3>{{ processo.numero_processo }}</h3>
-            <p>{{ processo.objeto_resumido }}</p>
+            <div class="processo-info">
+              <p><strong>Órgão:</strong> {{ processo.orgao }}</p>
+              <p><strong>Data:</strong> {{ formatDate(processo.data_pregao) }}</p>
+              <p><strong>Hora:</strong> {{ processo.hora_pregao }}</p>
+              <p class="objeto">{{ processo.objeto_resumido }}</p>
+            </div>
             <div class="processo-status">
               {{ formatStatus(processo.status) }}
             </div>
@@ -128,14 +133,14 @@
       <div class="navigation-buttons">
         <button 
           v-if="step > 1" 
-          @click="step--" 
+          @click="voltarEtapa" 
           class="btn-voltar"
         >
           Voltar
         </button>
         <button 
           v-if="step < 3 && podeAvancar" 
-          @click="step++" 
+          @click="avancarEtapa" 
           class="btn-avancar"
         >
           Avançar
@@ -186,6 +191,11 @@ const formatStatus = (status) => {
   return statusMap[status] || status
 }
 
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('pt-BR')
+}
+
 // Carregar processos do Supabase
 const loadProcessos = async () => {
   try {
@@ -219,7 +229,8 @@ const loadSistemas = async (processoId) => {
 
 const selectProcesso = async (processo) => {
   selectedProcesso.value = processo.id
-  await loadSistemas(processo.id)
+  await loadSistemas(processo.id) // Carrega os sistemas do processo selecionado
+  step.value = 2 // Avança para a etapa 2 após selecionar o processo
 }
 
 const formatarMoeda = (valor) => {
@@ -276,6 +287,31 @@ const exportarExcel = () => {
   writeFileXLSX(wb, 'proposta.xlsx')
 }
 
+const voltarEtapa = () => {
+  if (step.value > 1) {
+    step.value--
+  }
+}
+
+const avancarEtapa = () => {
+  if (step.value < 3 && podeAvancar.value) {
+    step.value++
+    if (step.value === 3) {
+      // Prepara os itens selecionados para a planilha
+      itensPlanilha.value = itensSelecionados.value.map(itemId => {
+        const item = itensDisponiveis.find(i => i.id === itemId)
+        return {
+          nome: item.nome,
+          descricao: '',
+          valorUnitario: 0,
+          quantidade: 1,
+          total: 0
+        }
+      })
+    }
+  }
+}
+
 onMounted(() => {
   loadProcessos()
 })
@@ -321,6 +357,31 @@ h1 {
 
 .processo-card.selected {
   border: 2px solid #193155;
+  background: #f8f9fa;
+}
+
+.processo-info {
+  margin: 1rem 0;
+}
+
+.processo-info p {
+  margin: 0.5rem 0;
+  color: #4b5563;
+}
+
+.processo-info .objeto {
+  font-style: italic;
+  color: #6b7280;
+  margin-top: 1rem;
+}
+
+.processo-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
 .sistemas-grid {
@@ -351,6 +412,14 @@ h1 {
   padding: 0.5rem;
   border: 1px solid #e9ecef;
   border-radius: 4px;
+}
+
+.planilha-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 2rem;
 }
 
 .navigation-buttons {
@@ -398,5 +467,60 @@ h1 {
 .total-label {
   font-weight: bold;
   text-align: right;
+}
+
+/* Adicione estes estilos */
+.sistemas-selection {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.sistemas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.sistema-card {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.sistema-card h3 {
+  color: #193155;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.itens-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.item-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #193155;
+  border-radius: 4px;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
 }
 </style>
