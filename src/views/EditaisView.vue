@@ -292,6 +292,13 @@ const handleSubmit = async () => {
   try {
     loading.value = true
 
+    // Validar formulário
+    const errors = validateForm()
+    if (errors.length > 0) {
+      alert(errors.join('\n'))
+      return
+    }
+
     // Obter o usuário atual
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
@@ -323,6 +330,7 @@ const handleSubmit = async () => {
 
     if (error) throw error
 
+    // Feedback de sucesso
     showToast('Processo cadastrado com sucesso!', 'success')
     router.push('/editais')
 
