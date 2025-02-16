@@ -12,6 +12,10 @@ export const sidebarRoutes = [
     name: 'Novo Processo'
   },
   {
+    path: '/lances',
+    name: 'Lances'
+  },
+  {
     path: '/dashboard',
     name: 'Dashboard'
   },

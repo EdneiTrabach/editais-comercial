@@ -66,6 +66,11 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/lances',
+      name: 'Lances',
+      component: () => import('@/views/LancesView.vue')
+    },
+    {
       path: '/reset-password',
       name: 'reset-password',
       component: () => import('../views/ResetPassword.vue')

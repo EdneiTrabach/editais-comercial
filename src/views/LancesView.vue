@@ -1,0 +1,402 @@
+<!-- src/views/LancesView.vue -->
+<template>
+  <div class="layout">
+    <TheSidebar @sidebarToggle="handleSidebarToggle" />
+    
+    <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
+      <h1>Planilha de Lances</h1>
+      
+      <!-- Seleção de Processo -->
+      <div v-if="step === 1" class="processo-selection">
+        <h2>Selecione o Processo</h2>
+        <div class="processos-grid">
+          <div 
+            v-for="processo in processos" 
+            :key="processo.id"
+            class="processo-card"
+            :class="{ 'selected': selectedProcesso === processo.id }"
+            @click="selectProcesso(processo)"
+          >
+            <h3>{{ processo.numero_processo }}</h3>
+            <p>{{ processo.objeto_resumido }}</p>
+            <div class="processo-status">
+              {{ formatStatus(processo.status) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seleção de Sistemas e Itens -->
+      <div v-if="step === 2" class="sistemas-selection">
+        <h2>Selecione os Itens da Proposta</h2>
+        <div class="sistemas-grid">
+          <div 
+            v-for="sistema in sistemas" 
+            :key="sistema.id"
+            class="sistema-card"
+          >
+            <h3>{{ sistema.nome }}</h3>
+            <div class="itens-list">
+              <label 
+                v-for="item in itensDisponiveis" 
+                :key="item.id"
+                class="item-checkbox"
+              >
+                <input 
+                  type="checkbox"
+                  v-model="itensSelecionados"
+                  :value="item.id"
+                >
+                {{ item.nome }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Planilha de Valores -->
+      <div v-if="step === 3" class="planilha-container">
+        <h2>Preencha os Valores</h2>
+        <table class="planilha-valores">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Descrição</th>
+              <th>Valor Unitário</th>
+              <th>Quantidade</th>
+              <th>Total</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in itensPlanilha" :key="index">
+              <td>{{ item.nome }}</td>
+              <td>
+                <input 
+                  v-model="item.descricao" 
+                  type="text"
+                  class="input-descricao"
+                >
+              </td>
+              <td>
+                <input 
+                  v-model="item.valorUnitario"
+                  type="number"
+                  class="input-valor"
+                  @input="calcularTotal(item)"
+                >
+              </td>
+              <td>
+                <input 
+                  v-model="item.quantidade"
+                  type="number"
+                  class="input-quantidade"
+                  @input="calcularTotal(item)"
+                >
+              </td>
+              <td>{{ formatarMoeda(item.total) }}</td>
+              <td>
+                <button @click="removerItem(index)" class="btn-remover">
+                  Remover
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="total-label">Total Geral:</td>
+              <td>{{ formatarMoeda(totalGeral) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="acoes-planilha">
+          <button @click="adicionarItem" class="btn-adicionar">
+            Adicionar Item
+          </button>
+          <button @click="exportarPDF" class="btn-exportar">
+            Exportar PDF
+          </button>
+          <button @click="exportarExcel" class="btn-exportar">
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Navegação entre etapas -->
+      <div class="navigation-buttons">
+        <button 
+          v-if="step > 1" 
+          @click="step--" 
+          class="btn-voltar"
+        >
+          Voltar
+        </button>
+        <button 
+          v-if="step < 3 && podeAvancar" 
+          @click="step++" 
+          class="btn-avancar"
+        >
+          Avançar
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue' // Adicione onMounted aqui
+import { supabase } from '@/lib/supabase'
+import TheSidebar from '@/components/TheSidebar.vue'
+import { utils, writeFileXLSX } from 'xlsx'
+import html2pdf from 'html2pdf.js'
+
+const step = ref(1)
+const isSidebarExpanded = ref(true)
+const processos = ref([])
+const sistemas = ref([])
+const selectedProcesso = ref(null)
+const itensSelecionados = ref([])
+const itensPlanilha = ref([])
+
+const itensDisponiveis = [
+  { id: 1, nome: 'Manutenção Mensal' },
+  { id: 2, nome: 'Treinamento' },
+  { id: 3, nome: 'Implantação' },
+  { id: 4, nome: 'Customização' },
+  { id: 5, nome: 'Outros' }
+]
+
+// Função para formatar status do processo
+const formatStatus = (status) => {
+  const statusMap = {
+    'vamos_participar': 'Vamos Participar',
+    'em_analise': 'Em Análise',
+    'em_andamento': 'Em Andamento',
+    'ganhamos': 'Ganhamos',
+    'perdemos': 'Perdemos',
+    'suspenso': 'Suspenso',
+    'revogado': 'Revogado',
+    'adiado': 'Adiado',
+    'demonstracao': 'Demonstração',
+    'cancelado': 'Cancelado',
+    'nao_participar': 'Decidido Não Participar'
+  }
+  return statusMap[status] || status
+}
+
+// Carregar processos do Supabase
+const loadProcessos = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('processos')
+      .select('*')
+      .eq('status', 'vamos_participar') // Adiciona filtro por status
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    processos.value = data
+  } catch (error) {
+    console.error('Erro ao carregar processos:', error)
+  }
+}
+
+// Carregar sistemas do processo selecionado
+const loadSistemas = async (processoId) => {
+  try {
+    const { data, error } = await supabase
+      .from('sistemas')
+      .select('*')
+      .eq('processo_id', processoId)
+
+    if (error) throw error
+    sistemas.value = data
+  } catch (error) {
+    console.error('Erro ao carregar sistemas:', error)
+  }
+}
+
+const selectProcesso = async (processo) => {
+  selectedProcesso.value = processo.id
+  await loadSistemas(processo.id)
+}
+
+const formatarMoeda = (valor) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
+}
+
+const calcularTotal = (item) => {
+  item.total = item.valorUnitario * item.quantidade
+}
+
+const totalGeral = computed(() => {
+  return itensPlanilha.value.reduce((acc, item) => acc + (item.total || 0), 0)
+})
+
+const podeAvancar = computed(() => {
+  switch (step.value) {
+    case 1:
+      return selectedProcesso.value !== null
+    case 2:
+      return itensSelecionados.value.length > 0
+    default:
+      return false
+  }
+})
+
+const adicionarItem = () => {
+  itensPlanilha.value.push({
+    nome: '',
+    descricao: '',
+    valorUnitario: 0,
+    quantidade: 1,
+    total: 0
+  })
+}
+
+const removerItem = (index) => {
+  itensPlanilha.value.splice(index, 1)
+}
+
+const exportarPDF = () => {
+  const element = document.querySelector('.planilha-container')
+  html2pdf()
+    .from(element)
+    .save('proposta.pdf')
+}
+
+const exportarExcel = () => {
+  const ws = utils.json_to_sheet(itensPlanilha.value)
+  const wb = utils.book_new()
+  utils.book_append_sheet(wb, ws, 'Proposta')
+  writeFileXLSX(wb, 'proposta.xlsx')
+}
+
+onMounted(() => {
+  loadProcessos()
+})
+</script>
+
+<style scoped>
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background: #f8f9fa;
+}
+
+h1 {
+  color: #193155;
+  margin-bottom: 2rem;
+}
+
+.processos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.processo-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.processo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.processo-card.selected {
+  border: 2px solid #193155;
+}
+
+.sistemas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.planilha-valores {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.planilha-valores th,
+.planilha-valores td {
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  text-align: left;
+}
+
+.input-descricao,
+.input-valor,
+.input-quantidade {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.btn-voltar,
+.btn-avancar,
+.btn-exportar {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-voltar {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-avancar {
+  background: #193155;
+  color: white;
+}
+
+.btn-exportar {
+  background: #28a745;
+  color: white;
+  margin-left: 1rem;
+}
+
+.btn-remover {
+  background: #dc3545;
+  color: white;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.total-label {
+  font-weight: bold;
+  text-align: right;
+}
+</style>

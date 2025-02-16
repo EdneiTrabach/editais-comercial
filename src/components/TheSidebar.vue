@@ -36,6 +36,13 @@
               <span class="link-text">Novo Processo</span>
             </router-link>
           </li>
+          <!-- Novo item de menu para Lances -->
+          <li class="sidebar-menu-item">
+            <router-link to="/lances" class="sidebar-menu-link">
+              <img src="/icons/calculadora.svg" alt="Lances" class="icon" />
+              <span class="link-text">Lances</span>
+            </router-link>
+          </li>
           <li>
             <router-link to="/sistemas" class="sidebar-menu-link" v-slot="{ isActive }">
               <img src="/icons/app.svg" alt="Sistemas" class="icon" />
