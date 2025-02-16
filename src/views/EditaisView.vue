@@ -86,13 +86,6 @@
                   {{ plataforma.nome }}
                 </option>
               </select>
-              <button 
-                type="button" 
-                class="btn-add-plataforma" 
-                @click="showPlataformaModal = true"
-              >
-                <img src="/icons/adicao.svg" alt="Nova Plataforma" class="icon" />
-              </button>
             </div>
           </div>
 
@@ -136,13 +129,6 @@
                   {{ rep.nome }}
                 </option>
               </select>
-              <button 
-                type="button" 
-                class="btn-add-representante" 
-                @click="showRepresentanteModal = true"
-              >
-                <img src="/icons/adicao.svg" alt="Novo Representante" class="icon" />
-              </button>
             </div>
           </div>
 
@@ -305,20 +291,28 @@ const validateForm = () => {
 const handleSubmit = async () => {
   try {
     loading.value = true
+
+    // Obter o usuário atual
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError) throw userError
+    if (!user) throw new Error('Usuário não autenticado')
+
     const processData = {
-      numero_processo: `${formData.numero}/${formData.ano}`,
-      orgao: formData.orgao,
-      data_pregao: formData.data_pregao,
-      hora_pregao: formData.hora_pregao,
-      estado: formData.estado,
-      modalidade: formData.modalidade,
-      site_pregao: formData.site_pregao,
-      objeto_resumido: formData.objeto_resumido,
-      objeto_completo: formData.objeto_completo,
-      representante: formData.representante,
-      status: formData.status || '',
-      responsavel_id: user.value.id,
-      sistemasAtivos: formData.sistemasAtivos || [],
+      numero_processo: `${formData.value.numero}/${formData.value.ano}`,
+      ano: formData.value.ano, // Corrigido: usar formData.value.ano
+      orgao: formData.value.orgao,
+      data_pregao: formData.value.data_pregao, // Corrigido: usar formData.value
+      hora_pregao: formData.value.hora_pregao,
+      estado: formData.value.estado,
+      modalidade: formData.value.modalidade,
+      site_pregao: formData.value.site_pregao,
+      objeto_resumido: formData.value.objeto_resumido,
+      objeto_completo: formData.value.objeto_completo,
+      representante: formData.value.representante,
+      status: formData.value.status || '',
+      responsavel_id: user.id,
+      sistemas_ativos: sistemasSelecionados.value, // Array de UUIDs
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
@@ -329,14 +323,36 @@ const handleSubmit = async () => {
 
     if (error) throw error
 
+    showToast('Processo cadastrado com sucesso!', 'success')
     router.push('/editais')
+
   } catch (error) {
     console.error('Erro ao salvar processo:', error)
-    alert('Erro ao salvar processo: ' + error.message)
+    showToast('Erro ao salvar processo: ' + error.message, 'error')
   } finally {
     loading.value = false
   }
 }
+
+// Adicione estas refs para o sistema de toast
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+// Função para mostrar toast
+const showToast = (message, type = 'success') => {
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
+
 // Adicione esta função de carregamento de sistemas
 const loadSistemas = async () => {
   try {
@@ -396,7 +412,7 @@ const novoRepresentante = ref({
 
 const formData = ref({
   numero: '', // Alterado de numero_processo para numero
-  ano: new Date().getFullYear(),
+  ano: new Date().getFullYear(), // Inicializa com o ano atual
   orgao: '',
   data_pregao: '',
   hora_pregao: '',
