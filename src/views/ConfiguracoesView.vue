@@ -807,7 +807,7 @@ onMounted(async () => {
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 500px;
+  max-width: 50%;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
