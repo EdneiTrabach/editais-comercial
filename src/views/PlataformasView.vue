@@ -90,80 +90,85 @@
           <button class="btn-close" @click="closeModal">×</button>
         </div>
         
-        <form @submit.prevent="handleSubmit" class="form-grid">
-          <div class="form-group">
-            <label>Nome*</label>
-            <input 
-              v-model="formData.nome"
-              type="text"
-              required
-              placeholder="Nome da plataforma"
-            />
-          </div>
-          <div class="form-group">
-            <label>URL*</label>
-            <input 
-              v-model="formData.url"
-              type="url"
-              required
-              placeholder="https://exemplo.com"
-            />
-          </div>
-
-          <!-- Nova seção de empresas -->
-          <div class="form-group full-width">
-            <label>Vincular Empresas</label>
-            <div class="empresas-grid">
-              <button
-                v-for="empresa in empresasCadastradas"
-                :key="empresa.id"
-                type="button"
-                class="empresa-chip"
-                :class="{ 'selected': empresasSelecionadas.includes(empresa.id) }"
-                @click="toggleEmpresa(empresa)"
-              >
-                {{ empresa.nome }}
-                <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
-              </button>
+        <div class="modal-body">
+          <form @submit.prevent="handleSubmit" class="form-grid">
+            <div class="form-group">
+              <label>Nome*</label>
+              <input 
+                v-model="formData.nome"
+                type="text"
+                required
+                placeholder="Nome da plataforma"
+              />
             </div>
-          </div>
+            
+            <div class="form-group">
+              <label>URL*</label>
+              <input 
+                v-model="formData.url"
+                type="url"
+                required
+                placeholder="https://exemplo.com"
+              />
+            </div>
 
-          <div class="form-group">
-            <label>Detalhes</label>
-            <textarea 
-              v-model="formData.detalhes"
-              rows="3"
-              placeholder="Detalhes da plataforma"
-            ></textarea>
-          </div>
+            <div class="form-group">
+              <label>Data de Validade</label>
+              <input 
+                v-model="formData.data_validade"
+                type="date"
+                :min="new Date().toISOString().split('T')[0]"
+              />
+            </div>
 
-          <div class="form-group">
-            <label>Data de Validade</label>
-            <input 
-              v-model="formData.data_validade"
-              type="date"
-              :min="new Date().toISOString().split('T')[0]"
-            />
-          </div>
+            <div class="form-group">
+              <label>Detalhes</label>
+              <textarea 
+                v-model="formData.detalhes"
+                rows="3"
+                placeholder="Detalhes da plataforma"
+                class="detalhes"
+              ></textarea>
+            </div>
 
-          <div class="form-group full-width">
-            <label>Observações</label>
-            <textarea 
-              v-model="formData.observacoes"
-              rows="3"
-              placeholder="Observações adicionais"
-            ></textarea>
-          </div>
+            <!-- Seção de empresas ocupa largura total -->
+            <div class="form-group full-width">
+              <label>Vincular Empresas</label>
+              <div class="empresas-grid">
+                <button
+                  v-for="empresa in empresasCadastradas"
+                  :key="empresa.id"
+                  type="button"
+                  class="empresa-chip"
+                  :class="{ 'selected': empresasSelecionadas.includes(empresa.id) }"
+                  @click="toggleEmpresa(empresa)"
+                >
+                  {{ empresa.nome }}
+                  <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
+                </button>
+              </div>
+            </div>
 
-          <div class="modal-actions">
-            <button type="button" class="btn-cancelar" @click="closeModal">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-salvar">
-              {{ editingId ? 'Atualizar' : 'Salvar' }}
-            </button>
-          </div>
-        </form>
+            <div class="form-group full-width">
+              <label>Observações</label>
+              <textarea 
+                v-model="formData.observacoes"
+                rows="3"
+                placeholder="Observações adicionais"
+                class="detalhes"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancelar" @click="closeModal">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-salvar">
+            {{ editingId ? 'Atualizar' : 'Salvar' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -501,17 +506,57 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Ajuste do layout principal */
+/* Layout principal */
 .layout {
   display: flex;
   min-height: 100vh;
+  position: relative;
 }
 
 .main-content {
-  padding: 2rem 0rem 2rem 2rem;
-  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  background: #f8f9fa;
+  flex: 1;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 74%;
+  background: #f8fafc;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+
+/* Quando o sidebar está recolhido */
+.main-content.expanded {
+  width: calc(100% - 70px); /* Ajusta para a largura do sidebar recolhido */
+  margin-left: 70px; /* Igual à largura do sidebar recolhido */
+}
+
+/* Media query para telas menores */
+@media (max-width: 768px) {
+  .main-content {
+    width: calc(100% - 70px);
+    margin-left: 70px;
+    padding: 1rem;
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Ajuste responsivo para telas menores */
+@media (max-width: 768px) {
+  .main-content {
+    width: calc(100% - 70px); /* Ajuste para sidebar mobile */
+    margin-left: 70px;
+    margin-right: 1rem;
+    padding: 1rem;
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
 }
 
 /* Header com estilo padrão */
@@ -519,14 +564,16 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(114, 47, 55, 0.2); /* Bordô sutil */
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .header h1 {
-  color: #722F37; /* Bordô principal */
-  font-size: 1.875rem;
+  color: #193155;
+  font-size: 1.8rem;
   font-weight: 600;
 }
 
@@ -534,35 +581,97 @@ onMounted(async () => {
 .btn-add {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.75rem;
+  padding: 0.875rem 1.75rem;
   background: #193155;
   color: white;
   border: none;
   border-radius: 8px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btn-add:hover {
+  transform: translateY(-2px);
   background: #254677;
+  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
 }
 
-/* Modal melhorado */
+/* Modal melhorado com scroll */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: 2rem;
+}
+
 .modal-content {
   background: white;
-  padding: 2.5rem;
+  width: 95%;
+  max-width: 1000px; /* Aumentado para acomodar duas colunas */
+  max-height: 90vh; /* Limita altura */
   border-radius: 16px;
-  width: 90%;
-  max-width: 900px;
-  box-shadow: 0 8px 32px rgba(82, 25, 32, 0.15);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Importante para o scroll interno */
 }
 
-/* Grid de duas colunas para o formulário */
+.modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0; /* Impede o header de encolher */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  color: #193155;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 1.5rem;
+}
+
+.btn-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Container com scroll */
+.modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Grid de duas colunas melhorado */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  gap: 30px; /* Gap solicitado */
+  max-width: 100%;
 }
 
 /* Campos que ocupam largura total */
@@ -570,100 +679,77 @@ onMounted(async () => {
   grid-column: 1 / -1;
 }
 
-/* Estilização dos inputs e labels */
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #722F37;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 0.9rem;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  background: #f8f9fa;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #193155;
-  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
-  background: white;
-}
-
-/* Ajuste da seção de empresas */
+/* Ajuste para a grid de empresas */
 .empresas-grid {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
   max-height: 300px;
   overflow-y: auto;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
   border: 2px solid #e9ecef;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-/* Botões do modal */
+/* Botões do modal fixos na parte inferior */
 .modal-actions {
-  grid-column: 1 / -1;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: white;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0; /* Impede os botões de encolherem */
 }
 
-.btn-cancelar,
-.btn-salvar {
-  padding: 0.9rem 2rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Responsividade */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr; /* Uma coluna em telas menores */
+    gap: 20px;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-header,
+  .modal-actions {
+    padding: 1rem 1.5rem;
+  }
 }
 
-.btn-cancelar {
-  background: #e9ecef;
-  color: #495057;
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #254677;
 }
 
-.btn-salvar {
-  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
-  color: white;
-}
-
-.btn-cancelar:hover,
-.btn-salvar:hover {
-  transform: translateY(-2px);
-}
-
-.btn-salvar:hover {
-  background: linear-gradient(180deg, #8B4B52 0%, #722F37 100%);
-  box-shadow: 0 4px 12px rgba(82, 25, 32, 0.2);
+.table-container::-webkit-scrollbar-thumb {
+    background: #193155;
+    border-radius: 4px;
 }
 
 .table-container {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-top: 1rem;
   overflow: auto;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 th, td {
@@ -673,9 +759,10 @@ th, td {
 }
 
 th {
-  background: #f8f9fa;
+  background: #f8fafc;
   font-weight: 600;
-  color: #374151;
+  color: #193155;
+  border-bottom: 2px solid #e9ecef;
 }
 
 .url-link {
@@ -688,17 +775,27 @@ th {
 }
 
 .validade-expirada {
+  padding: 0.25rem 0.75rem;
+  background: #fef2f2;
   color: #dc2626;
-  font-weight: 500;
+  border-radius: 50px;
+  font-size: 0.875rem;
 }
 
 .validade-proxima {
+  padding: 0.25rem 0.75rem;
+  background: #fffbeb;
   color: #d97706;
-  font-weight: 500;
+  border-radius: 50px;
+  font-size: 0.875rem;
 }
 
 .validade-ok {
+  padding: 0.25rem 0.75rem;
+  background: #f0fdf4;
   color: #059669;
+  border-radius: 50px;
+  font-size: 0.875rem;
 }
 
 .observacoes {
@@ -855,25 +952,26 @@ th {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-header h3 {
   color: #193155;
-  font-size: 1.25rem;
+  font-size: 1.75rem;
   font-weight: 600;
 }
 
@@ -899,14 +997,57 @@ th {
   gap: 0.8rem;
 }
 
+textarea.detalhes {
+    padding: 0.9rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    color: #495057;
+}
+
+
+.btn-cancelar, .btn-salvar {
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.btn-cancelar {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-salvar {
+  background: #193155;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background: #dee2e6;
+  transform: translateY(-2px);
+}
+
+.btn-salvar:hover {
+  background: #254677;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
+}
+
 .form-group input {
   padding: 0.9rem;
   border: 2px solid #e9ecef;
   border-radius: 8px;
   transition: all 0.3s ease;
-  background: #f8f9fa;
+  background: #f8fafc;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #495057;
 }
 
@@ -980,8 +1121,8 @@ th {
 }
 
 .empresa-chip.selected {
-  border-color: #722F37;
-  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
+  border-color: #193155;
+  background: #193155;
   color: white;
 }
 
@@ -1064,6 +1205,41 @@ table td {
 td.actions {
   white-space: nowrap;
   width: 120px;
+}
+
+/* Estilo base para scrollbar da tabela */
+.table-container::-webkit-scrollbar,
+.table-container.sidebar-expanded::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track,
+.table-container.sidebar-expanded::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb,
+.table-container.sidebar-expanded::-webkit-scrollbar-thumb {
+  background: #193155;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover,
+.table-container.sidebar-expanded::-webkit-scrollbar-thumb:hover {
+  background: #254677;
+}
+
+/* Ajuste para quando o sidebar estiver expandido */
+.table-container.sidebar-expanded {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ajuste para quando o sidebar estiver recolhido */
+.table-container:not(.sidebar-expanded) {
+  width: calc(100% - 70px);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>
 

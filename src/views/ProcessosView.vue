@@ -343,14 +343,11 @@ const handleSidebarToggle = (expanded) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    const cleanDate = dateString.split('T')[0];
-    const date = new Date(cleanDate);
-    if (isNaN(date.getTime())) return '-';
-
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
+    // Garante que estamos tratando apenas a data, sem considerar timezone
+    const [date] = dateString.split('T');
+    const [year, month, day] = date.split('-');
+    
+    // Retorna a data formatada sem manipulação de timezone
     return `${day}/${month}/${year}`;
   } catch (error) {
     console.error('Erro ao formatar data:', error);
