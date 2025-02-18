@@ -258,12 +258,14 @@ const loadPlataformas = async (empresaId = null) => {
 
     if (error) throw error
 
+    console.log('Dados retornados:', data) // Debug
+
     plataformas.value = data.map(p => ({
       ...p,
-      dados_especificos: p.empresa_plataforma_dados?.[0] || null
+      dados_especificos: p.empresa_plataforma_dados?.find(
+        d => d.empresa_id === empresaId
+      ) || null
     }))
-
-    console.log('Plataformas carregadas:', plataformas.value) // Debug
 
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
@@ -381,15 +383,15 @@ const loadVinculacoes = async (plataformaId) => {
 // Modifique a função editPlataforma
 const editPlataforma = async (plataforma) => {
   editingId.value = plataforma.id
-
+  
   // Dados básicos da plataforma
   formData.value = {
     nome: plataforma.nome,
     url: plataforma.url
   }
 
-  // Se tiver uma empresa selecionada, carrega os dados específicos
   if (selectedEmpresa.value) {
+    // Modo edição com empresa específica
     const dadosEspecificos = plataforma.dados_especificos || {}
     formData.value = {
       ...formData.value,
@@ -399,8 +401,13 @@ const editPlataforma = async (plataforma) => {
       observacoes: dadosEspecificos.observacoes || ''
     }
   } else {
-    // Se não tiver empresa selecionada, carrega as vinculações
-    await loadVinculacoes(plataforma.id)
+    // Carrega empresas vinculadas
+    const { data } = await supabase
+      .from('empresa_plataforma_dados')
+      .select('empresa_id')
+      .eq('plataforma_id', plataforma.id)
+
+    empresasSelecionadas.value = data?.map(v => v.empresa_id) || []
   }
 
   showModal.value = true
@@ -437,7 +444,30 @@ const handleSubmit = async () => {
       plataformaId = data[0].id
     }
 
-    // 2. Se tiver empresa selecionada, atualiza dados específicos
+    // 2. Gerenciar vinculações com empresas
+    if (!selectedEmpresa.value && empresasSelecionadas.value.length > 0) {
+      // Remove vinculações antigas
+      await supabase
+        .from('empresa_plataforma_dados')
+        .delete()
+        .eq('plataforma_id', plataformaId)
+
+      // Insere novas vinculações
+      const vinculacoes = empresasSelecionadas.value.map(empresaId => ({
+        empresa_id: empresaId,
+        plataforma_id: plataformaId,
+        responsavel_id: user.id,
+        created_at: new Date().toISOString()
+      }))
+
+      const { error: vinculacaoError } = await supabase
+        .from('empresa_plataforma_dados')
+        .insert(vinculacoes)
+
+      if (vinculacaoError) throw vinculacaoError
+    }
+
+    // 3. Se tiver empresa selecionada, atualiza dados específicos
     if (selectedEmpresa.value) {
       const dadosEspecificos = {
         plataforma_id: plataformaId,
