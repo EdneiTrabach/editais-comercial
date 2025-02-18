@@ -167,6 +167,45 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de Edição de Dados Específicos -->
+  <div v-if="showDadosModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Dados da Plataforma</h3>
+        <button class="btn-close" @click="closeDadosModal">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <form @submit.prevent="handleDadosSubmit" class="form-grid">
+          <div class="form-group">
+            <label>Login</label>
+            <input v-model="dadosForm.login" type="text" />
+          </div>
+
+          <div class="form-group">
+            <label>Senha</label>
+            <input v-model="dadosForm.senha" type="password" />
+          </div>
+
+          <div class="form-group">
+            <label>Data de Validade</label>
+            <input v-model="dadosForm.data_validade" type="date" />
+          </div>
+
+          <div class="form-group full-width">
+            <label>Observações</label>
+            <textarea v-model="dadosForm.observacoes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancelar" @click="closeDadosModal">Cancelar</button>
+        <button class="btn-salvar" @click="handleDadosSubmit">Salvar</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -201,21 +240,33 @@ const loadPlataformas = async (empresaId = null) => {
       .from('plataformas')
       .select(`
         *,
-        empresa_plataforma(*),
-        empresa_plataforma_dados(*)
+        empresa_plataforma(
+          empresa_id
+        ),
+        empresa_plataforma_dados(
+          login,
+          senha,
+          data_validade,
+          observacoes
+        )
       `)
 
+    // Se tiver empresa selecionada, filtra por ela
+    if (empresaId) {
+      query = query
+        .eq('empresa_plataforma.empresa_id', empresaId)
+    }
+
     const { data, error } = await query
+      .order('nome') // Ordena por nome
+
     if (error) throw error
     
-    // Se tiver empresaId, filtra as plataformas após o carregamento
-    if (empresaId) {
-      plataformas.value = data.filter(p => 
-        p.empresa_plataforma?.some(ep => ep.empresa_id === empresaId)
-      )
-    } else {
-      plataformas.value = data
-    }
+    plataformas.value = data.map(p => ({
+      ...p,
+      dados_especificos: p.empresa_plataforma_dados?.[0] || null
+    }))
+
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
   }
@@ -517,21 +568,28 @@ const saveDadosPlataforma = async (dados) => {
     const { data: { user } } = await supabase.auth.getUser()
     
     const dadosToSave = {
-      ...dados,
+      empresa_id: selectedEmpresa.value.id,
+      plataforma_id: editingPlataforma.value.id,
+      login: dados.login,
+      senha: dados.senha,
+      data_validade: dados.data_validade,
+      observacoes: dados.observacoes,
       responsavel_id: user.id,
-      data_atualizacao: new Date()
+      updated_at: new Date().toISOString()
     }
 
     const { error } = await supabase
       .from('empresa_plataforma_dados')
-      .upsert(dadosToSave)
+      .upsert(dadosToSave, {
+        onConflict: 'empresa_id,plataforma_id'
+      })
 
     if (error) throw error
     
     await loadPlataformas(selectedEmpresa.value?.id)
     showToast('Dados salvos com sucesso!')
   } catch (error) {
-    console.error('Erro ao salvar dados:', error)
+    console.error('Erro ao salvar:', error)
     showToast('Erro ao salvar dados', 'error')
   }
 }
@@ -548,7 +606,12 @@ const dadosForm = ref({
 
 const editDadosPlataforma = (plataforma) => {
   editingPlataforma.value = plataforma
-  dadosForm.value = { ...plataforma.dados_especificos }
+  dadosForm.value = {
+    login: plataforma.dados_especificos?.login || '',
+    senha: plataforma.dados_especificos?.senha || '',
+    data_validade: plataforma.dados_especificos?.data_validade || '',
+    observacoes: plataforma.dados_especificos?.observacoes || ''
+  }
   showDadosModal.value = true
 }
 
