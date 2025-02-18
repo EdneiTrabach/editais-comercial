@@ -136,11 +136,19 @@
                 <div class="ponto-destino">
                   <label>Cidade do Órgão</label>
                   <div class="cidade-input">
-                    <input v-model="cidadeOrgao" type="text" placeholder="Cidade do órgão" @input="validarCidade()">
-                    <span class="separator">/</span>
-                    <select v-model="formData.estado" style="width: 80px">
+                    <select v-model="formData.estado" @change="carregarMunicipios">
+                      <option value="">Selecione o estado...</option>
                       <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-                        {{ estado.uf }}
+                        {{ estado.nome }}
+                      </option>
+                    </select>
+                    <select 
+                      v-model="cidadeOrgao"
+                      :disabled="!formData.estado || !municipiosCarregados"
+                    >
+                      <option value="">Selecione a cidade...</option>
+                      <option v-for="municipio in municipios" :key="municipio.id" :value="municipio">
+                        {{ municipio.nome }}
                       </option>
                     </select>
                   </div>
@@ -326,6 +334,8 @@ import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
 import debounce from 'lodash/debounce' // Importação correta do debounce
 import { calcularDistanciaHaversine } from '@/utils/distance.js'
+import { ibgeService } from '@/services/ibgeService'
+import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
 
 // Adicione no início do arquivo, após as importações
 const processamentosCache = {
@@ -1195,56 +1205,22 @@ const pontosReferencia = [
 // Função para calcular distância usando Google Maps Distance Matrix API
 // Modifique a função calcularDistancia para usar cache de coordenadas
 const calcularDistancia = async () => {
-  if (!pontoReferencia.value || !cidadeOrgao.value || !formData.value.estado) {
-    showToast('Preencha todos os campos primeiro', 'warning')
+  if (!pontoReferencia.value || !cidadeOrgao.value) {
+    showToast('Selecione o ponto de origem e destino', 'warning')
     return
   }
 
   try {
-    const chaveCache = `${cidadeOrgao.value}-${formData.value.estado}`.toLowerCase()
+    const municipio = cidadeOrgao.value
+    const estado = formData.value.estado
     
-    // Tenta recuperar coordenadas do cache
-    let coordenadas = processamentosCache.obter(chaveCache, 'coordenadas')
+    // Busca coordenadas do banco local
+    const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
     
     if (!coordenadas) {
-      // Se não estiver no cache, busca da API
-      const responseCidade = await fetch(
-        `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.value.estado}/municipios`
-      )
-      const municipios = await responseCidade.json()
-
-      // Busca fuzzy para encontrar a cidade
-      const cidadeBuscada = cidadeOrgao.value.toLowerCase()
-      let melhorMatch = null
-      let maiorSimilaridade = 0
-
-      municipios.forEach(municipio => {
-        const similaridade = calcularSimilaridade(
-          municipio.nome.toLowerCase(), 
-          cidadeBuscada
-        )
-        if (similaridade > maiorSimilaridade && similaridade > 0.8) {
-          maiorSimilaridade = similaridade
-          melhorMatch = municipio
-        }
-      })
-
-      if (!melhorMatch) {
-        showToast('Cidade não encontrada. Use entrada manual.', 'warning')
-        return
-      }
-
-      // Salva no cache
-      coordenadas = {
-        id: melhorMatch.id,
-        nome: melhorMatch.nome,
-        latitude: melhorMatch.latitude,
-        longitude: melhorMatch.longitude
-      }
-      processamentosCache.salvar(chaveCache, coordenadas, 'coordenadas')
+      throw new Error('Coordenadas não disponíveis para esta cidade')
     }
 
-    // Calcula a distância usando as coordenadas (do cache ou recém obtidas)
     const distancia = calcularDistanciaHaversine(
       pontoReferencia.value.lat,
       pontoReferencia.value.lng,
@@ -1261,7 +1237,7 @@ const calcularDistancia = async () => {
 
   } catch (error) {
     console.error('Erro:', error)
-    showToast('Erro no cálculo. Use entrada manual.', 'error')
+    showToast('Coordenadas não disponíveis. Use entrada manual.', 'warning')
     distanciaManual.value = true
   }
 }
@@ -1494,6 +1470,24 @@ watch(() => formData.value.site_pregao, (newPlataforma) => {
     }
   }
 })
+
+// Adicione estes refs
+const municipios = ref([])
+const municipiosCarregados = ref(false)
+
+// Função para carregar municípios quando o estado for selecionado
+const carregarMunicipios = async () => {
+  if (!formData.value.estado) return
+  
+  try {
+    municipiosCarregados.value = false
+    municipios.value = await ibgeService.getMunicipios(formData.value.estado)
+    municipiosCarregados.value = true
+  } catch (error) {
+    console.error('Erro ao carregar municípios:', error)
+    showToast('Erro ao carregar municípios', 'error')
+  }
+}
 </script>
 
 <style scoped>
@@ -2256,5 +2250,13 @@ input[type="date"]:focus:not(.error) {
   padding: 0.25rem 0;
 }
 
+.warning-text {
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
 </style>
-`
