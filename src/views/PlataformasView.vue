@@ -6,7 +6,7 @@
       <div class="header">
         <h1>Gerenciamento de Plataformas</h1>
         <div class="actions">
-          <button class="btn-add" @click="showModal = true">
+          <button class="btn-add" @click="showModal = true" v-if="!selectedEmpresa">
             <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
             Nova Plataforma
           </button>
