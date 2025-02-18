@@ -180,20 +180,65 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Modificar o layout principal */
 .layout {
   display: flex;
-  min-height: 100vh;
-  flex-direction: column;
+  min-height: 100vh; /* Altura mínima de 100% da viewport */
+  width: 100%;
+  position: relative; /* Adiciona posicionamento relativo */
 }
 
+/* Ajustar o main-content */
 .main-content {
-  /* margin-left: 300px; */
+  flex: 1;
   padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+  width: 100%;
+  margin-left: 260px; /* Largura do sidebar */
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto; /* Adiciona scroll vertical se necessário */
 }
 
 .main-content.expanded {
-  margin-left: 0px;
+  margin-left: 70px; /* Quando o sidebar está recolhido */
+}
+
+/* Ajustar o welcome-banner */
+.welcome-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* Ajustar o dashboard-grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* Media queries para responsividade */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+    padding: 1rem;
+  }
+
+  .main-content.expanded {
+    margin-left: 0;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .dashboard-header {
@@ -201,12 +246,6 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
 }
 
 .stat-card {
@@ -307,15 +346,6 @@ th {
   color: #721c24;
 }
 
-.welcome-banner {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
 .welcome-banner h1 {
   color: #193155;
   font-size: 1.8rem;
@@ -331,15 +361,6 @@ th {
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 70px;
-    padding: 1rem;
-  }
-
-  .main-content.expanded {
-    margin-left: 0;
-  }
-
   .wide {
     grid-column: span 1;
   }
