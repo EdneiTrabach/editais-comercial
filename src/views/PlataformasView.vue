@@ -1,7 +1,7 @@
 <template>
   <div class="layout">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
-    
+
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
         <h1>Gerenciamento de Plataformas</h1>
@@ -23,26 +23,17 @@
           <p v-if="empresasCadastradas.length === 0" style="color: red;">
             Carregando empresas...
           </p>
-          
-          <div
-            v-for="empresa in empresasCadastradas"
-            :key="empresa.id"
-            class="empresa-chip"
-            :class="{ 'selected': selectedEmpresa?.id === empresa.id }"
-            @click="selectEmpresa(empresa)"
-          >
+
+          <div v-for="empresa in empresasCadastradas" :key="empresa.id" class="empresa-chip"
+            :class="{ 'selected': selectedEmpresa?.id === empresa.id }" @click="selectEmpresa(empresa)">
             {{ empresa.nome }}
             <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
           </div>
         </div>
-        
+
         <!-- Botão Ver Todas sempre visível -->
         <div class="empresas-actions">
-          <button 
-            class="btn-view-all" 
-            @click="clearEmpresaSelection"
-            :class="{ 'active': !selectedEmpresa }"
-          >
+          <button class="btn-view-all" @click="clearEmpresaSelection" :class="{ 'active': !selectedEmpresa }">
             Ver Todas as Plataformas
           </button>
         </div>
@@ -85,10 +76,7 @@
                 <td>{{ plataforma.dados_especificos?.observacoes || '-' }}</td>
               </template>
               <td>
-                <button 
-                  class="btn-action edit"
-                  @click="editPlataforma(plataforma)"
-                >
+                <button class="btn-action edit" @click="editPlataforma(plataforma)">
                   <img src="/icons/edicao.svg" alt="Editar" class="icon" />
                 </button>
               </td>
@@ -97,19 +85,27 @@
         </table>
       </div>
     </div>
+    <!-- Adicione dentro do seu template, antes do fechamento da div.layout -->
+    <div class="toast-container">
+      <div v-for="toast in toasts" :key="toast.id" :class="['toast-message', `toast-${toast.type}`]">
+        <span v-if="toast.type === 'success'">✓</span>
+        <span v-else>✕</span>
+        {{ toast.message }}
+      </div>
+    </div>
   </div>
 
-  <!-- Adicione este modal ao final do template, antes do fechamento da div layout -->
+  <!-- Ajuste o modal de edição -->
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ editingId ? 'Editar' : 'Nova' }} Plataforma</h3>
         <button class="btn-close" @click="closeModal">×</button>
       </div>
-      
+
       <div class="modal-body">
         <form @submit.prevent="handleSubmit" class="form-grid">
-          <!-- Dados básicos -->
+          <!-- Dados básicos sempre visíveis -->
           <div class="form-group">
             <label>Nome da Plataforma*</label>
             <input v-model="formData.nome" required type="text" />
@@ -120,42 +116,43 @@
             <input v-model="formData.url" required type="url" />
           </div>
 
-          <!-- Área de empresas vinculadas -->
-          <div class="form-group full-width">
-            <label>Empresas Vinculadas</label>
-            <div class="empresas-grid">
-              <div 
-                v-for="empresa in empresasCadastradas"
-                :key="empresa.id"
-                :class="['empresa-chip', { 'selected': empresasSelecionadas.includes(empresa.id) }]"
-                @click="toggleEmpresa(empresa)"
-              >
-                {{ empresa.nome }}
-                <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
+          <!-- Área de empresas vinculadas apenas quando não há empresa selecionada -->
+          <template v-if="!selectedEmpresa">
+            <div class="form-group full-width">
+              <label>Empresas Vinculadas</label>
+              <div class="empresas-grid">
+                <div v-for="empresa in empresasCadastradas" :key="empresa.id"
+                  :class="['empresa-chip', { 'selected': empresasSelecionadas.includes(empresa.id) }]"
+                  @click="toggleEmpresa(empresa)">
+                  {{ empresa.nome }}
+                  <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
 
-          <!-- Dados específicos -->
-          <div class="form-group">
-            <label>Login</label>
-            <input v-model="formData.login" type="text" />
-          </div>
+          <!-- Dados específicos apenas quando uma empresa está selecionada -->
+          <template v-if="selectedEmpresa">
+            <div class="form-group">
+              <label>Login</label>
+              <input v-model="formData.login" type="text" />
+            </div>
 
-          <div class="form-group">
-            <label>Senha</label>
-            <input v-model="formData.senha" type="password" />
-          </div>
+            <div class="form-group">
+              <label>Senha</label>
+              <input v-model="formData.senha" type="text" placeholder="Digite a senha para consulta" />
+            </div>
 
-          <div class="form-group">
-            <label>Validade do Certificado</label>
-            <input v-model="formData.data_validade_certificado" type="date" />
-          </div>
+            <div class="form-group">
+              <label>Validade do Certificado</label>
+              <input v-model="formData.data_validade" type="date" />
+            </div>
 
-          <div class="form-group full-width">
-            <label>Observações</label>
-            <textarea v-model="formData.observacoes" rows="3"></textarea>
-          </div>
+            <div class="form-group full-width">
+              <label>Observações</label>
+              <textarea v-model="formData.observacoes" rows="3"></textarea>
+            </div>
+          </template>
         </form>
       </div>
 
@@ -175,7 +172,7 @@
         <h3>Editar Dados da Plataforma</h3>
         <button class="btn-close" @click="closeDadosModal">×</button>
       </div>
-      
+
       <div class="modal-body">
         <form @submit.prevent="handleDadosSubmit" class="form-grid">
           <div class="form-group">
@@ -233,6 +230,9 @@ const selectedEmpresa = ref(null)
 const empresasCadastradas = ref([])
 const empresasSelecionadas = ref([])
 
+// Adicione junto com as outras refs no início do script
+const toasts = ref([])
+
 // Modifique a função loadPlataformas
 const loadPlataformas = async (empresaId = null) => {
   try {
@@ -240,35 +240,34 @@ const loadPlataformas = async (empresaId = null) => {
       .from('plataformas')
       .select(`
         *,
-        empresa_plataforma(
-          empresa_id
-        ),
-        empresa_plataforma_dados(
+        empresa_plataforma_dados!left(
+          empresa_id,
           login,
           senha,
           data_validade,
           observacoes
         )
       `)
+      .order('nome')
 
-    // Se tiver empresa selecionada, filtra por ela
     if (empresaId) {
-      query = query
-        .eq('empresa_plataforma.empresa_id', empresaId)
+      query = query.eq('empresa_plataforma_dados.empresa_id', empresaId)
     }
 
     const { data, error } = await query
-      .order('nome') // Ordena por nome
 
     if (error) throw error
-    
+
     plataformas.value = data.map(p => ({
       ...p,
       dados_especificos: p.empresa_plataforma_dados?.[0] || null
     }))
 
+    console.log('Plataformas carregadas:', plataformas.value) // Debug
+
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
+    showToast('Erro ao carregar plataformas', 'error')
   }
 }
 
@@ -279,7 +278,7 @@ const loadEmpresas = async () => {
       .from('empresas')
       .select('*')
       .order('nome')
-    
+
     if (error) throw error
     empresasCadastradas.value = data || []
     console.log('Empresas carregadas:', empresasCadastradas.value)
@@ -357,9 +356,10 @@ const toggleEmpresa = (empresa) => {
   const index = empresasSelecionadas.value.indexOf(empresa.id)
   if (index === -1) {
     empresasSelecionadas.value.push(empresa.id)
-    showToast(`Empresa ${empresa.nome} vinculada com sucesso!`)
+    showToast(`Empresa ${empresa.nome} vinculada com sucesso!`, 'success')
   } else {
     empresasSelecionadas.value.splice(index, 1)
+    showToast(`Empresa ${empresa.nome} desvinculada!`, 'error')
   }
 }
 
@@ -370,7 +370,7 @@ const loadVinculacoes = async (plataformaId) => {
       .from('empresa_plataforma')
       .select('empresa_id')
       .eq('plataforma_id', plataformaId)
-    
+
     if (error) throw error
     empresasSelecionadas.value = data.map(v => v.empresa_id)
   } catch (error) {
@@ -381,23 +381,36 @@ const loadVinculacoes = async (plataformaId) => {
 // Modifique a função editPlataforma
 const editPlataforma = async (plataforma) => {
   editingId.value = plataforma.id
+
+  // Dados básicos da plataforma
   formData.value = {
     nome: plataforma.nome,
-    url: plataforma.url,
-    login: plataforma.dados_especificos?.login || '',
-    senha: plataforma.dados_especificos?.senha || '',
-    data_validade_certificado: plataforma.dados_especificos?.data_validade_certificado || '',
-    observacoes: plataforma.dados_especificos?.observacoes || ''
+    url: plataforma.url
   }
-  await loadVinculacoes(plataforma.id)
+
+  // Se tiver uma empresa selecionada, carrega os dados específicos
+  if (selectedEmpresa.value) {
+    const dadosEspecificos = plataforma.dados_especificos || {}
+    formData.value = {
+      ...formData.value,
+      login: dadosEspecificos.login || '',
+      senha: dadosEspecificos.senha || '',
+      data_validade: dadosEspecificos.data_validade || '',
+      observacoes: dadosEspecificos.observacoes || ''
+    }
+  } else {
+    // Se não tiver empresa selecionada, carrega as vinculações
+    await loadVinculacoes(plataforma.id)
+  }
+
   showModal.value = true
 }
 
-// Modifique o handleSubmit para salvar todos os dados
+// Modifique o handleSubmit para verificar se está em modo de edição com empresa selecionada
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     // 1. Salvar dados da plataforma
     const plataformaData = {
       nome: formData.value.nome,
@@ -424,43 +437,33 @@ const handleSubmit = async () => {
       plataformaId = data[0].id
     }
 
-    // 2. Salvar vinculações com empresas
-    await supabase
-      .from('empresa_plataforma')
-      .delete()
-      .eq('plataforma_id', plataformaId)
+    // 2. Se tiver empresa selecionada, atualiza dados específicos
+    if (selectedEmpresa.value) {
+      const dadosEspecificos = {
+        plataforma_id: plataformaId,
+        empresa_id: selectedEmpresa.value.id,
+        login: formData.value.login || null,
+        senha: formData.value.senha || null,
+        data_validade: formData.value.data_validade || null,
+        observacoes: formData.value.observacoes || null,
+        responsavel_id: user.id
+      }
 
-    if (empresasSelecionadas.value.length > 0) {
-      const vinculacoes = empresasSelecionadas.value.map(empresaId => ({
-        empresa_id: empresaId,
-        plataforma_id: plataformaId
-      }))
+      const { error } = await supabase
+        .from('empresa_plataforma_dados')
+        .upsert(dadosEspecificos, {
+          onConflict: 'empresa_id,plataforma_id'
+        })
 
-      await supabase
-        .from('empresa_plataforma')
-        .insert(vinculacoes)
+      if (error) throw error
     }
 
-    // 3. Salvar dados específicos
-    const dadosEspecificos = {
-      plataforma_id: plataformaId,
-      empresa_id: selectedEmpresa.value?.id,
-      login: formData.value.login,
-      senha: formData.value.senha,
-      data_validade_certificado: formData.value.data_validade_certificado,
-      observacoes: formData.value.observacoes
-    }
-
-    await supabase
-      .from('empresa_plataforma_dados')
-      .upsert(dadosEspecificos)
-
-    await loadPlataformas()
+    await loadPlataformas(selectedEmpresa.value?.id)
     closeModal()
-    showToast('Plataforma salva com sucesso!')
+    showToast('Plataforma salva com sucesso!', 'success')
   } catch (error) {
     console.error('Erro ao salvar:', error)
-    showToast('Erro ao salvar plataforma', 'error')
+    showToast(`Erro ao salvar plataforma: ${error.message}`, 'error')
   }
 }
 
@@ -479,9 +482,13 @@ const closeModal = () => {
 }
 
 // Toast para feedback
-const showToast = (message) => {
-  // Implementar toast de sua preferência
-  alert(message)
+const showToast = (message, type = 'success') => {
+  const id = Date.now()
+  toasts.value.push({ id, message, type })
+  
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id)
+  }, 3000)
 }
 
 const deletePlataforma = async (id) => {
@@ -516,14 +523,14 @@ const truncateText = (text, length = 60) => {
 
 // Ajuste o computed plataformasFiltradas
 const plataformasFiltradas = computed(() => {
+  // Retorna todas as plataformas quando não há empresa selecionada
   if (!selectedEmpresa.value) {
     return plataformas.value
   }
-  
-  return plataformas.value.filter(plataforma => {
-    return plataforma.empresa_plataforma?.some(ep => 
-      ep.empresa_id === selectedEmpresa.value.id
-    )
+
+  // Filtra plataformas que têm dados específicos para a empresa selecionada  
+  return plataformas.value.filter(p => {
+    return p.dados_especificos?.empresa_id === selectedEmpresa.value.id
   })
 })
 
@@ -534,9 +541,10 @@ const getEmptyStateMessage = () => {
   return 'Nenhuma plataforma cadastrada'
 }
 
-const selectEmpresa = (empresa) => {
+const selectEmpresa = async (empresa) => {
   selectedEmpresa.value = empresa
-  loadPlataformas(empresa.id)
+  await loadPlataformas(empresa.id)
+  console.log('Empresa selecionada:', empresa) // Debug
 }
 
 const clearEmpresaSelection = () => {
@@ -547,17 +555,22 @@ const clearEmpresaSelection = () => {
 // Função para formatar datas
 const formatDate = (date) => {
   if (!date) return '-'
-  return new Date(date).toLocaleDateString('pt-BR')
+  try {
+    return new Date(date).toLocaleDateString('pt-BR')
+  } catch (error) {
+    console.error('Erro ao formatar data:', error)
+    return '-'
+  }
 }
 
 // Função para definir classe CSS baseada na validade
 const getValidadeClass = (data) => {
   if (!data) return 'validade-indefinida'
-  
+
   const hoje = new Date()
   const validade = new Date(data)
   const diasRestantes = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24))
-  
+
   if (diasRestantes < 0) return 'validade-expirada'
   if (diasRestantes <= 30) return 'validade-proxima'
   return 'validade-ok'
@@ -566,7 +579,7 @@ const getValidadeClass = (data) => {
 const saveDadosPlataforma = async (dados) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     const dadosToSave = {
       empresa_id: selectedEmpresa.value.id,
       plataforma_id: editingPlataforma.value.id,
@@ -578,6 +591,7 @@ const saveDadosPlataforma = async (dados) => {
       updated_at: new Date().toISOString()
     }
 
+    // Upsert na tabela empresa_plataforma_dados
     const { error } = await supabase
       .from('empresa_plataforma_dados')
       .upsert(dadosToSave, {
@@ -585,7 +599,8 @@ const saveDadosPlataforma = async (dados) => {
       })
 
     if (error) throw error
-    
+
+    // Recarrega apenas as plataformas da empresa selecionada
     await loadPlataformas(selectedEmpresa.value?.id)
     showToast('Dados salvos com sucesso!')
   } catch (error) {
@@ -641,6 +656,26 @@ const handleDadosSubmit = async () => {
   }
 }
 
+const handleEmpresasVinculadas = async (plataformaId) => {
+  // Remove vinculações existentes
+  await supabase
+    .from('empresa_plataforma')
+    .delete()
+    .eq('plataforma_id', plataformaId)
+
+  // Adiciona novas vinculações
+  if (empresasSelecionadas.value.length > 0) {
+    const vinculacoes = empresasSelecionadas.value.map(empresaId => ({
+      empresa_id: empresaId,
+      plataforma_id: plataformaId
+    }))
+
+    await supabase
+      .from('empresa_plataforma')
+      .insert(vinculacoes)
+  }
+}
+
 onMounted(async () => {
   console.log('Iniciando carregamento...')
   await loadPlataformas() // Primeiro carrega todas as plataformas
@@ -668,8 +703,10 @@ onMounted(async () => {
 
 /* Quando o sidebar está recolhido */
 .main-content.expanded {
-  width: calc(100% - 70px); /* Ajusta para a largura do sidebar recolhido */
-  margin-left: 70px; /* Igual à largura do sidebar recolhido */
+  width: calc(100% - 70px);
+  /* Ajusta para a largura do sidebar recolhido */
+  margin-left: 70px;
+  /* Igual à largura do sidebar recolhido */
 }
 
 /* Media query para telas menores */
@@ -689,7 +726,8 @@ onMounted(async () => {
 /* Ajuste responsivo para telas menores */
 @media (max-width: 768px) {
   .main-content {
-    width: calc(100% - 70px); /* Ajuste para sidebar mobile */
+    width: calc(100% - 70px);
+    /* Ajuste para sidebar mobile */
     margin-left: 70px;
     margin-right: 1rem;
     padding: 1rem;
@@ -738,7 +776,7 @@ onMounted(async () => {
 .btn-add:hover {
   transform: translateY(-2px);
   background: #254677;
-  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Modal melhorado com scroll */
@@ -757,19 +795,23 @@ onMounted(async () => {
 .modal-content {
   background: white;
   width: 95%;
-  max-width: 1000px; /* Aumentado para acomodar duas colunas */
-  max-height: 90vh; /* Limita altura */
+  max-width: 1000px;
+  /* Aumentado para acomodar duas colunas */
+  max-height: 90vh;
+  /* Limita altura */
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Importante para o scroll interno */
+  overflow: hidden;
+  /* Importante para o scroll interno */
 }
 
 .modal-header {
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #e5e7eb;
-  flex-shrink: 0; /* Impede o header de encolher */
+  flex-shrink: 0;
+  /* Impede o header de encolher */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -813,7 +855,8 @@ onMounted(async () => {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 30px; /* Gap solicitado */
+  gap: 30px;
+  /* Gap solicitado */
   max-width: 100%;
 }
 
@@ -844,7 +887,8 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  flex-shrink: 0; /* Impede os botões de encolherem */
+  flex-shrink: 0;
+  /* Impede os botões de encolherem */
 }
 
 /* Responsividade */
@@ -857,7 +901,8 @@ onMounted(async () => {
   }
 
   .form-grid {
-    grid-template-columns: 1fr; /* Uma coluna em telas menores */
+    grid-template-columns: 1fr;
+    /* Uma coluna em telas menores */
     gap: 20px;
   }
 
@@ -872,19 +917,19 @@ onMounted(async () => {
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
-    background: #254677;
+  background: #254677;
 }
 
 .table-container::-webkit-scrollbar-thumb {
-    background: #193155;
-    border-radius: 4px;
+  background: #193155;
+  border-radius: 4px;
 }
 
 .table-container {
   background: white;
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   margin-top: 1rem;
   overflow: auto;
 }
@@ -895,7 +940,8 @@ table {
   border-spacing: 0;
 }
 
-th, td {
+th,
+td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
@@ -1023,7 +1069,8 @@ th {
 }
 
 .btn-actions {
-  width: 36px; /* Aumentado para melhor clicabilidade */
+  width: 36px;
+  /* Aumentado para melhor clicabilidade */
   height: 36px;
   border: none;
   border-radius: 6px;
@@ -1075,7 +1122,8 @@ th {
 .icon-add {
   width: 32px;
   height: 32px;
-  filter: brightness(0) invert(1); /* Deixa o ícone branco */
+  filter: brightness(0) invert(1);
+  /* Deixa o ícone branco */
 }
 
 /* Modal Styles */
@@ -1131,18 +1179,19 @@ th {
 }
 
 textarea.detalhes {
-    padding: 0.9rem;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    background: #f8fafc;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.95rem;
-    color: #495057;
+  padding: 0.9rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: #495057;
 }
 
 
-.btn-cancelar, .btn-salvar {
+.btn-cancelar,
+.btn-salvar {
   padding: 0.9rem 2rem;
   border: none;
   border-radius: 8px;
@@ -1221,7 +1270,8 @@ textarea.detalhes {
 }
 
 .url-column {
-  width: 400px; /* ou outro valor que desejar */
+  width: 400px;
+  /* ou outro valor que desejar */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1385,7 +1435,7 @@ td.actions {
   background: white;
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
 }
 
@@ -1440,7 +1490,60 @@ td.actions {
   display: flex;
   justify-content: flex-end;
 }
+
+/* Adicione ao seu <style> existente */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+}
+
+.toast-message {
+  min-width: 300px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast-success {
+  background: #f0fdf4;
+  color: #059669;
+  border-left: 4px solid #059669;
+}
+
+.toast-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border-left: 4px solid #dc2626;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
 </style>
-
-
-
