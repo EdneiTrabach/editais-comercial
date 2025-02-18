@@ -13,29 +13,55 @@
         </div>
       </div>
 
-      <!-- Componente de seleção de empresas -->
-      <EmpresasSelector @empresa-selected="handleEmpresaSelected" />
-
-      <!-- Header da tabela com informação da empresa selecionada -->
-      <div v-if="selectedEmpresa" class="filter-info">
-        <h3>Plataformas vinculadas à {{ selectedEmpresa.nome }}</h3>
-        <button class="btn-clear" @click="clearEmpresaSelection">
-          Ver todas
-        </button>
+      <!-- Área de chips das empresas -->
+      <div class="empresas-selector">
+        <div class="empresas-header">
+          <h3>Selecione uma empresa</h3>
+        </div>
+        <div class="empresas-list">
+          <!-- Mensagem de debug -->
+          <p v-if="empresasCadastradas.length === 0" style="color: red;">
+            Carregando empresas...
+          </p>
+          
+          <div
+            v-for="empresa in empresasCadastradas"
+            :key="empresa.id"
+            class="empresa-chip"
+            :class="{ 'selected': selectedEmpresa?.id === empresa.id }"
+            @click="selectEmpresa(empresa)"
+          >
+            {{ empresa.nome }}
+            <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
+          </div>
+        </div>
+        
+        <!-- Botão Ver Todas sempre visível -->
+        <div class="empresas-actions">
+          <button 
+            class="btn-view-all" 
+            @click="clearEmpresaSelection"
+            :class="{ 'active': !selectedEmpresa }"
+          >
+            Ver Todas as Plataformas
+          </button>
+        </div>
       </div>
 
-      <div class="table-container" :class="{ 'sidebar-expanded': isSidebarExpanded }">
+      <!-- Tabela de plataformas -->
+      <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>Nome</th>
               <th>URL</th>
-              <th>Responsável</th>
-              <th>Detalhes</th>
-              <th>Data Cadastro</th>
-              <th>Última Atualização</th>
-              <th>Validade</th>
-              <th>Observações</th>
+              <!-- Colunas extras apenas quando uma empresa estiver selecionada -->
+              <template v-if="selectedEmpresa">
+                <th>Login</th>
+                <th>Senha</th>
+                <th>Validade</th>
+                <th>Observações</th>
+              </template>
               <th>Ações</th>
             </tr>
           </thead>
@@ -47,128 +73,97 @@
                   {{ truncateUrl(plataforma.url) }}
                 </a>
               </td>
-              <td>{{ plataforma.responsavel || '-' }}</td>
-              <td>{{ plataforma.detalhes || '-' }}</td>
-              <td>{{ formatDate(plataforma.data_cadastro) }}</td>
-              <td>{{ formatDate(plataforma.ultima_atualizacao) }}</td>
+              <!-- Células extras apenas quando uma empresa estiver selecionada -->
+              <template v-if="selectedEmpresa">
+                <td>{{ plataforma.dados_especificos?.login || '-' }}</td>
+                <td>{{ plataforma.dados_especificos?.senha || '-' }}</td>
+                <td>
+                  <span :class="getValidadeClass(plataforma.dados_especificos?.data_validade_certificado)">
+                    {{ formatDate(plataforma.dados_especificos?.data_validade_certificado) }}
+                  </span>
+                </td>
+                <td>{{ plataforma.dados_especificos?.observacoes || '-' }}</td>
+              </template>
               <td>
-                <span :class="getValidadeClass(plataforma.data_validade)">
-                  {{ formatDate(plataforma.data_validade) || '-' }}
-                </span>
-              </td>
-              <td>
-                <span class="observacoes" :title="plataforma.observacoes">
-                  {{ truncateText(plataforma.observacoes) || '-' }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <div class="actions-buttons">
-                  <button class="btn-action edit" @click="editPlataforma(plataforma)">
-                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
-                  </button>
-                  <button class="btn-action delete" @click="deletePlataforma(plataforma.id)">
-                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="plataformasFiltradas.length === 0">
-              <td colspan="9" class="empty-state"> <!-- Ajuste o colspan para o número total de colunas -->
-                {{ getEmptyStateMessage() }}
+                <button 
+                  class="btn-action edit"
+                  @click="editPlataforma(plataforma)"
+                >
+                  <img src="/icons/edicao.svg" alt="Editar" class="icon" />
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+  </div>
 
-    <!-- Modal de Cadastro/Edição -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ editingId ? 'Editar' : 'Nova' }} Plataforma</h3>
-          <button class="btn-close" @click="closeModal">×</button>
-        </div>
-        
-        <div class="modal-body">
-          <form @submit.prevent="handleSubmit" class="form-grid">
-            <div class="form-group">
-              <label>Nome*</label>
-              <input 
-                v-model="formData.nome"
-                type="text"
-                required
-                placeholder="Nome da plataforma"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label>URL*</label>
-              <input 
-                v-model="formData.url"
-                type="url"
-                required
-                placeholder="https://exemplo.com"
-              />
-            </div>
+  <!-- Adicione este modal ao final do template, antes do fechamento da div layout -->
+  <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ editingId ? 'Editar' : 'Nova' }} Plataforma</h3>
+        <button class="btn-close" @click="closeModal">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <form @submit.prevent="handleSubmit" class="form-grid">
+          <!-- Dados básicos -->
+          <div class="form-group">
+            <label>Nome da Plataforma*</label>
+            <input v-model="formData.nome" required type="text" />
+          </div>
 
-            <div class="form-group">
-              <label>Data de Validade</label>
-              <input 
-                v-model="formData.data_validade"
-                type="date"
-                :min="new Date().toISOString().split('T')[0]"
-              />
-            </div>
+          <div class="form-group">
+            <label>URL*</label>
+            <input v-model="formData.url" required type="url" />
+          </div>
 
-            <div class="form-group">
-              <label>Detalhes</label>
-              <textarea 
-                v-model="formData.detalhes"
-                rows="3"
-                placeholder="Detalhes da plataforma"
-                class="detalhes"
-              ></textarea>
-            </div>
-
-            <!-- Seção de empresas ocupa largura total -->
-            <div class="form-group full-width">
-              <label>Vincular Empresas</label>
-              <div class="empresas-grid">
-                <button
-                  v-for="empresa in empresasCadastradas"
-                  :key="empresa.id"
-                  type="button"
-                  class="empresa-chip"
-                  :class="{ 'selected': empresasSelecionadas.includes(empresa.id) }"
-                  @click="toggleEmpresa(empresa)"
-                >
-                  {{ empresa.nome }}
-                  <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
-                </button>
+          <!-- Área de empresas vinculadas -->
+          <div class="form-group full-width">
+            <label>Empresas Vinculadas</label>
+            <div class="empresas-grid">
+              <div 
+                v-for="empresa in empresasCadastradas"
+                :key="empresa.id"
+                :class="['empresa-chip', { 'selected': empresasSelecionadas.includes(empresa.id) }]"
+                @click="toggleEmpresa(empresa)"
+              >
+                {{ empresa.nome }}
+                <span class="empresa-cnpj">{{ formatCNPJ(empresa.cnpj) }}</span>
               </div>
             </div>
+          </div>
 
-            <div class="form-group full-width">
-              <label>Observações</label>
-              <textarea 
-                v-model="formData.observacoes"
-                rows="3"
-                placeholder="Observações adicionais"
-                class="detalhes"
-              ></textarea>
-            </div>
-          </form>
-        </div>
+          <!-- Dados específicos -->
+          <div class="form-group">
+            <label>Login</label>
+            <input v-model="formData.login" type="text" />
+          </div>
 
-        <div class="modal-actions">
-          <button type="button" class="btn-cancelar" @click="closeModal">
-            Cancelar
-          </button>
-          <button type="submit" class="btn-salvar">
-            {{ editingId ? 'Atualizar' : 'Salvar' }}
-          </button>
-        </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input v-model="formData.senha" type="password" />
+          </div>
+
+          <div class="form-group">
+            <label>Validade do Certificado</label>
+            <input v-model="formData.data_validade_certificado" type="date" />
+          </div>
+
+          <div class="form-group full-width">
+            <label>Observações</label>
+            <textarea v-model="formData.observacoes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancelar" @click="closeModal">Cancelar</button>
+        <button type="submit" class="btn-salvar" @click="handleSubmit">
+          {{ editingId ? 'Atualizar' : 'Salvar' }}
+        </button>
       </div>
     </div>
   </div>
@@ -199,35 +194,34 @@ const selectedEmpresa = ref(null)
 const empresasCadastradas = ref([])
 const empresasSelecionadas = ref([])
 
-// Carregar plataformas com filtro por empresa
+// Modifique a função loadPlataformas
 const loadPlataformas = async (empresaId = null) => {
   try {
     let query = supabase
       .from('plataformas')
       .select(`
         *,
-        empresa_plataforma (
-          empresa_id
-        )
+        empresa_plataforma(*),
+        empresa_plataforma_dados(*)
       `)
-      .order('nome')
-
-    if (empresaId) {
-      query = query.eq('empresa_plataforma.empresa_id', empresaId)
-    }
 
     const { data, error } = await query
-    
     if (error) throw error
     
-    console.log('Dados carregados:', data)
-    plataformas.value = data || []
+    // Se tiver empresaId, filtra as plataformas após o carregamento
+    if (empresaId) {
+      plataformas.value = data.filter(p => 
+        p.empresa_plataforma?.some(ep => ep.empresa_id === empresaId)
+      )
+    } else {
+      plataformas.value = data
+    }
   } catch (error) {
     console.error('Erro ao carregar plataformas:', error)
   }
 }
 
-// Carregar empresas
+// Modifique a função loadEmpresas
 const loadEmpresas = async () => {
   try {
     const { data, error } = await supabase
@@ -236,7 +230,8 @@ const loadEmpresas = async () => {
       .order('nome')
     
     if (error) throw error
-    empresasCadastradas.value = data
+    empresasCadastradas.value = data || []
+    console.log('Empresas carregadas:', empresasCadastradas.value)
   } catch (error) {
     console.error('Erro ao carregar empresas:', error)
   }
@@ -332,21 +327,30 @@ const loadVinculacoes = async (plataformaId) => {
   }
 }
 
-// Modificar editPlataforma para carregar vinculações
+// Modifique a função editPlataforma
 const editPlataforma = async (plataforma) => {
   editingId.value = plataforma.id
-  formData.value = { ...plataforma }
+  formData.value = {
+    nome: plataforma.nome,
+    url: plataforma.url,
+    login: plataforma.dados_especificos?.login || '',
+    senha: plataforma.dados_especificos?.senha || '',
+    data_validade_certificado: plataforma.dados_especificos?.data_validade_certificado || '',
+    observacoes: plataforma.dados_especificos?.observacoes || ''
+  }
   await loadVinculacoes(plataforma.id)
   showModal.value = true
 }
 
-// Modificar handleSubmit para incluir os novos campos
+// Modifique o handleSubmit para salvar todos os dados
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
+    // 1. Salvar dados da plataforma
     const plataformaData = {
-      ...formData.value,
+      nome: formData.value.nome,
+      url: formData.value.url,
       responsavel_id: user.id
     }
 
@@ -369,31 +373,43 @@ const handleSubmit = async () => {
       plataformaId = data[0].id
     }
 
-    // Remover vinculações antigas
+    // 2. Salvar vinculações com empresas
     await supabase
       .from('empresa_plataforma')
       .delete()
       .eq('plataforma_id', plataformaId)
 
-    // Inserir novas vinculações
     if (empresasSelecionadas.value.length > 0) {
       const vinculacoes = empresasSelecionadas.value.map(empresaId => ({
         empresa_id: empresaId,
         plataforma_id: plataformaId
       }))
 
-      const { error } = await supabase
+      await supabase
         .from('empresa_plataforma')
         .insert(vinculacoes)
-
-      if (error) throw error
     }
 
-    await loadPlataformas(selectedEmpresa.value?.id)
+    // 3. Salvar dados específicos
+    const dadosEspecificos = {
+      plataforma_id: plataformaId,
+      empresa_id: selectedEmpresa.value?.id,
+      login: formData.value.login,
+      senha: formData.value.senha,
+      data_validade_certificado: formData.value.data_validade_certificado,
+      observacoes: formData.value.observacoes
+    }
+
+    await supabase
+      .from('empresa_plataforma_dados')
+      .upsert(dadosEspecificos)
+
+    await loadPlataformas()
     closeModal()
+    showToast('Plataforma salva com sucesso!')
   } catch (error) {
     console.error('Erro ao salvar:', error)
-    alert('Erro ao salvar plataforma')
+    showToast('Erro ao salvar plataforma', 'error')
   }
 }
 
@@ -447,19 +463,12 @@ const truncateText = (text, length = 60) => {
   return text.length > length ? text.substring(0, length) + '...' : text
 }
 
-// Adicione no computed plataformasFiltradas
+// Ajuste o computed plataformasFiltradas
 const plataformasFiltradas = computed(() => {
-  console.log('Estado atual:', {
-    todasPlataformas: plataformas.value.length,
-    empresaSelecionada: selectedEmpresa.value?.nome,
-    filtradas: plataformas.value.filter(p => !selectedEmpresa.value).length
-  })
-  
   if (!selectedEmpresa.value) {
     return plataformas.value
   }
   
-  // Filtra apenas quando há uma empresa selecionada
   return plataformas.value.filter(plataforma => {
     return plataforma.empresa_plataforma?.some(ep => 
       ep.empresa_id === selectedEmpresa.value.id
@@ -472,6 +481,11 @@ const getEmptyStateMessage = () => {
     return `Nenhuma plataforma vinculada à empresa ${selectedEmpresa.value.nome}`
   }
   return 'Nenhuma plataforma cadastrada'
+}
+
+const selectEmpresa = (empresa) => {
+  selectedEmpresa.value = empresa
+  loadPlataformas(empresa.id)
 }
 
 const clearEmpresaSelection = () => {
@@ -496,6 +510,72 @@ const getValidadeClass = (data) => {
   if (diasRestantes < 0) return 'validade-expirada'
   if (diasRestantes <= 30) return 'validade-proxima'
   return 'validade-ok'
+}
+
+const saveDadosPlataforma = async (dados) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    const dadosToSave = {
+      ...dados,
+      responsavel_id: user.id,
+      data_atualizacao: new Date()
+    }
+
+    const { error } = await supabase
+      .from('empresa_plataforma_dados')
+      .upsert(dadosToSave)
+
+    if (error) throw error
+    
+    await loadPlataformas(selectedEmpresa.value?.id)
+    showToast('Dados salvos com sucesso!')
+  } catch (error) {
+    console.error('Erro ao salvar dados:', error)
+    showToast('Erro ao salvar dados', 'error')
+  }
+}
+
+const showDadosModal = ref(false)
+const editingPlataforma = ref(null)
+const dadosForm = ref({
+  login: '',
+  senha: '',
+  certificado_digital: '',
+  data_validade_certificado: '',
+  observacoes: ''
+})
+
+const editDadosPlataforma = (plataforma) => {
+  editingPlataforma.value = plataforma
+  dadosForm.value = { ...plataforma.dados_especificos }
+  showDadosModal.value = true
+}
+
+const closeDadosModal = () => {
+  showDadosModal.value = false
+  editingPlataforma.value = null
+  dadosForm.value = {
+    login: '',
+    senha: '',
+    certificado_digital: '',
+    data_validade_certificado: '',
+    observacoes: ''
+  }
+}
+
+const handleDadosSubmit = async () => {
+  try {
+    const dadosToSave = {
+      ...dadosForm.value,
+      plataforma_id: editingPlataforma.value.id
+    }
+    await saveDadosPlataforma(dadosToSave)
+    closeDadosModal()
+  } catch (error) {
+    console.error('Erro ao salvar dados específicos:', error)
+    showToast('Erro ao salvar dados específicos', 'error')
+  }
 }
 
 onMounted(async () => {
@@ -804,16 +884,6 @@ th {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.filter-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin: 1rem 0;
 }
 
 .btn-clear {
@@ -1164,8 +1234,14 @@ textarea.detalhes {
   transition: all 0.3s ease;
 }
 
+.btn-view-all.active {
+  background: #193155;
+  color: white;
+}
+
 .btn-view-all:hover {
-  background: #dee2e6;
+  background: #193155;
+  color: white;
   transform: translateY(-1px);
 }
 
@@ -1240,6 +1316,66 @@ td.actions {
 .table-container:not(.sidebar-expanded) {
   width: calc(100% - 70px);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.empresas-selector {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+}
+
+.empresas-header {
+  margin-bottom: 1rem;
+}
+
+.empresas-header h3 {
+  color: #193155;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.empresas-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.empresa-chip {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empresa-chip.selected {
+  border-color: #193155;
+  background: #193155;
+  color: white;
+}
+
+.empresa-cnpj {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+}
+
+.empresa-chip:hover {
+  transform: translateY(-2px);
+  border-color: #193155;
+}
+
+.empresas-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
 
