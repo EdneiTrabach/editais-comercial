@@ -160,6 +160,13 @@
     </div>
   </div>
 
+  <!-- Adicione logo após o fechamento da div.layout -->
+  <div class="toast-container">
+    <div v-if="toast.show" :class="['toast', `toast-${toast.type}`]">
+      {{ toast.message }}
+    </div>
+  </div>
+
   <!-- Modal para adicionar nova plataforma -->
   <div v-if="showPlataformaModal" class="modal-overlay">
     <div class="modal-content">
@@ -295,7 +302,7 @@ const handleSubmit = async () => {
     // Validar formulário
     const errors = validateForm()
     if (errors.length > 0) {
-      alert(errors.join('\n'))
+      showToast(errors.join('\n'), 'error')
       return
     }
 
@@ -307,9 +314,9 @@ const handleSubmit = async () => {
 
     const processData = {
       numero_processo: `${formData.value.numero}/${formData.value.ano}`,
-      ano: formData.value.ano, // Corrigido: usar formData.value.ano
+      ano: formData.value.ano,
       orgao: formData.value.orgao,
-      data_pregao: formData.value.data_pregao, // Corrigido: usar formData.value
+      data_pregao: formData.value.data_pregao,
       hora_pregao: formData.value.hora_pregao,
       estado: formData.value.estado,
       modalidade: formData.value.modalidade,
@@ -319,7 +326,7 @@ const handleSubmit = async () => {
       representante: formData.value.representante,
       status: formData.value.status || '',
       responsavel_id: user.id,
-      sistemas_ativos: sistemasSelecionados.value, // Array de UUIDs
+      sistemas_ativos: sistemasSelecionados.value,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
@@ -330,13 +337,15 @@ const handleSubmit = async () => {
 
     if (error) throw error
 
-    // Feedback de sucesso
     showToast('Processo cadastrado com sucesso!', 'success')
-    router.push('/editais')
+    // Aguarda um momento para o usuário ver a mensagem antes de redirecionar
+    setTimeout(() => {
+      router.push('/processos')
+    }, 1500)
 
   } catch (error) {
     console.error('Erro ao salvar processo:', error)
-    showToast('Erro ao salvar processo: ' + error.message, 'error')
+    showToast(error.message || 'Erro ao cadastrar processo', 'error')
   } finally {
     loading.value = false
   }
@@ -1304,5 +1313,55 @@ input[type="date"]:focus:not(.error) {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Adicione ao final do <style> */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.toast {
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toast-success {
+  background: #28a745;
+  color: white;
+}
+
+.toast-error {
+  background: #dc3545;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast::before {
+  content: '✓';
+  font-weight: bold;
+}
+
+.toast-error::before {
+  content: '✕';
 }
 </style>
