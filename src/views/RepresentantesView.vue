@@ -35,7 +35,7 @@
                   <button class="btn-action edit" @click="editRepresentante(representante)">
                     <img src="/icons/edicao.svg" alt="Editar" class="icon" />
                   </button>
-                  <button class="btn-action delete" @click="deleteRepresentante(representante.id)">
+                  <button class="btn-action delete" @click="deleteRepresentante(representante)">
                     <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
                   </button>
                 </div>
@@ -98,6 +98,30 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div v-if="deleteConfirmDialog.show" class="modal-overlay">
+      <div class="confirm-dialog">
+        <div class="confirm-content">
+          <h3>Confirmar Exclusão</h3>
+          <p>Tem certeza que deseja excluir este representante?</p>
+          <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+          <div class="confirm-actions">
+            <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+            <button class="btn-confirm delete" @click="confirmDelete">
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adicione o componente de toast -->
+    <div class="toast-container">
+      <div v-if="toast.show" :class="['toast', `toast-${toast.type}`]">
+        {{ toast.message }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -118,6 +142,27 @@ const formData = ref({
   telefone: ''
 })
 
+// Adicione o ref para o toast
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+// Adicione este ref junto com os outros
+const deleteConfirmDialog = ref({
+  show: false,
+  representante: null
+})
+
+// Função para mostrar toast
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
+
 const loadRepresentantes = async () => {
   try {
     const { data, error } = await supabase
@@ -132,6 +177,7 @@ const loadRepresentantes = async () => {
   }
 }
 
+// Modifique a função handleSubmit
 const handleSubmit = async () => {
   try {
     const data = { ...formData.value }
@@ -143,19 +189,21 @@ const handleSubmit = async () => {
         .eq('id', editingId.value)
       
       if (error) throw error
+      showToast('Representante atualizado com sucesso!')
     } else {
       const { error } = await supabase
         .from('representantes')
         .insert(data)
       
       if (error) throw error
+      showToast('Representante cadastrado com sucesso!')
     }
 
     await loadRepresentantes()
     closeModal()
   } catch (error) {
     console.error('Erro ao salvar:', error)
-    alert('Erro ao salvar representante')
+    showToast(error.message || 'Erro ao salvar representante', 'error')
   }
 }
 
@@ -165,20 +213,37 @@ const editRepresentante = (representante) => {
   showModal.value = true
 }
 
-const deleteRepresentante = async (id) => {
-  if (!confirm('Deseja realmente excluir este representante?')) return
+// Modifique a função deleteRepresentante
+const deleteRepresentante = (representante) => {
+  deleteConfirmDialog.value = {
+    show: true,
+    representante
+  }
+}
 
+// Adicione as funções de controle do diálogo
+const hideDeleteDialog = () => {
+  deleteConfirmDialog.value = {
+    show: false,
+    representante: null
+  }
+}
+
+const confirmDelete = async () => {
   try {
     const { error } = await supabase
       .from('representantes')
       .delete()
-      .eq('id', id)
+      .eq('id', deleteConfirmDialog.value.representante.id)
     
     if (error) throw error
+    
     await loadRepresentantes()
+    showToast('Representante excluído com sucesso!')
+    hideDeleteDialog()
   } catch (error) {
     console.error('Erro ao excluir:', error)
-    alert('Erro ao excluir representante')
+    showToast(error.message || 'Erro ao excluir representante', 'error')
   }
 }
 
@@ -603,5 +668,111 @@ th {
   .dropdown-content button {
     padding: 12px 16px;
   }
+}
+
+/* Adicione os estilos do toast */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.toast {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toast-success {
+  background: #10B981;
+  color: white;
+}
+
+.toast-error {
+  background: #EF4444;
+  color: white;
+}
+
+.toast::before {
+  content: '✓';
+  font-weight: bold;
+}
+
+.toast-error::before {
+  content: '✕';
+}
+
+/* Estilos do diálogo de confirmação */
+.confirm-dialog {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-content {
+  text-align: center;
+}
+
+.confirm-content h3 {
+  color: #193155;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.confirm-content p {
+  color: #4B5563;
+  margin-bottom: 0.5rem;
+}
+
+.warning-text {
+  color: #DC2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-cancel, .btn-confirm {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel {
+  background: #E5E7EB;
+  color: #4B5563;
+}
+
+.btn-confirm.delete {
+  background: #DC2626;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: #D1D5DB;
+}
+
+.btn-confirm.delete:hover {
+  background: #B91C1C;
 }
 </style>
