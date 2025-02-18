@@ -103,13 +103,13 @@
     <div v-if="deleteConfirmDialog.show" class="modal-overlay">
       <div class="confirm-dialog">
         <div class="confirm-content">
-          <h3>Confirmar Exclusão</h3>
-          <p>Tem certeza que deseja excluir este representante?</p>
-          <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+          <h3>Confirmar Inativação</h3>
+          <p>Tem certeza que deseja inativar este representante?</p>
+          <p class="warning-text">Esta ação poderá ser revertida pelo administrador!</p>
           <div class="confirm-actions">
             <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
             <button class="btn-confirm delete" @click="confirmDelete">
-              Excluir
+              Inativar
             </button>
           </div>
         </div>
@@ -168,6 +168,7 @@ const loadRepresentantes = async () => {
     const { data, error } = await supabase
       .from('representantes')
       .select('*')
+      .eq('status', 'ATIVO') // Adiciona filtro por status
       .order('nome')
     
     if (error) throw error
@@ -180,7 +181,11 @@ const loadRepresentantes = async () => {
 // Modifique a função handleSubmit
 const handleSubmit = async () => {
   try {
-    const data = { ...formData.value }
+    const data = { 
+      ...formData.value,
+      status: 'ATIVO', // Sempre ATIVO ao criar
+      updated_at: new Date().toISOString()
+    }
     
     if (editingId.value) {
       const { error } = await supabase
@@ -193,7 +198,10 @@ const handleSubmit = async () => {
     } else {
       const { error } = await supabase
         .from('representantes')
-        .insert(data)
+        .insert({
+          ...data,
+          created_at: new Date().toISOString()
+        })
       
       if (error) throw error
       showToast('Representante cadastrado com sucesso!')
@@ -233,17 +241,20 @@ const confirmDelete = async () => {
   try {
     const { error } = await supabase
       .from('representantes')
-      .delete()
+      .update({ 
+        status: 'INATIVO',
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', deleteConfirmDialog.value.representante.id)
     
     if (error) throw error
     
     await loadRepresentantes()
-    showToast('Representante excluído com sucesso!')
+    showToast('Representante inativado com sucesso!')
     hideDeleteDialog()
   } catch (error) {
-    console.error('Erro ao excluir:', error)
-    showToast(error.message || 'Erro ao excluir representante', 'error')
+    console.error('Erro ao inativar:', error)
+    showToast(error.message || 'Erro ao inativar representante', 'error')
   }
 }
 
