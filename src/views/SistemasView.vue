@@ -51,15 +51,25 @@
                 </span>
               </td>
               <td class="actions-cell">
-                <div class="action-buttons">
+                <div class="action-buttons" :class="{ 'admin': isAdmin }">
+                  <!-- Botão editar - disponível para todos -->
                   <button class="btn-icon edit" @click="editSistema(sistema)">
                     <img src="/icons/edicao.svg" alt="Editar" class="icon" />
                   </button>
-                  <button class="btn-icon" :class="sistema.status === 'ACTIVE' ? 'delete' : 'enable'"
+
+                  <!-- Botão ativar/inativar - apenas para admin -->
+                  <button 
+                    v-if="isAdmin"  
+                    class="btn-icon" 
+                    :class="sistema.status === 'ACTIVE' ? 'delete' : 'enable'"
                     @click="sistema.status === 'ACTIVE' ? inativarSistema(sistema) : ativarSistema(sistema)"
-                    :title="sistema.status === 'ACTIVE' ? 'Inativar Sistema' : 'Ativar Sistema'">
-                    <img :src="sistema.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'"
-                      :alt="sistema.status === 'ACTIVE' ? 'Inativar' : 'Ativar'" class="icon" />
+                    :title="sistema.status === 'ACTIVE' ? 'Inativar Sistema' : 'Ativar Sistema'"
+                  >
+                    <img 
+                      :src="sistema.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'"
+                      :alt="sistema.status === 'ACTIVE' ? 'Inativar' : 'Ativar'" 
+                      class="icon" 
+                    />
                   </button>
                 </div>
               </td>
@@ -185,6 +195,7 @@ const showModal = ref(false)
 const showSetorModal = ref(false)
 const editingId = ref(null)
 const isSidebarExpanded = ref(true)
+const isAdmin = ref(false)
 
 // Sistema de toast
 const toasts = ref([])
@@ -257,7 +268,8 @@ const loadSetores = async () => {
 onMounted(async () => {
   await Promise.all([
     loadSistemas(),
-    loadSetores()
+    loadSetores(),
+    checkAdminStatus() // Adicione esta linha
   ])
 })
 
@@ -368,6 +380,11 @@ const deleteSistema = (sistema) => {
 
 // Função para inativar sistema
 const inativarSistema = (sistema) => {
+  if (!isAdmin.value) {
+    showToast('Apenas administradores podem inativar sistemas', 'error')
+    return
+  }
+
   showConfirmDialog({
     title: 'Confirmar Inativação',
     message: `Deseja realmente inativar o sistema ${sistema.nome}?`,
@@ -398,6 +415,11 @@ const inativarSistema = (sistema) => {
 
 // Função para ativar sistema
 const ativarSistema = (sistema) => {
+  if (!isAdmin.value) {
+    showToast('Apenas administradores podem ativar sistemas', 'error')
+    return
+  }
+
   showConfirmDialog({
     title: 'Confirmar Ativação',
     message: `Deseja realmente ativar o sistema ${sistema.nome}?`,
@@ -521,6 +543,26 @@ const showConfirmDialog = (config) => {
   confirmDialog.value = {
     show: true,
     ...config
+  }
+}
+
+// Função para verificar permissão de admin
+const checkAdminStatus = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    isAdmin.value = profile?.role === 'admin'
+    return isAdmin.value
+  } catch (error) {
+    console.error('Erro ao verificar status admin:', error)
+    return false
   }
 }
 </script>
@@ -1245,8 +1287,8 @@ th {
   color: #374151;
   border: 2px dashed #e5e7eb;
   border-radius: 8px;
-  font-weight: 500;
   cursor: pointer;
+  font-weight: 500;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -1256,7 +1298,7 @@ th {
 
 .btn-add-contato:hover {
   background: #e5e7eb;
-  border-color: #d1d5db;
+  transform: translateY(-1px);
 }
 
 /* Modal content refinado */
@@ -1466,5 +1508,46 @@ th {
   opacity: 0.7;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Adicione ao seu <style> */
+.action-buttons {
+  position: relative;
+}
+
+.action-buttons:not(.is-admin) .btn-icon.delete,
+.action-buttons:not(.is-admin) .btn-icon.enable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-buttons:not(.is-admin):hover::after {
+  display: block;
+}
+
+/* Remova os estilos anteriores de .action-buttons:not(.is-admin) e adicione estes: */
+
+/* Estilo para o botão de ativar/inativar */
+.btn-icon.enable,
+.btn-icon.delete {
+  position: relative;
+}
+
+/* Quando não for admin e passar o mouse sobre o botão */
+:not(.admin) .btn-icon.enable:hover::after,
+:not(.admin) .btn-icon.delete:hover::after {
+  content: 'Acesso restrito';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #dc2626;
+  white-space: nowrap;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 </style>
