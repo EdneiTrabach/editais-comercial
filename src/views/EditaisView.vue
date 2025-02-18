@@ -11,6 +11,13 @@
         <h1>Novo Processo Licitatório</h1>
       </div>
 
+      <!-- Adicione após o header no template -->
+      <div class="header-actions">
+        <button class="btn-import" @click="showImportModal = true">
+          Importar Publicação
+        </button>
+      </div>
+
       <div class="form-container">
         <form @submit.prevent="handleSubmit" class="form-grid">
           <div class="form-group">
@@ -78,11 +85,7 @@
             <div class="plataforma-container">
               <select v-model="formData.site_pregao" required>
                 <option value="">Selecione a plataforma...</option>
-                <option 
-                  v-for="plataforma in plataformas" 
-                  :key="plataforma.id" 
-                  :value="plataforma.url"
-                >
+                <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
                   {{ plataforma.nome }}
                 </option>
               </select>
@@ -115,17 +118,78 @@
               placeholder="Descrição completa do objeto conforme Art. 40"></textarea>
           </div>
 
+          <!-- Adicione após o campo de objeto_completo -->
+          <div class="form-group full-width">
+            <RequiredLabel text="Cálculo de Distância" :isRequired="false" />
+            <div class="distancia-container">
+              <div class="pontos-container">
+                <div class="ponto-origem">
+                  <label>Ponto de Origem (Referência)</label>
+                  <select v-model="pontoReferencia">
+                    <option value="">Selecione o ponto de referência...</option>
+                    <option v-for="ponto in pontosReferencia" :key="ponto.cidade" :value="ponto">
+                      {{ ponto.cidade }}/{{ ponto.uf }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="ponto-destino">
+                  <label>Cidade do Órgão</label>
+                  <div class="cidade-input">
+                    <input v-model="cidadeOrgao" type="text" placeholder="Cidade do órgão" @input="validarCidade()">
+                    <span class="separator">/</span>
+                    <select v-model="formData.estado" style="width: 80px">
+                      <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                        {{ estado.uf }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Novo botão de cálculo -->
+                <div class="calcular-button">
+                  <button @click="calcularDistancia" class="btn-calcular"
+                    :disabled="!pontoReferencia || !cidadeOrgao || !formData.estado">
+                    Calcular Distância
+                  </button>
+                </div>
+              </div>
+
+              <div class="distancia-result">
+                <div v-if="distanciaCalculada" class="distancia-automatica">
+                  <span class="distance-value">{{ distanciaCalculada }}</span>
+                  <button @click="salvarDistancia" class="btn-confirmar">
+                    Confirmar Distância
+                  </button>
+                </div>
+
+                <!-- Novo campo para entrada manual -->
+                <div v-if="!distanciaCalculada || distanciaManual" class="distancia-manual">
+                  <label>Distância Manual (km)</label>
+                  <div class="manual-input">
+                    <input v-model="distanciaManualValue" type="number" min="0" step="1"
+                      placeholder="Digite a distância em km" />
+                    <button @click="salvarDistanciaManual" class="btn-confirmar">
+                      Confirmar Manual
+                    </button>
+                  </div>
+                  <small v-if="distanciaCalculada" class="toggle-manual">
+                    <a href="#" @click.prevent="toggleModoManual">
+                      {{ distanciaManual ? 'Usar cálculo automático' : 'Inserir manualmente' }}
+                    </a>
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Campo de Representante -->
           <div class="form-group">
             <RequiredLabel text="Representante" :isRequired="true" />
             <div class="representante-container">
               <select v-model="formData.representante" required>
                 <option value="">Selecione o representante...</option>
-                <option 
-                  v-for="rep in representantes" 
-                  :key="rep.id" 
-                  :value="rep.id"
-                >
+                <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                   {{ rep.nome }}
                 </option>
               </select>
@@ -150,6 +214,14 @@
           <div class="form-actions">
             <button type="button" class="btn-cancelar" @click="router.push('/funcionalidades')">
               Cancelar
+            </button>
+            <button 
+              v-if="formData.extraction_id" 
+              type="button" 
+              class="btn-correcoes" 
+              @click="salvarCorrecoes"
+            >
+              Salvar Correções
             </button>
             <button type="submit" class="btn-salvar" :disabled="loading">
               {{ loading ? 'Salvando...' : 'Salvar' }}
@@ -224,15 +296,82 @@
       </form>
     </div>
   </div>
+
+  <!-- Adicione o modal de importação -->
+  <div v-if="showImportModal" class="modal-overlay">
+    <div class="modal-content import-modal">
+      <h3>Importar Publicação</h3>
+      <div class="form-group">
+        <label>Cole aqui o texto da publicação:</label>
+        <textarea v-model="publicacaoText" rows="10"
+          placeholder="Cole aqui o texto completo da publicação..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" @click="closeImportModal">
+          Cancelar
+        </button>
+        <button class="btn-import" @click="processarPublicacao">
+          Processar Publicação
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
 import debounce from 'lodash/debounce' // Importação correta do debounce
+import { calcularDistanciaHaversine } from '@/utils/distance.js'
+
+// Adicione no início do arquivo, após as importações
+const processamentosCache = {
+  // Cache para publicações já processadas
+  dados: new Map(),
+  
+  // Cache para coordenadas de cidades
+  coordenadas: new Map(),
+  
+  // Cache para órgãos frequentes
+  orgaos: new Map(),
+  
+  // Configuração de expiração (24 horas em milissegundos)
+  TEMPO_EXPIRACAO: 24 * 60 * 60 * 1000,
+
+  // Método para salvar no cache
+  salvar(chave, dados, tipo = 'dados') {
+    this[tipo].set(chave, {
+      dados,
+      timestamp: Date.now()
+    })
+  },
+
+  // Método para recuperar do cache
+  obter(chave, tipo = 'dados') {
+    const item = this[tipo].get(chave)
+    if (!item) return null
+
+    // Verifica se o cache expirou
+    if (Date.now() - item.timestamp > this.TEMPO_EXPIRACAO) {
+      this[tipo].delete(chave)
+      return null
+    }
+
+    return item.dados
+  },
+
+  // Método para gerar chave única para publicação
+  gerarChave(texto) {
+    return texto
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .substring(0, 100)
+  }
+}
 
 // Estado reativo para controle de carregamento e subscription
 const loading = ref(false)
@@ -242,12 +381,12 @@ const realtimeSubscription = ref(null)
 const setupRealtimeListener = () => {
   realtimeSubscription.value = supabase
     .channel('processos-changes')
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'processos' 
-      }, 
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'processos'
+      },
       () => {
         loadData()
       }
@@ -259,7 +398,7 @@ const setupRealtimeListener = () => {
 const loadData = debounce(async () => {
   try {
     loading.value = true
-    
+
     // Carregamento paralelo dos dados necessários
     const [processosResponse, plataformasResponse, representantesResponse] = await Promise.all([
       supabase.from('processos').select('*'),
@@ -284,13 +423,13 @@ const loadData = debounce(async () => {
 // Função para validar formulário
 const validateForm = () => {
   const errors = []
-  
+
   if (!formData.value.numero) errors.push('Número do processo é obrigatório')
   if (!formData.value.orgao) errors.push('Órgão é obrigatório')
   if (!formData.value.data_pregao) errors.push('Data do pregão é obrigatória')
   if (!formData.value.hora_pregao) errors.push('Hora do pregão é obrigatória')
   if (!formData.value.modalidade) errors.push('Modalidade é obrigatória')
-  
+
   return errors
 }
 
@@ -306,9 +445,16 @@ const handleSubmit = async () => {
       return
     }
 
+    // Validações cruzadas
+    const errosCruzados = executarValidacoesCruzadas(formData.value)
+    if (errosCruzados.length > 0) {
+      showToast(errosCruzados.join('\n'), 'warning')
+      // Permite continuar, mas mostra aviso
+    }
+
     // Obter o usuário atual
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError) throw userError
     if (!user) throw new Error('Usuário não autenticado')
 
@@ -328,7 +474,10 @@ const handleSubmit = async () => {
       responsavel_id: user.id,
       sistemas_ativos: sistemasSelecionados.value,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      distancia_km: formData.value.distancia_km,
+      ponto_referencia_cidade: formData.value.ponto_referencia_cidade,
+      ponto_referencia_uf: formData.value.ponto_referencia_uf
     }
 
     const { error } = await supabase
@@ -440,7 +589,10 @@ const formData = ref({
   sistemasAtivos: [],
   objeto_completo: '',
   representante: '',
-  status: '' // Certifique-se que está vazio aqui
+  status: '', // Certifique-se que está vazio aqui
+  distancia_km: null,
+  ponto_referencia_cidade: '',
+  ponto_referencia_uf: ''
 })
 
 const estados = [
@@ -837,18 +989,511 @@ const getProcesso = async (id) => {
   if (processosCache.has(id)) {
     return processosCache.get(id)
   }
-  
+
   const { data } = await supabase
     .from('processos')
     .select('*')
     .eq('id', id)
     .single()
-    
+
   if (data) {
     processosCache.set(id, data)
   }
   return data
 }
+
+// Adicione estas refs
+const showImportModal = ref(false)
+const publicacaoText = ref('')
+const camposNaoEncontrados = ref([])
+
+// Função para fechar modal
+const closeImportModal = () => {
+  showImportModal.value = false
+  publicacaoText.value = ''
+  camposNaoEncontrados.value = []
+}
+
+// Primeiro, adicione estas refs para controlar o progresso
+const progressoExtracao = ref({
+  status: 'idle', // idle, processing, success, error
+  etapa: '',
+  porcentagem: 0,
+  detalhes: []
+})
+
+// Adicione antes da função processarPublicacao
+const patterns = {
+  // Captura diferentes formatos de número/ano
+  numeroProcesso: /(?:(?:PE|PP|processo)[\s.\/]*(\d+)[\s.\/]*(\d{4}))|(?:(\d+)[\s.\/]*(\d{4}))|(?:processo[\s.:]*(\d+)[\s.\/]*(\d{4}))/i,
+  
+  // Captura diversos formatos de data e hora
+  dataHora: /(?:(?:data|prazo|abertura)[\s.:]*(\d{2}\/\d{2}\/\d{4})(?:[\s,]*(?:às|as|a|hora|hs|h)?[\s.:]*(\d{1,2}[:h]\d{2})?)|(?:(\d{2}\/\d{2}\/\d{4})\s*(?:às|as|a|hora|hs|h)?\s*(\d{1,2}[:h]\d{2})))/i,
+  
+  // Captura diferentes formatos de órgão
+  orgao: /(?:(?:órgão|unid\.\s*licitante)[\s.:]+([^\n]+))|(?:FACULDADE\s+[A-ZÀ-Ú\s]+)|(?:FMJ)/i,
+  
+  // Captura modalidade
+  modalidade: /(?:modalidade[\s.:]*)?(?:(?:pregão\s+eletrônico|PE|licitação\s+eletrônica))/i,
+  
+  // Captura objeto
+  objeto: /(?:\*\s*([^*]+)\s*\*)|(?:objeto[\s.:]+([^\n]+))/i,
+  
+  // Captura valor
+  valor: /R\$\s*([\d.,]+)/i
+}
+
+// Modifique a função processarPublicacao para usar os patterns
+const processarPublicacao = async () => {
+  try {
+    loading.value = true
+    const texto = publicacaoText.value
+    
+    // Inicia o progresso
+    progressoExtracao.value = {
+      status: 'processing',
+      etapa: 'Iniciando processamento',
+      porcentagem: 0,
+      detalhes: []
+    }
+
+    // Verifica cache
+    const chaveCache = processamentosCache.gerarChave(texto)
+    const dadosCache = processamentosCache.obter(chaveCache)
+    
+    if (dadosCache) {
+      progressoExtracao.value.etapa = 'Dados encontrados no cache'
+      progressoExtracao.value.porcentagem = 100
+      Object.assign(formData.value, dadosCache)
+      showToast('Dados recuperados do cache com sucesso!', 'success')
+      closeImportModal()
+      return
+    }
+
+    const dadosExtraidos = {
+      numero: '',
+      ano: '',
+      orgao: '',
+      data_pregao: '',
+      hora_pregao: '',
+      modalidade: '',
+      objeto_resumido: '',
+      objeto_completo: ''
+    }
+
+    // Extração do número do processo (10%)
+    progressoExtracao.value.etapa = 'Extraindo número do processo'
+    progressoExtracao.value.porcentagem = 10
+    const matchNumero = texto.match(patterns.numeroProcesso)
+    if (matchNumero) {
+      dadosExtraidos.numero = matchNumero[1] || matchNumero[3] || matchNumero[5]
+      dadosExtraidos.ano = matchNumero[2] || matchNumero[4] || matchNumero[6]
+      progressoExtracao.value.detalhes.push('✓ Número do processo extraído')
+    }
+
+    // Extração de data e hora (30%)
+    progressoExtracao.value.etapa = 'Extraindo data e hora'
+    progressoExtracao.value.porcentagem = 30
+    const matchDataHora = texto.match(patterns.dataHora)
+    if (matchDataHora) {
+      const data = matchDataHora[1] || matchDataHora[3]
+      const hora = matchDataHora[2] || matchDataHora[4]
+      
+      if (data) {
+        const [dia, mes, ano] = data.split('/')
+        dadosExtraidos.data_pregao = `${ano}-${mes}-${dia}`
+      }
+      
+      if (hora) {
+        dadosExtraidos.hora_pregao = hora.replace(/[h]s?/i, ':').padEnd(5, '0')
+      }
+      progressoExtracao.value.detalhes.push('✓ Data e hora extraídas')
+    }
+
+    // Extração do órgão (50%)
+    progressoExtracao.value.etapa = 'Extraindo órgão'
+    progressoExtracao.value.porcentagem = 50
+    const matchOrgao = texto.match(patterns.orgao)
+    if (matchOrgao) {
+      // ... código existente ...
+      progressoExtracao.value.detalhes.push('✓ Órgão extraído')
+    }
+
+    // Extração da modalidade (70%)
+    progressoExtracao.value.etapa = 'Extraindo modalidade'
+    progressoExtracao.value.porcentagem = 70
+    const matchModalidade = texto.match(patterns.modalidade)
+    if (matchModalidade) {
+      // ... código existente ...
+      progressoExtracao.value.detalhes.push('✓ Modalidade extraída')
+    }
+
+    // Extração do objeto (90%)
+    progressoExtracao.value.etapa = 'Extraindo objeto'
+    progressoExtracao.value.porcentagem = 90
+    const matchObjeto = texto.match(patterns.objeto)
+    if (matchObjeto) {
+      // ... código existente ...
+      progressoExtracao.value.detalhes.push('✓ Objeto extraído')
+    }
+
+    // Finalização (100%)
+    progressoExtracao.value.etapa = 'Finalizando processamento'
+    progressoExtracao.value.porcentagem = 100
+    progressoExtracao.value.status = 'success'
+
+    // Salva no cache e atualiza formulário
+    processamentosCache.salvar(chaveCache, dadosExtraidos)
+    Object.assign(formData.value, dadosExtraidos)
+
+    showToast('Processamento concluído com sucesso!', 'success')
+    setTimeout(() => closeImportModal(), 1500)
+
+  } catch (error) {
+    progressoExtracao.value.status = 'error'
+    console.error('Erro ao processar publicação:', error)
+    showToast('Erro ao processar publicação', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+// Função auxiliar para mapear modalidades
+const mapearModalidade = (modalidadeTexto) => {
+  const mapa = {
+    'pregão eletrônico': 'pregao_eletronico',
+    'pregão presencial': 'pregao_presencial',
+    'tomada de preços': 'tomada_precos',
+    'concorrência': 'concorrencia',
+    'leilão': 'leilao'
+  }
+
+  const modalidadeLower = modalidadeTexto.toLowerCase()
+  return mapa[modalidadeLower] || ''
+}
+
+// Adicione estes refs
+const pontoReferencia = ref(null)
+const cidadeOrgao = ref('')
+const distanciaCalculada = ref(null)
+
+// Array com pontos de referência por estado
+const pontosReferencia = [
+  { uf: 'MG', cidade: 'Governador Valadares', lat: -18.8513, lng: -41.9555 },
+  { uf: 'MG', cidade: 'Belo Horizonte', lat: -19.9167, lng: -43.9345 },
+  { uf: 'MG', cidade: 'Uberlândia', lat: -18.9113, lng: -48.2622 },
+  { uf: 'MG', cidade: 'Juiz de Fora', lat: -21.7642, lng: -43.3496 },
+  { uf: 'SP', cidade: 'São Paulo', lat: -23.5505, lng: -46.6333 },
+  { uf: 'RJ', cidade: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 },
+  { uf: 'ES', cidade: 'Vitória', lat: -20.2976, lng: -40.2958 },
+  { uf: 'BA', cidade: 'Salvador', lat: -12.9718, lng: -38.5011 },
+  { uf: 'PR', cidade: 'Curitiba', lat: -25.4284, lng: -49.2733 },
+  { uf: 'GO', cidade: 'Goiânia', lat: -16.6869, lng: -49.2648 },
+  { uf: 'RS', cidade: 'Porto Alegre', lat: -30.0346, lng: -51.2177 },
+]
+
+// Função para calcular distância usando Google Maps Distance Matrix API
+// Modifique a função calcularDistancia para usar cache de coordenadas
+const calcularDistancia = async () => {
+  if (!pontoReferencia.value || !cidadeOrgao.value || !formData.value.estado) {
+    showToast('Preencha todos os campos primeiro', 'warning')
+    return
+  }
+
+  try {
+    const chaveCache = `${cidadeOrgao.value}-${formData.value.estado}`.toLowerCase()
+    
+    // Tenta recuperar coordenadas do cache
+    let coordenadas = processamentosCache.obter(chaveCache, 'coordenadas')
+    
+    if (!coordenadas) {
+      // Se não estiver no cache, busca da API
+      const responseCidade = await fetch(
+        `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.value.estado}/municipios`
+      )
+      const municipios = await responseCidade.json()
+
+      // Busca fuzzy para encontrar a cidade
+      const cidadeBuscada = cidadeOrgao.value.toLowerCase()
+      let melhorMatch = null
+      let maiorSimilaridade = 0
+
+      municipios.forEach(municipio => {
+        const similaridade = calcularSimilaridade(
+          municipio.nome.toLowerCase(), 
+          cidadeBuscada
+        )
+        if (similaridade > maiorSimilaridade && similaridade > 0.8) {
+          maiorSimilaridade = similaridade
+          melhorMatch = municipio
+        }
+      })
+
+      if (!melhorMatch) {
+        showToast('Cidade não encontrada. Use entrada manual.', 'warning')
+        return
+      }
+
+      // Salva no cache
+      coordenadas = {
+        id: melhorMatch.id,
+        nome: melhorMatch.nome,
+        latitude: melhorMatch.latitude,
+        longitude: melhorMatch.longitude
+      }
+      processamentosCache.salvar(chaveCache, coordenadas, 'coordenadas')
+    }
+
+    // Calcula a distância usando as coordenadas (do cache ou recém obtidas)
+    const distancia = calcularDistanciaHaversine(
+      pontoReferencia.value.lat,
+      pontoReferencia.value.lng,
+      coordenadas.latitude,
+      coordenadas.longitude
+    )
+
+    if (isNaN(distancia)) {
+      throw new Error('Erro no cálculo da distância')
+    }
+
+    distanciaCalculada.value = `${distancia} km`
+    distanciaManual.value = false
+
+  } catch (error) {
+    console.error('Erro:', error)
+    showToast('Erro no cálculo. Use entrada manual.', 'error')
+    distanciaManual.value = true
+  }
+}
+
+// Função para salvar a distância no formData
+const salvarDistancia = () => {
+  if (!pontoReferencia.value || !distanciaCalculada.value) {
+    showToast('Selecione um ponto de referência e calcule a distância primeiro', 'error')
+    return
+  }
+
+  formData.value.distancia_km = parseFloat(distanciaCalculada.value.replace(' km', ''))
+  formData.value.ponto_referencia_cidade = pontoReferencia.value.cidade
+  formData.value.ponto_referencia_uf = pontoReferencia.value.uf
+
+  showToast('Distância salva com sucesso!', 'success')
+}
+
+const validarCidade = () => {
+  return cidadeOrgao.value.length >= 3;
+};
+
+// Adicione estas refs
+const distanciaManual = ref(false)
+const distanciaManualValue = ref(null)
+
+// Função para alternar modo manual
+const toggleModoManual = () => {
+  distanciaManual.value = !distanciaManual.value;
+  if (!distanciaManual.value) {
+    calcularDistancia();
+  }
+}
+
+// Função para salvar distância manual
+const salvarDistanciaManual = () => {
+  if (!distanciaManualValue.value) {
+    showToast('Digite um valor de distância', 'error')
+    return
+  }
+
+  formData.value.distancia_km = parseFloat(distanciaManualValue.value)
+  formData.value.ponto_referencia_cidade = pontoReferencia.value.cidade
+  formData.value.ponto_referencia_uf = pontoReferencia.value.uf
+
+  showToast('Distância manual salva com sucesso!', 'success')
+}
+
+// Função para calcular a similaridade entre strings
+const calcularSimilaridade = (str1, str2) => {
+  const s1 = str1.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  const s2 = str2.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+  let longer = s1.length >= s2.length ? s1 : s2
+  let shorter = s1.length >= s2.length ? s2 : s1
+
+  const longerLength = longer.length
+  if (longerLength === 0) return 1.0
+
+  return (longerLength - editDistance(longer, shorter)) / longerLength
+}
+
+// Função para calcular a distância de edição
+const editDistance = (s1, s2) => {
+  const custos = []
+  for (let i = 0; i <= s1.length; i++) {
+    let lastValue = i
+    for (let j = 0; j <= s2.length; j++) {
+      if (i === 0) custos[j] = j
+      else {
+        if (j > 0) {
+          let newValue = custos[j - 1]
+          if (s1.charAt(i - 1) !== s2.charAt(j - 1))
+            newValue = Math.min(Math.min(newValue, lastValue), custos[j]) + 1
+          custos[j - 1] = lastValue
+          lastValue = newValue
+        }
+      }
+    }
+    if (i > 0) custos[s2.length] = lastValue
+  }
+  return custos[s2.length]
+}
+
+const modalidades = {
+  patterns: /(?:modalidade[\s:]*)?(?:(pregão\s+eletrônico|pregão\s+presencial|dispensa\s+(?:de\s+)?licitação|tomada\s+de\s+preços|concorrência|chamada\s+pública|leilão))|(?:PE\/|PP\/|DL\/|TP\/|CP\/)/i,
+  
+  mapeamento: {
+    'pregão eletrônico': 'pregao_eletronico',
+    'pregão presencial': 'pregao_presencial',
+    'dispensa de licitação': 'dispensa',
+    'tomada de preços': 'tomada_precos',
+    'concorrência': 'concorrencia',
+    'leilão': 'leilao',
+    'chamada pública': 'chamada_publica'
+  }
+}
+
+const dataHora = {
+  patterns: {
+    completo: /(?:(?:dia|data|abertura|realizar-se)[\s.:]*(\d{2}\/\d{2}\/\d{4})(?:[\s,]*(?:às|as|a|hora|hs|h)?[\s.:]*(\d{1,2}[:h]\d{2})?)|(?:(\d{2}\/\d{2}\/\d{4})\s*(?:às|as|a|hora|hs|h)?\s*(\d{1,2}[:h]\d{2})))/i,
+    
+    dataSimples: /(\d{2}\/\d{2}\/\d{4})/i,
+    
+    horaSimples: /(\d{1,2}[:h]\d{2})(?:\s*hs?)?/i
+  }
+}
+
+const orgao = {
+  patterns: {
+    principal: /(?:PREFEITURA\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+(?:\s*[-–]\s*[A-ZÀ-Ú]{2})?)|(?:MUNICÍPIO\s+DE\s+[A-ZÀ-Ú\s]+)|(?:CÂMARA\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+)|(?:CONSÓRCIO\s+[A-ZÀ-Ú\s]+)|(?:FUNDO\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+)|(?:SERVIÇO\s+[A-ZÀ-Ú\s]+)/i,
+    
+    cnpj: /(?:cnpj[\s.:]*(?:n[º°.])?[\s.:]*)([\d./-]+)/i,
+    
+    endereco: /(?:endereço|situada?[\s:]*(?:na|no|à)?[\s:]*([^,\n.]+)(?:[,\s]+(?:n[º°.][\s:]*\d+)?)?(?:[,\s]+(?:centro|bairro)[,\s]+)?([A-ZÀ-Ú][A-Za-zÀ-ú\s]+)(?:\/|\s*-\s*)([A-Z]{2}))/i
+  }
+}
+
+const objeto = {
+  patterns: {
+    principal: /(?:objeto|finalidade)[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$))|(?:OBJETO[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$)))/i,
+    
+    resumido: /(?:objeto\s+resumido|resumo)[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$))/i
+  }
+}
+
+const plataformasPatterns = {
+  patterns: {
+    principal: /(?:(?:portal|site|endereço\s+eletrônico|plataforma)[\s:]*(?:da\s+)?([^\s,]+\.(?:gov|com|org|br)[^\s,]*)|(?:www\.[^\s,]+))/i,
+    
+    dominios: /((?:www\.)?[a-z0-9-]+\.(?:gov|com|org|br)\.?(?:[a-z]{2,})?)/i
+  }
+}
+
+// Removed duplicate declaration of processarPublicacao
+
+// Adicione esta função ao script
+const validacoesCruzadas = {
+  // Validação cruzada entre data e modalidade
+  validarDataModalidade: (data, modalidade) => {
+    const diasUteis = {
+      'pregao_eletronico': 8,
+      'pregao_presencial': 8,
+      'tomada_precos': 15,
+      'concorrencia': 30,
+      'leilao': 15
+    }
+
+    if (!data || !modalidade) return true
+
+    const dataLimite = new Date()
+    dataLimite.setDate(dataLimite.getDate() + (diasUteis[modalidade] || 8))
+    const dataPregao = new Date(data)
+
+    return dataPregao >= dataLimite
+  },
+
+  // Validação cruzada entre modalidade e valor estimado
+  validarModalidadeValor: (modalidade, valor) => {
+    const limitesModalidade = {
+      'pregao_eletronico': { min: 0, max: Infinity },
+      'tomada_precos': { min: 0, max: 3300000 }, // Valores exemplo
+      'concorrencia': { min: 3300000, max: Infinity }
+    }
+
+    if (!modalidade || !valor) return true
+    const limite = limitesModalidade[modalidade]
+    return limite ? (valor >= limite.min && valor <= limite.max) : true
+  },
+
+  // Validação cruzada entre estado e plataforma
+  validarEstadoPlataforma: (estado, plataforma) => {
+    const plataformasRegionais = {
+      'MG': ['compras.mg.gov.br', 'licitacoes-e.com.br'],
+      'SP': ['bec.sp.gov.br', 'licitacoes-e.com.br'],
+      // Adicione mais estados e suas plataformas
+    }
+
+    if (!estado || !plataforma) return true
+    const plataformasPermitidas = plataformasRegionais[estado] || []
+    return plataformasPermitidas.some(p => plataforma.includes(p))
+  }
+}
+
+// Adicione esta função para executar todas as validações cruzadas
+const executarValidacoesCruzadas = (formData) => {
+  const erros = []
+
+  // Valida data x modalidade
+  if (!validacoesCruzadas.validarDataModalidade(formData.data_pregao, formData.modalidade)) {
+    erros.push(`O prazo mínimo para ${formatModalidade(formData.modalidade)} não foi respeitado`)
+  }
+
+  // Valida modalidade x valor (se houver)
+  if (formData.valor_estimado && 
+      !validacoesCruzadas.validarModalidadeValor(formData.modalidade, formData.valor_estimado)) {
+    erros.push('O valor não é compatível com a modalidade selecionada')
+  }
+
+  // Valida estado x plataforma
+  if (formData.site_pregao && 
+      !validacoesCruzadas.validarEstadoPlataforma(formData.estado, formData.site_pregao)) {
+    erros.push('A plataforma selecionada não é compatível com o estado')
+  }
+
+  return erros
+}
+
+// Adicione watchers para validações em tempo real
+watch(() => formData.value.modalidade, (newModalidade) => {
+  if (formData.value.data_pregao) {
+    const valid = validacoesCruzadas.validarDataModalidade(
+      formData.value.data_pregao, 
+      newModalidade
+    )
+    if (!valid) {
+      showToast('Atenção: Prazo mínimo para esta modalidade não atendido', 'warning')
+    }
+  }
+})
+
+watch(() => formData.value.site_pregao, (newPlataforma) => {
+  if (formData.value.estado && newPlataforma) {
+    const valid = validacoesCruzadas.validarEstadoPlataforma(
+      formData.value.estado, 
+      newPlataforma
+    )
+    if (!valid) {
+      showToast('Atenção: Plataforma não comum para este estado', 'warning')
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -1311,8 +1956,13 @@ input[type="date"]:focus:not(.error) {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Adicione ao final do <style> */
@@ -1350,6 +2000,7 @@ input[type="date"]:focus:not(.error) {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -1364,4 +2015,246 @@ input[type="date"]:focus:not(.error) {
 .toast-error::before {
   content: '✕';
 }
+
+/* Adicione ao final do <style> */
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.btn-import {
+  padding: 0.9rem 1.5rem;
+  background: #193155;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-import:hover {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.import-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.import-modal textarea {
+  width: 93%;
+  min-height: 300px;
+  font-family: monospace;
+  padding: 1rem;
+  line-height: 1.5;
+}
+
+.campos-nao-encontrados {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  color: #856404;
+}
+
+.btn-import {
+  background: #193155;
+  color: white;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-import:hover {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.import-modal {
+  max-width: 600px;
+}
+
+.distancia-container {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.pontos-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cidade-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cidade-input input {
+  flex: 1;
+}
+
+.distancia-result {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.distancia-automatica,
+.distancia-manual {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.manual-input {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.manual-input input {
+  width: 150px;
+}
+
+.toggle-manual {
+  margin-top: 0.5rem;
+}
+
+.toggle-manual a {
+  color: #193155;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.toggle-manual a:hover {
+  text-decoration: underline;
+}
+
+.distance-value {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #193155;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+/* Adicione ao final do <style> */
+.calcular-button {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.btn-calcular {
+  background: #193155;
+  color: white;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.btn-calcular:hover:not(:disabled) {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-calcular:disabled {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+.btn-correcoes {
+  padding: 0.9rem 2rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-correcoes:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+.progress-container {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #193155;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.error {
+  background: #dc3545;
+}
+
+.progress-fill.success {
+  background: #28a745;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.progress-stage {
+  color: #495057;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #193155;
+  font-weight: 600;
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-detail-item {
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding: 0.25rem 0;
+}
+
 </style>
+`
