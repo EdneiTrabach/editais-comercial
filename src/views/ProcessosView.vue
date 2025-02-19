@@ -48,9 +48,9 @@
                     </button>
                   </div>
 
-                  <div v-if="coluna.campo !== 'data_pregao' && coluna.campo !== 'hora_pregao'" class="filtro-container">
+                  <div v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)" class="filtro-container">
                     <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
-                      <img src="/icons/search-line.svg" alt="Filtrar" class="icon-filter" />
+                      <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
                     </button>
                   </div>
                 </div>
@@ -309,23 +309,48 @@ const sortConfig = ref({
 const selectedRow = ref(null)
 
 const colunas = [
-  { titulo: 'Data', campo: 'data_pregao' },
-  { titulo: 'Hora', campo: 'hora_pregao' },
-  { titulo: 'Modalidade', campo: 'modalidade' },
-  { titulo: 'Estado', campo: 'estado' },
-  { titulo: 'Nº Processo', campo: 'numero_processo' },
-  { titulo: 'Código Análise', campo: 'codigo_analise' }, // Nova coluna
-  { titulo: 'Órgão', campo: 'orgao' },
-  { titulo: 'Status', campo: 'status' },
-  { titulo: 'Objeto Resumido', campo: 'objeto_resumido' },
-  { titulo: 'Responsável', campo: 'responsavel_nome' },
-  { titulo: 'Objeto Completo', campo: 'objeto_completo' },
-  { titulo: 'Portal', campo: 'site_pregao' },
-  { titulo: 'Representante', campo: 'representante' },
-  { titulo: 'Impugnações', campo: 'impugnacoes' },
-  { titulo: 'Empresa Participante', campo: 'empresa' },
-  { titulo: 'Campo Adicional 1', campo: 'campo_adicional1' },
-  { titulo: 'Campo Adicional 2', campo: 'campo_adicional2' },
+  { titulo: 'Data', campo: 'data_pregao' },             // processo.data_pregao
+  { titulo: 'Hora', campo: 'hora_pregao' },             // processo.hora_pregao
+  { titulo: 'Modalidade', campo: 'modalidade' },        // processo.modalidade
+  { titulo: 'Estado', campo: 'estado' },                // processo.estado
+  { titulo: 'Nº Processo', campo: 'numero_processo' },  // processo.numero_processo
+  { titulo: 'Objeto Resumido', campo: 'objeto_resumido' }, // processo.objeto_resumido
+  { 
+    titulo: 'Sistemas', 
+    campo: 'sistemas_ativos',  // Alterado para refletir o nome correto da coluna
+    tabela: 'processo',
+    tipo: 'array'  // Para indicar que é um array de IDs
+  },
+  { titulo: 'Código Análise', campo: 'codigo_analise' }, // processo.codigo_analise
+  { titulo: 'Órgão', campo: 'orgao' },                  // processo.orgao
+  { titulo: 'Objeto Completo', campo: 'objeto_completo' }, // processo.objeto_completo
+  { titulo: 'Status', campo: 'status' },                // processo.status
+  { 
+    titulo: 'Responsável', 
+    campo: 'responsavel_id',                            // processo.responsavel_id
+    tabelaRelacionada: 'profiles',
+    campoExibicao: 'nome'
+  },
+  { 
+    titulo: 'Distâncias', 
+    campo: 'processo_distancias',                       // tabela processo_distancias
+    tabelaRelacionada: 'processo_distancias',
+    camposExibicao: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
+  },
+  { titulo: 'Portal', campo: 'site_pregao' },          // processo.site_pregao
+  { 
+    titulo: 'Representante', 
+    campo: 'representante_id',                          // processo.representante_id
+    tabelaRelacionada: 'representantes',
+    campoExibicao: 'nome'
+  },
+  { titulo: 'Impugnações', campo: 'impugnacoes' },     // processo.impugnacoes
+  { 
+    titulo: 'Empresa Participante', 
+    campo: 'empresa_id',                                // processo.empresa_id
+    tabelaRelacionada: 'empresas',
+    campoExibicao: 'nome'
+  }
 ]
 
 const initializeFiltros = () => {
@@ -471,7 +496,7 @@ const formatStatus = (status) => {
 }
 
 const loadProcessos = async () => {
-  if (isLoading.value) return // Evita múltiplas chamadas simultâneas
+  if (isLoading.value) return
   
   try {
     isLoading.value = true
@@ -1259,10 +1284,6 @@ const stopAutoRefresh = () => {
   z-index: 10;
 }
 
-.th-content {
-  margin: 1rem;
-}
-
 .table-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1930,13 +1951,15 @@ td select option {
   transition: all 0.2s ease;
 }
 
-.btn-filtro:hover {
-  opacity: 1;
-}
-
 .icon-filter {
   width: 16px;
   height: 16px;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.btn-filtro:hover .icon-filter {
+  opacity: 1;
 }
 
 .estado-dropdown {

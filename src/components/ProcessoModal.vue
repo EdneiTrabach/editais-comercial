@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <!-- <div 
     v-if="show" 
     class="modal-backdrop" 
     @click.self="fecharModal"
@@ -123,72 +123,72 @@
         </div>
       </form>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { supabase } from '@/lib/supabase'
+// import { ref, computed } from 'vue'
+// import { supabase } from '@/lib/supabase'
 
-const props = defineProps({
-  show: Boolean
-})
+// const props = defineProps({
+//   show: Boolean
+// })
 
-const emit = defineEmits(['close', 'saved'])
+// const emit = defineEmits(['close', 'saved'])
 
-const currentYear = new Date().getFullYear()
-const loading = ref(false)
+// const currentYear = new Date().getFullYear()
+// const loading = ref(false)
 
-const formData = ref({
-  numero: '',
-  ano: currentYear,
-  orgao: '',
-  data_pregao: '',
-  modalidade: '',
-  tipo_pregao: '',
-  site_pregao: '',
-  objeto_resumido: '',
-  objeto_completo: ''
-})
+// const formData = ref({
+//   numero: '',
+//   ano: currentYear,
+//   orgao: '',
+//   data_pregao: '',
+//   modalidade: '',
+//   tipo_pregao: '',
+//   site_pregao: '',
+//   objeto_resumido: '',
+//   objeto_completo: ''
+// })
 
-const fecharModal = (event) => {
-  // Simplificado para sempre fechar quando clicado fora
-  emit('close')
-}
+// const fecharModal = (event) => {
+//   // Simplificado para sempre fechar quando clicado fora
+//   emit('close')
+// }
 
-const handleSubmit = async () => {
-  try {
-    loading.value = true
-    const { data: { user } } = await supabase.auth.getUser()
+// const handleSubmit = async () => {
+//   try {
+//     loading.value = true
+//     const { data: { user } } = await supabase.auth.getUser()
 
-    const processo = {
-      numero_processo: `${formData.value.numero}/${formData.value.ano}`,
-      ano: formData.value.ano,
-      orgao: formData.value.orgao,
-      data_pregao: formData.value.data_pregao,
-      modalidade: formData.value.modalidade,
-      tipo_pregao: formData.value.tipo_pregao,
-      site_pregao: formData.value.site_pregao,
-      objeto_resumido: formData.value.objeto_resumido,
-      objeto_completo: formData.value.objeto_completo,
-      responsavel: user.id
-    }
+//     const processo = {
+//       numero_processo: `${formData.value.numero}/${formData.value.ano}`,
+//       ano: formData.value.ano,
+//       orgao: formData.value.orgao,
+//       data_pregao: formData.value.data_pregao,
+//       modalidade: formData.value.modalidade,
+//       tipo_pregao: formData.value.tipo_pregao,
+//       site_pregao: formData.value.site_pregao,
+//       objeto_resumido: formData.value.objeto_resumido,
+//       objeto_completo: formData.value.objeto_completo,
+//       responsavel: user.id
+//     }
 
-    const { error } = await supabase
-      .from('processos')
-      .insert(processo)
+//     const { error } = await supabase
+//       .from('processos')
+//       .insert(processo)
 
-    if (error) throw error
+//     if (error) throw error
 
-    emit('saved')
-    fecharModal()
-  } catch (error) {
-    console.error('Erro:', error)
-    alert('Erro ao salvar processo')
-  } finally {
-    loading.value = false
-  }
-}
+//     emit('saved')
+//     fecharModal()
+//   } catch (error) {
+//     console.error('Erro:', error)
+//     alert('Erro ao salvar processo')
+//   } finally {
+//     loading.value = false
+//   }
+// }
 </script>
 
 <style scoped>
