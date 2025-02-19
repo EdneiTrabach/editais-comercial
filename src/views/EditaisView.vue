@@ -11,14 +11,12 @@
       <!-- Loading overlay -->
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
+        <!-- Adicione após o header no template -->
+          <button class="btn-import" @click="showImportModal = true">
+            Importar Publicação
+          </button>
       </div>
 
-      <!-- Adicione após o header no template -->
-      <div class="header-actions">
-        <button class="btn-import" @click="showImportModal = true">
-          Importar Publicação
-        </button>
-      </div>
 
       <div class="form-container">
         <form @submit.prevent="handleSubmit" class="form-grid">
@@ -1906,6 +1904,8 @@ label,
 
 .header {
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
 }
 
 .header h1 {

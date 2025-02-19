@@ -6,17 +6,29 @@ export class SupabaseManager {
 
   static async handleReconnect() {
     try {
-      // Desconecta todas as subscrições existentes
-      for (const [channel] of this.subscriptions) {
-        await supabase.removeChannel(channel)
+      // Primeiro desconecta os canais existentes
+      for (const [channelName, channel] of this.subscriptions) {
+        try {
+          if (channel && typeof channel.unsubscribe === 'function') {
+            await channel.unsubscribe()
+          }
+          await supabase.removeChannel(channel)
+        } catch (err) {
+          console.warn(`Erro ao remover canal ${channelName}:`, err)
+        }
       }
 
       // Limpa o mapa de subscrições
       this.subscriptions.clear()
 
       // Reconecta o cliente realtime
-      await supabase.realtime.disconnect()
-      await supabase.realtime.connect()
+      try {
+        await supabase.realtime.disconnect()
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Espera 1s
+        await supabase.realtime.connect()
+      } catch (err) {
+        console.warn('Erro ao reconectar realtime:', err)
+      }
 
       return true
     } catch (error) {
@@ -26,11 +38,19 @@ export class SupabaseManager {
   }
 
   static addSubscription(channelName, channel) {
-    this.subscriptions.set(channelName, channel)
+    if (channel && channel.unsubscribe) {
+      this.subscriptions.set(channelName, channel)
+    } else {
+      console.warn('Tentativa de adicionar canal inválido:', channelName)
+    }
   }
 
   static removeSubscription(channelName) {
     this.subscriptions.delete(channelName)
+  }
+
+  static getSubscription(channelName) {
+    return this.subscriptions.get(channelName)
   }
 }
 
