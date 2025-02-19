@@ -250,7 +250,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick, onUnmounted } from 'vue' // Adicione onUnmounted
+import { ref, onMounted, computed, nextTick, onUnmounted, watch } from 'vue' // Adicione onUnmounted e watch
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -519,13 +519,8 @@ const loadProcessos = async () => {
 
     if (error) throw error
 
-    // Log para debug
-    console.log('Dados brutos:', data)
-
     const processosComSistemas = await Promise.all(
       (data || []).map(async processo => {
-        // Aqui é onde pegamos os sistemas_ativos de cada processo individual
-        console.log('Sistemas do processo:', processo.sistemas_ativos)
         return {
           ...processo,
           sistemas_nomes: Array.isArray(processo.sistemas_ativos)
@@ -842,32 +837,62 @@ const hideConfirmDialog = () => {
 
 const handleUpdate = async (processo) => {
   try {
-    if (!editingCell.value.value) return cancelEdit();
-
-    let updateValue = editingCell.value.value;
-
-    if (editingCell.value.field === 'data_pregao') {
-      updateValue = updateValue.split('T')[0];
-    } else if (editingCell.value.field === 'hora_pregao') {
-      updateValue = updateValue.split(':').slice(0, 2).join(':');
+    if (!editingCell.value.value) {
+      cancelEdit()
+      return
     }
 
+    let updateValue = editingCell.value.value
+
+    // Formatação específica por tipo de campo
+    switch (editingCell.value.field) {
+      case 'data_pregao':
+        // Converte data para formato ISO
+        const [day, month, year] = editingCell.value.value.split('/')
+        updateValue = `${year}-${month}-${day}`
+        break
+      case 'hora_pregao':
+        // Garante formato HH:mm
+        updateValue = editingCell.value.value.split(':').slice(0, 2).join(':')
+        break
+      case 'sistemas_ativos':
+        // Garante que é um array
+        updateValue = Array.isArray(editingCell.value.value) ? editingCell.value.value : []
+        break
+    }
+
+    // Prepara dados para atualização
     const updateData = {
       [editingCell.value.field]: updateValue,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      updated_by: (await supabase.auth.getUser()).data.user?.id
     }
 
+    // Atualiza no banco de dados
     const { error } = await supabase
       .from('processos')
       .update(updateData)
       .eq('id', processo.id)
 
-    if (error) throw error;
+    if (error) throw error
 
-    processo[editingCell.value.field] = updateValue;
+    // Log da alteração
+    await logSystemAction({
+      tipo: 'atualizacao',
+      tabela: 'processos', 
+      registro_id: processo.id,
+      campo_alterado: editingCell.value.field,
+      dados_anteriores: processo[editingCell.value.field],
+      dados_novos: updateValue
+    })
+
+    // Recarrega os processos após atualização bem-sucedida
+    await loadProcessos()
 
   } catch (error) {
     console.error('Erro ao atualizar:', error)
+    // Exibe mensagem de erro para o usuário
+    alert('Erro ao atualizar o campo. Por favor, tente novamente.')
   } finally {
     cancelEdit()
   }
