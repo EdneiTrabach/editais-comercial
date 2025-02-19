@@ -1,15 +1,14 @@
 <template>
   <div class="layout">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
-
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div v-if="showTimeoutMessage" class="timeout-message">
+        Se o carregamento persistir, por favor recarregue a página
+      </div>
+    </div>
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <!-- Loading overlay -->
-      <div v-if="isLoading" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div v-if="showTimeoutMessage" class="timeout-message">
-          Se o carregamento persistir, por favor recarregue a página
-        </div>
-      </div>
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
       </div>
@@ -167,7 +166,7 @@
 
               <!-- Botões e Resultado -->
               <div class="distancia-actions">
-                <button @click="calcularDistancia" class="btn-calcular" 
+                <button @click="calcularDistancia" class="btn-calcular"
                   :disabled="!pontoReferencia || !cidadeOrgao || !formData.estado">
                   Calcular Distância
                 </button>
@@ -185,9 +184,7 @@
               <div v-if="distanciasSalvas.length > 0" class="distancias-lista">
                 <h4>Distâncias Calculadas</h4>
                 <div class="distancia-items">
-                  <div v-for="(dist, index) in distanciasSalvas" 
-                      :key="index" 
-                      class="distancia-item">
+                  <div v-for="(dist, index) in distanciasSalvas" :key="index" class="distancia-item">
                     <span class="distancia-valor">{{ dist.distancia_km }}km</span>
                     <span class="distancia-cidade">de {{ dist.cidade_destino }}/{{ dist.uf_destino }}</span>
                     <button @click="removerDaLista(index)" class="btn-remover">×</button>
@@ -231,12 +228,7 @@
             <button type="button" class="btn-cancelar" @click="router.push('/funcionalidades')">
               Cancelar
             </button>
-            <button 
-              v-if="formData.extraction_id" 
-              type="button" 
-              class="btn-correcoes" 
-              @click="salvarCorrecoes"
-            >
+            <button v-if="formData.extraction_id" type="button" class="btn-correcoes" @click="salvarCorrecoes">
               Salvar Correções
             </button>
             <button type="submit" class="btn-salvar" :disabled="loading">
@@ -344,18 +336,20 @@ import debounce from 'lodash/debounce' // Importação correta do debounce
 import { calcularDistanciaHaversine } from '@/utils/distance.js'
 import { ibgeService } from '@/services/ibgeService'
 import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
+import { useVisibilityHandler } from '@/composables/useVisibilityHandler'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 // Adicione no início do arquivo, após as importações
 const processamentosCache = {
   // Cache para publicações já processadas
   dados: new Map(),
-  
+
   // Cache para coordenadas de cidades
   coordenadas: new Map(),
-  
+
   // Cache para órgãos frequentes
   orgaos: new Map(),
-  
+
   // Configuração de expiração (24 horas em milissegundos)
   TEMPO_EXPIRACAO: 24 * 60 * 60 * 1000,
 
@@ -990,19 +984,19 @@ const progressoExtracao = ref({
 const patterns = {
   // Captura diferentes formatos de número/ano
   numeroProcesso: /(?:(?:PE|PP|processo)[\s.\/]*(\d+)[\s.\/]*(\d{4}))|(?:(\d+)[\s.\/]*(\d{4}))|(?:processo[\s.:]*(\d+)[\s.\/]*(\d{4}))/i,
-  
+
   // Captura diversos formatos de data e hora
   dataHora: /(?:(?:data|prazo|abertura)[\s.:]*(\d{2}\/\d{2}\/\d{4})(?:[\s,]*(?:às|as|a|hora|hs|h)?[\s.:]*(\d{1,2}[:h]\d{2})?)|(?:(\d{2}\/\d{2}\/\d{4})\s*(?:às|as|a|hora|hs|h)?\s*(\d{1,2}[:h]\d{2})))/i,
-  
+
   // Captura diferentes formatos de órgão
   orgao: /(?:(?:órgão|unid\.\s*licitante)[\s.:]+([^\n]+))|(?:FACULDADE\s+[A-ZÀ-Ú\s]+)|(?:FMJ)/i,
-  
+
   // Captura modalidade
   modalidade: /(?:modalidade[\s.:]*)?(?:(?:pregão\s+eletrônico|PE|licitação\s+eletrônica))/i,
-  
+
   // Captura objeto
   objeto: /(?:\*\s*([^*]+)\s*\*)|(?:objeto[\s.:]+([^\n]+))/i,
-  
+
   // Captura valor
   valor: /R\$\s*([\d.,]+)/i
 }
@@ -1012,7 +1006,7 @@ const processarPublicacao = async () => {
   try {
     loading.value = true
     const texto = publicacaoText.value
-    
+
     // Inicia o progresso
     progressoExtracao.value = {
       status: 'processing',
@@ -1024,7 +1018,7 @@ const processarPublicacao = async () => {
     // Verifica cache
     const chaveCache = processamentosCache.gerarChave(texto)
     const dadosCache = processamentosCache.obter(chaveCache)
-    
+
     if (dadosCache) {
       progressoExtracao.value.etapa = 'Dados encontrados no cache'
       progressoExtracao.value.porcentagem = 100
@@ -1062,12 +1056,12 @@ const processarPublicacao = async () => {
     if (matchDataHora) {
       const data = matchDataHora[1] || matchDataHora[3]
       const hora = matchDataHora[2] || matchDataHora[4]
-      
+
       if (data) {
         const [dia, mes, ano] = data.split('/')
         dadosExtraidos.data_pregao = `${ano}-${mes}-${dia}`
       }
-      
+
       if (hora) {
         dadosExtraidos.hora_pregao = hora.replace(/[h]s?/i, ':').padEnd(5, '0')
       }
@@ -1241,7 +1235,7 @@ const editDistance = (s1, s2) => {
 
 const modalidades = {
   patterns: /(?:modalidade[\s:]*)?(?:(pregão\s+eletrônico|pregão\s+presencial|dispensa\s+(?:de\s+)?licitação|tomada\s+de\s+preços|concorrência|chamada\s+pública|leilão))|(?:PE\/|PP\/|DL\/|TP\/|CP\/)/i,
-  
+
   mapeamento: {
     'pregão eletrônico': 'pregao_eletronico',
     'pregão presencial': 'pregao_presencial',
@@ -1256,9 +1250,9 @@ const modalidades = {
 const dataHora = {
   patterns: {
     completo: /(?:(?:dia|data|abertura|realizar-se)[\s.:]*(\d{2}\/\d{2}\/\d{4})(?:[\s,]*(?:às|as|a|hora|hs|h)?[\s.:]*(\d{1,2}[:h]\d{2})?)|(?:(\d{2}\/\d{2}\/\d{4})\s*(?:às|as|a|hora|hs|h)?\s*(\d{1,2}[:h]\d{2})))/i,
-    
+
     dataSimples: /(\d{2}\/\d{2}\/\d{4})/i,
-    
+
     horaSimples: /(\d{1,2}[:h]\d{2})(?:\s*hs?)?/i
   }
 }
@@ -1266,9 +1260,9 @@ const dataHora = {
 const orgao = {
   patterns: {
     principal: /(?:PREFEITURA\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+(?:\s*[-–]\s*[A-ZÀ-Ú]{2})?)|(?:MUNICÍPIO\s+DE\s+[A-ZÀ-Ú\s]+)|(?:CÂMARA\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+)|(?:CONSÓRCIO\s+[A-ZÀ-Ú\s]+)|(?:FUNDO\s+MUNICIPAL\s+DE\s+[A-ZÀ-Ú\s]+)|(?:SERVIÇO\s+[A-ZÀ-Ú\s]+)/i,
-    
+
     cnpj: /(?:cnpj[\s.:]*(?:n[º°.])?[\s.:]*)([\d./-]+)/i,
-    
+
     endereco: /(?:endereço|situada?[\s:]*(?:na|no|à)?[\s:]*([^,\n.]+)(?:[,\s]+(?:n[º°.][\s:]*\d+)?)?(?:[,\s]+(?:centro|bairro)[,\s]+)?([A-ZÀ-Ú][A-Za-zÀ-ú\s]+)(?:\/|\s*-\s*)([A-Z]{2}))/i
   }
 }
@@ -1276,7 +1270,7 @@ const orgao = {
 const objeto = {
   patterns: {
     principal: /(?:objeto|finalidade)[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$))|(?:OBJETO[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$)))/i,
-    
+
     resumido: /(?:objeto\s+resumido|resumo)[\s.:]*([^.]*?(?=\b(?:local|data|valor|prazo|edital)\b|$))/i
   }
 }
@@ -1284,7 +1278,7 @@ const objeto = {
 const plataformasPatterns = {
   patterns: {
     principal: /(?:(?:portal|site|endereço\s+eletrônico|plataforma)[\s:]*(?:da\s+)?([^\s,]+\.(?:gov|com|org|br)[^\s,]*)|(?:www\.[^\s,]+))/i,
-    
+
     dominios: /((?:www\.)?[a-z0-9-]+\.(?:gov|com|org|br)\.?(?:[a-z]{2,})?)/i
   }
 }
@@ -1349,14 +1343,14 @@ const executarValidacoesCruzadas = (formData) => {
   }
 
   // Valida modalidade x valor (se houver)
-  if (formData.valor_estimado && 
-      !validacoesCruzadas.validarModalidadeValor(formData.modalidade, formData.valor_estimado)) {
+  if (formData.valor_estimado &&
+    !validacoesCruzadas.validarModalidadeValor(formData.modalidade, formData.valor_estimado)) {
     erros.push('O valor não é compatível com a modalidade selecionada')
   }
 
   // Valida estado x plataforma
-  if (formData.site_pregao && 
-      !validacoesCruzadas.validarEstadoPlataforma(formData.estado, formData.site_pregao)) {
+  if (formData.site_pregao &&
+    !validacoesCruzadas.validarEstadoPlataforma(formData.estado, formData.site_pregao)) {
     erros.push('A plataforma selecionada não é compatível com o estado')
   }
 
@@ -1367,7 +1361,7 @@ const executarValidacoesCruzadas = (formData) => {
 watch(() => formData.value.modalidade, (newModalidade) => {
   if (formData.value.data_pregao) {
     const valid = validacoesCruzadas.validarDataModalidade(
-      formData.value.data_pregao, 
+      formData.value.data_pregao,
       newModalidade
     )
     if (!valid) {
@@ -1379,7 +1373,7 @@ watch(() => formData.value.modalidade, (newModalidade) => {
 watch(() => formData.value.site_pregao, (newPlataforma) => {
   if (formData.value.estado && newPlataforma) {
     const valid = validacoesCruzadas.validarEstadoPlataforma(
-      formData.value.estado, 
+      formData.value.estado,
       newPlataforma
     )
     if (!valid) {
@@ -1395,7 +1389,7 @@ const municipiosCarregados = ref(false)
 // Função para carregar municípios quando o estado for selecionado
 const carregarMunicipios = async () => {
   if (!estadoDestino.value) return
-  
+
   try {
     console.log('Carregando municípios para:', estadoDestino.value)
     municipiosCarregados.value = false
@@ -1417,7 +1411,7 @@ const pontosFiltrados = computed(() => {
     // Se não houver filtro, mostra todos os pontos
     return pontosReferencia
   }
-  
+
   // Filtra apenas os pontos do estado selecionado
   return pontosReferencia.filter(ponto => ponto.uf === filtroEstadoReferencia.value)
 })
@@ -1425,7 +1419,7 @@ const pontosFiltrados = computed(() => {
 // Watch para atualizar automaticamente o filtro quando o estado principal for selecionado
 watch(() => formData.value.estado, (novoEstado) => {
   filtroEstadoReferencia.value = novoEstado
-  
+
   // Carrega os municípios automaticamente quando o estado for selecionado
   if (novoEstado) {
     carregarMunicipios()
@@ -1460,8 +1454,8 @@ const adicionarDistancia = async () => {
   try {
     const novaDistancia = {
       processo_id: formData.value.id,
-      distancia_km: distanciaManual.value ? 
-        parseFloat(distanciaManualValue.value) : 
+      distancia_km: distanciaManual.value ?
+        parseFloat(distanciaManualValue.value) :
         parseFloat(distanciaCalculada.value),
       ponto_referencia_cidade: pontoReferencia.value.cidade,
       ponto_referencia_uf: pontoReferencia.value.uf
@@ -1548,7 +1542,7 @@ const startVisibilityMonitoring = () => {
 }
 
 const stopVisibilityMonitoring = () => {
-  document.removeEventListener('visibilitychange', pageVisibilityHandler) 
+  document.removeEventListener('visibilitychange', pageVisibilityHandler)
   window.removeEventListener('focus', pageVisibilityHandler)
   window.removeEventListener('online', pageVisibilityHandler)
 }
@@ -1559,7 +1553,7 @@ onMounted(() => {
   startAutoRefresh()
   Promise.all([
     loadSistemas(),
-    loadPlataformas(), 
+    loadPlataformas(),
     loadRepresentantes()
   ])
 })
@@ -1583,10 +1577,10 @@ const calcularDistancia = async () => {
     calculandoDistancia.value = true
     const municipio = cidadeOrgao.value
     const estado = estadoDestino.value
-    
+
     // Verifica se as coordenadas existem
     const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
-    
+
     if (!coordenadas) {
       throw new Error(`Coordenadas não encontradas para ${municipio.nome}/${estado}`)
     }
@@ -1646,6 +1640,8 @@ const stopAutoRefresh = () => {
 
 // Função de carregamento com cache
 const loadProcessos = async () => {
+  if (isLoading.value) return
+
   try {
     isLoading.value = true
     const { data, error } = await supabase
@@ -1655,7 +1651,7 @@ const loadProcessos = async () => {
 
     if (error) throw error
     processos.value = data
-    
+
     // Atualiza cache
     data.forEach(processo => {
       processosCache.set(processo.id, processo)
@@ -1686,39 +1682,9 @@ const getProcesso = async (id) => {
 }
 
 // Ajuste das refs de loading
-const isLoading = ref(false)
-const loadingTimeout = ref(null)
+
 const lastLoadTime = ref(Date.now())
 const LOADING_COOLDOWN = 120000 // 2 minutos em milliseconds
-
-// Função melhorada para gerenciar o loading
-const handleLoading = async (loadingFunction) => {
-  // Verifica se já passou tempo suficiente desde o último carregamento
-  const timeSinceLastLoad = Date.now() - lastLoadTime.value
-  if (timeSinceLastLoad < LOADING_COOLDOWN) {
-    return
-  }
-
-  try {
-    isLoading.value = true
-    
-    // Configura timeout de segurança
-    loadingTimeout.value = setTimeout(() => {
-      isLoading.value = false
-    }, 5000) // 5 segundos máximo de loading
-
-    await loadingFunction()
-    
-    lastLoadTime.value = Date.now()
-  } catch (error) {
-    console.error('Erro durante carregamento:', error)
-  } finally {
-    if (loadingTimeout.value) {
-      clearTimeout(loadingTimeout.value)
-    }
-    isLoading.value = false
-  }
-}
 
 // Modificar o pageVisibilityHandler
 const pageVisibilityHandler = async () => {
@@ -1739,8 +1705,8 @@ const dataCache = {
 // Modificar funções de carregamento
 const loadSistemas = async () => {
   // Verifica cache
-  if (dataCache.sistemas && 
-      Date.now() - dataCache.lastUpdate < dataCache.CACHE_DURATION) {
+  if (dataCache.sistemas &&
+    Date.now() - dataCache.lastUpdate < dataCache.CACHE_DURATION) {
     return dataCache.sistemas
   }
 
@@ -1752,11 +1718,11 @@ const loadSistemas = async () => {
       .order('nome')
 
     if (error) throw error
-    
+
     // Atualiza cache
     dataCache.sistemas = data
     dataCache.lastUpdate = Date.now()
-    
+
     sistemasAtivos.value = data
     return data
   } catch (error) {
@@ -1793,6 +1759,110 @@ onMounted(() => {
 const showTimeoutMessage = ref(false)
 const TIMEOUT_MESSAGE_DELAY = 10000 // 10 segundos
 
+// Proper reactive refs
+const isLoading = ref(false)
+const loadingTimeout = ref(null)
+
+// Use visibility handler
+const { isVisible } = useVisibilityHandler()
+
+// Improved loading handler with timeout
+const handleLoading = async (loadingFunction) => {
+  try {
+    isLoading.value = true
+
+    // Set loading timeout
+    loadingTimeout.value = setTimeout(() => {
+      isLoading.value = false
+    }, 10000) // 10s max loading time
+
+    await loadingFunction()
+  } catch (error) {
+    console.error('Loading error:', error)
+  } finally {
+    if (loadingTimeout.value) {
+      clearTimeout(loadingTimeout.value)
+    }
+    isLoading.value = false
+  }
+}
+
+// Watch for visibility changes
+watch(isVisible, async (newValue) => {
+  if (newValue) {
+    await handleLoading(() => loadData())
+  }
+})
+
+onUnmounted(() => {
+  // Clear any pending timeouts
+  if (loadingTimeout.value) {
+    clearTimeout(loadingTimeout.value)
+  }
+})
+
+onMounted(() => {
+  setupRealtimeSubscription()
+})
+
+onUnmounted(() => {
+  const channel = SupabaseManager.subscriptions.get('processos-changes')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('processos-changes')
+  }
+})
+
+const setupRealtimeSubscription = () => {
+  try {
+    const channel = supabase
+      .channel('processos-changes')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'processos'
+        },
+        (payload) => {
+          console.log('Mudança detectada:', payload)
+          loadProcessos()
+        }
+      )
+      .subscribe()
+
+    // Registra a subscrição
+    SupabaseManager.addSubscription('processos-changes', channel)
+  } catch (error) {
+    console.error('Erro ao configurar realtime:', error)
+  }
+}
+
+// Função para monitorar visibilidade
+const setupVisibilityHandling = () => {
+  document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden) {
+      // Reconecta quando a aba ficar visível novamente
+      await SupabaseManager.handleReconnect()
+      await loadProcessos() // Recarrega dados
+    }
+  })
+}
+
+// Modificar o onMounted
+onMounted(() => {
+  setupRealtimeSubscription()
+  setupVisibilityHandling()
+})
+
+// Modificar o onUnmounted
+onUnmounted(() => {
+  const channel = SupabaseManager.subscriptions.get('processos-changes')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('processos-changes')
+  }
+  document.removeEventListener('visibilitychange', setupVisibilityHandling)
+})
 </script>
 
 <style scoped>
@@ -2565,6 +2635,7 @@ input[type="date"]:focus:not(.error) {
   font-size: 0.8rem;
   margin-top: 0.5rem;
 }
+
 .referencia-container {
   display: flex;
   gap: 0.5rem;
@@ -2575,7 +2646,8 @@ input[type="date"]:focus:not(.error) {
 }
 
 .referencia-container select:first-child {
-  flex: 0.4; /* Estado ocupa menos espaço */
+  flex: 0.4;
+  /* Estado ocupa menos espaço */
 }
 
 .distancias-list {
@@ -2803,5 +2875,4 @@ input[type="date"]:focus:not(.error) {
   font-size: 2rem;
   flex-wrap: wrap;
 }
-
 </style>
