@@ -123,10 +123,24 @@ const emit = defineEmits(['sidebarToggle'])
 
 const router = useRouter()
 const isAdmin = ref(false)
-const isActive = ref(false)
+const isActive = ref(localStorage.getItem('sidebarState') === 'true')
+const isPinned = ref(localStorage.getItem('sidebarPinned') === 'true')
 const isDarkMode = ref(false)
-const isPinned = ref(false) // Novo estado para controlar se está fixado
 const unreadNotifications = ref(0)
+
+const routes = [
+  { path: '/processos', name: 'Processos', icon: '/icons/pasta.svg' },
+  { path: '/funcionalidades', name: 'Funcionalidades', icon: '/icons/configuracoes.svg' },
+  { path: '/editais', name: 'Novo Processo', icon: '/icons/nova-pasta.svg' },
+  { path: '/lances', name: 'Lances', icon: '/icons/calculadora.svg' },
+  { path: '/sistemas', name: 'Sistemas', icon: '/icons/app.svg' },
+  { path: '/dashboard', name: 'Dashboard', icon: '/icons/grafico.svg' },
+  { path: '/representantes', name: 'Representantes', icon: '/icons/cartao-usuario.svg' },
+  { path: '/plataformas', name: 'Plataformas', icon: '/icons/links.svg' },
+  { path: '/empresas', name: 'Empresas', icon: '/icons/empresa.svg' },
+  { path: '/relatorios', name: 'Relatórios', icon: '/icons/check.svg' },
+  { path: '/configuracoes', name: 'Admin. de Usuários', icon: '/icons/config-usuario.svg' }
+]
 
 const checkAdminStatus = async () => {
   try {
@@ -269,6 +283,40 @@ const checkNotifications = async () => {
   }
 }
 
+// Em TheSidebar.vue
+
+// Substitua pelo hook onMounted mais seguro
+onMounted(() => {
+  const handleClick = (e) => {
+    const sidebar = document.querySelector('.sidebar')
+    const trigger = document.querySelector('.sidebar-trigger')
+    
+    if (sidebar && trigger &&
+      !sidebar.contains(e.target) &&
+      !trigger.contains(e.target)) {
+      if (!isPinned.value) {
+        isActive.value = false
+        adjustMainContent()
+      }
+    }
+  }
+
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape' && !isPinned.value) {
+      isActive.value = false
+      adjustMainContent()
+    }
+  }
+
+  document.addEventListener('click', handleClick)
+  document.addEventListener('keydown', handleKeydown)
+
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClick)
+    document.removeEventListener('keydown', handleKeydown)
+  })
+})
+
 // Fechar sidebar quando clicar fora
 document.addEventListener('click', (e) => {
   const sidebar = document.querySelector('.sidebar')
@@ -381,6 +429,35 @@ const handleAdminClick = (e) => {
   }
   router.push('/configuracoes')
 }
+
+// Em TheSidebar.vue
+onMounted(() => {
+  // Restaurar estado do sidebar
+  const savedState = localStorage.getItem('sidebarState') === 'true'
+  const savedPinned = localStorage.getItem('sidebarPinned') === 'true'
+  
+  isActive.value = savedState
+  isPinned.value = savedPinned
+  
+  adjustMainContent()
+})
+
+// Adicionar listener para visibilidade da página
+onMounted(() => {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      // Reajustar sidebar quando a página ficar visível
+      adjustMainContent()
+    }
+  })
+})
+
+// Usar watch para persistir mudanças
+watch([isActive, isPinned], ([newActive, newPinned]) => {
+  localStorage.setItem('sidebarState', newActive.toString())
+  localStorage.setItem('sidebarPinned', newPinned.toString())
+  adjustMainContent()
+})
 </script>
 
 <style scoped>

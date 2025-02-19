@@ -259,48 +259,21 @@ import '../assets/styles/dark-mode.css'
 const loadingTimeout = ref(null)
 const isLoading = ref(false)
 
-const pageVisibilityHandler = async () => {
-  if (document.hidden) {
-    stopAutoRefresh()
-  } else {
-    try {
-      // Limpa timeout anterior se existir
-      if (loadingTimeout.value) {
-        clearTimeout(loadingTimeout.value)
-      }
+const handleLoading = async (loadingFunction) => {
+  try {
+    isLoading.value = true
+    await loadingFunction()
+  } catch (error) {
+    console.error('Erro:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
 
-      // Define um timeout máximo para o loading
-      loadingTimeout.value = setTimeout(() => {
-        isLoading.value = false
-      }, 5000) // 5 segundos máximo
-
-      isLoading.value = true
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        router.push('/login')
-        return
-      }
-
-      // Carrega dados em paralelo
-      await Promise.all([
-        loadProcessos(),
-        loadRepresentantes(),
-        loadPlataformas()
-      ])
-
-      startAutoRefresh()
-
-    } catch (error) {
-      console.error('Erro ao restaurar estado:', error)
-      await supabase.auth.refreshSession()
-    } finally {
-      // Limpa o timeout e remove loading
-      if (loadingTimeout.value) {
-        clearTimeout(loadingTimeout.value)
-      }
-      isLoading.value = false
-    }
+// Simplifique o pageVisibilityHandler
+const pageVisibilityHandler = () => {
+  if (!document.hidden) {
+    loadProcessos().catch(console.error) // Carrega em background
   }
 }
 

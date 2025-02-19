@@ -6,6 +6,9 @@
       <!-- Loading overlay -->
       <div v-if="isLoading" class="loading-overlay">
         <div class="loading-spinner"></div>
+        <div v-if="showTimeoutMessage" class="timeout-message">
+          Se o carregamento persistir, por favor recarregue a página
+        </div>
       </div>
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
@@ -549,22 +552,6 @@ const showToast = (message, type = 'success') => {
   setTimeout(() => {
     toast.value.show = false
   }, 3000)
-}
-
-// Adicione esta função de carregamento de sistemas
-const loadSistemas = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('sistemas')
-      .select('*')
-      .eq('status', 'ACTIVE')
-      .order('nome')
-
-    if (error) throw error
-    sistemasAtivos.value = data
-  } catch (error) {
-    console.error('Erro ao carregar sistemas:', error)
-  }
 }
 
 // Modifique o onMounted para carregar tudo de uma vez
@@ -1553,56 +1540,6 @@ const removerDaLista = (index) => {
   distanciasSalvas.value.splice(index, 1)
   showToast('Distância removida da lista', 'success')
 }
-
-// Adicione isLoading nas refs no início do arquivo
-const isLoading = ref(false)
-const loadingTimeout = ref(null)
-
-// Modifique a função de visibilidade
-const pageVisibilityHandler = async () => {
-  if (document.hidden) {
-    stopAutoRefresh()
-  } else {
-    try {
-      // Limpa timeout anterior se existir
-      if (loadingTimeout.value) {
-        clearTimeout(loadingTimeout.value)
-      }
-
-      // Define timeout máximo para loading
-      loadingTimeout.value = setTimeout(() => {
-        isLoading.value = false
-      }, 5000)
-
-      isLoading.value = true
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        router.push('/login')
-        return
-      }
-
-      // Carrega dados em paralelo
-      await Promise.all([
-        loadSistemas(),
-        loadPlataformas(),
-        loadRepresentantes()
-      ])
-
-      startAutoRefresh()
-
-    } catch (error) {
-      console.error('Erro ao restaurar estado:', error)
-      await supabase.auth.refreshSession()
-    } finally {
-      if (loadingTimeout.value) {
-        clearTimeout(loadingTimeout.value)
-      }
-      isLoading.value = false
-    }
-  }
-}
-
 // Adicione estas funções
 const startVisibilityMonitoring = () => {
   document.addEventListener('visibilitychange', pageVisibilityHandler)
@@ -1694,9 +1631,9 @@ const refreshInterval = ref(null)
 const processosCache = new Map()
 
 const startAutoRefresh = () => {
-  stopAutoRefresh()
+  stopAutoRefresh() // Limpa timer anterior
   refreshInterval.value = setInterval(() => {
-    loadProcessos()
+    loadProcessos().catch(console.error)
   }, 30000)
 }
 
@@ -1747,6 +1684,115 @@ const getProcesso = async (id) => {
   }
   return data
 }
+
+// Ajuste das refs de loading
+const isLoading = ref(false)
+const loadingTimeout = ref(null)
+const lastLoadTime = ref(Date.now())
+const LOADING_COOLDOWN = 120000 // 2 minutos em milliseconds
+
+// Função melhorada para gerenciar o loading
+const handleLoading = async (loadingFunction) => {
+  // Verifica se já passou tempo suficiente desde o último carregamento
+  const timeSinceLastLoad = Date.now() - lastLoadTime.value
+  if (timeSinceLastLoad < LOADING_COOLDOWN) {
+    return
+  }
+
+  try {
+    isLoading.value = true
+    
+    // Configura timeout de segurança
+    loadingTimeout.value = setTimeout(() => {
+      isLoading.value = false
+    }, 5000) // 5 segundos máximo de loading
+
+    await loadingFunction()
+    
+    lastLoadTime.value = Date.now()
+  } catch (error) {
+    console.error('Erro durante carregamento:', error)
+  } finally {
+    if (loadingTimeout.value) {
+      clearTimeout(loadingTimeout.value)
+    }
+    isLoading.value = false
+  }
+}
+
+// Modificar o pageVisibilityHandler
+const pageVisibilityHandler = async () => {
+  if (!document.hidden) {
+    loadProcessos().catch(console.error)
+  }
+}
+
+// Adicione o cache de dados
+const dataCache = {
+  sistemas: null,
+  plataformas: null,
+  representantes: null,
+  lastUpdate: null,
+  CACHE_DURATION: 120000 // 2 minutos
+}
+
+// Modificar funções de carregamento
+const loadSistemas = async () => {
+  // Verifica cache
+  if (dataCache.sistemas && 
+      Date.now() - dataCache.lastUpdate < dataCache.CACHE_DURATION) {
+    return dataCache.sistemas
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('sistemas')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('nome')
+
+    if (error) throw error
+    
+    // Atualiza cache
+    dataCache.sistemas = data
+    dataCache.lastUpdate = Date.now()
+    
+    sistemasAtivos.value = data
+    return data
+  } catch (error) {
+    console.error('Erro ao carregar sistemas:', error)
+    return null
+  }
+}
+
+// Adicionar ao início do arquivo
+const setupSupabaseErrorHandling = () => {
+  supabase.channel('system-error')
+    .on('system', { event: '*' }, (payload) => {
+      if (payload.type === 'connection_error') {
+        isLoading.value = false
+        console.error('Erro de conexão Supabase:', payload)
+      }
+    })
+    .subscribe()
+}
+
+// Adicionar ao onMounted
+onMounted(() => {
+  setupSupabaseErrorHandling()
+  startVisibilityMonitoring()
+  startAutoRefresh()
+  handleLoading(() => Promise.all([
+    loadSistemas(),
+    loadPlataformas(),
+    loadRepresentantes()
+  ]))
+})
+
+// Adicione estas refs
+const showTimeoutMessage = ref(false)
+const TIMEOUT_MESSAGE_DELAY = 10000 // 10 segundos
+
 </script>
 
 <style scoped>
@@ -2194,6 +2240,7 @@ input[type="date"]:focus:not(.error) {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  flex-direction: column;
 }
 
 .loading-spinner {
@@ -2748,6 +2795,13 @@ input[type="date"]:focus:not(.error) {
   background: #e9ecef;
   cursor: not-allowed;
   transform: none;
+}
+
+.timeout-message {
+  margin-top: 1rem;
+  color: #ff0000;
+  font-size: 2rem;
+  flex-wrap: wrap;
 }
 
 </style>

@@ -143,40 +143,18 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
-  
-  console.log('Router Guard:', {
-    path: to.path,
-    requiresAuth: to.meta.requiresAuth,
-    hasSession: !!session
-  })
-  
+
+  // Simplifica a lógica de redirecionamento
   if (to.path === '/login' && session) {
     next('/processos')
     return
   }
-  
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!session) {
-      console.log('❌ Redirecionando para login - sem sessão')
-      next('/login')
-      return
-    }
-    
-    if (to.meta.requiresAdmin) {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
-        
-      if (error || profile?.role !== 'admin') {
-        console.log('❌ Acesso negado - não é admin')
-        next(from.path || '/')
-        return
-      }
-    }
+
+  if (to.meta.requiresAuth && !session) {
+    next('/login')
+    return
   }
-  
+
   next()
 })
 
