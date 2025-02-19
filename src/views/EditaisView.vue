@@ -123,71 +123,76 @@
             <RequiredLabel text="Cálculo de Distância" :isRequired="false" />
             <div class="distancia-container">
               <div class="pontos-container">
+                <!-- Ponto de Origem -->
                 <div class="ponto-origem">
                   <label>Ponto de Origem (Referência)</label>
-                  <select v-model="pontoReferencia">
-                    <option value="">Selecione o ponto de referência...</option>
-                    <option v-for="ponto in pontosReferencia" :key="ponto.cidade" :value="ponto">
-                      {{ ponto.cidade }}/{{ ponto.uf }}
-                    </option>
-                  </select>
-                </div>
-
-                <div class="ponto-destino">
-                  <label>Cidade do Órgão</label>
-                  <div class="cidade-input">
-                    <select v-model="formData.estado" @change="carregarMunicipios">
-                      <option value="">Selecione o estado...</option>
+                  <div class="referencia-container">
+                    <select v-model="filtroEstadoReferencia">
+                      <option value="">Todos os Estados</option>
                       <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                         {{ estado.nome }}
                       </option>
                     </select>
-                    <select 
-                      v-model="cidadeOrgao"
-                      :disabled="!formData.estado || !municipiosCarregados"
-                    >
-                      <option value="">Selecione a cidade...</option>
+                    <select v-model="pontoReferencia">
+                      <option value="">Selecione o ponto de referência...</option>
+                      <option v-for="ponto in pontosFiltrados" :key="ponto.cidade" :value="ponto">
+                        {{ ponto.cidade }}/{{ ponto.uf }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Cidade do Órgão -->
+                <div class="ponto-destino">
+                  <label>Cidade do Órgão</label>
+                  <div class="cidade-input">
+                    <select v-model="estadoDestino" @change="carregarMunicipios">
+                      <option value="">Estado...</option>
+                      <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                        {{ estado.nome }}
+                      </option>
+                    </select>
+                    <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados">
+                      <option value="">Cidade...</option>
                       <option v-for="municipio in municipios" :key="municipio.id" :value="municipio">
                         {{ municipio.nome }}
                       </option>
                     </select>
                   </div>
                 </div>
-
-                <!-- Novo botão de cálculo -->
-                <div class="calcular-button">
-                  <button @click="calcularDistancia" class="btn-calcular"
-                    :disabled="!pontoReferencia || !cidadeOrgao || !formData.estado">
-                    Calcular Distância
-                  </button>
-                </div>
               </div>
 
-              <div class="distancia-result">
-                <div v-if="distanciaCalculada" class="distancia-automatica">
+              <!-- Botões e Resultado -->
+              <div class="distancia-actions">
+                <button @click="calcularDistancia" class="btn-calcular" 
+                  :disabled="!pontoReferencia || !cidadeOrgao || !formData.estado">
+                  Calcular Distância
+                </button>
+
+                <div v-if="distanciaCalculada" class="distancia-result">
                   <span class="distance-value">{{ distanciaCalculada }}</span>
-                  <button @click="salvarDistancia" class="btn-confirmar">
-                    Confirmar Distância
+                  <button @click="adicionarDistanciaLista" class="btn-add-distancia">
+                    <span>Adicionar à Lista</span>
+                    <span class="icon">+</span>
                   </button>
                 </div>
+              </div>
 
-                <!-- Novo campo para entrada manual -->
-                <div v-if="!distanciaCalculada || distanciaManual" class="distancia-manual">
-                  <label>Distância Manual (km)</label>
-                  <div class="manual-input">
-                    <input v-model="distanciaManualValue" type="number" min="0" step="1"
-                      placeholder="Digite a distância em km" />
-                    <button @click="salvarDistanciaManual" class="btn-confirmar">
-                      Confirmar Manual
-                    </button>
+              <!-- Adicione após o div.distancia-actions -->
+              <div v-if="distanciasSalvas.length > 0" class="distancias-lista">
+                <h4>Distâncias Calculadas</h4>
+                <div class="distancia-items">
+                  <div v-for="(dist, index) in distanciasSalvas" 
+                      :key="index" 
+                      class="distancia-item">
+                    <span class="distancia-valor">{{ dist.distancia_km }}km</span>
+                    <span class="distancia-cidade">de {{ dist.cidade_destino }}/{{ dist.uf_destino }}</span>
+                    <button @click="removerDaLista(index)" class="btn-remover">×</button>
                   </div>
-                  <small v-if="distanciaCalculada" class="toggle-manual">
-                    <a href="#" @click.prevent="toggleModoManual">
-                      {{ distanciaManual ? 'Usar cálculo automático' : 'Inserir manualmente' }}
-                    </a>
-                  </small>
                 </div>
               </div>
+
+              <!-- Lista de Distâncias Salvas -->
             </div>
           </div>
 
@@ -490,11 +495,28 @@ const handleSubmit = async () => {
       ponto_referencia_uf: formData.value.ponto_referencia_uf
     }
 
-    const { error } = await supabase
+    // Primeiro insere o processo
+    const { data: processo, error: processoError } = await supabase
       .from('processos')
       .insert(processData)
+      .select()
+      .single()
 
-    if (error) throw error
+    if (processoError) throw processoError
+
+    // Depois de inserir o processo, insere as distâncias
+    if (distanciasSalvas.value.length > 0) {
+      const distanciasData = distanciasSalvas.value.map(dist => ({
+        processo_id: processo.id, // ID do processo recém-criado
+        ...dist
+      }))
+
+      const { error: distanciasError } = await supabase
+        .from('processo_distancias')
+        .insert(distanciasData)
+
+      if (distanciasError) throw distanciasError
+    }
 
     showToast('Processo cadastrado com sucesso!', 'success')
     // Aguarda um momento para o usuário ver a mensagem antes de redirecionar
@@ -585,6 +607,7 @@ const novoRepresentante = ref({
   email: '',
   telefone: ''
 })
+
 
 const formData = ref({
   numero: '', // Alterado de numero_processo para numero
@@ -1205,14 +1228,14 @@ const pontosReferencia = [
 // Função para calcular distância usando Google Maps Distance Matrix API
 // Modifique a função calcularDistancia para usar cache de coordenadas
 const calcularDistancia = async () => {
-  if (!pontoReferencia.value || !cidadeOrgao.value) {
+  if (!pontoReferencia.value || !cidadeOrgao.value || !estadoDestino.value) {
     showToast('Selecione o ponto de origem e destino', 'warning')
     return
   }
 
   try {
     const municipio = cidadeOrgao.value
-    const estado = formData.value.estado
+    const estado = estadoDestino.value
     
     // Busca coordenadas do banco local
     const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
@@ -1260,7 +1283,7 @@ const validarCidade = () => {
   return cidadeOrgao.value.length >= 3;
 };
 
-// Adicione estas refs
+// Adicione estes refs
 const distanciaManual = ref(false)
 const distanciaManualValue = ref(null)
 
@@ -1477,16 +1500,149 @@ const municipiosCarregados = ref(false)
 
 // Função para carregar municípios quando o estado for selecionado
 const carregarMunicipios = async () => {
-  if (!formData.value.estado) return
+  if (!estadoDestino.value) return
   
   try {
     municipiosCarregados.value = false
-    municipios.value = await ibgeService.getMunicipios(formData.value.estado)
+    municipios.value = await ibgeService.getMunicipios(estadoDestino.value)
     municipiosCarregados.value = true
   } catch (error) {
     console.error('Erro ao carregar municípios:', error)
     showToast('Erro ao carregar municípios', 'error')
   }
+}
+
+// Novo ref para controlar o filtro de estado dos pontos de referência
+const filtroEstadoReferencia = ref('')
+
+// Computed property para filtrar os pontos de referência
+const pontosFiltrados = computed(() => {
+  if (!filtroEstadoReferencia.value) {
+    // Se não houver filtro, mostra todos os pontos
+    return pontosReferencia
+  }
+  
+  // Filtra apenas os pontos do estado selecionado
+  return pontosReferencia.filter(ponto => ponto.uf === filtroEstadoReferencia.value)
+})
+
+// Watch para atualizar automaticamente o filtro quando o estado principal for selecionado
+watch(() => formData.value.estado, (novoEstado) => {
+  filtroEstadoReferencia.value = novoEstado
+  
+  // Carrega os municípios automaticamente quando o estado for selecionado
+  if (novoEstado) {
+    carregarMunicipios()
+  } else {
+    municipios.value = []
+    municipiosCarregados.value = false
+  }
+})
+
+// Adicione estes refs
+const distanciasSalvas = ref([])
+
+// Função para carregar distâncias existentes
+const carregarDistancias = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('processo_distancias')
+      .select('*')
+      .eq('processo_id', formData.value.id)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    distanciasSalvas.value = data
+  } catch (error) {
+    console.error('Erro ao carregar distâncias:', error)
+    showToast('Erro ao carregar distâncias', 'error')
+  }
+}
+
+// Função para adicionar nova distância
+const adicionarDistancia = async () => {
+  try {
+    const novaDistancia = {
+      processo_id: formData.value.id,
+      distancia_km: distanciaManual.value ? 
+        parseFloat(distanciaManualValue.value) : 
+        parseFloat(distanciaCalculada.value),
+      ponto_referencia_cidade: pontoReferencia.value.cidade,
+      ponto_referencia_uf: pontoReferencia.value.uf
+    }
+
+    const { error } = await supabase
+      .from('processo_distancias')
+      .insert(novaDistancia)
+
+    if (error) throw error
+
+    await carregarDistancias()
+    showToast('Distância adicionada com sucesso!', 'success')
+  } catch (error) {
+    console.error('Erro ao adicionar distância:', error)
+    showToast('Erro ao adicionar distância', 'error')
+  }
+}
+
+// Função para remover distância
+const removerDistancia = async (id) => {
+  try {
+    const { error } = await supabase
+      .from('processo_distancias')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+
+    await carregarDistancias()
+    showToast('Distância removida com sucesso!', 'success')
+  } catch (error) {
+    console.error('Erro ao remover distância:', error)
+    showToast('Erro ao remover distância', 'error')
+  }
+}
+
+// Carregue as distâncias ao montar o componente
+onMounted(() => {
+  if (formData.value.id) {
+    carregarDistancias()
+  }
+})
+
+// Adicione este ref
+const estadoDestino = ref('')
+
+// Adicione um watch para sincronizar inicialmente o estadoDestino com o estado principal
+watch(() => formData.value.estado, (novoEstado) => {
+  if (novoEstado && !estadoDestino.value) {
+    estadoDestino.value = novoEstado
+    carregarMunicipios()
+  }
+}, { immediate: true })
+
+// Adicione esta função
+const adicionarDistanciaLista = () => {
+  if (!distanciaCalculada.value || !pontoReferencia.value || !cidadeOrgao.value) {
+    showToast('Selecione os pontos e calcule a distância primeiro', 'warning')
+    return
+  }
+
+  const novaDistancia = {
+    distancia_km: parseFloat(distanciaCalculada.value),
+    ponto_referencia_cidade: pontoReferencia.value.cidade,
+    ponto_referencia_uf: pontoReferencia.value.uf,
+    cidade_destino: cidadeOrgao.value.nome,
+    uf_destino: estadoDestino.value
+  }
+
+  distanciasSalvas.value.push(novaDistancia)
+  distanciaCalculada.value = null
+}
+
+const removerDaLista = (index) => {
+  distanciasSalvas.value.splice(index, 1)
+  showToast('Distância removida da lista', 'success')
 }
 </script>
 
@@ -2018,6 +2174,10 @@ input[type="date"]:focus:not(.error) {
 }
 
 .btn-import {
+  margin-bottom: 1rem;
+}
+
+.btn-import {
   padding: 0.9rem 1.5rem;
   background: #193155;
   color: white;
@@ -2258,5 +2418,221 @@ input[type="date"]:focus:not(.error) {
   font-size: 0.8rem;
   margin-top: 0.5rem;
 }
+.referencia-container {
+  display: flex;
+  gap: 0.5rem;
+}
 
+.referencia-container select {
+  flex: 1;
+}
+
+.referencia-container select:first-child {
+  flex: 0.4; /* Estado ocupa menos espaço */
+}
+
+.distancias-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.distancia-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.distancia-valor {
+  font-weight: 500;
+  color: #193155;
+}
+
+.distancia-referencia {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.btn-remove {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btn-remove:hover {
+  background: #ffebeb;
+}
+
+.nova-distancia {
+  border-top: 1px solid #e9ecef;
+  padding-top: 1rem;
+}
+
+/* Ajuste o CSS existente no EditaisView.vue */
+.distancia-container {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.pontos-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Adicione os estilos responsivos */
+@media (max-width: 1228px) {
+  .pontos-container {
+    grid-template-columns: 1fr;
+  }
+
+  .referencia-container {
+    flex-direction: column;
+  }
+
+  .referencia-container select {
+    width: 100%;
+  }
+}
+
+.distancia-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  gap: 1rem;
+}
+
+.btn-add-distancia {
+  padding: 0.75rem 1rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-add-distancia:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.distancias-lista {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.distancias-lista h4 {
+  color: #193155;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.distancia-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.distancia-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  gap: 1rem;
+}
+
+.distancia-valor {
+  font-weight: 500;
+  color: #193155;
+}
+
+.distancia-cidade {
+  color: #6c757d;
+}
+
+.btn-remover {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btn-remover:hover {
+  background: #ffebeb;
+}
+
+.distancias-lista {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.distancia-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.distancia-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.distancia-valor {
+  font-weight: 500;
+  color: #193155;
+  margin-right: 0.5rem;
+}
+
+.distancia-texto {
+  color: #6c757d;
+}
+
+.btn-remover {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btn-remover:hover {
+  background: #ffebeb;
+}
 </style>

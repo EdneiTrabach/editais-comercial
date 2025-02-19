@@ -180,6 +180,13 @@
                       {{ getEmpresaNome(processo.empresa_id) }}
                     </span>
                   </template>
+                  <td v-else-if="coluna.campo === 'distancias'">
+                    <div class="distancias-stack">
+                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                      </div>
+                    </div>
+                  </td>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -1071,6 +1078,17 @@ onMounted(async () => {
 const getEmpresaNome = (empresaId) => {
   const empresa = empresas.value.find(e => e.id === empresaId)
   return empresa ? empresa.nome : '-'
+}
+
+// Adicione esta função
+const getDistancias = async (processoId) => {
+  const { data } = await supabase
+    .from('processo_distancias')
+    .select('*')
+    .eq('processo_id', processoId)
+    .order('created_at', { ascending: true })
+  
+  return data || []
 }
 </script>
 
@@ -2445,4 +2463,17 @@ td[data-field="impugnacoes"] {
   user-select: text;
 }
 
+.distancias-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.distancia-chip {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  white-space: nowrap;
+}
 </style>
