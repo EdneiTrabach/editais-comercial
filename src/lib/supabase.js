@@ -29,6 +29,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
+// No seu arquivo de configuração do Supabase
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    router.push('/login')
+  }
+})
+
+// Adicione um interceptor global para erros de rede
+window.addEventListener('unhandledrejection', async (event) => {
+  if (event.reason?.code === 'NETWORK_ERROR') {
+    await supabase.auth.refreshSession()
+  }
+})
+
 // Adicione esta função de helper
 const handleSupabaseError = (error) => {
   console.error('Supabase error:', error)

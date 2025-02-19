@@ -245,7 +245,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed, nextTick, onUnmounted } from 'vue' // Adicione onUnmounted
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -254,6 +254,69 @@ import { writeFileXLSX, utils } from 'xlsx'
 import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
 import '../assets/styles/dark-mode.css'
+
+// Adicione aqui o código de monitoramento de visibilidade
+const loadingTimeout = ref(null)
+const isLoading = ref(false)
+
+const pageVisibilityHandler = async () => {
+  if (document.hidden) {
+    stopAutoRefresh()
+  } else {
+    try {
+      // Limpa timeout anterior se existir
+      if (loadingTimeout.value) {
+        clearTimeout(loadingTimeout.value)
+      }
+
+      // Define um timeout máximo para o loading
+      loadingTimeout.value = setTimeout(() => {
+        isLoading.value = false
+      }, 5000) // 5 segundos máximo
+
+      isLoading.value = true
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      // Carrega dados em paralelo
+      await Promise.all([
+        loadProcessos(),
+        loadRepresentantes(),
+        loadPlataformas()
+      ])
+
+      startAutoRefresh()
+
+    } catch (error) {
+      console.error('Erro ao restaurar estado:', error)
+      await supabase.auth.refreshSession()
+    } finally {
+      // Limpa o timeout e remove loading
+      if (loadingTimeout.value) {
+        clearTimeout(loadingTimeout.value)
+      }
+      isLoading.value = false
+    }
+  }
+}
+
+const startVisibilityMonitoring = () => {
+  document.addEventListener('visibilitychange', pageVisibilityHandler)
+  window.addEventListener('focus', pageVisibilityHandler)
+  window.addEventListener('online', pageVisibilityHandler) 
+}
+
+const stopVisibilityMonitoring = () => {
+  document.removeEventListener('visibilitychange', pageVisibilityHandler)
+  window.removeEventListener('focus', pageVisibilityHandler)
+  window.removeEventListener('online', pageVisibilityHandler)
+}
+
+// Restante do código existente...
 
 const router = useRouter()
 const isSidebarExpanded = ref(true)
@@ -435,8 +498,10 @@ const formatStatus = (status) => {
 }
 
 const loadProcessos = async () => {
+  if (isLoading.value) return // Evita múltiplas chamadas simultâneas
+  
   try {
-    loading.value = true
+    isLoading.value = true
     const { data, error } = await supabase
       .from('processos')
       .select(`
@@ -466,7 +531,7 @@ const loadProcessos = async () => {
     alert('Erro ao carregar dados')
     processos.value = []
   } finally {
-    loading.value = false
+    isLoading.value = false
   }
 }
 
@@ -1089,6 +1154,35 @@ const getDistancias = async (processoId) => {
     .order('created_at', { ascending: true })
   
   return data || []
+}
+
+// Modifique o onMounted existente
+onMounted(async () => {
+  startVisibilityMonitoring()
+  await loadProcessos()
+  await loadRepresentantes()
+  loadColumnWidths()
+})
+
+// Adicione o onUnmounted
+onUnmounted(() => {
+  stopVisibilityMonitoring()
+})
+
+const refreshInterval = ref(null)
+
+const startAutoRefresh = () => {
+  stopAutoRefresh() // Para evitar múltiplos intervalos
+  refreshInterval.value = setInterval(() => {
+    loadProcessos()
+  }, 30000) // Atualiza a cada 30 segundos
+}
+
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = null
+  }
 }
 </script>
 

@@ -4,7 +4,7 @@
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <!-- Loading overlay -->
-      <div v-if="loading" class="loading-overlay">
+      <div v-if="isLoading" class="loading-overlay">
         <div class="loading-spinner"></div>
       </div>
       <div class="header">
@@ -962,22 +962,6 @@ onMounted(() => {
   })
 })
 
-// Em EditaisView.vue
-const refreshInterval = ref(null)
-
-const startAutoRefresh = () => {
-  refreshInterval.value = setInterval(() => {
-    loadProcessos()
-  }, 30000) // Atualiza a cada 30 segundos
-}
-
-const stopAutoRefresh = () => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value)
-  }
-}
-
-// Monitore visibilidade da página
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     stopAutoRefresh()
@@ -995,47 +979,7 @@ onUnmounted(() => {
   stopAutoRefresh()
 })
 
-// Em EditaisView.vue
 const processos = ref([])
-
-const loadProcessos = debounce(async () => {
-  try {
-    loading.value = true
-    const { data, error } = await supabase
-      .from('processos')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    processos.value = data
-  } catch (error) {
-    console.error('Erro ao carregar processos:', error)
-  } finally {
-    loading.value = false
-  }
-}, 300)
-
-// Cache para melhorar performance
-const processosCache = new Map()
-
-const getProcesso = async (id) => {
-  if (processosCache.has(id)) {
-    return processosCache.get(id)
-  }
-
-  const { data } = await supabase
-    .from('processos')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (data) {
-    processosCache.set(id, data)
-  }
-  return data
-}
-
-// Adicione estas refs
 const showImportModal = ref(false)
 const publicacaoText = ref('')
 const camposNaoEncontrados = ref([])
@@ -1227,43 +1171,6 @@ const pontosReferencia = [
 
 // Função para calcular distância usando Google Maps Distance Matrix API
 // Modifique a função calcularDistancia para usar cache de coordenadas
-const calcularDistancia = async () => {
-  if (!pontoReferencia.value || !cidadeOrgao.value || !estadoDestino.value) {
-    showToast('Selecione o ponto de origem e destino', 'warning')
-    return
-  }
-
-  try {
-    const municipio = cidadeOrgao.value
-    const estado = estadoDestino.value
-    
-    // Busca coordenadas do banco local
-    const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
-    
-    if (!coordenadas) {
-      throw new Error('Coordenadas não disponíveis para esta cidade')
-    }
-
-    const distancia = calcularDistanciaHaversine(
-      pontoReferencia.value.lat,
-      pontoReferencia.value.lng,
-      coordenadas.latitude,
-      coordenadas.longitude
-    )
-
-    if (isNaN(distancia)) {
-      throw new Error('Erro no cálculo da distância')
-    }
-
-    distanciaCalculada.value = `${distancia} km`
-    distanciaManual.value = false
-
-  } catch (error) {
-    console.error('Erro:', error)
-    showToast('Coordenadas não disponíveis. Use entrada manual.', 'warning')
-    distanciaManual.value = true
-  }
-}
 
 // Função para salvar a distância no formData
 const salvarDistancia = () => {
@@ -1503,8 +1410,10 @@ const carregarMunicipios = async () => {
   if (!estadoDestino.value) return
   
   try {
+    console.log('Carregando municípios para:', estadoDestino.value)
     municipiosCarregados.value = false
     municipios.value = await ibgeService.getMunicipios(estadoDestino.value)
+    console.log('Municípios carregados:', municipios.value)
     municipiosCarregados.value = true
   } catch (error) {
     console.error('Erro ao carregar municípios:', error)
@@ -1643,6 +1552,200 @@ const adicionarDistanciaLista = () => {
 const removerDaLista = (index) => {
   distanciasSalvas.value.splice(index, 1)
   showToast('Distância removida da lista', 'success')
+}
+
+// Adicione isLoading nas refs no início do arquivo
+const isLoading = ref(false)
+const loadingTimeout = ref(null)
+
+// Modifique a função de visibilidade
+const pageVisibilityHandler = async () => {
+  if (document.hidden) {
+    stopAutoRefresh()
+  } else {
+    try {
+      // Limpa timeout anterior se existir
+      if (loadingTimeout.value) {
+        clearTimeout(loadingTimeout.value)
+      }
+
+      // Define timeout máximo para loading
+      loadingTimeout.value = setTimeout(() => {
+        isLoading.value = false
+      }, 5000)
+
+      isLoading.value = true
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      // Carrega dados em paralelo
+      await Promise.all([
+        loadSistemas(),
+        loadPlataformas(),
+        loadRepresentantes()
+      ])
+
+      startAutoRefresh()
+
+    } catch (error) {
+      console.error('Erro ao restaurar estado:', error)
+      await supabase.auth.refreshSession()
+    } finally {
+      if (loadingTimeout.value) {
+        clearTimeout(loadingTimeout.value)
+      }
+      isLoading.value = false
+    }
+  }
+}
+
+// Adicione estas funções
+const startVisibilityMonitoring = () => {
+  document.addEventListener('visibilitychange', pageVisibilityHandler)
+  window.addEventListener('focus', pageVisibilityHandler)
+  window.addEventListener('online', pageVisibilityHandler)
+}
+
+const stopVisibilityMonitoring = () => {
+  document.removeEventListener('visibilitychange', pageVisibilityHandler) 
+  window.removeEventListener('focus', pageVisibilityHandler)
+  window.removeEventListener('online', pageVisibilityHandler)
+}
+
+// Modifique o onMounted e onUnmounted
+onMounted(() => {
+  startVisibilityMonitoring()
+  startAutoRefresh()
+  Promise.all([
+    loadSistemas(),
+    loadPlataformas(), 
+    loadRepresentantes()
+  ])
+})
+
+onUnmounted(() => {
+  stopVisibilityMonitoring()
+  stopAutoRefresh()
+})
+
+// No início do arquivo, junto com outros refs
+const calculandoDistancia = ref(false)
+
+// Modifique a função calcularDistancia
+const calcularDistancia = async () => {
+  if (!pontoReferencia.value || !cidadeOrgao.value || !estadoDestino.value) {
+    showToast('Selecione o ponto de origem e destino', 'warning')
+    return
+  }
+
+  try {
+    calculandoDistancia.value = true
+    const municipio = cidadeOrgao.value
+    const estado = estadoDestino.value
+    
+    // Verifica se as coordenadas existem
+    const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
+    
+    if (!coordenadas) {
+      throw new Error(`Coordenadas não encontradas para ${municipio.nome}/${estado}`)
+    }
+
+    console.log('Calculando distância:', {
+      origem: pontoReferencia.value,
+      destino: coordenadas,
+      municipio: municipio.nome,
+      estado
+    })
+
+    const distancia = calcularDistanciaHaversine(
+      pontoReferencia.value.lat,
+      pontoReferencia.value.lng,
+      coordenadas.latitude,
+      coordenadas.longitude
+    )
+
+    if (isNaN(distancia)) {
+      throw new Error('Erro no cálculo da distância')
+    }
+
+    distanciaCalculada.value = `${Math.round(distancia)} km`
+    showToast('Distância calculada com sucesso!', 'success')
+
+  } catch (error) {
+    console.error('Erro ao calcular distância:', error)
+    showToast(error.message || 'Erro ao calcular distância', 'error')
+    distanciaCalculada.value = null
+  } finally {
+    calculandoDistancia.value = false
+  }
+}
+
+// Adicione no início do componente
+onMounted(() => {
+  console.log('Coordenadas disponíveis:', Object.keys(coordenadasMunicipais))
+})
+
+// Refs para refresh e cache
+const refreshInterval = ref(null)
+const processosCache = new Map()
+
+const startAutoRefresh = () => {
+  stopAutoRefresh()
+  refreshInterval.value = setInterval(() => {
+    loadProcessos()
+  }, 30000)
+}
+
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = null
+  }
+}
+
+// Função de carregamento com cache
+const loadProcessos = async () => {
+  try {
+    isLoading.value = true
+    const { data, error } = await supabase
+      .from('processos')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    processos.value = data
+    
+    // Atualiza cache
+    data.forEach(processo => {
+      processosCache.set(processo.id, processo)
+    })
+  } catch (error) {
+    console.error('Erro ao carregar processos:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Função para obter processo do cache
+const getProcesso = async (id) => {
+  if (processosCache.has(id)) {
+    return processosCache.get(id)
+  }
+
+  const { data } = await supabase
+    .from('processos')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (data) {
+    processosCache.set(id, data)
+  }
+  return data
 }
 </script>
 
@@ -2085,10 +2188,7 @@ input[type="date"]:focus:not(.error) {
 
 .loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(255, 255, 255, 0.8);
   display: flex;
   justify-content: center;
@@ -2561,7 +2661,6 @@ input[type="date"]:focus:not(.error) {
   padding: 0.75rem;
   background: #f8f9fa;
   border-radius: 6px;
-  gap: 1rem;
 }
 
 .distancia-valor {
@@ -2635,4 +2734,20 @@ input[type="date"]:focus:not(.error) {
 .btn-remover:hover {
   background: #ffebeb;
 }
+
+.distancia-error {
+  color: #dc3545;
+  background: #fff8f8;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.btn-calcular:disabled {
+  background: #e9ecef;
+  cursor: not-allowed;
+  transform: none;
+}
+
 </style>
