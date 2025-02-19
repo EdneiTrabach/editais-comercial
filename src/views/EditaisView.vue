@@ -165,9 +165,9 @@
               <!-- Botões e Resultado -->
               <div class="distancia-actions">
                 <button @click="calcularDistancia" class="btn-calcular"
-                  :disabled="!pontoReferencia || !cidadeOrgao || !formData.estado">
-                  Calcular Distância
-                </button>
+                :disabled="calculandoDistancia || !pontoReferencia || !cidadeOrgao || !formData.estado">
+                {{ calculandoDistancia ? 'Calculando...' : 'Calcular Distância' }}
+              </button>
 
                 <div v-if="distanciaCalculada" class="distancia-result">
                   <span class="distance-value">{{ distanciaCalculada }}</span>
@@ -330,14 +330,13 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
-import debounce from 'lodash/debounce' // Importação correta do debounce
+import debounce from 'lodash/debounce'
 import { calcularDistanciaHaversine } from '@/utils/distance.js'
 import { ibgeService } from '@/services/ibgeService'
 import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
 import { useVisibilityHandler } from '@/composables/useVisibilityHandler'
 import { SupabaseManager } from '@/lib/supabaseManager'
-
-// Adicione no início do arquivo, após as importações
+import { calcularDistanciaRota } from '@/utils/googleMapsService';
 const processamentosCache = {
   // Cache para publicações já processadas
   dados: new Map(),
@@ -1573,43 +1572,38 @@ const calcularDistancia = async () => {
 
   try {
     calculandoDistancia.value = true
-    const municipio = cidadeOrgao.value
-    const estado = estadoDestino.value
+    showToast('Calculando rota real...', 'info');
+    
+    const municipio = cidadeOrgao.value;
+    const estado = estadoDestino.value;
 
-    // Verifica se as coordenadas existem
-    const coordenadas = coordenadasMunicipais[estado]?.[municipio.nome]
+    const coordenadasDestino = coordenadasMunicipais[estado]?.[municipio.nome];
 
-    if (!coordenadas) {
-      throw new Error(`Coordenadas não encontradas para ${municipio.nome}/${estado}`)
+    if (!coordenadasDestino) {
+      throw new Error(`Coordenadas não encontradas para ${municipio.nome}/${estado}`);
     }
 
-    console.log('Calculando distância:', {
-      origem: pontoReferencia.value,
-      destino: coordenadas,
-      municipio: municipio.nome,
-      estado
-    })
+    const distancia = await calcularDistanciaRota(
+      pontoReferencia.value,
+      coordenadasDestino
+    );
 
+    distanciaCalculada.value = `${distancia} km`;
+    showToast('Distância calculada com sucesso!', 'success');
+
+  } catch (error) {
+    console.error('Erro ao calcular distância:', error);
+    showToast('Erro ao calcular distância. Usando aproximação.', 'warning');
+    // Tenta fallback com Haversine
     const distancia = calcularDistanciaHaversine(
       pontoReferencia.value.lat,
       pontoReferencia.value.lng,
-      coordenadas.latitude,
-      coordenadas.longitude
-    )
-
-    if (isNaN(distancia)) {
-      throw new Error('Erro no cálculo da distância')
-    }
-
-    distanciaCalculada.value = `${Math.round(distancia)} km`
-    showToast('Distância calculada com sucesso!', 'success')
-
-  } catch (error) {
-    console.error('Erro ao calcular distância:', error)
-    showToast(error.message || 'Erro ao calcular distância', 'error')
-    distanciaCalculada.value = null
+      coordenadasDestino.latitude,
+      coordenadasDestino.longitude
+    );
+    distanciaCalculada.value = `${distancia} km (aproximado)`;
   } finally {
-    calculandoDistancia.value = false
+    calculandoDistancia.value = false;
   }
 }
 
