@@ -187,6 +187,11 @@
                       </div>
                     </div>
                   </td>
+                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
+                    <div class="sistemas-chips">
+                      {{ processo.sistemas_nomes }}
+                    </div>
+                  </template>
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -504,32 +509,56 @@ const loadProcessos = async () => {
       .from('processos')
       .select(`
         *,
-        representantes!processos_representante_fkey (
-          id, 
-          nome
+        processo_sistemas!left(
+          sistemas(
+            nome
+          )
         )
       `)
-      .order('data_pregao', { ascending: true }) // Adicione esta linha para ordenação padrão
+      .order('data_pregao', { ascending: true })
 
     if (error) throw error
 
-    processos.value = data?.map(processo => ({
-      ...processo,
-      data_pregao: processo.data_pregao,
-      hora_pregao: processo.hora_pregao,
-      responsavel_nome: '-',
-      representante: processo.representantes?.nome || '-',
-      impugnacoes: processo.impugnacoes || '-', // Adicione este campo
-      campo_adicional1: processo.campo_adicional1 || '-',
-      campo_adicional2: processo.campo_adicional2 || '-'
-    })) || []
+    // Log para debug
+    console.log('Dados brutos:', data)
+
+    const processosComSistemas = await Promise.all(
+      (data || []).map(async processo => {
+        // Aqui é onde pegamos os sistemas_ativos de cada processo individual
+        console.log('Sistemas do processo:', processo.sistemas_ativos)
+        return {
+          ...processo,
+          sistemas_nomes: Array.isArray(processo.sistemas_ativos)
+            ? await getSistemasNomes(processo.sistemas_ativos)
+            : '-'
+        }
+      })
+    )
+    
+    processos.value = processosComSistemas
 
   } catch (error) {
     console.error('Erro ao carregar processos:', error)
-    alert('Erro ao carregar dados')
     processos.value = []
   } finally {
     isLoading.value = false
+  }
+}
+
+// Nova função para buscar nomes dos sistemas
+const getSistemasNomes = async (sistemasIds) => {
+  if (!sistemasIds?.length) return '-'
+
+  try {
+    const { data } = await supabase
+      .from('sistemas')
+      .select('nome')
+      .in('id', sistemasIds)
+
+    return data?.map(s => s.nome).join(', ') || '-'
+  } catch (error) {
+    console.error('Erro ao buscar nomes dos sistemas:', error)
+    return '-'
   }
 }
 
