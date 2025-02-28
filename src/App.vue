@@ -12,7 +12,7 @@ import NavigationButtons from './components/NavigationButtons.vue'
 
 <style scoped>
 * {
-  font-family: 'JetBrains Mono';
+  font-family: 'Roboto', sans-serif;
   box-sizing: border-box;
 }
 header {
@@ -91,7 +91,7 @@ html, body {
 
 #app {
   height: 100%;
-  font-family: 'JetBrains Mono';
+  font-family: 'Roboto', sans-serif;
   position: relative;
 }
 </style>

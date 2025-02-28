@@ -84,7 +84,7 @@ const shouldShowNavigation = computed(() => {
 }
 
 .current-page {
-  font-family: 'JetBrains Mono';
+  font-family: 'Roboto', sans-serif;
   color: #193155;
   font-weight: 500;
   min-width: 120px;
@@ -98,7 +98,7 @@ button {
   background: linear-gradient(135deg,#193155,#254677);
   color: white;
   cursor: pointer;
-  font-family: 'JetBrains Mono';
+  font-family: 'Roboto', sans-serif;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

@@ -579,7 +579,7 @@ th {
   border-radius: 8px;
   transition: all 0.3s ease;
   background: #f8f9fa;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   font-size: 0.9rem;
   color: #495057;
 }

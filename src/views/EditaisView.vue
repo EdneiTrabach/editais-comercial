@@ -1868,11 +1868,11 @@ useConnectionManager(loadPageData)
 
 <style scoped>
 /* Importação da fonte JetBrains Mono */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap'); */
 
 /* Aplicação da fonte no layout */
 .layout {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   display: flex;
   min-height: 100vh;
 }
@@ -1885,7 +1885,7 @@ textarea,
 button,
 label,
 .modal-content {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
 }
 
 .layout {
@@ -1955,7 +1955,7 @@ textarea {
   border-radius: 8px;
   transition: all 0.3s ease;
   background: #f8f9fa;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   font-size: 0.9rem;
   color: #495057;
 }
@@ -1999,7 +1999,7 @@ textarea {
   border-radius: 8px;
   transition: all 0.3s ease;
   background: #f8f9fa;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   /* Garantindo a fonte aqui também */
   font-size: 0.9rem;
   /* Ajuste o tamanho se necessário */

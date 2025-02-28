@@ -1222,7 +1222,7 @@ textarea.detalhes {
   border-radius: 8px;
   transition: all 0.3s ease;
   background: #f8fafc;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   font-size: 0.95rem;
   color: #495057;
 }
@@ -1266,7 +1266,7 @@ textarea.detalhes {
   border-radius: 8px;
   transition: all 0.3s ease;
   background: #f8fafc;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto', sans-serif;
   font-size: 0.95rem;
   color: #495057;
 }
