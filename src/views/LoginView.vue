@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const router = useRouter()
 const email = ref('')
@@ -103,6 +104,13 @@ const handleResetPassword = async () => {
     loading.value = false
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 </script>
 
 <template>

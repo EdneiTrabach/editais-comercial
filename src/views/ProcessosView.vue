@@ -259,6 +259,7 @@ import { writeFileXLSX, utils } from 'xlsx'
 import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
 import '../assets/styles/dark-mode.css'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 // Adicione aqui o código de monitoramento de visibilidade
 const loadingTimeout = ref(null)
@@ -1236,6 +1237,14 @@ const stopAutoRefresh = () => {
     refreshInterval.value = null
   }
 }
+
+// No setup do componente
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 </script>
 
 <style scoped>

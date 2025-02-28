@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { Chart } from 'chart.js/auto'
 import TheSidebar from '@/components/TheSidebar.vue'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const isSidebarExpanded = ref(true)
 const currentDate = new Date().toLocaleDateString('pt-BR', {
@@ -25,6 +26,13 @@ const ultimosEditais = ref([
 const lineChartRef = ref(null)
 const pieChartRef = ref(null)
 const barChartRef = ref(null)
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 onMounted(() => {
   // Gráfico de Linha

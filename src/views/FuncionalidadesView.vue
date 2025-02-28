@@ -36,6 +36,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TheSidebar from '@/components/TheSidebar.vue'
 import FeatureCard from '@/components/FeatureCard.vue'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const router = useRouter()
 const isSidebarExpanded = ref(true)
@@ -133,6 +134,13 @@ const triggerEasterEgg = () => {
     showEasterEgg.value = false
   }, 4500) // Aumentado para 4.5 segundos para acomodar toda a sequência
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 </script>
 
 <style scoped>

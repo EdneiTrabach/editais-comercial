@@ -129,6 +129,7 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const isSidebarExpanded = ref(true)
 const showModal = ref(false)
@@ -272,6 +273,13 @@ const closeModal = () => {
 const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
+
+const loadData = async () => {
+  await loadRepresentantes() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 onMounted(() => {
   loadRepresentantes()

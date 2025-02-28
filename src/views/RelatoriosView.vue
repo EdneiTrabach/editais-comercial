@@ -39,6 +39,7 @@ import TheSidebar from '@/components/TheSidebar.vue'
 import { jsPDF } from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const isSidebarExpanded = ref(true)
 
@@ -141,6 +142,13 @@ const fetchReportData = async (endpoint) => {
     ];
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 </script>
 
 <style scoped>

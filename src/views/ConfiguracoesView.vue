@@ -171,6 +171,7 @@ import { ref, onMounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useRouter } from 'vue-router'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const router = useRouter()
 
@@ -546,6 +547,13 @@ const debugAccess = async () => {
     return false
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 onMounted(async () => {
   const isAdmin = await debugAccess()

@@ -156,6 +156,7 @@ import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { utils, writeFileXLSX } from 'xlsx'
 import html2pdf from 'html2pdf.js'
+ import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const step = ref(1)
 const isSidebarExpanded = ref(true)
@@ -311,6 +312,13 @@ const avancarEtapa = () => {
     }
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 onMounted(() => {
   loadProcessos()

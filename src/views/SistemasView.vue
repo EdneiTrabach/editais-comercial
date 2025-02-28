@@ -187,6 +187,7 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const sistemas = ref([])
 const setores = ref([])
@@ -265,13 +266,16 @@ const loadSetores = async () => {
 }
 
 // Carregar dados ao montar o componente
-onMounted(async () => {
+const loadData = async () => {
   await Promise.all([
     loadSistemas(),
     loadSetores(),
     checkAdminStatus() // Adicione esta linha
   ])
-})
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 // Outras funções necessárias
 const handleSidebarToggle = (expanded) => {

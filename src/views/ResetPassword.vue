@@ -31,6 +31,7 @@
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'vue-router'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const router = useRouter()
 const password = ref('')
@@ -56,4 +57,11 @@ const handleResetSubmit = async () => {
     alert('Erro ao atualizar senha')
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 </script>

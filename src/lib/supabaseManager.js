@@ -6,9 +6,12 @@ export class SupabaseManager {
 
   static async handleReconnect() {
     try {
-      // Primeiro desconecta os canais existentes
+      console.log('Iniciando processo de reconexão...')
+      
+      // Desconecta os canais existentes
       for (const [channelName, channel] of this.subscriptions) {
         try {
+          console.log(`Desconectando canal: ${channelName}`)
           if (channel && typeof channel.unsubscribe === 'function') {
             await channel.unsubscribe()
           }
@@ -23,13 +26,26 @@ export class SupabaseManager {
 
       // Reconecta o cliente realtime
       try {
+        console.log('Desconectando cliente realtime...')
         await supabase.realtime.disconnect()
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Espera 1s
+        
+        // Espera um pouco antes de reconectar
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        console.log('Reconectando cliente realtime...')
         await supabase.realtime.connect()
+        
+        // Atualiza o token de autenticação também
+        const { data } = await supabase.auth.getSession()
+        if (data?.session) {
+          await supabase.auth.refreshSession()
+          console.log('Sessão de autenticação atualizada')
+        }
       } catch (err) {
         console.warn('Erro ao reconectar realtime:', err)
       }
 
+      console.log('Processo de reconexão concluído')
       return true
     } catch (error) {
       console.error('Erro na reconexão do Supabase:', error)

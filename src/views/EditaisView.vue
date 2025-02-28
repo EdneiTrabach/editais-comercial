@@ -337,6 +337,8 @@ import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
 import { useVisibilityHandler } from '@/composables/useVisibilityHandler'
 import { SupabaseManager } from '@/lib/supabaseManager'
 import { calcularDistanciaRota } from '@/utils/googleMapsService';
+import { useConnectionManager } from '@/composables/useConnectionManager'
+
 const processamentosCache = {
   // Cache para publicações já processadas
   dados: new Map(),
@@ -1855,6 +1857,13 @@ onUnmounted(() => {
   }
   document.removeEventListener('visibilitychange', setupVisibilityHandling)
 })
+
+const loadPageData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadPageData)
 </script>
 
 <style scoped>

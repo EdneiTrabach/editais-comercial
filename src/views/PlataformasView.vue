@@ -210,6 +210,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import EmpresasSelector from '@/components/EmpresasSelector.vue'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const isSidebarExpanded = ref(true)
 const showModal = ref(false)
@@ -705,6 +706,13 @@ const handleEmpresasVinculadas = async (plataformaId) => {
       .insert(vinculacoes)
   }
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+// Use o composable
+useConnectionManager(loadData)
 
 onMounted(async () => {
   console.log('Iniciando carregamento...')

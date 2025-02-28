@@ -109,6 +109,7 @@ import { ref, onMounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import VueTheMask from 'vue-the-mask'
+import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const empresas = ref([])
 const showModal = ref(false)
@@ -237,6 +238,12 @@ const formatCNPJ = (cnpj) => {
 const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
 }
+
+const loadData = async () => {
+  await loadProcessos() // ou qualquer outra função que carregue seus dados
+}
+
+useConnectionManager(loadData)
 
 onMounted(() => {
   loadEmpresas()
