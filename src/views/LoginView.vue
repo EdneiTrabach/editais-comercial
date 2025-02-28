@@ -204,7 +204,7 @@ const handleResetPassword = async () => {
   min-height: 100vh;
   min-width: 100vw;  /* Adicionado */
   /* background: linear-gradient(135deg, #193155 0%, #254677 100%); */
-  background: linear-gradient(135deg, #722F37 0%, #521920 100%); /* Bordô elegante */
+  background: linear-gradient(135deg, #193155 0%, #254677 100%); /* Bordô elegante */
   position: relative;
   overflow: hidden;
   margin: 0;         /* Adicionado */
@@ -307,7 +307,7 @@ const handleResetPassword = async () => {
 /* Efeito de gradiente nos botões */
 .login-button {
   /* background: linear-gradient(135deg, #193155 0%, #254677 100%); */
-  background: linear-gradient(135deg, #722F37 0%, #521920 100%); /* Bordô elegante */
+  background: linear-gradient(135deg, #193155 0%, #254677 100%); /* Bordô elegante */
   color: white;
   padding: 0.75rem;
   border: none;

@@ -985,7 +985,7 @@ th {
 }
 
 .url-link {
-  color: #722F37;
+  color: #3e6ca0;
   text-decoration: none;
 }
 

@@ -475,7 +475,7 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
   top: 0;
   height: 95%;
   width: 260px;
-  background: linear-gradient(180deg, #722F37 0%, #521920 100%);
+  background: linear-gradient(135deg,#193155,#254677);
   /* Bordô elegante */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -495,12 +495,12 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
 
 /* Modifique a visibilidade do trigger */
 .sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #722F37;
+  background: #2f3b72;
   /* Mantém consistente com o sidebar */
 }
 
 .sidebar.pinned .sidebar-trigger {
-  background: #521920;
+  background: linear-gradient(135deg,#193155,#254677);;
   /* Tom mais escuro quando fixado */
 }
 
@@ -534,7 +534,7 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
   right: -32px;
   top: 50%;
   transform: translateY(-50%);
-  background: #722F37 !important;
+  background: linear-gradient(135deg,#193155,#254677);;
   /* Mesma cor do topo do sidebar */
   width: 35px;
   height: 75px;
@@ -689,9 +689,9 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
 
 .sidebar-menu-link:hover,
 .sidebar-menu-link.router-link-active {
-  background: rgba(181, 102, 111, 0.25);
+  background: linear-gradient(135deg,#193155,#254677);
   /* Bordô transparente para hover */
-  border-left: 3px solid #D98E77;
+  border-left: 3px solid #77b2d9;
   /* Detalhe em cobre */
   padding-left: calc(1.2rem - 3px);
   /* Compensa a borda */
@@ -710,7 +710,7 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
   border-radius: 10px;
   border-top: 1px solid rgba(217, 142, 119, 0.2);
   /* Separador em cobre sutil */
-  background: linear-gradient(180deg, rgba(114, 47, 55, 0.95) 0%, rgba(82, 25, 32, 0.95) 100%);
+  background: linear-gradient(135deg,#193155,#254677);;
   overflow-x: hidden;
   /* Previne scroll horizontal */
   width: 100%;
