@@ -323,18 +323,22 @@ useConnectionManager(loadData)
 
 onMounted(() => {
   loadProcessos()
+  
+  const channel = supabase.channel('lances-updates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'processos' }, 
+      () => loadData()
+    )
+    .subscribe()
+  
+  SupabaseManager.addSubscription('lances-updates', channel)
 })
 
-// Quando criar um canal
-const channel = supabase.channel('nome-do-canal')
-channel.subscribe()
-SupabaseManager.addSubscription('nome-do-canal', channel)
-
 onUnmounted(() => {
-  const channel = SupabaseManager.getSubscription('nome-do-canal')
+  const channel = SupabaseManager.getSubscription('lances-updates')
   if (channel) {
     supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('nome-do-canal')
+    SupabaseManager.removeSubscription('lances-updates')
   }
 })
 </script>

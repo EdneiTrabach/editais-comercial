@@ -206,11 +206,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import EmpresasSelector from '@/components/EmpresasSelector.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 const isSidebarExpanded = ref(true)
 const showModal = ref(false)
@@ -708,16 +709,31 @@ const handleEmpresasVinculadas = async (plataformaId) => {
 }
 
 const loadData = async () => {
-  await loadProcessos() // ou qualquer outra função que carregue seus dados
+  await loadPlataformas(selectedEmpresa.value?.id)
 }
 
-// Use o composable
 useConnectionManager(loadData)
 
-onMounted(async () => {
-  console.log('Iniciando carregamento...')
-  await loadPlataformas() // Primeiro carrega todas as plataformas
-  await loadEmpresas()  // Depois carrega as empresas
+onMounted(() => {
+  loadPlataformas()
+  loadEmpresas()
+  
+  const channel = supabase.channel('plataformas-updates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'plataformas' }, 
+      () => loadData()
+    )
+    .subscribe()
+  
+  SupabaseManager.addSubscription('plataformas-updates', channel)
+})
+
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('plataformas-updates')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('plataformas-updates')
+  }
 })
 </script>
 

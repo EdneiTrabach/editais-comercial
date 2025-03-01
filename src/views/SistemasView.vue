@@ -184,10 +184,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 const sistemas = ref([])
 const setores = ref([])
@@ -276,6 +277,27 @@ const loadData = async () => {
 
 // Use o composable
 useConnectionManager(loadData)
+
+onMounted(() => {
+  loadData()
+  
+  const channel = supabase.channel('lances-updates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'processos' }, 
+      () => loadData()
+    )
+    .subscribe()
+  
+  SupabaseManager.addSubscription('lances-updates', channel)
+})
+
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('lances-updates')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('lances-updates')
+  }
+})
 
 // Outras funções necessárias
 const handleSidebarToggle = (expanded) => {

@@ -409,7 +409,10 @@ const setupRealtimeListener = () => {
 const loadData = debounce(async () => {
   try {
     loading.value = true
-
+    
+    // Adicione loadProcessos() aqui se precisar
+    await loadProcessos()
+    
     // Carregamento paralelo dos dados necessários
     const [processosResponse, plataformasResponse, representantesResponse] = await Promise.all([
       supabase.from('processos').select('*'),
@@ -1876,6 +1879,32 @@ onUnmounted(() => {
   if (channel) {
     supabase.removeChannel(channel)
     SupabaseManager.removeSubscription('nome-do-canal')
+  }
+})
+
+// Use o composable com a função loadData já existente
+useConnectionManager(loadData)
+
+// Configure o canal no onMounted e limpe no onUnmounted
+onMounted(() => {
+  // Carregamento inicial
+  loadData()
+  
+  const channel = supabase.channel('editais-updates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'processos' }, 
+      () => loadData()
+    )
+    .subscribe()
+  
+  SupabaseManager.addSubscription('editais-updates', channel)
+})
+
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('editais-updates')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('editais-updates')
   }
 })
 </script>

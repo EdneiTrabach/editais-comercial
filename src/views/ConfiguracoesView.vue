@@ -167,11 +167,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useRouter } from 'vue-router'
 import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 const router = useRouter()
 
@@ -580,6 +581,23 @@ onMounted(async () => {
   } catch (error) {
     console.error('Erro no onMounted:', error)
     showToastMessage('Erro ao carregar página', 'error')
+  }
+
+  const channel = supabase.channel('lances-updates')
+    .on('postgres_changes', 
+      { event: '*', schema: 'public', table: 'processos' }, 
+      () => loadData()
+    )
+    .subscribe()
+  
+  SupabaseManager.addSubscription('lances-updates', channel)
+})
+
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('lances-updates')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('lances-updates')
   }
 })
 </script>

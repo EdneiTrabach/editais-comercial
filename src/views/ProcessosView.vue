@@ -1257,6 +1257,37 @@ const loadData = async () => {
 
 // Use o composable
 useConnectionManager(loadData)
+
+// Modifique o onMounted para adicionar a inscrição do canal:
+onMounted(() => {
+  loadProcessos()
+  
+  // Configure o canal Realtime
+  const channel = supabase.channel('processos-updates')
+    .on('postgres_changes',
+      { 
+        event: '*',
+        schema: 'public',
+        table: 'processos'
+      },
+      () => {
+        loadProcessos()
+      }
+    )
+    .subscribe()
+    
+  // Registre no gerenciador
+  SupabaseManager.addSubscription('processos-updates', channel)
+})
+
+// Adicione onUnmounted para limpar o canal:
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('processos-updates')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('processos-updates')
+  }
+})
 </script>
 
 <style scoped>
@@ -2637,4 +2668,3 @@ td[data-field="impugnacoes"] {
   white-space: nowrap;
 }
 </style>
-`
