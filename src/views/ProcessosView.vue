@@ -1311,20 +1311,6 @@ onUnmounted(() => {
   margin-left: 0px;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-shrink: 0;
-}
-
-.header h1 {
-  color: #193155;
-  font-size: 1.8rem;
-  font-weight: 600;
-}
-
 .actions {
   display: flex;
   gap: 1rem;

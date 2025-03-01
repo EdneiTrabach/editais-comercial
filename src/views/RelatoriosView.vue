@@ -3,9 +3,9 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
-      <div class="reports-header">
+      <div class="header">
         <h1>Relatórios do Sistema</h1>
-        <p>Selecione o tipo de relatório que deseja gerar</p>
+        <!-- <p>Selecione o tipo de relatório que deseja gerar</p> -->
       </div>
 
       <div class="reports-grid">
@@ -161,16 +161,6 @@ useConnectionManager(loadData)
   padding: 2rem;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
-}
-
-.reports-header {
-  margin-bottom: 2rem;
-}
-
-.reports-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
 }
 
 .reports-grid {

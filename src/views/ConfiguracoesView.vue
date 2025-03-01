@@ -616,21 +616,6 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-/* Cabeçalho */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.header h1 {
-  color: #193155;
-  font-size: 1.8rem;
-  font-weight: 600;
-}
 
 /* Botão Adicionar */
 .btn-add {

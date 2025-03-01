@@ -4,7 +4,10 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
-      <h1>Planilha de Lances</h1>
+      <div class="header">
+        <h1>Planilha de Lances</h1>
+        <!-- <p>Selecione o processo e os itens da proposta para gerar a planilha de lances</p> -->
+      </div>
       
       <!-- Seleção de Processo -->
       <div v-if="step === 1" class="processo-selection">
@@ -323,22 +326,18 @@ useConnectionManager(loadData)
 
 onMounted(() => {
   loadProcessos()
-  
-  const channel = supabase.channel('lances-updates')
-    .on('postgres_changes', 
-      { event: '*', schema: 'public', table: 'processos' }, 
-      () => loadData()
-    )
-    .subscribe()
-  
-  SupabaseManager.addSubscription('lances-updates', channel)
 })
 
+// Quando criar um canal
+const channel = supabase.channel('nome-do-canal')
+channel.subscribe()
+SupabaseManager.addSubscription('nome-do-canal', channel)
+
 onUnmounted(() => {
-  const channel = SupabaseManager.getSubscription('lances-updates')
+  const channel = SupabaseManager.getSubscription('nome-do-canal')
   if (channel) {
     supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('lances-updates')
+    SupabaseManager.removeSubscription('nome-do-canal')
   }
 })
 </script>

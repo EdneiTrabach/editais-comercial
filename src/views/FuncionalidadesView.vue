@@ -3,7 +3,7 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
-      <div class="welcome-banner">
+      <div class="header">
         <h1>Funcionalidades do Sistema</h1>
       </div>
 
