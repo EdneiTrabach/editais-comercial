@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "framework": "vite",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
@@ -22,7 +21,6 @@
         }
       ]
     }
-  ]
+  ],
+  "version": 2
 }
-
-

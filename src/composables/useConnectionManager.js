@@ -5,52 +5,52 @@ import { ref } from 'vue'
 export function useConnectionManager(loadDataCallback) {
   const isReconnecting = ref(false)
 
-  // Função melhorada para gerenciar reconexão
-  const handleVisibilityChange = async () => {
-    if (!document.hidden && !isReconnecting.value) {
-      console.log('Página visível novamente, reconectando...')
-      try {
-        isReconnecting.value = true
-        
-        // Verifica a sessão do usuário e atualiza se necessário
-        const { data } = await supabase.auth.getSession()
-        if (data?.session) {
-          await supabase.auth.refreshSession()
-        }
-        
-        // Reconecta o cliente Realtime
+  // Função para verificar e reconectar
+  const checkConnection = async () => {
+    try {
+      // Verificar se ainda há conexão com o Supabase
+      const { error } = await supabase.from('profiles').select('id').limit(1)
+      
+      if (error) {
+        console.log('Erro de conexão detectado, reconectando...')
         await supabase.realtime.disconnect()
-        
-        // Pequeno delay para garantir desconexão completa
-        await new Promise(resolve => setTimeout(resolve, 300))
-        
-        // Reconecta
+        await new Promise(resolve => setTimeout(resolve, 500))
         await supabase.realtime.connect()
         
-        // Carrega os dados necessários
-        if (typeof loadDataCallback === 'function') {
-          await loadDataCallback()
-        }
-      } catch (error) {
-        console.error('Erro ao reconectar:', error)
-      } finally {
-        isReconnecting.value = false
+        // Atualiza a sessão também para evitar erros de autenticação
+        await supabase.auth.refreshSession()
+        
+        // Recarregar os dados
+        if (loadDataCallback) await loadDataCallback()
       }
+    } catch (err) {
+      console.error('Erro ao verificar conexão:', err)
     }
+  }
+
+  // Eventos para monitorar quando reconectar
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      checkConnection()
+    }
+  }
+
+  const handleOnline = () => {
+    checkConnection()
   }
 
   // Configura os event listeners
   onMounted(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleVisibilityChange)
-    window.addEventListener('online', handleVisibilityChange)
+    window.addEventListener('online', handleOnline)
   })
 
   // Remove os event listeners
   onUnmounted(() => {
     document.removeEventListener('visibilitychange', handleVisibilityChange)
     window.removeEventListener('focus', handleVisibilityChange)
-    window.removeEventListener('online', handleVisibilityChange)
+    window.removeEventListener('online', handleOnline)
   })
 
   return {
