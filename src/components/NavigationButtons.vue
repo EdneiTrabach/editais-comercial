@@ -37,8 +37,31 @@ const goToNext = () => {
   }
 }
 
-// Apenas rotas de autenticação não devem mostrar os botões
+// Rotas onde não devemos mostrar a navegação
 const hideNavigationRoutes = ['/login', '/reset-password', '/forgot-password']
+
+// Adiciona suporte para rotas especiais
+const isSpecialRoute = computed(() => {
+  // Verifica se está em uma rota de edição ou criação baseada no padrão das URLs
+  return route.path.includes('/edit') || 
+         route.path.includes('/new') || 
+         route.path.includes('/create') || 
+         (route.path.includes('/') && route.params.id)
+})
+
+// Determina a rota para voltar quando está em uma rota especial
+const getBackRoute = computed(() => {
+  // Personalizar conforme necessário para seu aplicativo
+  if (route.path.includes('/editais/')) return '/editais'
+  if (route.path.includes('/processos/')) return '/processos'
+  if (route.path.includes('/lances/')) return '/lances'
+  if (route.path.includes('/plataformas/')) return '/plataformas'
+  if (route.path.includes('/sistemas/')) return '/sistemas'
+  if (route.path.includes('/empresas/')) return '/empresas'
+  if (route.path.includes('/representantes/')) return '/representantes'
+  if (route.path.includes('/configuracoes/')) return '/configuracoes'
+  return '/home'
+})
 
 const shouldShowNavigation = computed(() => {
   return !hideNavigationRoutes.includes(route.path)
@@ -47,23 +70,39 @@ const shouldShowNavigation = computed(() => {
 
 <template>
   <div class="navigation-buttons" v-if="shouldShowNavigation">
-    <button 
-      @click="goToPrevious" 
-      :disabled="!hasPrevious"
-      :class="{ disabled: !hasPrevious }"
-    >
-      Anterior
-    </button>
-    <div class="current-page">
-      {{ navigationRoutes[currentIndex.value]?.name || 'Página Atual' }}
-    </div>
-    <button 
-      @click="goToNext" 
-      :disabled="!hasNext"
-      :class="{ disabled: !hasNext }"
-    >
-      Próximo
-    </button>
+    <!-- Modo especial: botão voltar quando estiver em rota de edição/criação -->
+    <template v-if="isSpecialRoute">
+      <button 
+        @click="router.push(getBackRoute)"
+        class="nav-btn prev-btn"
+      >
+        <i class="fa fa-chevron-left icon-white"></i>
+        Voltar para Lista
+      </button>
+    </template>
+    
+    <!-- Navegação padrão para rotas normais -->
+    <template v-else>
+      <button 
+        @click="goToPrevious" 
+        :disabled="!hasPrevious"
+        class="nav-btn prev-btn"
+      >
+        <i class="fa fa-chevron-left icon-white"></i>
+        Anterior
+      </button>
+      <div class="current-page" v-if="!isSpecialRoute">
+        {{ navigationRoutes[currentIndex.value]?.name || 'Página Atual' }}
+      </div>
+      <button 
+        @click="goToNext" 
+        :disabled="!hasNext"
+        class="nav-btn"
+      >
+        Próximo
+        <i class="fa fa-chevron-right icon-white"></i>
+      </button>
+    </template>
   </div>
 </template>
 
@@ -72,15 +111,14 @@ const shouldShowNavigation = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 1rem;
   padding: 20px;
-  margin-top: auto;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   background-color: #f8f9fa;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  border-radius: 8px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  /* Removido: position: fixed e bottom, left, right */
 }
 
 .current-page {
@@ -91,39 +129,56 @@ const shouldShowNavigation = computed(() => {
   text-align: center;
 }
 
-button {
-  padding: 10px 20px;
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg,#193155,#254677);
-  color: white;
+  border-radius: 8px;
+  font-size: 1rem;
   cursor: pointer;
-  font-family: 'Roboto', sans-serif;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: #193155;
+  color: white;
 }
 
-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #461D22;
-  box-shadow: none;
-}
-
-button:hover:not(.disabled) {
-  background: linear-gradient(180deg, #4b618b 0%, #2f7269 100%);
+.nav-btn:hover:not(:disabled) {
+  background: #254677;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-button:active:not(.disabled) {
-  transform: translateY(0);
-  background: linear-gradient(135deg,#193155,#254677);;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #e9ecef !important;
+  color: #6c757d !important;
 }
 
-/* Adicione em cada view ou no seu CSS global */
-.main-content {
-  padding-bottom: 80px; /* Espaço para os botões de navegação */
+.prev-btn {
+  background: #e9ecef;
+  color: #193155;
 }
+
+.prev-btn:not(:disabled) {
+  background: #193155;
+  color: white;
+}
+
+.prev-btn:hover:not(:disabled) {
+  background: #254677;
+  transform: translateY(-1px);
+}
+
+.icon-white {
+  font-size: 1.2rem;
+  color: white;
+}
+
+.nav-btn:disabled .icon-white {
+  color: #6c757d;
+}
+
+/* Removido o espaçamento para o main-content, já não é necessário */
 </style>
