@@ -137,6 +137,12 @@ const router = createRouter({
       name: 'sistemas',
       component: () => import('../views/SistemasView.vue'),
       meta: { requiresAuth: true }
+    },
+    // Adicione um catch-all route
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFound.vue')
     }
   ]
 })

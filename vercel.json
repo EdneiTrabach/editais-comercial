@@ -51,6 +51,13 @@
       ]
     }
   ],
+  "routes": [
+    {
+      "src": "/[^.]+",
+      "dest": "/",
+      "status": 200
+    }
+  ],
   "cleanUrls": true,
   "trailingSlash": false
 }

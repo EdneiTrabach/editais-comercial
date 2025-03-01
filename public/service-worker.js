@@ -17,6 +17,15 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Para requisições de navegação, responder com index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('/index.html')
+        .then(response => response || fetch(event.request))
+    );
+    return;
+  }
+  
   // Não intercepta requisições para o Supabase
   if (event.request.url.includes('supabase.co')) {
     return;

@@ -10,31 +10,18 @@ export class SupabaseManager {
       
       // Desconecta todos os canais existentes
       for (const [channelName, channel] of this.subscriptions) {
-        try {
-          console.log(`Desconectando canal: ${channelName}`)
-          await supabase.removeChannel(channel)
-        } catch (err) {
-          console.warn(`Erro ao remover canal ${channelName}:`, err)
-        }
+        await supabase.removeChannel(channel)
       }
 
-      // Limpa o mapa de subscrições
+      // Limpa o mapa
       this.subscriptions.clear()
 
-      // Reconecta o cliente realtime
-      try {
-        console.log('Reconectando cliente realtime...')
-        await supabase.realtime.disconnect()
-        await new Promise(resolve => setTimeout(resolve, 500)) // Pausa breve
-        await supabase.realtime.connect()
-        
-        // Atualiza o token de autenticação também
-        await supabase.auth.refreshSession()
-      } catch (err) {
-        console.warn('Erro ao reconectar realtime:', err)
-      }
-
-      console.log('Processo de reconexão concluído')
+      // Reconecta o cliente realtime e refresca a sessão
+      await supabase.realtime.disconnect()
+      await new Promise(resolve => setTimeout(resolve, 500))
+      await supabase.realtime.connect()
+      await supabase.auth.refreshSession()
+      
       return true
     } catch (error) {
       console.error('Erro na reconexão do Supabase:', error)
