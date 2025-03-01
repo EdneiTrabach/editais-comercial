@@ -1,5 +1,5 @@
 // src/lib/supabaseManager.js
-import { supabase } from '@/supabase' // ajuste o caminho conforme seu projeto
+import { supabase } from '@/lib/supabase'
 
 export class SupabaseManager {
   static subscriptions = new Map()

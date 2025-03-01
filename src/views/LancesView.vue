@@ -151,12 +151,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue' // Adicione onMounted aqui
+import { ref, computed, onMounted, onUnmounted } from 'vue' // Adicione onMounted e onUnmounted aqui
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { utils, writeFileXLSX } from 'xlsx'
 import html2pdf from 'html2pdf.js'
- import { useConnectionManager } from '@/composables/useConnectionManager'
+import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 const step = ref(1)
 const isSidebarExpanded = ref(true)
@@ -322,6 +323,19 @@ useConnectionManager(loadData)
 
 onMounted(() => {
   loadProcessos()
+})
+
+// Quando criar um canal
+const channel = supabase.channel('nome-do-canal')
+channel.subscribe()
+SupabaseManager.addSubscription('nome-do-canal', channel)
+
+onUnmounted(() => {
+  const channel = SupabaseManager.getSubscription('nome-do-canal')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('nome-do-canal')
+  }
 })
 </script>
 

@@ -1227,7 +1227,7 @@ onMounted(async () => {
 onUnmounted(() => {
   stopVisibilityMonitoring()
 
-  const channel = SupabaseManager.subscriptions.get('nome-do-canal')
+  const channel = SupabaseManager.getSubscription('nome-do-canal')
   if (channel) {
     supabase.removeChannel(channel)
     SupabaseManager.removeSubscription('nome-do-canal')
@@ -2637,3 +2637,4 @@ td[data-field="impugnacoes"] {
   white-space: nowrap;
 }
 </style>
+`
