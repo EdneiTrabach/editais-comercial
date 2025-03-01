@@ -6,37 +6,49 @@ export function useConnectionManager(loadDataCallback) {
   const isReconnecting = ref(false)
 
   // Função para verificar e reconectar
-  const checkConnection = async () => {
+  const handleConnectionRestore = async () => {
     try {
-      // Verificar se ainda há conexão com o Supabase
-      const { error } = await supabase.from('profiles').select('id').limit(1)
-      
-      if (error) {
-        console.log('Erro de conexão detectado, reconectando...')
-        await supabase.realtime.disconnect()
-        await new Promise(resolve => setTimeout(resolve, 500))
-        await supabase.realtime.connect()
+      if (!document.hidden) {
+        console.log('Aba visível novamente, verificando conexão...')
         
-        // Atualiza a sessão também para evitar erros de autenticação
-        await supabase.auth.refreshSession()
-        
-        // Recarregar os dados
-        if (loadDataCallback) await loadDataCallback()
+        // Verificar se a conexão realtime ainda está funcional
+        const { error } = await supabase
+          .from('processos')
+          .select('id')
+          .limit(1)
+          .maybeSingle()
+          
+        if (error && (error.code === 'JWT_INVALID' || error.code === 'PGRST301')) {
+          console.log('Detectado problema de conexão, reconectando...')
+          
+          // Reconectar ao Realtime
+          await supabase.realtime.disconnect()
+          await new Promise(resolve => setTimeout(resolve, 300))
+          await supabase.realtime.connect()
+          
+          // Atualizar a sessão
+          await supabase.auth.refreshSession()
+          
+          // Recarregar dados
+          if (typeof loadDataCallback === 'function') {
+            await loadDataCallback()
+          }
+        }
       }
     } catch (err) {
-      console.error('Erro ao verificar conexão:', err)
+      console.error('Erro na verificação de conexão:', err)
     }
   }
 
   // Eventos para monitorar quando reconectar
   const handleVisibilityChange = () => {
     if (!document.hidden) {
-      checkConnection()
+      handleConnectionRestore()
     }
   }
 
   const handleOnline = () => {
-    checkConnection()
+    handleConnectionRestore()
   }
 
   // Configura os event listeners

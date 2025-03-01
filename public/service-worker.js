@@ -26,24 +26,40 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Não intercepta requisições para o Supabase
+  // Não interceptar requisições para o Supabase
   if (event.request.url.includes('supabase.co')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          // Retorna imagem fallback para ícones que falharem
-          if (event.request.url.includes('/icons/')) {
-            return caches.match('/icons/fallback.svg');
-          }
-          throw new Error('Network error');
-        });
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request)
+          .then(cachedResponse => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            
+            // Retorna fallback para ícones ou imagens
+            if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
+              return caches.match('/icons/fallback.svg');
+            }
+            
+            throw new Error('Network error');
+          });
       })
+  );
+});
+
+// Adicionar evento de ativação para limpar caches antigos
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      }));
+    })
   );
 });

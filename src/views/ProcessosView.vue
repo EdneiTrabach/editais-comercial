@@ -260,6 +260,7 @@ import { buildUrl } from '@/utils/url'
 import BaseImage from '@/components/BaseImage.vue'
 import '../assets/styles/dark-mode.css'
 import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 // Adicione aqui o código de monitoramento de visibilidade
 const loadingTimeout = ref(null)
@@ -1215,11 +1216,22 @@ onMounted(async () => {
   await loadProcessos()
   await loadRepresentantes()
   loadColumnWidths()
+
+  // Quando criar um canal:
+  const channel = supabase.channel('nome-do-canal')
+  channel.subscribe()
+  SupabaseManager.addSubscription('nome-do-canal', channel)
 })
 
 // Adicione o onUnmounted
 onUnmounted(() => {
   stopVisibilityMonitoring()
+
+  const channel = SupabaseManager.subscriptions.get('nome-do-canal')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('nome-do-canal')
+  }
 })
 
 const refreshInterval = ref(null)

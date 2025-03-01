@@ -1864,6 +1864,20 @@ const loadPageData = async () => {
 
 // Use o composable
 useConnectionManager(loadPageData)
+
+// Quando criar um canal:
+const channel = supabase.channel('nome-do-canal')
+channel.subscribe()
+SupabaseManager.addSubscription('nome-do-canal', channel)
+
+// Quando componente é desmontado:
+onUnmounted(() => {
+  const channel = SupabaseManager.subscriptions.get('nome-do-canal')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('nome-do-canal')
+  }
+})
 </script>
 
 <style scoped>

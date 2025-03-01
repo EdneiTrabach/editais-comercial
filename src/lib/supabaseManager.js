@@ -1,5 +1,5 @@
 // src/lib/supabaseManager.js
-import { supabase } from './supabase'
+import { supabase } from '@/supabase' // ajuste o caminho conforme seu projeto
 
 export class SupabaseManager {
   static subscriptions = new Map()
@@ -29,16 +29,12 @@ export class SupabaseManager {
     }
   }
 
-  static addSubscription(channelName, channel) {
-    if (channel && channel.unsubscribe) {
-      this.subscriptions.set(channelName, channel)
-    } else {
-      console.warn('Tentativa de adicionar canal inválido:', channelName)
-    }
+  static addSubscription(name, channel) {
+    this.subscriptions.set(name, channel)
   }
 
-  static removeSubscription(channelName) {
-    this.subscriptions.delete(channelName)
+  static removeSubscription(name) {
+    this.subscriptions.delete(name)
   }
 
   static getSubscription(channelName) {

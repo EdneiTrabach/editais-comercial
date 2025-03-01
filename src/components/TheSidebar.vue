@@ -118,6 +118,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import { SupabaseManager } from '@/lib/supabaseManager'
 
 const emit = defineEmits(['sidebarToggle'])
 
@@ -457,6 +458,20 @@ watch([isActive, isPinned], ([newActive, newPinned]) => {
   localStorage.setItem('sidebarState', newActive.toString())
   localStorage.setItem('sidebarPinned', newPinned.toString())
   adjustMainContent()
+})
+
+// Quando criar um canal:
+const channel = supabase.channel('nome-do-canal')
+channel.subscribe()
+SupabaseManager.addSubscription('nome-do-canal', channel)
+
+// Quando componente é desmontado:
+onUnmounted(() => {
+  const channel = SupabaseManager.subscriptions.get('nome-do-canal')
+  if (channel) {
+    supabase.removeChannel(channel)
+    SupabaseManager.removeSubscription('nome-do-canal')
+  }
 })
 </script>
 
