@@ -24,7 +24,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    },
+    queryParams: {
+      _t: Date.now() // Adicionar timestamp para evitar cache
     }
   }
 })

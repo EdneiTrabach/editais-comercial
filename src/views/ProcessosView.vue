@@ -172,7 +172,7 @@
                         @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()" class="empresa-select">
                         <option value="">Selecione uma empresa</option>
                         <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
-                          {{ empresa.nome }} ({{ empresa.cnpj }})
+                          {{ empresa.nome }}
                         </option>
                       </select>
                     </template>
@@ -1287,6 +1287,25 @@ onUnmounted(() => {
     supabase.removeChannel(channel)
     SupabaseManager.removeSubscription('processos-updates')
   }
+})
+
+// Para cada cache no sistema (exemplo para processamentosCache):
+const processamentosCache = {
+  // ...código existente...
+  
+  // Adicione esta função
+  limparCache() {
+    this.dados.clear();
+    this.coordenadas.clear();
+    this.orgaos.clear();
+    console.log('Cache limpo com sucesso');
+  }
+}
+
+// Limpar cache quando o componente é montado
+onMounted(() => {
+  processamentosCache.limparCache();
+  // Resto do código existente...
 })
 </script>
 

@@ -381,6 +381,14 @@ const processamentosCache = {
       .toLowerCase()
       .replace(/\s+/g, '')
       .substring(0, 100)
+  },
+
+  // Adicione esta função
+  limparCache() {
+    this.dados.clear();
+    this.coordenadas.clear();
+    this.orgaos.clear();
+    console.log('Cache limpo com sucesso');
   }
 }
 
@@ -1906,6 +1914,12 @@ onUnmounted(() => {
     supabase.removeChannel(channel)
     SupabaseManager.removeSubscription('editais-updates')
   }
+})
+
+// Limpar cache quando o componente é montado
+onMounted(() => {
+  processamentosCache.limparCache();
+  // Resto do código existente...
 })
 </script>
 
