@@ -2294,12 +2294,6 @@ tbody tr:hover .row-number-cell {
   background-color: rgba(25, 49, 85, 0.08) !important;
 }
 
-.selected-row .row-number-cell {
-  background-color: rgb(25, 49, 85) !important;
-  font-weight: 600;
-  color: #ffffff;
-}
-
 .excel-table tr {
   transition: background-color 0.2s ease, border-left 0.2s ease;
 }
@@ -2482,6 +2476,7 @@ th[data-field="objeto_completo"] {
   background-color: transparent !important;
   color: inherit;
   font-weight: 600;
+  color: #ffffff;
 }
 
 .selected-row {
