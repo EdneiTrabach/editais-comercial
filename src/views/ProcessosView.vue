@@ -692,21 +692,6 @@ const limparFiltros = () => {
   })
 }
 
-onMounted(() => {
-  document.addEventListener('click', (e) => {
-    const isFilterClick = e.target.closest('.filtro-container')
-    if (!isFilterClick) {
-      Object.keys(mostrarFiltro.value).forEach(key => {
-        mostrarFiltro.value[key] = false
-      })
-    }
-  })
-})
-
-onMounted(() => {
-  loadProcessos()
-})
-
 const STORAGE_KEY = 'table-columns-width'
 const colunasWidth = ref({})
 
@@ -944,12 +929,6 @@ const checkAdminStatus = async () => {
   }
 }
 
-onMounted(async () => {
-  await loadProcessos()
-  await loadRepresentantes()
-  loadColumnWidths()
-})
-
 const estados = ref([
   { uf: 'AC', nome: 'Acre' },
   { uf: 'AL', nome: 'Alagoas' },
@@ -996,11 +975,6 @@ const loadRepresentantes = async () => {
     representantes.value = []
   }
 }
-
-onMounted(() => {
-  loadProcessos()
-  loadRepresentantes()
-})
 
 const getPortalName = (url) => {
   if (!url) return '-'
@@ -1056,11 +1030,6 @@ const loadPlataformas = async () => {
     console.error('Erro ao carregar plataformas:', error)
   }
 }
-
-onMounted(() => {
-  loadRepresentantes()
-  loadPlataformas()
-})
 
 const getPlataformaNome = (url) => {
   if (!url) return '-'
@@ -1185,14 +1154,6 @@ const handleEmpresaChange = async (processo) => {
   }
 }
 
-// Adicione no onMounted
-onMounted(async () => {
-  await Promise.all([
-    loadProcessos(),
-    loadEmpresas()
-  ])
-})
-
 // Adicione esta função junto com as outras
 const getEmpresaNome = (empresaId) => {
   const empresa = empresas.value.find(e => e.id === empresaId)
@@ -1210,27 +1171,90 @@ const getDistancias = async (processoId) => {
   return data || []
 }
 
-// Modifique o onMounted existente
-onMounted(async () => {
-  startVisibilityMonitoring()
-  await loadProcessos()
-  await loadRepresentantes()
-  loadColumnWidths()
+// Para cada cache no sistema (exemplo para processamentosCache):
+const processamentosCache = {
+  dados: new Map(),
+  coordenadas: new Map(),
+  orgaos: new Map(),
+  
+  limparCache() {
+    this.dados.clear();
+    this.coordenadas.clear();
+    this.orgaos.clear();
+    console.log('Cache limpo com sucesso');
+  }
+}
 
-  // Quando criar um canal:
-  const channel = supabase.channel('nome-do-canal')
-  channel.subscribe()
-  SupabaseManager.addSubscription('nome-do-canal', channel)
+// Consolidação de todos os onMounted em um único bloco
+onMounted(async () => {
+  try {
+    // 1. Iniciar monitoramento de visibilidade da página
+    startVisibilityMonitoring()
+    
+    // 2. Limpar cache antes de carregar novos dados
+    if (processamentosCache) {
+      processamentosCache.limparCache()
+    }
+    
+    // 3. Registrar listener para fechar dropdowns de filtros ao clicar fora
+    document.addEventListener('click', (e) => {
+      const isFilterClick = e.target.closest('.filtro-container')
+      if (!isFilterClick) {
+        Object.keys(mostrarFiltro.value).forEach(key => {
+          mostrarFiltro.value[key] = false
+        })
+      }
+    })
+    
+    // 4. Carregar dados em paralelo para melhor desempenho
+    await Promise.all([
+      loadProcessos(),
+      loadRepresentantes(),
+      loadEmpresas(),
+      loadPlataformas()
+    ])
+    
+    // 5. Carregar configurações da interface
+    loadColumnWidths()
+    
+    // 6. Configurar canal Realtime para atualizações em tempo real
+    const channel = supabase.channel('processos-updates')
+      .on('postgres_changes',
+        { 
+          event: '*',
+          schema: 'public',
+          table: 'processos'
+        },
+        () => {
+          loadProcessos()
+        }
+      )
+      .subscribe()
+    
+    // 7. Registrar canal no gerenciador
+    SupabaseManager.addSubscription('processos-updates', channel)
+    
+    // 8. Iniciar atualização automática
+    startAutoRefresh()
+    
+  } catch (error) {
+    console.error('Erro na inicialização do componente:', error)
+  }
 })
 
-// Adicione o onUnmounted
+// Manter o onUnmounted original para limpeza adequada
 onUnmounted(() => {
+  // Parar monitoramento de visibilidade
   stopVisibilityMonitoring()
-
-  const channel = SupabaseManager.getSubscription('nome-do-canal')
+  
+  // Parar auto-refresh
+  stopAutoRefresh()
+  
+  // Remover canal do Supabase
+  const channel = SupabaseManager.getSubscription('processos-updates')
   if (channel) {
     supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('nome-do-canal')
+    SupabaseManager.removeSubscription('processos-updates')
   }
 })
 
@@ -1257,56 +1281,6 @@ const loadData = async () => {
 
 // Use o composable
 useConnectionManager(loadData)
-
-// Modifique o onMounted para adicionar a inscrição do canal:
-onMounted(() => {
-  loadProcessos()
-  
-  // Configure o canal Realtime
-  const channel = supabase.channel('processos-updates')
-    .on('postgres_changes',
-      { 
-        event: '*',
-        schema: 'public',
-        table: 'processos'
-      },
-      () => {
-        loadProcessos()
-      }
-    )
-    .subscribe()
-    
-  // Registre no gerenciador
-  SupabaseManager.addSubscription('processos-updates', channel)
-})
-
-// Adicione onUnmounted para limpar o canal:
-onUnmounted(() => {
-  const channel = SupabaseManager.getSubscription('processos-updates')
-  if (channel) {
-    supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('processos-updates')
-  }
-})
-
-// Para cada cache no sistema (exemplo para processamentosCache):
-const processamentosCache = {
-  // ...código existente...
-  
-  // Adicione esta função
-  limparCache() {
-    this.dados.clear();
-    this.coordenadas.clear();
-    this.orgaos.clear();
-    console.log('Cache limpo com sucesso');
-  }
-}
-
-// Limpar cache quando o componente é montado
-onMounted(() => {
-  processamentosCache.limparCache();
-  // Resto do código existente...
-})
 </script>
 
 <style scoped>
@@ -1364,8 +1338,6 @@ onMounted(() => {
   height: 20px;
   filter: brightness(0) invert(1);
 }
-
-
 
 .excel-table {
   width: 100%;
@@ -2640,3 +2612,4 @@ td[data-field="impugnacoes"] {
   white-space: nowrap;
 }
 </style>
+``` 
