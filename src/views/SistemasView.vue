@@ -620,14 +620,6 @@ const checkAdminStatus = async () => {
   font-weight: 600;
 }
 
-.table-container {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow: auto;
-}
-
 table {
   width: 100%;
   border-collapse: separate;
@@ -778,15 +770,6 @@ th {
   width: 20px;
   height: 20px;
   filter: brightness(0) invert(1);
-}
-
-/* Tabela de Sistemas */
-.table-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow: auto;
 }
 
 .excel-table {

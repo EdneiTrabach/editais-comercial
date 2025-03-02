@@ -327,14 +327,6 @@ onMounted(() => {
   background: #254677;
 }
 
-.table-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  height: 100%;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;

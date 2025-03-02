@@ -1365,17 +1365,7 @@ onMounted(() => {
   filter: brightness(0) invert(1);
 }
 
-.table-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  max-height: calc(100vh - 180px);
-  margin-bottom: 1rem;
-  position: relative;
-  user-select: text;
-  height: 100%;
-}
+
 
 .excel-table {
   width: 100%;
@@ -1439,11 +1429,6 @@ onMounted(() => {
   width: 60px;
   min-width: 60px;
   white-space: nowrap;
-}
-
-.table-container {
-  max-height: calc(100vh - 180px);
-  overflow: auto;
 }
 
 .excel-table {
@@ -1666,19 +1651,9 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
-.table-container {
-  user-select: text;
-  overflow: auto;
-  position: relative;
-}
-
 .table-container.resizing * {
   cursor: col-resize;
   user-select: text !important;
-}
-
-.table-container {
-  position: relative;
 }
 
 .actions-column {
@@ -2282,14 +2257,6 @@ tbody .row-number-cell {
 
 tbody tr:hover .row-number-cell {
   background: #f0f0f0;
-}
-
-.table-container {
-  overflow: auto;
-  position: relative;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .excel-table {

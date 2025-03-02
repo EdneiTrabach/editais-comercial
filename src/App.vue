@@ -1,12 +1,37 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import { ref, watch, onMounted } from 'vue'
 import NavigationButtons from './components/NavigationButtons.vue'
+
+// Definir a variável isSidebarExpanded
+const isSidebarExpanded = ref(true) // Valor padrão: expandido
+
+// Carregar o estado do sidebar do localStorage na montagem
+onMounted(() => {
+  const savedState = localStorage.getItem('sidebarState')
+  if (savedState !== null) {
+    isSidebarExpanded.value = savedState === 'true'
+  }
+})
+
+// Função para atualizar o estado quando o sidebar mudar
+const handleSidebarToggle = (expanded) => {
+  isSidebarExpanded.value = expanded
+}
+
+// Opcional: escutar eventos do localStorage para sincronização entre componentes
+window.addEventListener('storage', (event) => {
+  if (event.key === 'sidebarState') {
+    isSidebarExpanded.value = event.newValue === 'true'
+  }
+})
 </script>
 
 <template>
   <div class="app-container">
-    <RouterView />
-    <NavigationButtons :isSidebarExpanded="isSidebarExpanded" />  </div>
+    <RouterView @sidebarToggle="handleSidebarToggle" />
+    <NavigationButtons :isSidebarExpanded="isSidebarExpanded" />
+  </div>
 </template>
 
 <style scoped>

@@ -298,15 +298,6 @@ onMounted(() => {
   background: #244776;
 }
 
-.table-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  flex: 1;
-  height: 100%;
-}
-
 .excel-table {
   width: 100%;
   border-collapse: collapse;

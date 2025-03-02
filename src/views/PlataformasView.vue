@@ -979,15 +979,6 @@ onUnmounted(() => {
   border-radius: 4px;
 }
 
-.table-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-top: 1rem;
-  overflow: auto;
-}
-
 table {
   width: 100%;
   border-collapse: separate;

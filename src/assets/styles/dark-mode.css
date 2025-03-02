@@ -689,6 +689,7 @@
     color: #94a3b8;
     border: 1px solid #4b5563;
     transition: all 0.2s ease;
+    background: #0f172a;
   }
 
   [data-theme="dark"] .tab-button:hover {

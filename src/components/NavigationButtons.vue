@@ -69,7 +69,9 @@ const shouldShowNavigation = computed(() => {
 </script>
 
 <template>
-  <div class="navigation-buttons" v-if="shouldShowNavigation">
+  <div class="navigation-buttons" 
+       v-if="shouldShowNavigation"
+       :class="{ 'sidebar-expanded': isSidebarExpanded, 'sidebar-collapsed': !isSidebarExpanded }">
     <!-- Modo especial: botão voltar quando estiver em rota de edição/criação -->
     <template v-if="isSpecialRoute">
       <button 
