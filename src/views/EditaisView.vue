@@ -1584,32 +1584,22 @@ const removerDaLista = (index) => {
   distanciasSalvas.value.splice(index, 1)
   showToast('Distância removida da lista', 'success')
 }
-// Adicione estas funções
-const startVisibilityMonitoring = () => {
-  document.addEventListener('visibilitychange', pageVisibilityHandler)
-  window.addEventListener('focus', pageVisibilityHandler)
-  window.addEventListener('online', pageVisibilityHandler)
-}
-
-const stopVisibilityMonitoring = () => {
-  document.removeEventListener('visibilitychange', pageVisibilityHandler)
-  window.removeEventListener('focus', pageVisibilityHandler)
-  window.removeEventListener('online', pageVisibilityHandler)
-}
 
 // Modifique o onMounted e onUnmounted
 onMounted(() => {
-  startVisibilityMonitoring()
+  // Use apenas o composable para gerenciar reconexões
   startAutoRefresh()
+  
   Promise.all([
     loadSistemas(),
     loadPlataformas(),
     loadRepresentantes()
-  ])
+  ]).catch(error => {
+    console.error('Erro ao carregar dados iniciais:', error)
+  })
 })
 
 onUnmounted(() => {
-  stopVisibilityMonitoring()
   stopAutoRefresh()
 })
 
@@ -1910,50 +1900,35 @@ onUnmounted(() => {
 })
 
 const loadPageData = async () => {
-  await loadProcessos() // ou qualquer outra função que carregue seus dados
+  if (isLoading.value) return
+  
+  try {
+    isLoading.value = true
+    await Promise.all([
+      loadProcessos(),
+      loadPlataformas(),
+      loadRepresentantes(),
+      loadSistemas()
+    ])
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// Use o composable
-useConnectionManager(loadPageData)
-
-// Quando criar um canal:
-const channel = supabase.channel('nome-do-canal')
-channel.subscribe()
-SupabaseManager.addSubscription('nome-do-canal', channel)
-
-// Quando componente é desmontado:
-onUnmounted(() => {
-  const channel = SupabaseManager.subscriptions.get('nome-do-canal')
-  if (channel) {
-    supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('nome-do-canal')
-  }
-})
-
-// Use o composable com a função loadData já existente
-useConnectionManager(loadData)
-
-// Configure o canal no onMounted e limpe no onUnmounted
+// Use o composable no primeiro onMounted
 onMounted(() => {
-  // Carregamento inicial
-  loadData()
+  useConnectionManager(loadPageData)
   
   const channel = supabase.channel('editais-updates')
     .on('postgres_changes', 
       { event: '*', schema: 'public', table: 'processos' }, 
-      () => loadData()
+      () => loadPageData()
     )
     .subscribe()
   
   SupabaseManager.addSubscription('editais-updates', channel)
-})
-
-onUnmounted(() => {
-  const channel = SupabaseManager.getSubscription('editais-updates')
-  if (channel) {
-    supabase.removeChannel(channel)
-    SupabaseManager.removeSubscription('editais-updates')
-  }
 })
 
 // Limpar cache quando o componente é montado

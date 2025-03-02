@@ -3,33 +3,27 @@ import { supabase } from '@/lib/supabase'
 import { ref } from 'vue'
 
 export function useConnectionManager(loadDataCallback) {
+  // Adicione este controle de estado
   const isReconnecting = ref(false)
 
-  // Função para verificar e reconectar
   const handleConnectionRestore = async () => {
+    if (isReconnecting.value) return
+
     try {
-      if (!document.hidden) {
-        console.log('Aba visível novamente, verificando conexão...')
-        
-        // Verificar se a conexão realtime ainda está funcional
-        const { error } = await supabase
-          .from('processos')
-          .select('id')
-          .limit(1)
-          .maybeSingle()
-          
-        if (error && (error.code === 'JWT_INVALID' || error.code === 'PGRST301')) {
-          console.log('Detectado problema de conexão, reconectando...')
-          
-          // Reconectar ao Realtime
-          await supabase.realtime.disconnect()
-          await new Promise(resolve => setTimeout(resolve, 300))
-          await supabase.realtime.connect()
-          
-          // Atualizar a sessão
-          await supabase.auth.refreshSession()
-          
-          // Recarregar dados
+      isReconnecting.value = true
+
+      // Verifica se está online
+      if (navigator.onLine) {
+        // Verifica se a sessão Supabase está ativa
+        const { data: { session } } = await supabase.auth.getSession()
+
+        // Se tiver sessão ativa, executa o callback
+        if (session) {
+          await SupabaseManager.handleReconnect()
+
+          // Adicione um pequeno delay para evitar colisões
+          await new Promise(resolve => setTimeout(resolve, 500))
+
           if (typeof loadDataCallback === 'function') {
             await loadDataCallback()
           }
@@ -37,13 +31,23 @@ export function useConnectionManager(loadDataCallback) {
       }
     } catch (err) {
       console.error('Erro na verificação de conexão:', err)
+    } finally {
+      isReconnecting.value = false
     }
   }
 
-  // Eventos para monitorar quando reconectar
+  // Configure os event listeners com controle de debounce
+  let reconnectTimer = null
+
   const handleVisibilityChange = () => {
     if (!document.hidden) {
-      handleConnectionRestore()
+      // Cancelar timer anterior se houver
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+
+      // Aguardar um pouco antes de tentar reconectar
+      reconnectTimer = setTimeout(() => {
+        handleConnectionRestore()
+      }, 1000)
     }
   }
 

@@ -3,29 +3,38 @@ import { supabase } from '@/lib/supabase'
 
 export class SupabaseManager {
   static subscriptions = new Map()
+  static reconnecting = false
+  static reconnectTimeout = null
 
   static async handleReconnect() {
+    // Evita múltiplas reconexões simultâneas
+    if (this.reconnecting) return;
+    
     try {
-      console.log('Iniciando processo de reconexão...')
+      this.reconnecting = true;
       
-      // Desconecta todos os canais existentes
-      for (const [channelName, channel] of this.subscriptions) {
-        await supabase.removeChannel(channel)
+      // Tenta renovar a sessão
+      const { error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('Erro ao renovar sessão:', error);
+        return;
       }
-
-      // Limpa o mapa
-      this.subscriptions.clear()
-
-      // Reconecta o cliente realtime e refresca a sessão
-      await supabase.realtime.disconnect()
-      await new Promise(resolve => setTimeout(resolve, 500))
-      await supabase.realtime.connect()
-      await supabase.auth.refreshSession()
       
-      return true
-    } catch (error) {
-      console.error('Erro na reconexão do Supabase:', error)
-      return false
+      // Reativa inscrições
+      for (const [channelName, channel] of this.subscriptions.entries()) {
+        await channel.subscribe();
+        console.log(`Reativado canal: ${channelName}`);
+      }
+      
+    } catch (err) {
+      console.error('Erro ao reconectar:', err);
+    } finally {
+      this.reconnecting = false;
+      
+      // Limpa timeout anterior se houver
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+      }
     }
   }
 
