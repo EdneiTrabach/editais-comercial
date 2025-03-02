@@ -203,12 +203,6 @@
     color: var(--text-primary);
   }
   
-  [data-theme="dark"] .table-container {
-    background-color: #1e293b;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border: 1px solid #2d3748;
-  }
-  
   [data-theme="dark"] .excel-table {
     border-color: #2d3748;
     background-color: #1e293b;

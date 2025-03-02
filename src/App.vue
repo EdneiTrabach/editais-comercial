@@ -6,8 +6,7 @@ import NavigationButtons from './components/NavigationButtons.vue'
 <template>
   <div class="app-container">
     <RouterView />
-    <NavigationButtons />
-  </div>
+    <NavigationButtons :isSidebarExpanded="isSidebarExpanded" />  </div>
 </template>
 
 <style scoped>
