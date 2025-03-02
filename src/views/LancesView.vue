@@ -447,12 +447,6 @@ h1 {
   margin-top: 2rem;
 }
 
-.navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-}
-
 .btn-voltar,
 .btn-avancar,
 .btn-exportar {
@@ -543,9 +537,4 @@ h1 {
   border-radius: 4px;
 }
 
-.navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-}
 </style>

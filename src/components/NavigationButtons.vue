@@ -115,12 +115,12 @@ const shouldShowNavigation = computed(() => {
   align-items: center;
   gap: 1rem;
   padding: 20px;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
   margin-bottom: 1rem;
-  background-color: #f8f9fa;
+  background-color: #00000000;
   border-radius: 8px;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  /* Removido: position: fixed e bottom, left, right */
+  z-index: 10;
 }
 
 .current-page {
