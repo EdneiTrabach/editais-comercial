@@ -252,7 +252,7 @@ const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     localStorage.clear()
-    await router.push('/login')
+    await router.push('/login')  // A navegação já está acontecendo aqui
   } catch (error) {
     console.error('Erro ao fazer logout:', error)
     alert('Erro ao sair do sistema. Tente novamente.')

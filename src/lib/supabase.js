@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import router from '@/router'  // Adicione esta importação
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -37,7 +38,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // No seu arquivo de configuração do Supabase
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
-    router.push('/login')
+    router.push('/login')  // Aqui está o erro: router não está definido
   }
 })
 
