@@ -529,7 +529,7 @@ th {
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -574,6 +574,7 @@ th {
   font-family: 'Roboto', sans-serif;
   font-size: 0.9rem;
   color: #495057;
+  width: 340px;
 }
 
 .form-group input:focus {
@@ -590,6 +591,8 @@ th {
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
+  grid-column: 1 / -1; /* Faz ocupar todas as colunas disponíveis (de 1 até o fim) */
+  
 }
 
 .btn-cancelar, .btn-salvar {

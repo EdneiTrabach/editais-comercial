@@ -207,6 +207,28 @@
             </div>
           </div>
 
+          <!-- Adicione este campo após o campo de representante -->
+          <div class="form-group">
+            <RequiredLabel text="Valor Estimado" :isRequired="false" />
+            <div class="valor-container">
+              <span class="currency-symbol">R$</span>
+              <input 
+                v-model="formData.valor_estimado" 
+                type="text" 
+                placeholder="0,00"
+                @input="formatarValorEstimado"
+              />
+            </div>
+          </div>
+
+          <!-- Adicionar esta seção após o campo de valor estimado, caso deseje visualizar a publicação -->
+          <div v-if="formData.publicacao_original" class="form-group full-width">
+            <RequiredLabel text="Publicação Original" :isRequired="false" />
+            <div class="publicacao-container">
+              <textarea v-model="formData.publicacao_original" rows="6" readonly class="publicacao-text"></textarea>
+            </div>
+          </div>
+
           <div class="form-group">
             <RequiredLabel text="Observações" :isRequired="false" />
             <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais" />
@@ -499,7 +521,9 @@ const handleSubmit = async () => {
       updated_at: new Date().toISOString(),
       distancia_km: formData.value.distancia_km,
       ponto_referencia_cidade: formData.value.ponto_referencia_cidade,
-      ponto_referencia_uf: formData.value.ponto_referencia_uf
+      ponto_referencia_uf: formData.value.ponto_referencia_uf,
+      valor_estimado: formData.value.valor_estimado,
+      publicacao_original: formData.value.publicacao_original || null, // Adicionando o texto original
     }
 
     // Primeiro insere o processo
@@ -616,7 +640,8 @@ const formData = ref({
   status: '', // Certifique-se que está vazio aqui
   distancia_km: null,
   ponto_referencia_cidade: '',
-  ponto_referencia_uf: ''
+  ponto_referencia_uf: '',
+  valor_estimado: ''
 })
 
 const estados = [
@@ -1007,15 +1032,18 @@ const patterns = {
   // Captura objeto
   objeto: /(?:\*\s*([^*]+)\s*\*)|(?:objeto[\s.:]+([^\n]+))/i,
 
-  // Captura valor
-  valor: /R\$\s*([\d.,]+)/i
+  // Atualize o padrão existente para valores
+  valor: /(?:valor[\s.:]*estimado|valor[\s.:]*global|valor[\s.:]*total|valor[\s.:]*máximo)[\s.:]*(?:de)?[\s.:]*R\$[\s.]*([\d.,]+)|\bR\$[\s.]*([\d.,]+)/i
 }
 
-// Modifique a função processarPublicacao para usar os patterns
+// Modifique a função processarPublicacao para armazenar o texto original
 const processarPublicacao = async () => {
   try {
     loading.value = true
     const texto = publicacaoText.value
+
+    // Armazena o texto original no formData
+    formData.value.publicacao_original = texto
 
     // Inicia o progresso
     progressoExtracao.value = {
@@ -1103,6 +1131,18 @@ const processarPublicacao = async () => {
     if (matchObjeto) {
       // ... código existente ...
       progressoExtracao.value.detalhes.push('✓ Objeto extraído')
+    }
+
+    // Extração do valor estimado (80%)
+    progressoExtracao.value.etapa = 'Extraindo valor estimado'
+    progressoExtracao.value.porcentagem = 80
+    const matchValor = texto.match(patterns.valor)
+    if (matchValor) {
+      let valorExtraido = matchValor[1].replace(/\./g, '').replace(',', '.')
+      // Formata para o padrão brasileiro
+      dadosExtraidos.valor_estimado = parseFloat(valorExtraido)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+      progressoExtracao.value.detalhes.push('✓ Valor estimado extraído')
     }
 
     // Finalização (100%)
@@ -1921,6 +1961,19 @@ onMounted(() => {
   processamentosCache.limparCache();
   // Resto do código existente...
 })
+
+// Adicione esta função ao componente
+const formatarValorEstimado = () => {
+  // Remove qualquer caracter que não seja número
+  let valor = formData.value.valor_estimado.replace(/\D/g, '')
+  
+  // Converte para valor decimal (divide por 100)
+  valor = (parseInt(valor) / 100).toFixed(2)
+  
+  // Formata para o padrão brasileiro
+  formData.value.valor_estimado = valor.replace('.', ',')
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
 </script>
 
 <style scoped>
@@ -1984,13 +2037,14 @@ label,
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.8rem;
+  gap: 2rem; /* Aumente o espaço aqui */
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  margin-bottom: 0.5rem; /* Adicione essa margem */
 }
 
 .full-width {
@@ -2934,5 +2988,54 @@ input[type="date"]:focus:not(.error) {
   color: #ff0000;
   font-size: 2rem;
   flex-wrap: wrap;
+}
+
+/* Estilo para o campo de valor */
+.valor-container {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.valor-container input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.9rem 0.5rem;
+}
+
+.valor-container input:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.currency-symbol {
+  padding-left: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Adicione ao seu estilo CSS */
+.publicacao-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.publicacao-text {
+  width: 100%;
+  background: #f8f9fa;
+  border: none;
+  font-family: monospace;
+  cursor: default;
+}
+
+.publicacao-text:focus {
+  outline: none;
+  box-shadow: none;
 }
 </style>
