@@ -9,7 +9,7 @@
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   background: #f8f9fa;
-  height: 100vh;
+  /* height: 100vh; */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -58,7 +58,7 @@
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #e9ecef;
-  min-width: 1500px;
+  min-width: 1406px;
 }
 
 .excel-table th {
@@ -73,8 +73,8 @@
 }
 
 .table-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .table-container::-webkit-scrollbar-track {
