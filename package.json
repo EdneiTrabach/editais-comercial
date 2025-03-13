@@ -19,6 +19,7 @@
     "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.2",
     "lodash": "^4.17.21",
+    "maska": "^3.1.0",
     "rate-limiter-flexible": "^5.0.5",
     "redis": "^4.7.0",
     "vue": "^3.5.13",

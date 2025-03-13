@@ -21,7 +21,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {
     schema: 'public'
   },
-  debug: true, // Ativa logs detalhados
   global: {
     headers: {
       'Content-Type': 'application/json',
@@ -35,12 +34,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// No seu arquivo de configuração do Supabase
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
-    router.push('/login')  // Aqui está o erro: router não está definido
-  }
-})
+// Não use o router aqui para evitar problemas de importação circular
+// Em vez disso, use o hook onAuthStateChange no appService
 
 // Adicione um interceptor global para erros de rede
 window.addEventListener('unhandledrejection', async (event) => {

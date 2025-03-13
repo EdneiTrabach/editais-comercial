@@ -38,3 +38,26 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Adicione este handler para lidar com reconexões
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'RECONNECT') {
+    // Limpa o cache para forçar novas requisições
+    caches.delete(CACHE_NAME).then(() => {
+      // Notifica a página que o cache foi limpo
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'CACHE_CLEARED'
+          })
+        })
+      })
+    })
+  }
+})
+
+// Adicione também este evento:
+self.addEventListener('activate', (event) => {
+  // Reivindicar controle imediatamente
+  event.waitUntil(self.clients.claim())
+})

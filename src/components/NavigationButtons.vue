@@ -2,6 +2,14 @@
 import { useRouter, useRoute } from 'vue-router'
 import { computed } from 'vue'
 
+// Defina a propriedade como prop
+const props = defineProps({
+  isSidebarExpanded: {
+    type: Boolean,
+    default: true
+  }
+})
+
 // Define a ordem correta das rotas para navegação
 const navigationRoutes = [
   { path: '/home', name: 'Home' },
