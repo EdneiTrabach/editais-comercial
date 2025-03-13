@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useRouter } from 'vue-router'
@@ -231,14 +231,8 @@ export default {
 
     // Modifique a função handleSidebarToggle no ConfiguracoesView.js
     const handleSidebarToggle = (expanded) => {
-      isSidebarExpanded.value = expanded
-      
-      // Aplicar a margem correta ao conteúdo principal
-      const mainContent = document.querySelector('.main-content-cfg-usuarios')
-      if (mainContent) {
-        // Se expanded for true, aplicar margem; caso contrário, remover
-        mainContent.style.marginLeft = expanded ? '260px' : '0'
-      }
+      console.log('Sidebar toggle:', expanded);
+      isSidebarExpanded.value = expanded;
     }
 
     const formatDate = (date) => {
@@ -527,12 +521,65 @@ export default {
       SupabaseManager.addSubscription('lances-updates', channel)
     })
 
+    onMounted(() => {
+      // Verificar o estado inicial do sidebar
+      const savedState = localStorage.getItem('sidebarState')
+      if (savedState !== null) {
+        isSidebarExpanded.value = savedState === 'true'
+      }
+      
+      // Adicionar listener para eventos de armazenamento
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'sidebarState') {
+          isSidebarExpanded.value = event.newValue === 'true'
+        }
+      })
+
+      // Adicionar um listener para eventos de click globais
+      document.addEventListener('click', (e) => {
+        const sidebar = document.querySelector('.sidebar')
+        const trigger = document.querySelector('.sidebar-trigger')
+        
+        if (sidebar && trigger && 
+            !sidebar.contains(e.target) && 
+            !trigger.contains(e.target)) {
+          // Se clicar fora do sidebar e ele não estiver fixado
+          const isPinned = localStorage.getItem('sidebarPinned') === 'true'
+          if (!isPinned) {
+            isSidebarExpanded.value = false
+          }
+        }
+      })
+    })
+
     onUnmounted(() => {
       const channel = SupabaseManager.getSubscription('lances-updates')
       if (channel) {
         supabase.removeChannel(channel)
         SupabaseManager.removeSubscription('lances-updates')
       }
+
+      window.removeEventListener('storage', (event) => {
+        if (event.key === 'sidebarState') {
+          isSidebarExpanded.value = event.newValue === 'true'
+        }
+      })
+    })
+
+    // Adicione este código dentro do setup()
+    watch(isSidebarExpanded, (newValue) => {
+      console.log('isSidebarExpanded mudou para:', newValue)
+      // Certifique-se de que o DOM seja atualizado
+      nextTick(() => {
+        const mainContent = document.querySelector('.main-content-cfg-usuarios')
+        if (mainContent) {
+          if (newValue) {
+            mainContent.classList.remove('expanded')
+          } else {
+            mainContent.classList.add('expanded')
+          }
+        }
+      })
     })
 
     // Retornar variáveis e funções que serão usadas no template
