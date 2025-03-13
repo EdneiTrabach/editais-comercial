@@ -229,8 +229,16 @@ export default {
       showConfirmDialog.value = true;
     };
 
+    // Modifique a função handleSidebarToggle no ConfiguracoesView.js
     const handleSidebarToggle = (expanded) => {
       isSidebarExpanded.value = expanded
+      
+      // Aplicar a margem correta ao conteúdo principal
+      const mainContent = document.querySelector('.main-content-cfg-usuarios')
+      if (mainContent) {
+        // Se expanded for true, aplicar margem; caso contrário, remover
+        mainContent.style.marginLeft = expanded ? '260px' : '0'
+      }
     }
 
     const formatDate = (date) => {

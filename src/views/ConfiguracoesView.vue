@@ -24,7 +24,7 @@
               <th class="th-cfg-usuarios">Função</th>
               <th class="th-cfg-usuarios">Status</th>
               <th class="th-cfg-usuarios">Criado em</th>
-              <th class="th-actions-cfg-usuarios">Ações</th>
+              <th class="th-cfg-usuarios">Ações</th>
             </tr>
           </thead>
           <tbody class="tbody-cfg-usuarios">

@@ -13,10 +13,11 @@
   background: white;
   border-radius: 12px;
   margin: 0.5rem;
+  margin-left: 260px; /* Valor padrão quando o sidebar está expandido */
 }
 
 .main-content-cfg-usuarios.expanded {
-  margin-left: 0;
+  margin-left: 0; /* Quando o sidebar está recolhido */
 }
 
 /* Cabeçalho */
@@ -916,4 +917,172 @@ input {
 
 .btn-reset-cfg-usuarios:hover .icon-action-cfg-usuarios {
   transform: rotate(15deg);
+}
+
+/* Adicione essas regras ao final do arquivo ConfiguracoesView.css */
+
+/* Suporte ao modo Dark */
+[data-theme="dark"] .layout-cfg-usuarios {
+  background-color: #0f172a;
+}
+
+[data-theme="dark"] .main-content-cfg-usuarios {
+  background-color: #1e293b;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .header-cfg-usuarios {
+  border-bottom-color: #2d3748;
+}
+
+[data-theme="dark"] .title-cfg-usuarios {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .excel-table-cfg-usuarios {
+  border-color: #2d3748;
+}
+
+[data-theme="dark"] .thead-cfg-usuarios {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+[data-theme="dark"] .th-cfg-usuarios {
+  color: #f9fafb;
+  border-color: #2d3748;
+}
+
+[data-theme="dark"] .tbody-cfg-usuarios .tr-body-cfg-usuarios:nth-child(even) {
+  background-color: #1e293b;
+}
+
+[data-theme="dark"] .tr-body-cfg-usuarios:hover {
+  background-color: #334155 !important;
+}
+
+[data-theme="dark"] .td-cfg-usuarios,
+[data-theme="dark"] .td-actions-cfg-usuarios {
+  border-color: #2d3748;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .th-actions-cfg-usuarios {
+  border-color: #2d3748;
+}
+
+[data-theme="dark"] .th-cfg-usuarios:hover {
+  background-color: #434343;
+}
+
+/* Inputs e formulários */
+[data-theme="dark"] .name-input-cfg-usuarios,
+[data-theme="dark"] .email-input-cfg-usuarios,
+[data-theme="dark"] .table-container-cfg-usuarios {
+  background: transparent;
+  color: #f9fafb;
+  border: none;
+}
+
+[data-theme="dark"] .input-cfg-usuarios,
+[data-theme="dark"] .select-cfg-usuarios {
+  background-color: #1e293b;
+  border-color: #2d3748;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .input-cfg-usuarios:focus,
+[data-theme="dark"] .select-cfg-usuarios:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .role-select-cfg-usuarios {
+  background-color: #1e293b;
+  color: #f9fafb;
+  border-color: #2d3748;
+}
+
+/* Status badges */
+[data-theme="dark"] .status-badge-cfg-usuarios.active {
+  background: #166534;
+  color: #bbf7d0;
+}
+
+[data-theme="dark"] .status-badge-cfg-usuarios.disabled {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+[data-theme="dark"] .status-badge-cfg-usuarios.pending {
+  background: #854d0e;
+  color: #fde68a;
+}
+
+/* Botões */
+[data-theme="dark"] .btn-toggle-cfg-usuarios:hover {
+  background-color: #334155;
+}
+
+[data-theme="dark"] .btn-action-cfg-usuarios.btn-reset-cfg-usuarios {
+  background: #0369a1;
+  color: #bae6fd;
+}
+
+[data-theme="dark"] .btn-action-cfg-usuarios.btn-delete-cfg-usuarios {
+  background: #7f1d1d;
+}
+
+/* Modal */
+[data-theme="dark"] .modal-cfg-usuarios {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="dark"] .modal-content-cfg-usuarios {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .modal-title-cfg-usuarios {
+  color: #f9fafb;
+  border-bottom-color: #2d3748;
+}
+
+[data-theme="dark"] .btn-cancel-cfg-usuarios {
+  background: #334155;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .btn-confirm-cfg-usuarios {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+/* Dialog */
+[data-theme="dark"] .confirm-dialog-cfg-usuarios {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .dialog-title-cfg-usuarios {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .dialog-message-cfg-usuarios {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .warning-text-cfg-usuarios {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+[data-theme="dark"] .btn-secondary-cfg-usuarios {
+  background: #334155;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .btn-danger-cfg-usuarios {
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+}
+
+[data-theme="dark"] .btn-primary-cfg-usuarios {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
 }
