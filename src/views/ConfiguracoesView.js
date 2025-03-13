@@ -191,33 +191,42 @@ export default {
       showConfirmDialog.value = true
     }
 
+    // Substitua a função toggleUserStatus existente por esta versão melhorada:
     const toggleUserStatus = async (user) => {
       const newStatus = user.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+      const message = newStatus === 'ACTIVE' 
+        ? `Deseja ativar o usuário ${user.email}?` 
+        : `Deseja desativar o usuário ${user.email}?`;
       
-      try {
-        // Atualizar apenas status na tabela profiles
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            status: newStatus,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
+      dialogConfig.value = {
+        title: `${newStatus === 'ACTIVE' ? 'Ativar' : 'Desativar'} usuário`,
+        message: message,
+        confirmText: newStatus === 'ACTIVE' ? 'Ativar' : 'Desativar',
+        onConfirm: async () => {
+          try {
+            // Atualizar status na tabela profiles
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ 
+                status: newStatus,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id);
 
-        if (profileError) throw profileError;
+            if (profileError) throw profileError;
 
-        // Removido o código que tentava modificar diretamente o usuário via auth.admin
-        // Isso seria feito usando funções no backend ou funções RPC seguras
-
-        // Atualizar UI
-        user.status = newStatus;
-        showToastMessage(`Usuário ${newStatus === 'ACTIVE' ? 'ativado' : 'desativado'} com sucesso!`);
-        await loadUsers();
-
-      } catch (error) {
-        console.error('Erro ao alterar status:', error);
-        showToastMessage('Erro ao alterar status do usuário', 'error');
-      }
+            // Atualizar UI
+            user.status = newStatus;
+            showConfirmDialog.value = false;
+            showToastMessage(`Usuário ${newStatus === 'ACTIVE' ? 'ativado' : 'desativado'} com sucesso!`);
+          } catch (error) {
+            console.error('Erro ao alterar status:', error);
+            showToastMessage('Erro ao alterar status do usuário', 'error');
+          }
+        }
+      };
+      
+      showConfirmDialog.value = true;
     };
 
     const handleSidebarToggle = (expanded) => {
@@ -399,6 +408,80 @@ export default {
     // Use o composable
     useConnectionManager(loadData)
 
+    // Função para atualizar o email do usuário
+    const handleEmailUpdate = async (user, newEmail) => {
+      if (user.email === newEmail || !newEmail) return;
+      
+      // Validação básica de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        showToastMessage('Formato de email inválido', 'error');
+        // Recarrega para reverter a alteração inválida
+        await loadUsers();
+        return;
+      }
+    
+      try {
+        // Verifica se o email já existe (exceto para o usuário atual)
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', newEmail)
+          .neq('id', user.id)
+          .single();
+    
+        if (existingUser) {
+          showToastMessage('Este email já está em uso', 'error');
+          await loadUsers(); // Reverte alteração
+          return;
+        }
+    
+        // Atualiza o email na tabela profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            email: newEmail,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+    
+        if (profileError) throw profileError;
+    
+        // Atualiza localmente
+        user.email = newEmail;
+        showToastMessage('Email atualizado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao atualizar email:', error);
+        showToastMessage('Erro ao atualizar email', 'error');
+        await loadUsers(); // Reverte alteração em caso de erro
+      }
+    };
+    
+    // Função para solicitar redefinição de senha
+    const resetPassword = async (user) => {
+      dialogConfig.value = {
+        title: 'Confirmar redefinição de senha',
+        message: `Deseja enviar um email de redefinição de senha para ${user.email}?`,
+        confirmText: 'Enviar',
+        onConfirm: async () => {
+          try {
+            const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+              redirectTo: `${window.location.origin}/reset-password`
+            });
+    
+            if (error) throw error;
+    
+            showConfirmDialog.value = false;
+            showToastMessage('Email de redefinição enviado com sucesso!');
+          } catch (error) {
+            console.error('Erro ao enviar redefinição de senha:', error);
+            showToastMessage('Erro ao enviar email de redefinição de senha', 'error');
+          }
+        }
+      };
+      showConfirmDialog.value = true;
+    };
+
     onMounted(async () => {
       // Seu código existente...
       try {
@@ -468,7 +551,9 @@ export default {
       hideConfirmDialog: () => { showConfirmDialog.value = false },
       showAccessDeniedModal, // Exportar nova ref
       redirectToHome, // Exportar nova função
-      currentUserEmail
+      currentUserEmail,
+      handleEmailUpdate,
+      resetPassword,
     }
   }
 }

@@ -38,7 +38,16 @@
                   class="name-input-cfg-usuarios"
                 />
               </td>
-              <td class="td-cfg-usuarios">{{ formatUserDisplay(user) }}</td>
+              <td class="td-cfg-usuarios">
+                <input 
+                  :value="user.email || ''"
+                  @blur="handleEmailUpdate(user, $event.target.value)"
+                  type="email"
+                  placeholder="Digite o email"
+                  class="email-input-cfg-usuarios"
+                  :disabled="user.id === currentUser?.id"
+                />
+              </td>
               <td class="td-cfg-usuarios">
                 <select 
                   :value="user.role"
@@ -50,32 +59,43 @@
                   <option value="admin" class="option-cfg-usuarios">Administrador</option>
                 </select>
               </td>
-              <td class="td-cfg-usuarios">
-                <span :class="['status-cfg-usuarios', user.status?.toLowerCase()]">
-                  {{ formatStatus(user.status) }}
-                </span>
-                <button 
-                  @click="toggleUserStatus(user)"
-                  class="btn-toggle-cfg-usuarios"
-                  :disabled="user.id === currentUser?.id"
-                  :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
-                >
-                  <img 
-                    :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
-                    :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
-                    class="icon-status-cfg-usuarios"
-                  />
-                </button>
+              <td class="td-cfg-usuarios status-cell-cfg-usuarios">
+                <div class="status-controls-cfg-usuarios">
+                  <span :class="['status-badge-cfg-usuarios', user.status?.toLowerCase()]">
+                    {{ formatStatus(user.status) }}
+                  </span>
+                  <button 
+                    @click="toggleUserStatus(user)"
+                    class="btn-toggle-cfg-usuarios"
+                    :disabled="user.id === currentUser?.id"
+                    :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
+                  >
+                    <img 
+                      :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
+                      :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
+                      class="icon-status-cfg-usuarios"
+                    />
+                  </button>
+                </div>
               </td>
               <td class="td-cfg-usuarios">{{ formatDate(user.created_at) }}</td>
               <td class="td-actions-cfg-usuarios">
-                <button 
-                  @click="deleteUser(user)" 
-                  class="btn-delete-cfg-usuarios"
-                  :disabled="user.id === currentUser?.id"
-                >
-                  <img src="/icons/lixeira.svg" alt="Excluir" class="icon-delete-cfg-usuarios" />
-                </button>
+                <div class="actions-container-cfg-usuarios">
+                  <button 
+                    @click="resetPassword(user)" 
+                    class="btn-action-cfg-usuarios btn-reset-cfg-usuarios"
+                    :title="'Redefinir senha'"
+                  >
+                    <img src="../../public/icons/senha.svg" alt="Redefinir senha" class="icon-action-cfg-usuarios" />
+                  </button>
+                  <button 
+                    @click="deleteUser(user)" 
+                    class="btn-action-cfg-usuarios btn-delete-cfg-usuarios"
+                    :disabled="user.id === currentUser?.id"
+                  >
+                    <img src="../../public/icons/lixeira.svg" alt="Excluir" class="icon-delete-cfg-usuarios" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

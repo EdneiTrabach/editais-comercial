@@ -808,3 +808,112 @@ input {
     padding: 0.7rem 1rem;
   }
 }
+
+/* Adicionando estilos para as células editáveis */
+
+/* Input para email */
+.email-input-cfg-usuarios {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  background: none;
+}
+
+.email-input-cfg-usuarios:focus {
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  outline: none;
+  background-color: rgba(25, 49, 85, 0.05);
+}
+
+.email-input-cfg-usuarios:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Estilização para célula de status */
+.status-cell-cfg-usuarios {
+  padding: 0.5rem 1rem;
+}
+
+.status-controls-cfg-usuarios {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.status-badge-cfg-usuarios {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  min-width: 90px;
+}
+
+.status-badge-cfg-usuarios.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge-cfg-usuarios.disabled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge-cfg-usuarios.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge-cfg-usuarios.deleted {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+/* Estilização para botões de ação */
+.actions-container-cfg-usuarios {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-action-cfg-usuarios {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-reset-cfg-usuarios {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-reset-cfg-usuarios:hover {
+  background: #bae6fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(3, 105, 161, 0.15);
+}
+
+.icon-action-cfg-usuarios {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.btn-reset-cfg-usuarios:hover .icon-action-cfg-usuarios {
+  transform: rotate(15deg);
+}
