@@ -114,15 +114,15 @@ useConnectionManager(loadData)
 </script>
 
 <template>
-  <div class="login-container">
+  <div class="container-login">
     <!-- Toast notification -->
-    <div v-if="toast.show" :class="['toast', toast.type]">
+    <div v-if="toast.show" :class="['toast-login', toast.type]">
       {{ toast.message }}
     </div>
 
     <!-- Matrix Effect -->
-    <div class="matrix-effect" v-if="showMatrix">
-      <div v-for="i in 50" :key="i" class="matrix-column" :style="{
+    <div class="matrix-effect-login" v-if="showMatrix">
+      <div v-for="i in 50" :key="i" class="matrix-column-login" :style="{
         left: `${Math.random() * 100}%`,
         animationDuration: `${2 + Math.random() * 3}s`,
         animationDelay: `${Math.random() * 2}s`
@@ -132,68 +132,70 @@ useConnectionManager(loadData)
     </div>
 
     <!-- Login Card -->
-    <div class="login-card">
-      <div class="logo-container">
-        <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
+    <div class="card-login">
+      <div class="logo-container-login">
+        <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo-login" />
         <h1>Conecte-se</h1>
       </div>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <div class="input-container">
-            <span class="input-icon">👤</span>
+      <form @submit.prevent="handleLogin" class="form-login">
+        <div class="form-group-login">
+          <div class="input-container-login">
+            <span class="input-icon-login">👤</span>
             <input 
               type="email" 
               v-model="email" 
               required
               placeholder=" "
+              class="input-login"
             />
-            <label>Email</label>
+            <label class="label-login">Email</label>
           </div>
         </div>
 
-        <div class="form-group">
-          <div class="input-container">
-            <span class="input-icon">🔒</span>
+        <div class="form-group-login">
+          <div class="input-container-login">
+            <span class="input-icon-login">🔒</span>
             <input 
               type="password" 
               v-model="password" 
               required
               placeholder=" "
+              class="input-login"
             />
-            <label>Senha</label>
+            <label class="label-login">Senha</label>
           </div>
-          <span v-if="error" class="error-message">{{ error }}</span>
+          <span v-if="error" class="error-message-login">{{ error }}</span>
         </div>
 
-        <div class="forgot-password">
-          <a href="#" class="forgot-link" @click="handleForgotClick">Esqueci minha senha</a>
+        <div class="forgot-password-login">
+          <a href="#" class="forgot-link-login" @click="handleForgotClick">Esqueci minha senha</a>
         </div>
 
-        <button type="submit" class="login-button" :disabled="loading">
+        <button type="submit" class="button-login" :disabled="loading">
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
     </div>
 
     <!-- Modal de Recuperação de Senha -->
-    <div v-if="showForgotModal" class="modal-overlay">
-      <div class="modal-content">
-        <h2>Recuperação de Senha</h2>
-        <form @submit.prevent="handleResetPassword" class="reset-form">
-          <div class="form-group">
-            <div class="input-container">
-              <span class="input-icon">📧</span>
-              <input type="email" v-model="resetEmail" placeholder=" " required />
-              <label>Email</label>
+    <div v-if="showForgotModal" class="modal-overlay-login">
+      <div class="modal-content-login">
+        <h2 class="modal-title-login">Recuperação de Senha</h2>
+        <form @submit.prevent="handleResetPassword" class="reset-form-login">
+          <div class="form-group-login">
+            <div class="input-container-login">
+              <span class="input-icon-login">📧</span>
+              <input type="email" v-model="resetEmail" placeholder=" " required class="input-login" />
+              <label class="label-login">Email</label>
             </div>
           </div>
 
-          <div class="modal-actions">
-            <button type="button" @click="showForgotModal = false" class="btn-cancelar">
+          <div class="modal-actions-login">
+            <button type="button" @click="showForgotModal = false" class="btn-cancelar-login">
               Cancelar
             </button>
-            <button type="submit" class="btn-enviar" :disabled="loading">
+            <button type="submit" class="btn-enviar-login" :disabled="loading">
               {{ loading ? 'Enviando...' : 'Enviar' }}
             </button>
           </div>
