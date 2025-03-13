@@ -379,6 +379,8 @@ const anosDisponiveis = computed(() => {
 const processosFiltrados = computed(() => {
   if (!processos.value) return []
 
+
+
   return processos.value
     .filter(processo => processo.ano === anoSelecionado.value)
     .filter(processo => {
@@ -507,36 +509,30 @@ const loadProcessos = async () => {
   
   try {
     isLoading.value = true
+    console.log('Iniciando carregamento de processos...')
+    
+    // Teste simples para verificar conexão
+    const { data: testData, error: testError } = await supabase
+      .from('processos')
+      .select('count(*)')
+    
+    console.log('Teste de conexão:', { testData, testError })
+    
+    // Consulta real
     const { data, error } = await supabase
       .from('processos')
-      .select(`
-        *,
-        processo_sistemas!left(
-          sistemas(
-            nome
-          )
-        )
-      `)
+      .select(`*`)
       .order('data_pregao', { ascending: true })
 
+    console.log('Dados retornados:', data)
+    console.log('Erro (se houver):', error)
+    
     if (error) throw error
 
-    const processosComSistemas = await Promise.all(
-      (data || []).map(async processo => {
-        return {
-          ...processo,
-          sistemas_nomes: Array.isArray(processo.sistemas_ativos)
-            ? await getSistemasNomes(processo.sistemas_ativos)
-            : '-'
-        }
-      })
-    )
-    
-    processos.value = processosComSistemas
-
+    // Restante do código...
+    processos.value = data || []
   } catch (error) {
-    console.error('Erro ao carregar processos:', error)
-    processos.value = []
+    console.error('Erro detalhado ao carregar processos:', error)
   } finally {
     isLoading.value = false
   }

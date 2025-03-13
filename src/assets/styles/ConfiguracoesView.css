@@ -1079,6 +1079,11 @@ input {
   color: #e5e7eb;
 }
 
+[data-theme="dark"] .modal-actions-cfg-usuarios {
+  background: transparent;
+  border: none;
+}
+
 [data-theme="dark"] .btn-danger-cfg-usuarios {
   background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
 }

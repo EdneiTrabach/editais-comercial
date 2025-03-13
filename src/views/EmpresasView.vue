@@ -16,7 +16,6 @@
         </div>
       </div>
       
-
       <div class="table-container">
         <div v-if="isLoading" class="loading-indicator">Carregando empresas...</div>
         <div v-else-if="loadError" class="error-message">{{ loadError }}</div>
@@ -43,6 +42,9 @@
               <td>{{ empresa.email }}</td>
               <td>
                 <div class="action-buttons">
+                  <button class="btn-action edit" @click="editEmpresa(empresa)">
+                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
+                  </button>
                   <button class="btn-action delete" @click="handleDelete(empresa)">
                     <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
                   </button>
@@ -53,18 +55,18 @@
         </table>
       </div>
 
-      <!-- Modal de Cadastro -->
-      <div v-if="showModal" class="modal-overlay">
-        <div class="modal-content">
-          <h2>Nova Empresa</h2>
-          <form @submit.prevent="handleSubmit">
+      <!-- Modal de Cadastro (Padronizado) -->
+      <div v-if="showModal" class="modal-cfg-usuarios">
+        <div class="modal-content-cfg-usuarios">
+          <h2 class="modal-title-cfg-usuarios">{{ isEditing ? 'Editar Empresa' : 'Nova Empresa' }}</h2>
+          <form @submit.prevent="handleSubmit" class="form-cfg-usuarios">
             <div class="form-grid">
               <div class="form-column">
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>Nome Fantasia</label>
-                  <input v-model="formData.nome" required>
+                  <input v-model="formData.nome" required class="input-cfg-usuarios">
                 </div>
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>CNPJ</label>
                   <input 
                     v-model="formData.cnpj" 
@@ -72,42 +74,76 @@
                     placeholder="00.000.000/0000-00"
                     required
                     @blur="validateCNPJ"
-                    :class="{ 'invalid': cnpjError }"
+                    :class="{ 'invalid': cnpjError, 'input-cfg-usuarios': true }"
                   >
                   <span v-if="cnpjError" class="error-message">{{ cnpjError }}</span>
                 </div>
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>Razão Social</label>
-                  <input v-model="formData.razao_social" required>
+                  <input v-model="formData.razao_social" required class="input-cfg-usuarios">
                 </div>
               </div>
               
               <div class="form-column">
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>Contato</label>
-                  <input v-model="formData.contato">
+                  <input v-model="formData.contato" class="input-cfg-usuarios">
                 </div>
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>Telefone</label>
                   <input 
                     v-model="formData.telefone" 
                     @input="formatarTelefone"
                     placeholder="(00) 00000-0000"
+                    class="input-cfg-usuarios"
                   >
                 </div>
-                <div class="form-group">
+                <div class="form-group-cfg-usuarios">
                   <label>Email</label>
-                  <input type="email" v-model="formData.email">
+                  <input type="email" v-model="formData.email" class="input-cfg-usuarios">
                 </div>
               </div>
             </div>
 
-            <div class="modal-actions">
-              <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
-              <button type="submit" class="btn-confirm">Salvar</button>
+            <div class="modal-actions-cfg-usuarios">
+              <button type="button" class="btn-cancel-cfg-usuarios" @click="resetForm">Cancelar</button>
+              <button type="submit" class="btn-confirm-cfg-usuarios">Salvar</button>
             </div>
           </form>
         </div>
+      </div>
+
+      <!-- Modal de confirmação de exclusão (Padronizado) -->
+      <div v-if="showDeleteDialog" class="dialog-overlay-cfg-usuarios">
+        <div class="confirm-dialog-cfg-usuarios">
+          <div class="confirm-content-cfg-usuarios">
+            <h3 class="dialog-title-cfg-usuarios">Confirmar Exclusão</h3>
+            
+            <div v-if="empresaToDelete?.temVinculacoes" class="warning-detail-cfg-usuarios">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Esta empresa possui <strong>{{ empresaToDelete.qtdVinculacoes }}</strong> vinculações com plataformas.</p>
+              <p>Todas essas vinculações também serão excluídas.</p>
+            </div>
+            
+            <p class="dialog-message-cfg-usuarios">Deseja realmente excluir a empresa <strong>{{ empresaToDelete?.nome }}</strong>?</p>
+            <p class="warning-text-cfg-usuarios">Esta ação não poderá ser desfeita!</p>
+            
+            <div class="confirm-actions-cfg-usuarios">
+              <button type="button" class="btn-secondary-cfg-usuarios" @click="hideDeleteDialog">
+                Cancelar
+              </button>
+              <button type="button" class="btn-danger-cfg-usuarios" @click="confirmDelete">
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast notifications (Padronizado) -->
+      <div v-if="showToast" class="toast-cfg-usuarios" :class="{ 'toast-success': toastType === 'success', 'toast-error': toastType === 'error' }">
+        <i :class="toastType === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+        {{ toastMessage }}
       </div>
     </div>
   </div>

@@ -14,6 +14,14 @@ export default {
     const cnpjError = ref('')
     const isLoading = ref(false)
     const loadError = ref(null)
+    const isEditing = ref(false);
+    const editingId = ref(null);
+
+    const showDeleteDialog = ref(false);
+    const empresaToDelete = ref(null);
+    const showToast = ref(false);
+    const toastMessage = ref('');
+    const toastType = ref('success'); // 'success' ou 'error'
 
     const formData = ref({
       nome: '',
@@ -66,47 +74,80 @@ export default {
 
     const handleSubmit = async () => {
       try {
-        // Valida o CNPJ antes de enviar
-        if (!await validateCNPJ()) {
-          return
-        }
-
-        // Consulta SQL equivalente:
-        // INSERT INTO empresas (nome, cnpj, razao_social, contato, telefone, email, updated_at)
-        // VALUES (?, ?, ?, ?, ?, ?, ?);
-        const { data, error } = await supabase
-          .from('empresas')
-          .insert({
-            nome: formData.value.nome,
-            cnpj: formData.value.cnpj.replace(/[^\d]/g, ''), // Remove caracteres não numéricos
-            razao_social: formData.value.razao_social,
-            contato: formData.value.contato,
-            telefone: formData.value.telefone,
-            email: formData.value.email,
-            updated_at: new Date().toISOString()
-          })
-
-        if (error) throw error
-
-        await loadEmpresas()
-        showModal.value = false
-        // Reset do formulário
-        formData.value = {
-          nome: '',
-          cnpj: '',
-          razao_social: '',
-          contato: '',
-          telefone: '',
-          email: ''
-        }
-      } catch (error) {
-        console.error('Erro ao cadastrar empresa:', error)
+        // Remove caracteres não numéricos do CNPJ
+        const cnpjLimpo = formData.value.cnpj.replace(/[^\d]/g, '');
         
-        // Mensagem de erro mais amigável
-        if (error.code === '23505') {
-          alert('CNPJ já cadastrado no sistema')
+        // Se estiver editando, não precisa verificar o próprio CNPJ como duplicado
+        if (!isEditing.value) {
+          if (!await validateCNPJ()) {
+            return;
+          }
         } else {
-          alert('Erro ao cadastrar empresa. Por favor, tente novamente.')
+          // Validação de CNPJ para edição (ignora o próprio registro)
+          if (!formData.value.cnpj) {
+            cnpjError.value = 'CNPJ é obrigatório';
+            return false;
+          }
+          
+          if (cnpjLimpo.length !== 14) {
+            cnpjError.value = 'CNPJ inválido';
+            return false;
+          }
+          
+          // Verifica se o CNPJ existe em outro registro
+          const { data } = await supabase
+            .from('empresas')
+            .select('id')
+            .eq('cnpj', cnpjLimpo)
+            .neq('id', editingId.value)
+            .single();
+
+          if (data) {
+            cnpjError.value = 'CNPJ já cadastrado';
+            return false;
+          }
+          
+          cnpjError.value = '';
+        }
+
+        const empresaData = {
+          nome: formData.value.nome,
+          cnpj: cnpjLimpo,
+          razao_social: formData.value.razao_social,
+          contato: formData.value.contato,
+          telefone: formData.value.telefone,
+          email: formData.value.email,
+          updated_at: new Date().toISOString()
+        };
+
+        if (isEditing.value) {
+          // Atualizar empresa existente
+          const { error } = await supabase
+            .from('empresas')
+            .update(empresaData)
+            .eq('id', editingId.value);
+
+          if (error) throw error;
+          showToastMessage('Empresa atualizada com sucesso!');
+        } else {
+          // Inserir nova empresa
+          const { error } = await supabase
+            .from('empresas')
+            .insert(empresaData);
+
+          if (error) throw error;
+          showToastMessage('Empresa cadastrada com sucesso!');
+        }
+
+        await loadEmpresas();
+        resetForm();
+      } catch (error) {
+        console.error('Erro ao salvar empresa:', error);
+        
+        if (error.code === '23505') {
+          showToastMessage('CNPJ já cadastrado no sistema', 'error');
+        } else {
+          showToastMessage('Erro ao salvar empresa. Por favor, tente novamente.', 'error');
         }
       }
     }
@@ -143,22 +184,69 @@ export default {
     }
 
     const handleDelete = async (empresa) => {
-      if (!confirm('Confirma a exclusão desta empresa?')) return
-
       try {
-        // Consulta SQL equivalente:
-        // DELETE FROM empresas WHERE id = ?;
+        // Primeiro verifica se existem dados vinculados
+        const { data: vinculacoes, error: checkError } = await supabase
+          .from('empresa_plataforma_dados')
+          .select('id')
+          .eq('empresa_id', empresa.id);
+        
+        if (checkError) throw checkError;
+        
+        // Configura o diálogo de confirmação
+        empresaToDelete.value = {
+          ...empresa,
+          temVinculacoes: vinculacoes && vinculacoes.length > 0,
+          qtdVinculacoes: vinculacoes ? vinculacoes.length : 0
+        };
+        
+        // Mostra o diálogo de confirmação
+        showDeleteDialog.value = true;
+        
+      } catch (error) {
+        console.error('Erro ao verificar vinculações da empresa:', error);
+        showToastMessage('Erro ao verificar vinculações da empresa', 'error');
+      }
+    }
+
+    // Adicione esta função para confirmar a exclusão
+    const confirmDelete = async () => {
+      if (!empresaToDelete.value) return;
+      
+      try {
+        const empresa = empresaToDelete.value;
+        
+        if (empresa.temVinculacoes) {
+          // Exclui primeiro as vinculações
+          const { error: deleteVinculacoesError } = await supabase
+            .from('empresa_plataforma_dados')
+            .delete()
+            .eq('empresa_id', empresa.id);
+          
+          if (deleteVinculacoesError) throw deleteVinculacoesError;
+        }
+
+        // Agora exclui a empresa
         const { error } = await supabase
           .from('empresas')
           .delete()
-          .eq('id', empresa.id)
+          .eq('id', empresa.id);
 
-        if (error) throw error
-        await loadEmpresas()
+        if (error) throw error;
+        
+        await loadEmpresas();
+        showToastMessage('Empresa excluída com sucesso!', 'success');
+        hideDeleteDialog();
       } catch (error) {
-        console.error('Erro ao excluir empresa:', error)
-        alert('Erro ao excluir empresa')
+        console.error('Erro ao excluir empresa:', error);
+        showToastMessage(error.message || 'Erro ao excluir empresa', 'error');
+        hideDeleteDialog();
       }
+    }
+
+    const hideDeleteDialog = () => {
+      showDeleteDialog.value = false;
+      empresaToDelete.value = null;
     }
 
     const formatCNPJ = (cnpj) => {
@@ -229,6 +317,63 @@ export default {
         })
     }
 
+    const editEmpresa = (empresa) => {
+      formData.value = {
+        nome: empresa.nome,
+        cnpj: formatCNPJ(empresa.cnpj),
+        razao_social: empresa.razao_social,
+        contato: empresa.contato || '',
+        telefone: empresa.telefone || '',
+        email: empresa.email || ''
+      };
+      editingId.value = empresa.id;
+      isEditing.value = true;
+      showModal.value = true;
+    }
+
+    const resetForm = () => {
+      formData.value = {
+        nome: '',
+        cnpj: '',
+        razao_social: '',
+        contato: '',
+        telefone: '',
+        email: ''
+      };
+      editingId.value = null;
+      isEditing.value = false;
+      showModal.value = false;
+      cnpjError.value = '';
+    }
+
+    // Função para formatar telefone
+    const formatarTelefone = (e) => {
+      let value = e.target.value.replace(/\D/g, '');
+      
+      if (value.length > 11) value = value.substring(0, 11);
+      
+      if (value.length > 10) {
+        formData.value.telefone = value.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+      } else if (value.length > 6) {
+        formData.value.telefone = value.replace(/^(\d{2})(\d{4})(\d+)$/, "($1) $2-$3");
+      } else if (value.length > 2) {
+        formData.value.telefone = value.replace(/^(\d{2})(\d+)$/, "($1) $2");
+      } else {
+        formData.value.telefone = value;
+      }
+    }
+
+    const showToastMessage = (message, type = 'success') => {
+      toastMessage.value = message;
+      toastType.value = type;
+      showToast.value = true;
+      
+      // Esconder o toast após 3 segundos
+      setTimeout(() => {
+        showToast.value = false;
+      }, 3000);
+    }
+
     // Exponha as variáveis e métodos necessários para o template
     return {
       empresas,
@@ -238,14 +383,26 @@ export default {
       cnpjError,
       isLoading,
       loadError,
+      isEditing,
       loadEmpresas,
       handleSubmit,
       validateCNPJ,
       handleDelete,
+      editEmpresa,
       formatCNPJ,
       formatarCNPJ,
+      formatarTelefone,
       handleSidebarToggle,
-      debugEmpresas  // Adicionada aqui
+      resetForm,
+      debugEmpresas,
+      // Novos itens
+      showDeleteDialog,
+      empresaToDelete,
+      confirmDelete,
+      hideDeleteDialog,
+      showToast,
+      toastMessage,
+      toastType
     }
   }
 }
