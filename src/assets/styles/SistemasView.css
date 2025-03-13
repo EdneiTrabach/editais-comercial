@@ -1,4 +1,3 @@
-
 .layout {
   display: flex;
   min-height: 100vh;
@@ -628,6 +627,11 @@ th {
   background: white;
 }
 
+textarea.input-cfg-usuarios {
+  width: 90%;
+}
+
+
 /* Estilo hover */
 .form-group input:hover,
 .form-group select:hover,
@@ -963,4 +967,60 @@ th {
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
+}
+
+/* Estilos para campos específicos dos sistema */
+.setor-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contato-form-cfg-usuarios {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.btn-add-contato-cfg-usuarios {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f8fafc;
+  color: #374151;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+[data-theme="dark"] .btn-add-contato-cfg-usuarios {
+  background: #1f2937;
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .sub-title-cfg-usuarios {
+  color: #d1d5db;
+}
+
+
+.btn-add-contato-cfg-usuarios:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.sub-title-cfg-usuarios {
+  color: #193155;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
 }
