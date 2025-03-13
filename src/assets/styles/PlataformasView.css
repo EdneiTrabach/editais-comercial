@@ -1,4 +1,3 @@
-
 /* Layout principal */
 .layout {
   display: flex;
@@ -700,6 +699,24 @@ td.actions {
   margin-bottom: 2rem;
 }
 
+[data-theme="dark"] .empresas-selector {
+  background: #1a202c;
+  color: white;
+}
+
+[data-theme="dark"] .empresa-chip {
+  background: #1a202c;
+  color: white;
+}
+
+[data-theme="dark"] .empresas-header h3 {
+  color: white;
+}
+
+[data-theme="dark"]  .empresas-grid {
+  background: transparent;
+}
+
 .empresas-header {
   margin-bottom: 1rem;
 }
@@ -806,4 +823,47 @@ td.actions {
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+/* Estilos para diálogo de confirmação se não existirem no seu CSS */
+.confirm-dialog {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.confirm-content {
+  text-align: center;
+}
+
+.confirm-content h3 {
+  color: #193155;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-weight: 500;
+  margin: 1rem 0 1.5rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-confirm.delete {
+  background-color: #dc2626;
+  color: white;
+}
+
+.btn-confirm.delete:hover {
+  background-color: #b91c1c;
 }
