@@ -17,6 +17,7 @@ export default {
     const isSidebarExpanded = ref(true)
     const showAddUserModal = ref(false)
     const showConfirmDialog = ref(false)
+    const showAccessDeniedModal = ref(false)  // Novo estado para o modal de acesso negado
     const dialogConfig = ref({})
     const previousRole = ref(null)
     const showToast = ref(false)
@@ -30,6 +31,7 @@ export default {
       nome: '',
       role: 'user'
     })
+    const currentUserEmail = ref('');
 
     // Todas as funções existentes...
     const handleNameUpdate = async (user, newName) => {
@@ -310,6 +312,13 @@ export default {
       }
     }
 
+    // Função para redirecionar após fechar o modal
+    const redirectToHome = () => {
+      showAccessDeniedModal.value = false
+      router.push('/')
+    }
+
+    // Modificar a verificação de acesso para exibir o modal em vez de redirecionar imediatamente
     const checkAdminAccess = async () => {
       try {
         console.log('Verificando acesso admin...');
@@ -318,36 +327,41 @@ export default {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          console.error('Usuário não autenticado');
           router.push('/login');
           return false;
         }
-    
+
+        // Salvar o email do usuário atual
+        currentUserEmail.value = user.email;
+        
         // 2. Buscar perfil do usuário
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, nome')
           .eq('id', user.id)
           .single();
-    
+        
         if (error) {
           console.error('Erro ao buscar perfil:', error);
+          showAccessDeniedModal.value = true;
           return false;
         }
-    
+        
         // 3. Verificar se é admin
         const isAdmin = profile?.role === 'admin';
-        console.log('Role do usuário:', profile?.role);
-    
+        
         if (!isAdmin) {
-          console.log('Acesso negado - usuário não é admin');
-          router.push('/');
+          // IMPORTANTE: Mostrar modal em vez de alert ou console.log
+          showAccessDeniedModal.value = true;
           return false;
         }
-    
+        
+        // 4. Usuário é admin, continuar
+        currentUser.value = user;
         return true;
       } catch (error) {
-        console.error('Erro na verificação de acesso:', error);
+        console.error('Erro ao verificar acesso:', error);
+        showAccessDeniedModal.value = true;
         return false;
       }
     };
@@ -392,7 +406,7 @@ export default {
         console.log('Usuário é admin?', isAdmin)
         
         if (!isAdmin) {
-          router.push('/')
+          showAccessDeniedModal.value = true;
           return
         }
         
@@ -451,7 +465,10 @@ export default {
       toggleUserStatus,
       deleteUser,
       handleRoleChange,
-      hideConfirmDialog: () => { showConfirmDialog.value = false }
+      hideConfirmDialog: () => { showConfirmDialog.value = false },
+      showAccessDeniedModal, // Exportar nova ref
+      redirectToHome, // Exportar nova função
+      currentUserEmail
     }
   }
 }
