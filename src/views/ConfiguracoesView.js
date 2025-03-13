@@ -165,25 +165,25 @@ export default {
         confirmText: 'Excluir',
         onConfirm: async () => {
           try {
-            // Chama a função RPC para deletar o usuário
-            const { data, error } = await supabase
-              .rpc('delete_user_secure', {
-                user_id: user.id
+            // Primeiro, desativa o usuário atualizando o status
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({
+                status: 'DELETED',
+                updated_at: new Date().toISOString()
               })
+              .eq('id', user.id)
     
-            if (error) throw error
-            if (!data.success) throw new Error(data.message)
+            if (profileError) throw profileError
     
-            await loadUsers()
+            // Agora podemos atualizar a UI e fechar o diálogo
+            await loadUsers() // Recarregar usuários
             showConfirmDialog.value = false
             showToastMessage('Usuário excluído com sucesso!')
           } catch (error) {
             console.error('Erro ao excluir usuário:', error)
             showToastMessage('Erro ao excluir usuário', 'error')
           }
-        },
-        onCancel: () => {
-          showConfirmDialog.value = false
         }
       }
       showConfirmDialog.value = true
@@ -193,7 +193,7 @@ export default {
       const newStatus = user.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
       
       try {
-        // Atualizar status na tabela profiles
+        // Atualizar apenas status na tabela profiles
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -201,25 +201,17 @@ export default {
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id);
-    
+
         if (profileError) throw profileError;
-    
-        // Atualizar status no Auth (desativar/reativar)
-        if (newStatus === 'DISABLED') {
-          await supabase.auth.admin.updateUserById(user.id, {
-            ban_duration: '87600h' // 10 anos
-          });
-        } else {
-          await supabase.auth.admin.updateUserById(user.id, {
-            ban_duration: '0h'
-          });
-        }
-    
+
+        // Removido o código que tentava modificar diretamente o usuário via auth.admin
+        // Isso seria feito usando funções no backend ou funções RPC seguras
+
         // Atualizar UI
         user.status = newStatus;
         showToastMessage(`Usuário ${newStatus === 'ACTIVE' ? 'ativado' : 'desativado'} com sucesso!`);
         await loadUsers();
-    
+
       } catch (error) {
         console.error('Erro ao alterar status:', error);
         showToastMessage('Erro ao alterar status do usuário', 'error');

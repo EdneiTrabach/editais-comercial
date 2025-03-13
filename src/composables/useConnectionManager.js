@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { ref } from 'vue'
+import { SupabaseManager } from '@/lib/supabaseManager' // Adicione esta importação
 
 export function useConnectionManager(loadDataCallback) {
   // Adicione este controle de estado
