@@ -46,52 +46,54 @@
       </div>
     </div>
 
-    <!-- Modal de Cadastro/Edição -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ editingId ? 'Editar' : 'Novo' }} Representante</h3>
-          <button class="btn-close" @click="closeModal">×</button>
-        </div>
-        <form @submit.prevent="handleSubmit" class="form-grid">
-          <div class="form-group">
-            <label>Nome*</label>
+    <!-- Modal de Cadastro/Edição com as classes padronizadas -->
+    <div v-if="showModal" class="modal-cfg-usuarios">
+      <div class="modal-content-cfg-usuarios">
+        <h2 class="modal-title-cfg-usuarios">{{ editingId ? 'Editar' : 'Novo' }} Representante</h2>
+        <form @submit.prevent="handleSubmit" class="form-cfg-usuarios">
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Nome*</label>
             <input 
               v-model="formData.nome"
               type="text"
               required
               placeholder="Nome completo"
+              class="input-cfg-usuarios"
             />
           </div>
-          <div class="form-group">
-            <label>Documento</label>
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Documento</label>
             <input 
               v-model="formData.documento"
               type="text"
               placeholder="CPF/CNPJ"
+              class="input-cfg-usuarios"
             />
           </div>
-          <div class="form-group">
-            <label>Email</label>
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Email</label>
             <input 
               v-model="formData.email"
               type="email"
               placeholder="email@exemplo.com"
+              class="input-cfg-usuarios"
             />
           </div>
-          <div class="form-group">
-            <label>Telefone</label>
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Telefone</label>
             <input 
               v-model="formData.telefone"
               type="tel"
               placeholder="(00) 00000-0000"
+              class="input-cfg-usuarios"
             />
           </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancelar" @click="closeModal">
+          
+          <div class="modal-actions-cfg-usuarios">
+            <button type="button" class="btn-cancel-cfg-usuarios" @click="closeModal">
               Cancelar
             </button>
-            <button type="submit" class="btn-salvar">
+            <button type="submit" class="btn-confirm-cfg-usuarios">
               {{ editingId ? 'Atualizar' : 'Salvar' }}
             </button>
           </div>
@@ -100,15 +102,18 @@
     </div>
 
     <!-- Modal de confirmação de exclusão -->
-    <div v-if="deleteConfirmDialog.show" class="modal-overlay">
-      <div class="confirm-dialog">
-        <div class="confirm-content">
-          <h3>Confirmar Inativação</h3>
-          <p>Tem certeza que deseja inativar este representante?</p>
-          <p class="warning-text">Esta ação poderá ser revertida pelo administrador!</p>
-          <div class="confirm-actions">
-            <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-            <button class="btn-confirm delete" @click="confirmDelete">
+    <div v-if="deleteConfirmDialog.show" class="dialog-overlay-cfg-usuarios">
+      <div class="confirm-dialog-cfg-usuarios">
+        <div class="confirm-content-cfg-usuarios">
+          <h3 class="dialog-title-cfg-usuarios">Confirmar Inativação</h3>
+          <p class="dialog-message-cfg-usuarios">Tem certeza que deseja inativar este representante?</p>
+          <p class="warning-text-cfg-usuarios">Esta ação poderá ser revertida pelo administrador!</p>
+          
+          <div class="confirm-actions-cfg-usuarios">
+            <button class="btn-secondary-cfg-usuarios" @click="hideDeleteDialog">
+              Cancelar
+            </button>
+            <button class="btn-danger-cfg-usuarios" @click="confirmDelete">
               Inativar
             </button>
           </div>
@@ -116,174 +121,15 @@
       </div>
     </div>
 
-    <!-- Adicione o componente de toast -->
-    <div class="toast-container">
-      <div v-if="toast.show" :class="['toast', `toast-${toast.type}`]">
-        {{ toast.message }}
-      </div>
+    <!-- Toast notification padronizado -->
+    <div 
+      v-if="toast.show" 
+      :class="['toast-cfg-usuarios', `toast-${toast.type}`]"
+    >
+      {{ toast.message }}
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue'
-import { supabase } from '@/lib/supabase'
-import TheSidebar from '@/components/TheSidebar.vue'
-import { useConnectionManager } from '@/composables/useConnectionManager'
-
-const isSidebarExpanded = ref(true)
-const showModal = ref(false)
-const editingId = ref(null)
-const representantes = ref([])
-
-const formData = ref({
-  nome: '',
-  documento: '',
-  email: '',
-  telefone: ''
-})
-
-// Adicione o ref para o toast
-const toast = ref({
-  show: false,
-  message: '',
-  type: 'success'
-})
-
-// Adicione este ref junto com os outros
-const deleteConfirmDialog = ref({
-  show: false,
-  representante: null
-})
-
-// Função para mostrar toast
-const showToast = (message, type = 'success') => {
-  toast.value = { show: true, message, type }
-  setTimeout(() => {
-    toast.value.show = false
-  }, 3000)
-}
-
-const loadRepresentantes = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('representantes')
-      .select('*')
-      .eq('status', 'ATIVO') // Adiciona filtro por status
-      .order('nome')
-    
-    if (error) throw error
-    representantes.value = data
-  } catch (error) {
-    console.error('Erro ao carregar representantes:', error)
-  }
-}
-
-// Modifique a função handleSubmit
-const handleSubmit = async () => {
-  try {
-    const data = { 
-      ...formData.value,
-      status: 'ATIVO', // Sempre ATIVO ao criar
-      updated_at: new Date().toISOString()
-    }
-    
-    if (editingId.value) {
-      const { error } = await supabase
-        .from('representantes')
-        .update(data)
-        .eq('id', editingId.value)
-      
-      if (error) throw error
-      showToast('Representante atualizado com sucesso!')
-    } else {
-      const { error } = await supabase
-        .from('representantes')
-        .insert({
-          ...data,
-          created_at: new Date().toISOString()
-        })
-      
-      if (error) throw error
-      showToast('Representante cadastrado com sucesso!')
-    }
-
-    await loadRepresentantes()
-    closeModal()
-  } catch (error) {
-    console.error('Erro ao salvar:', error)
-    showToast(error.message || 'Erro ao salvar representante', 'error')
-  }
-}
-
-const editRepresentante = (representante) => {
-  editingId.value = representante.id
-  formData.value = { ...representante }
-  showModal.value = true
-}
-
-// Modifique a função deleteRepresentante
-const deleteRepresentante = (representante) => {
-  deleteConfirmDialog.value = {
-    show: true,
-    representante
-  }
-}
-
-// Adicione as funções de controle do diálogo
-const hideDeleteDialog = () => {
-  deleteConfirmDialog.value = {
-    show: false,
-    representante: null
-  }
-}
-
-const confirmDelete = async () => {
-  try {
-    const { error } = await supabase
-      .from('representantes')
-      .update({ 
-        status: 'INATIVO',
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', deleteConfirmDialog.value.representante.id)
-    
-    if (error) throw error
-    
-    await loadRepresentantes()
-    showToast('Representante inativado com sucesso!')
-    hideDeleteDialog()
-  } catch (error) {
-    console.error('Erro ao inativar:', error)
-    showToast(error.message || 'Erro ao inativar representante', 'error')
-  }
-}
-
-const closeModal = () => {
-  showModal.value = false
-  editingId.value = null
-  formData.value = {
-    nome: '',
-    documento: '',
-    email: '',
-    telefone: ''
-  }
-}
-
-const handleSidebarToggle = (expanded) => {
-  isSidebarExpanded.value = expanded
-}
-
-const loadData = async () => {
-  await loadRepresentantes() // ou qualquer outra função que carregue seus dados
-}
-
-// Use o composable
-useConnectionManager(loadData)
-
-onMounted(() => {
-  loadRepresentantes()
-})
-</script>
-
+<script src="../views/RepresentantesView.js"></script>
 <style src="../assets/styles/RepresentantesView.css"></style>
