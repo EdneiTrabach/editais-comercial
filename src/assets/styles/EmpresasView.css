@@ -1,4 +1,3 @@
-
 .layout {
   display: flex;
   min-height: 100vh;
@@ -26,6 +25,24 @@
   color: #193155;
   font-size: 1.8rem;
   font-weight: 600;
+}
+
+/* Novo estilo para o container de botões */
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Estilo específico para o botão de recarregar */
+.btn-reload {
+  background: #f3f4f6;
+  color: #193155;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-reload:hover {
+  background: #e5e7eb;
 }
 
 .btn-add {
@@ -64,6 +81,7 @@
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
   color: #4b5563;
+  text-align: left;
 }
 
 .action-buttons {
