@@ -78,10 +78,8 @@ export default {
     const {
       dateError,
       timeError,
-      validateDate,
-      validateTime,
-      isBusinessDay,
-      getNextBusinessDay
+      validateDate: validateDateFn,
+      validateTime: validateTimeFn
     } = useDateValidation()
     
     const {
@@ -254,6 +252,25 @@ export default {
         }
       }
     }
+
+    // Função wrapper para validação de data que passa o valor do formData
+    const validateDate = () => {
+      validateDateFn(formData.value.data_pregao)
+    }
+    
+    // Função wrapper para validação de horário que passa o valor do formData
+    const validateTime = () => {
+      validateTimeFn(formData.value.hora_pregao)
+    }
+    
+    // Valida a data e hora quando elas forem alteradas
+    watch(() => formData.value.data_pregao, (newDate) => {
+      if (newDate) validateDateFn(newDate)
+    })
+    
+    watch(() => formData.value.hora_pregao, (newTime) => {
+      if (newTime) validateTimeFn(newTime)
+    })
 
     // === CICLO DE VIDA DO COMPONENTE ===
     
