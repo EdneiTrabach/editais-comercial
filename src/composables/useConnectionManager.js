@@ -53,7 +53,9 @@ export function useConnectionManager(loadDataCallback) {
   }
 
   const handleOnline = () => {
-    handleConnectionRestore()
+    console.log('Conexão restaurada, tentando reconexão...')
+    SupabaseManager.handleReconnect()
+    loadDataCallback()
   }
 
   // Configura os event listeners
@@ -71,6 +73,7 @@ export function useConnectionManager(loadDataCallback) {
   })
 
   return {
-    forceReconnect: handleVisibilityChange
+    forceReconnect: handleVisibilityChange,
+    handleOnline
   }
 }

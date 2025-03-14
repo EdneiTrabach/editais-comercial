@@ -1,12 +1,15 @@
 // src/lib/supabaseManager.js
 import { supabase } from '@/lib/supabase'
 
-export class SupabaseManager {
-  static subscriptions = new Map()
-  static reconnecting = false
-  static reconnectTimeout = null
+/**
+ * Gerencia as inscrições do Supabase Realtime
+ */
+export const SupabaseManager = {
+  subscriptions: new Map(),
+  reconnecting: false,
+  reconnectTimeout: null,
 
-  static async handleReconnect() {
+  async handleReconnect() {
     // Evita múltiplas reconexões simultâneas
     if (this.reconnecting) return;
     
@@ -36,18 +39,33 @@ export class SupabaseManager {
         clearTimeout(this.reconnectTimeout);
       }
     }
-  }
+  },
 
-  static addSubscription(name, channel) {
+  addSubscription(name, channel) {
+    // Remove inscrição existente com o mesmo nome, se houver
+    if (this.subscriptions.has(name)) {
+      supabase.removeChannel(this.subscriptions.get(name))
+    }
     this.subscriptions.set(name, channel)
-  }
+  },
 
-  static removeSubscription(name) {
+  removeSubscription(name) {
     this.subscriptions.delete(name)
-  }
+  },
 
-  static getSubscription(channelName) {
+  getSubscription(channelName) {
     return this.subscriptions.get(channelName)
+  },
+
+  removeAllSubscriptions() {
+    for (const [name, channel] of this.subscriptions.entries()) {
+      try {
+        supabase.removeChannel(channel)
+      } catch (error) {
+        console.error(`Erro ao remover canal ${name}:`, error)
+      }
+    }
+    this.subscriptions.clear()
   }
 }
 

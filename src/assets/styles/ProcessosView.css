@@ -1326,3 +1326,306 @@ td[data-field="impugnacoes"] {
   border-radius: 4px;
   white-space: nowrap;
 }
+
+/* Adicionar ao final do arquivo */
+
+/* Melhorias para a edição de células */
+.excel-table td.editing-cell {
+  background-color: rgba(25, 49, 85, 0.05) !important;
+  box-shadow: inset 0 0 0 2px #193155 !important;
+  position: relative;
+  z-index: 5;
+}
+
+.editing-cell input,
+.editing-cell textarea,
+.editing-cell select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none !important;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 8px;
+  box-shadow: none !important;
+}
+
+.editing-cell:after {
+  content: '✓';
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 12px;
+  color: #155724;
+}
+
+/* Animação para células em edição */
+@keyframes pulseEditingBorder {
+  0% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.8);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.5);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.8);
+  }
+}
+
+.excel-table td.editing-cell {
+  animation: pulseEditingBorder 2s infinite;
+}
+
+/* Melhorias para o diálogo de confirmação */
+.confirm-dialog {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  padding: 1rem 1.5rem;
+  min-width: 250px;
+  z-index: 1000;
+  animation: fadeInScale 0.2s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animação de pulso para células em edição com destaque visual */
+@keyframes pulseEditingBorder {
+  0% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.9);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.5);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(25, 49, 85, 0.9);
+  }
+}
+
+/* Melhorias para células em edição */
+.excel-table td.editing-cell {
+  background-color: rgba(25, 49, 85, 0.05) !important;
+  box-shadow: inset 0 0 0 2px #193155 !important;
+  position: relative;
+  z-index: 50;
+  animation: pulseEditingBorder 1.5s infinite;
+}
+
+.editing-cell::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  left: -1px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.editing-cell input,
+.editing-cell textarea,
+.editing-cell select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none !important;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 10px;
+  box-shadow: none !important;
+  color: #193155;
+}
+
+/* Ícone de edição na célula em foco */
+.editing-cell::after {
+  content: '✓';
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 14px;
+  color: #155724;
+  background: rgba(255, 255, 255, 0.7);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover estilo para indicar que a célula é editável */
+.excel-table td:hover:not(.editing-cell):not(.actions-cell):not(.row-number-cell) {
+  background-color: rgba(25, 49, 85, 0.03);
+  cursor: pointer;
+  position: relative;
+}
+
+.excel-table td:hover:not(.editing-cell):not(.actions-cell):not(.row-number-cell)::after {
+  content: '✎';
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  font-size: 12px;
+  color: #6c757d;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.8);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Melhorias para o diálogo de confirmação */
+.confirm-dialog {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 1.2rem 1.5rem;
+  min-width: 280px;
+  z-index: 1000;
+  animation: fadeInScale 0.2s ease;
+  border: 1px solid rgba(25, 49, 85, 0.1);
+}
+
+.confirm-content h3 {
+  color: #193155;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.confirm-content p {
+  color: #495057;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn-confirm, 
+.btn-cancel {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.btn-confirm {
+  background: #193155;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background: #254677;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-cancel {
+  background: #f1f3f5;
+  color: #495057;
+  border: 1px solid #e9ecef;
+}
+
+.btn-cancel:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Adicionar feedback visual para indicar que o campo foi salvo com sucesso */
+@keyframes successPulse {
+  0% {
+    box-shadow: inset 0 0 0 2px rgba(21, 87, 36, 0);
+    background-color: rgba(21, 87, 36, 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px rgba(21, 87, 36, 0.5);
+    background-color: rgba(21, 87, 36, 0.1);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(21, 87, 36, 0);
+    background-color: rgba(21, 87, 36, 0);
+  }
+}
+
+.saved-success {
+  animation: successPulse 1s forwards;
+}
+
+/* Efeito de ondulação para feedback visual ao editar */
+@keyframes inputRipple {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(25, 49, 85, 0.4);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(25, 49, 85, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(25, 49, 85, 0);
+  }
+}
+
+.editing-cell input:focus,
+.editing-cell textarea:focus,
+.editing-cell select:focus {
+  animation: inputRipple 1s infinite;
+  outline: none;
+}
+
+/* Efeito de transição ao salvar com sucesso */
+@keyframes saveSuccess {
+  0% {
+    background-color: rgba(21, 87, 36, 0.2);
+  }
+  50% {
+    background-color: rgba(21, 87, 36, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.save-success-transition {
+  animation: saveSuccess 1.5s ease-out;
+}
+
