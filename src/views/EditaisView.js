@@ -1,29 +1,44 @@
-import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import { SupabaseManager } from '@/lib/supabaseManager'
+
+// Componentes
 import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
-import debounce from 'lodash/debounce'
-import { calcularDistanciaHaversine } from '@/utils/distance.js'
-import { ibgeService } from '@/services/ibgeService'
-import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
+
+// Gerenciamento de conexão e visibilidade
 import { useVisibilityHandler } from '@/composables/useVisibilityHandler'
-import { SupabaseManager } from '@/lib/supabaseManager'
-import { calcularDistanciaRota } from '@/utils/googleMapsService'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 
-// Importação dos composables criados
+// Composables básicos de dados
 import { usePlatforms } from '@/composables/usePlatforms'
 import { useRepresentatives } from '@/composables/useRepresentatives'
 import { useDateValidation } from '@/composables/useDateValidation'
+import { useSystemsManagement } from '@/composables/useSystemsManagement'
+
+// Composables de processamento e cálculos
 import { useDistanceCalculator } from '@/composables/useDistanceCalculator'
 import { usePublicationProcessing } from '@/composables/usePublicationProcessing'
-import { useSystemsManagement } from '@/composables/useSystemsManagement'
+
+// Composables de interface e validação
 import { useValidation } from '@/composables/useValidation'
 import { useToast } from '@/composables/useToast'
 
-// Importação das utilidades
-import { formatarModalidade, requiresPlataforma } from '@/utils/modalityUtils'
+// Composables específicos da view
+import { useEditaisForm } from '@/composables/useEditaisForm'
+import { useRealtimeManager } from '@/composables/useRealtimeManager'
+import { useEstados } from '@/composables/useEstados'
+import { useDistanceHandling } from '@/composables/useDistanceHandling'
+import { usePublicationHandler } from '@/composables/usePublicationHandler'
+
+// Utilidades
+import { formatarModalidade } from '@/utils/modalityUtils'
+
+// No topo do arquivo, adicione estas importações:
+import { useTimeout } from '@/composables/useTimeout'
+import { useConnection } from '@/composables/useConnection'
+import { useSubscriptionManager } from '@/composables/useSubscriptionManager'
 
 export default {
   name: 'EditaisView',
@@ -31,14 +46,18 @@ export default {
     TheSidebar,
     RequiredLabel
   },
+  emits: ['sidebarToggle'],
   setup() {
+    // Variáveis básicas do componente
     const router = useRouter()
     const isSidebarExpanded = ref(true)
-    const loading = ref(false)
     const currentYear = ref(new Date().getFullYear())
-    const processos = ref([])
+    const showTimeoutMessage = ref(false)
+    const loadingTimeout = ref(null)
     
-    // Inicializa os composables
+    // === INICIALIZAÇÃO DE COMPOSABLES ===
+    
+    // Composables de dados
     const { 
       plataformas, 
       showPlataformaModal, 
@@ -66,6 +85,19 @@ export default {
     } = useDateValidation()
     
     const {
+      sistemasAtivos,
+      sistemasSelecionados,
+      loadSistemas,
+      toggleSistema,
+      isSistemaSelected,
+      clearSelections,
+      selectAllSistemas
+    } = useSystemsManagement()
+
+    const { estados } = useEstados()
+    
+    // Composables de processamento
+    const {
       pontoReferencia,
       cidadeOrgao,
       distanciaCalculada,
@@ -75,10 +107,9 @@ export default {
       municipios,
       municipiosCarregados,
       filtroEstadoReferencia,
-      distanciasSalvas,
-      calculandoDistancia,
       pontosReferencia,
       pontosFiltrados,
+      calculandoDistancia, // Adicione esta linha
       carregarMunicipios,
       calcularDistancia,
       toggleModoManual
@@ -94,16 +125,7 @@ export default {
       closeImportModal
     } = usePublicationProcessing()
     
-    const {
-      sistemasAtivos,
-      sistemasSelecionados,
-      loadSistemas,
-      toggleSistema,
-      isSistemaSelected,
-      clearSelections,
-      selectAllSistemas
-    } = useSystemsManagement()
-
+    // Composables de interface e validação
     const {
       errors,
       validationState,
@@ -118,352 +140,92 @@ export default {
     const { toast, showToast } = useToast()
     
     const { isVisible } = useVisibilityHandler()
+    
+    // Composables específicos da view
+    const {
+      formData,
+      loading,
+      showPlataformaField,
+      validateForm,
+      handleSubmit,
+      setupWatchers
+    } = useEditaisForm()
+    
+    const {
+      isLoading,
+      processos,
+      setupRealtimeSubscription,
+      startAutoRefresh,
+      loadPageData,
+      cleanupSubscriptions
+    } = useRealtimeManager()
+    
+    // Composables adicionais para melhor organização
+    const {
+      distanciasSalvas,
+      salvarDistancia,
+      validarCidade,
+      salvarDistanciaManual,
+      adicionarDistanciaLista,
+      removerDaLista
+    } = useDistanceHandling(
+      formData, 
+      pontoReferencia, 
+      distanciaCalculada, 
+      cidadeOrgao, 
+      distanciaManualValue,
+      estadoDestino
+    )
+    
+    const {
+      handleProcessPublication
+    } = usePublicationHandler(
+      publicacaoText, 
+      processarPublicacao, 
+      closeImportModal, 
+      formData
+    )
 
-    // Dados do formulário
-    const formData = ref({
-      numero: '',
-      ano: new Date().getFullYear(),
-      orgao: '',
-      data_pregao: '',
-      hora_pregao: '',
-      estado: '',
-      modalidade: '',
-      site_pregao: '',
-      objeto_resumido: '',
-      sistemasAtivos: [],
-      objeto_completo: '',
-      representante: '',
-      status: '',
-      distancia_km: null,
-      ponto_referencia_cidade: '',
-      ponto_referencia_uf: '',
-      valor_estimado: ''
-    })
+    // No início do setup()
+    const { setTimeout: safeSetTimeout, clearTimeout: safeClearTimeout } = useTimeout()
+    const { isOnline, hasConnectionIssue, checkConnection, attemptReconnect } = useConnection()
+    const { addSubscription, removeSubscription, removeAllSubscriptions } = useSubscriptionManager()
+    
+    // No arquivo EditaisView.js, dentro do setup(), antes de onUnmounted:
+    const refreshInterval = ref(null)
 
-    // Lista de estados
-    const estados = [
-      { uf: 'AC', nome: 'Acre' },
-      { uf: 'AL', nome: 'Alagoas' },
-      { uf: 'AP', nome: 'Amapá' },
-      { uf: 'AM', nome: 'Amazonas' },
-      { uf: 'BA', nome: 'Bahia' },
-      { uf: 'CE', nome: 'Ceará' },
-      { uf: 'DF', nome: 'Distrito Federal' },
-      { uf: 'ES', nome: 'Espírito Santo' },
-      { uf: 'GO', nome: 'Goiás' },
-      { uf: 'MA', nome: 'Maranhão' },
-      { uf: 'MT', nome: 'Mato Grosso' },
-      { uf: 'MS', nome: 'Mato Grosso do Sul' },
-      { uf: 'MG', nome: 'Minas Gerais' },
-      { uf: 'PA', nome: 'Pará' },
-      { uf: 'PB', nome: 'Paraíba' },
-      { uf: 'PR', nome: 'Paraná' },
-      { uf: 'PE', nome: 'Pernambuco' },
-      { uf: 'PI', nome: 'Piauí' },
-      { uf: 'RJ', nome: 'Rio de Janeiro' },
-      { uf: 'RN', nome: 'Rio Grande do Norte' },
-      { uf: 'RS', nome: 'Rio Grande do Sul' },
-      { uf: 'RO', nome: 'Rondônia' },
-      { uf: 'RR', nome: 'Roraima' },
-      { uf: 'SC', nome: 'Santa Catarina' },
-      { uf: 'SP', nome: 'São Paulo' },
-      { uf: 'SE', nome: 'Sergipe' },
-      { uf: 'TO', nome: 'Tocantins' }
-    ]
-
-    // Computed property para controlar a visibilidade do campo de plataforma
-    const showPlataformaField = computed(() => {
-      return requiresPlataforma(formData.value.modalidade)
-    })
+    // === FUNÇÕES BÁSICAS DE INTERAÇÃO ===
     
     // Função para toggle do sidebar
     const handleSidebarToggle = (expanded) => {
       isSidebarExpanded.value = expanded
     }
-
-    // Função para lidar com a mudança de modalidade
-    const handleModalidadeChange = () => {
-      // Limpa o campo de plataforma se mudar para modalidade que não requer
-      if (!requiresPlataforma(formData.value.modalidade)) {
-        formData.value.site_pregao = ''
+    
+    // Função para mostrar mensagem de timeout
+    const showTimeout = (show = true) => {
+      if (loadingTimeout.value) {
+        clearTimeout(loadingTimeout.value)
+        loadingTimeout.value = null
+      }
+      
+      showTimeoutMessage.value = show
+      
+      if (show) {
+        loadingTimeout.value = setTimeout(() => {
+          showTimeoutMessage.value = false
+        }, 5000)
       }
     }
     
-    // Função para salvar a distância no formData
-    const salvarDistancia = () => {
-      if (!pontoReferencia.value || !distanciaCalculada.value) {
-        showToast('Selecione um ponto de referência e calcule a distância primeiro', 'error')
-        return
-      }
-
-      formData.value.distancia_km = parseFloat(distanciaCalculada.value.replace(' km', '').replace('(aproximado)', '').trim())
-      formData.value.ponto_referencia_cidade = pontoReferencia.value.cidade
-      formData.value.ponto_referencia_uf = pontoReferencia.value.uf
-
-      showToast('Distância salva com sucesso!', 'success')
-    }
-
-    const validarCidade = () => {
-      return cidadeOrgao.value && cidadeOrgao.value.length >= 3;
-    }
-
-    // Função para salvar distância manual
-    const salvarDistanciaManual = () => {
-      if (!distanciaManualValue.value || !pontoReferencia.value) {
-        showToast('Digite um valor de distância e selecione um ponto de referência', 'error')
-        return
-      }
-
-      formData.value.distancia_km = parseFloat(distanciaManualValue.value)
-      formData.value.ponto_referencia_cidade = pontoReferencia.value.cidade
-      formData.value.ponto_referencia_uf = pontoReferencia.value.uf
-
-      showToast('Distância manual salva com sucesso!', 'success')
-    }
+    // === CONFIGURAÇÃO DE WATCHERS ===
     
-    // Função para validar formulário
-    const validateForm = () => {
-      clearErrors()
-      
-      // Validação de campos obrigatórios
-      const requiredFields = [
-        { field: 'numero', label: 'Número' },
-        { field: 'ano', label: 'Ano' },
-        { field: 'orgao', label: 'Órgão' },
-        { field: 'data_pregao', label: 'Data do pregão' },
-        { field: 'hora_pregao', label: 'Hora do pregão' },
-        { field: 'modalidade', label: 'Modalidade' },
-        { field: 'estado', label: 'Estado' }
-      ]
-      
-      let isValid = true
-      
-      // Valida campos obrigatórios
-      for (const item of requiredFields) {
-        if (!formData.value[item.field]) {
-          addError(item.field, `O campo ${item.label} é obrigatório`)
-          isValid = false
-        }
-      }
-      
-      // Valida data
-      if (formData.value.data_pregao && !validateDate(formData.value.data_pregao)) {
-        addError('data_pregao', dateError.value || 'Data inválida')
-        isValid = false
-      }
-      
-      // Valida hora
-      if (formData.value.hora_pregao && !validateTime(formData.value.hora_pregao)) {
-        addError('hora_pregao', timeError.value || 'Hora inválida')
-        isValid = false
-      }
-      
-      // Valida plataforma para modalidades eletrônicas
-      if (requiresPlataforma(formData.value.modalidade) && !formData.value.site_pregao) {
-        addError('site_pregao', 'A plataforma é obrigatória para esta modalidade')
-        isValid = false
-      }
-      
-      // Executar validações cruzadas
-      const errosValidacaoCruzada = executarValidacoesCruzadas(formData.value)
-      if (errosValidacaoCruzada.length > 0) {
-        for (const erro of errosValidacaoCruzada) {
-          showToast(erro, 'warning')
-        }
-        // Não impede envio, apenas alerta
-      }
-      
-      return isValid
-    }
+    // Configuração de watchers do formulário
+    setupWatchers(estadoDestino, carregarMunicipios)
     
-    // Função para submeter o formulário
-    const handleSubmit = async () => {
-      if (!validateForm()) {
-        showToast('Por favor, corrija os erros no formulário', 'error')
-        return
-      }
-      
-      try {
-        loading.value = true
-        
-        // Prepara dados para envio
-        const formDataToSend = { ...formData.value }
-        
-        // Adiciona sistemas selecionados
-        formDataToSend.sistemas = sistemasSelecionados.value
-        
-        // Converte valor estimado para número se existir
-        if (formDataToSend.valor_estimado) {
-          formDataToSend.valor_estimado = parseFloat(
-            formDataToSend.valor_estimado.replace(/\./g, '').replace(',', '.')
-          )
-        }
-        
-        const { data, error } = await supabase
-          .from('processos')
-          .insert(formDataToSend)
-          .select()
-        
-        if (error) throw error
-        
-        showToast('Processo cadastrado com sucesso!', 'success')
-        
-        // Resetar formulário ou redirecionar
-        router.push({ name: 'processos' })
-        
-      } catch (error) {
-        console.error('Erro ao cadastrar processo:', error)
-        showToast('Erro ao cadastrar processo', 'error')
-      } finally {
-        loading.value = false
-      }
-    }
-
-    // Função para processar uma publicação
-    const handleProcessPublication = async () => {
-      if (!publicacaoText.value) {
-        showToast('Insira o texto da publicação', 'warning')
-        return
-      }
-      
-      try {
-        const result = await processarPublicacao(formData.value)
-        
-        if (result.success) {
-          // Atualiza o formulário com os dados extraídos
-          Object.assign(formData.value, result.data)
-          
-          showToast(result.fromCache 
-            ? 'Dados recuperados do cache com sucesso!'
-            : 'Processamento concluído com sucesso!', 'success')
-          
-          setTimeout(() => closeImportModal(), 1500)
-        } else {
-          showToast('Erro ao processar publicação', 'error')
-        }
-      } catch (error) {
-        console.error('Erro ao processar publicação:', error)
-        showToast('Erro ao processar publicação', 'error')
-      }
-    }
-
-    // Gerenciamento de realtime e refresh
-    const isLoading = ref(false)
-    const refreshInterval = ref(null)
-    const processosCache = new Map()
-
-    const startAutoRefresh = () => {
-      stopAutoRefresh() // Limpa timer anterior
-      refreshInterval.value = setInterval(() => {
-        loadProcessos().catch(console.error)
-      }, 30000)
-    }
-
-    const stopAutoRefresh = () => {
-      if (refreshInterval.value) {
-        clearInterval(refreshInterval.value)
-        refreshInterval.value = null
-      }
-    }
-
-    // Função de carregamento com cache
-    const loadProcessos = async () => {
-      if (isLoading.value) return
-
-      try {
-        isLoading.value = true
-        const { data, error } = await supabase
-          .from('processos')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-        processos.value = data
-
-        // Atualiza cache
-        data.forEach(processo => {
-          processosCache.set(processo.id, processo)
-        })
-      } catch (error) {
-        console.error('Erro ao carregar processos:', error)
-      } finally {
-        isLoading.value = false
-      }
-    }
-
-    const setupRealtimeSubscription = () => {
-      try {
-        const channel = supabase
-          .channel('processos-changes')
-          .on('postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'processos'
-            },
-            (payload) => {
-              console.log('Mudança detectada:', payload)
-              loadProcessos()
-            }
-          )
-          .subscribe()
-
-        // Registra a subscrição
-        SupabaseManager.addSubscription('processos-changes', channel)
-      } catch (error) {
-        console.error('Erro ao configurar realtime:', error)
-      }
-    }
-
-    // Função para carregar dados da página
-    const loadPageData = async () => {
-      if (isLoading.value) return
-      
-      try {
-        isLoading.value = true
-        await Promise.all([
-          loadProcessos(),
-          loadPlataformas(),
-          loadRepresentantes(),
-          loadSistemas()
-        ])
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error)
-      } finally {
-        isLoading.value = false
-      }
-    }
-
-    // Funções relacionadas a distância e municípios
-    const adicionarDistanciaLista = () => {
-      if (!distanciaCalculada.value || !pontoReferencia.value || !cidadeOrgao.value) {
-        showToast('Selecione os pontos e calcule a distância primeiro', 'warning')
-        return
-      }
-
-      const novaDistancia = {
-        distancia_km: parseFloat(distanciaCalculada.value.replace(' km', '').replace('(aproximado)', '').trim()),
-        ponto_referencia_cidade: pontoReferencia.value.cidade,
-        ponto_referencia_uf: pontoReferencia.value.uf,
-        cidade_destino: cidadeOrgao.value.nome,
-        uf_destino: estadoDestino.value
-      }
-
-      distanciasSalvas.value.push(novaDistancia)
-      distanciaCalculada.value = null
-      showToast('Distância adicionada à lista', 'success')
-    }
-
-    const removerDaLista = (index) => {
-      distanciasSalvas.value.splice(index, 1)
-      showToast('Distância removida da lista', 'success')
-    }
-
-    // Watchers
+    // Watcher para sincronizar estado e carregar municípios
     watch(() => formData.value.estado, (novoEstado) => {
       filtroEstadoReferencia.value = novoEstado
 
-      // Carrega os municípios automaticamente quando o estado for selecionado
       if (novoEstado) {
         carregarMunicipios()
       } else {
@@ -472,57 +234,41 @@ export default {
       }
     })
 
-    watch(() => formData.value.modalidade, (newModalidade) => {
-      handleModalidadeChange()
-      
-      // Validação cruzada
-      if (formData.value.data_pregao) {
-        const valid = validacoesCruzadas.validarDataModalidade(
-          formData.value.data_pregao,
-          newModalidade
-        )
-        if (!valid) {
-          showToast('Atenção: Prazo mínimo para esta modalidade não atendido', 'warning')
-        }
-      }
-    })
-
-    watch(() => formData.value.site_pregao, (newPlataforma) => {
-      if (formData.value.estado && newPlataforma) {
-        const valid = validacoesCruzadas.validarEstadoPlataforma(
-          formData.value.estado,
-          newPlataforma
-        )
-        if (!valid) {
-          showToast('Atenção: Plataforma não comum para este estado', 'warning')
-        }
-      }
-    })
-
-    // Adicione um watch para sincronizar inicialmente o estadoDestino com o estado principal
-    watch(() => formData.value.estado, (novoEstado) => {
-      if (novoEstado && !estadoDestino.value) {
-        estadoDestino.value = novoEstado
-        carregarMunicipios()
-      }
-    }, { immediate: true })
-
-    // Watch for visibility changes
+    // Watcher para mudanças de visibilidade
     watch(isVisible, async (newValue) => {
       if (newValue) {
-        await loadPageData()
+        await loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
       }
     })
 
-    // Ciclo de vida do componente
+    // Substitua a lógica de verificação de visibilidade existente
+    const handleVisibilityChange = async () => {
+      if (!document.hidden) {
+        if (isOnline.value) {
+          await checkConnection()
+          if (!hasConnectionIssue.value) {
+            await loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
+          } else {
+            await attemptReconnect()
+          }
+        }
+      }
+    }
+
+    // === CICLO DE VIDA DO COMPONENTE ===
+    
     onMounted(() => {
-      // Use o composable para gerenciar reconexões
-      useConnectionManager(loadPageData)
+      // Adicionar listener de visibilidade
+      document.addEventListener('visibilitychange', handleVisibilityChange)
       
-      // Configurar o realtime
+      // Gerenciamento de conexão
+      useConnectionManager(() => loadPageData(loadPlataformas, loadRepresentantes, loadSistemas))
+      
+      // Configurações de realtime
       setupRealtimeSubscription()
+      startAutoRefresh()
       
-      // Carregar dados iniciais
+      // Carregamento de dados iniciais
       Promise.all([
         loadPlataformas(),
         loadRepresentantes(),
@@ -531,62 +277,104 @@ export default {
         console.error('Erro ao carregar dados iniciais:', error)
       })
       
-      // Limpar cache
+      // Limpeza de cache
       processamentosCache.limparCache()
       
-      // Iniciar auto refresh
-      startAutoRefresh()
-      
-      // Configura subscrição para atualizações
+      // Configuração de canal para atualizações
       const channel = supabase.channel('editais-updates')
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'processos' }, 
-          () => loadPageData()
+          () => loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
         )
         .subscribe()
       
-      SupabaseManager.addSubscription('editais-updates', channel)
-      
-      // Log coordenadas disponíveis (debug)
-      console.log('Componente EditaisView montado')
+      addSubscription('editais-updates', channel)
     })
 
+    // Limpeza ao desmontar o componente
     onUnmounted(() => {
-      // Limpar timers e listeners
-      stopAutoRefresh()
+      // Limpar todas as assinaturas
+      removeAllSubscriptions()
       
-      // Remover canais Supabase
-      const channelProcessosChanges = SupabaseManager.subscriptions.get('processos-changes')
-      if (channelProcessosChanges) {
-        supabase.removeChannel(channelProcessosChanges)
-        SupabaseManager.removeSubscription('processos-changes')
+      // Limpar temporizadores
+      if (loadingTimeout.value) {
+        safeClearTimeout(loadingTimeout.value)
       }
       
-      const channelEditaisUpdates = SupabaseManager.subscriptions.get('editais-updates')
-      if (channelEditaisUpdates) {
-        supabase.removeChannel(channelEditaisUpdates)
-        SupabaseManager.removeSubscription('editais-updates')
+      // Remover listeners de visibilidade
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      
+      // Limpar outras limpezas existentes
+      cleanupSubscriptions()
+      
+      // Parar auto refresh
+      if (refreshInterval && refreshInterval.value) {
+        clearInterval(refreshInterval.value)
+        refreshInterval.value = null
       }
+      
+      // Cancelar solicitações pendentes
+      const controller = new AbortController()
+      controller.abort()
+      
+      // Remover listeners de visibilidade
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     })
 
-    // Retorne todas as variáveis e funções necessárias no template
+    // === WRAPPERS DE FUNÇÕES ===
+    
+    // Wrapper para validação do formulário
+    const validateFormWrapper = () => {
+      return validateForm(
+        validateDate, 
+        validateTime, 
+        dateError, 
+        timeError
+      )
+    }
+    
+    // Wrapper para submissão do formulário
+    const handleSubmitWrapper = async () => {
+      await handleSubmit(sistemasSelecionados, validateFormWrapper)
+    }
+
+    // === RETORNO DE VALORES E FUNÇÕES PARA O TEMPLATE ===
+    
     return {
+      // Variáveis de UI
       isSidebarExpanded,
       loading,
       isLoading,
-      formData,
       currentYear,
+      toast,
+      showTimeoutMessage,
+      
+      // Dados do formulário
+      formData,
+      showPlataformaField,
+      estados,
+      
+      // Dados de plataformas
       plataformas,
       showPlataformaModal,
       novaPlatforma,
+      
+      // Dados de representantes
       representantes,
       showRepresentanteModal,
       novoRepresentante,
+      
+      // Dados de importação
       showImportModal,
       publicacaoText,
+      progressoExtracao,
+      camposNaoEncontrados,
+      
+      // Dados de validação
       dateError,
       timeError,
-      estados,
+      
+      // Dados de distância
       pontoReferencia,
       cidadeOrgao,
       distanciaCalculada,
@@ -600,35 +388,49 @@ export default {
       pontosFiltrados,
       distanciasSalvas,
       calculandoDistancia,
+      
+      // Dados de sistemas
       sistemasAtivos,
       sistemasSelecionados,
-      showPlataformaField,
-      toast,
-      progressoExtracao,
-      camposNaoEncontrados,
+      
+      // Dados de processos
       processos,
       
-      // Funções
+      // Funções de interação básica
       handleSidebarToggle,
+      
+      // Funções de plataformas
       loadPlataformas,
       handleAddPlataforma,
+      
+      // Funções de representantes
       loadRepresentantes,
       handleAddRepresentante,
       handleOpenRepresentanteModal,
+      
+      // Funções de sistemas
       toggleSistema,
       isSistemaSelected,
+      
+      // Funções de distância
       carregarMunicipios,
       calcularDistancia,
-      closeImportModal,
-      handleProcessPublication,
-      validateForm,
-      handleSubmit,
       salvarDistancia,
       validarCidade,
       toggleModoManual,
       salvarDistanciaManual,
       adicionarDistanciaLista,
       removerDaLista,
+      
+      // Funções de importação
+      closeImportModal,
+      handleProcessPublication,
+      
+      // Funções de formulário
+      validateForm: validateFormWrapper,
+      handleSubmit: handleSubmitWrapper,
+      
+      // Funções de formatação
       formatarModalidade,
       formatarValorEstimado
     }

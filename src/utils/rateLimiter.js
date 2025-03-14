@@ -17,20 +17,58 @@ const rateLimiterRedis = new RateLimiterRedis({
   blockDuration: 300, // Bloqueia por 5 minutos após exceder
 });
 
+// Implementação de limitador de taxa baseada em memória para front-end
 export class RateLimiter {
-  async isRateLimited(key) {
-    try {
-      await rateLimiterRedis.consume(key);
-      return false;
-    } catch (error) {
-      return true;
-    }
+  constructor(maxAttempts = 5, timeWindow = 300000) { // 5 tentativas em 5 minutos (300000ms)
+    this.attempts = new Map();
+    this.maxAttempts = maxAttempts;
+    this.timeWindow = timeWindow;
   }
 
-  async resetLimit(key) {
-    await rateLimiterRedis.delete(key);
+  isRateLimited(key) {
+    const now = Date.now();
+    const userAttempts = this.attempts.get(key) || [];
+    
+    // Limpa tentativas antigas
+    const recentAttempts = userAttempts.filter(timestamp => 
+      now - timestamp < this.timeWindow
+    );
+    
+    // Atualiza a lista de tentativas
+    if (recentAttempts.length < this.maxAttempts) {
+      recentAttempts.push(now);
+      this.attempts.set(key, recentAttempts);
+      return false;  // Não está limitado
+    }
+    
+    return true;  // Está limitado
+  }
+
+  resetLimit(key) {
+    this.attempts.delete(key);
+  }
+  
+  // Limpa as tentativas antigas a cada minuto
+  startCleanupInterval() {
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, timestamps] of this.attempts.entries()) {
+        const validTimestamps = timestamps.filter(t => now - t < this.timeWindow);
+        if (validTimestamps.length === 0) {
+          this.attempts.delete(key);
+        } else {
+          this.attempts.set(key, validTimestamps);
+        }
+      }
+    }, 60000); // A cada minuto
   }
 }
+
+// Criar uma instância padrão
+const loginLimiter = new RateLimiter(3, 300000); // 3 tentativas em 5 minutos
+loginLimiter.startCleanupInterval();
+
+export { loginLimiter };
 
 // Uso no login
 const rateLimiter = new RateLimiter();

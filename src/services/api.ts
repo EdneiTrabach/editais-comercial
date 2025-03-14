@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { supabase } from '../config/supabase'
+// Importe supabase da sua instância principal
+import { supabase } from '@/lib/supabase' // Modifique o caminho se necessário
 import axios from 'axios'
 import router from '../router'
 

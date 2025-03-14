@@ -441,7 +441,7 @@ input[type="date"]:focus:not(.error) {
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(79 79 79 / 80%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -591,6 +591,23 @@ input[type="date"]:focus:not(.error) {
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+}
+
+[data-theme="dark"] .distancia-container {
+  background: #1e293b !important;
+  color: white;
+}
+
+[data-theme="dark"] .btn-calcular:disabled {
+  background: #6a7079;
+  color: white;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .sistema-chip {
+  background: #1e293b;
+  color: white;
+  border-color: #ffffff79;
 }
 
 .pontos-container {

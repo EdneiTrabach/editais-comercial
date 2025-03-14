@@ -4,35 +4,40 @@ import router from '@/router'  // Adicione esta importação
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Faltam variáveis de ambiente do Supabase')
+// Implementar um padrão Singleton adequado
+let supabaseInstance = null
+
+export function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Erro: Variáveis de ambiente do Supabase não configuradas.')
+    throw new Error('Faltam variáveis de ambiente do Supabase')
+  }
+  
+  try {
+    // Criar cliente com configurações adequadas
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storageKey: 'editais-comercial-auth' // Chave personalizada para evitar conflitos
+      }
+    })
+    return supabaseInstance
+  } catch (error) {
+    console.error('Erro ao criar cliente Supabase:', error)
+    throw error
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
-  },
-  realtime: {
-    enabled: true
-  },
-  db: {
-    schema: 'public'
-  },
-  global: {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    },
-    queryParams: {
-      _t: Date.now() // Adicionar timestamp para evitar cache
-    }
-  }
-})
+// Exportar uma única instância do Supabase cliente
+export const supabase = getSupabase()
+
+// Adicionar uma função para resetar a instância em caso de necessidade
+export function resetSupabaseClient() {
+  supabaseInstance = null
+}
 
 // Não use o router aqui para evitar problemas de importação circular
 // Em vez disso, use o hook onAuthStateChange no appService
