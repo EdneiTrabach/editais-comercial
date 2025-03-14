@@ -1212,3 +1212,17 @@ input[type="date"]:focus:not(.error) {
   padding-left: 2.5rem !important;
   width: 100%;
 }
+
+
+.validation-info {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #fff8e6;
+  border: 1px solid #ffd166;
+  border-radius: 8px;
+}
+
+.info-message {
+  color: #856404;
+  font-size: 0.9rem;
+}

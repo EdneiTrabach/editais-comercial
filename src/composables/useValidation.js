@@ -66,20 +66,87 @@ export function useValidation() {
 
     // Validação cruzada entre estado e plataforma
     validarEstadoPlataforma: (estado, plataforma) => {
+      // Mapeamento de plataformas específicas por estado
       const plataformasRegionais = {
-        'MG': ['compras.mg.gov.br', 'licitacoes-e.com.br'],
-        'SP': ['bec.sp.gov.br', 'licitacoes-e.com.br'],
-        'RJ': ['compras.rj.gov.br', 'licitacoes-e.com.br']
-        // Adicione mais estados e suas plataformas conforme necessário
+        'MG': ['compras.mg.gov.br', 'licitacoes-e.com.br', 'ammlicita', 'amm.org.br'],
+        'SP': ['bec.sp.gov.br', 'licitacoes-e.com.br', 'bbmnet'],
+        'RJ': ['compras.rj.gov.br', 'licitacoes-e.com.br'],
+        'RS': ['compras.rs.gov.br', 'licitacoes-e.com.br'],
+        'PR': ['compras.pr.gov.br', 'licitacoes-e.com.br'],
+        'BA': ['comprasnet.ba.gov.br', 'licitacoes-e.com.br'],
+        'CE': ['portalcompras.ce.gov.br', 'licitacoes-e.com.br', 'comprasnet.gov.br'],
+        'GO': ['comprasnet.go.gov.br', 'licitacoes-e.com.br'],
+        'PE': ['compras.pe.gov.br', 'licitacoes-e.com.br'],
+        'SC': ['portaldecompras.sc.gov.br', 'licitacoes-e.com.br'],
+        'ES': ['compras.es.gov.br', 'licitacoes-e.com.br'],
+        'AM': ['compras.am.gov.br', 'e-compras.am.gov.br'],
+        'PA': ['compraspara.pa.gov.br', 'licitacoes-e.com.br'],
+        'DF': ['compras.df.gov.br', 'licitacoes-e.com.br'],
+        'MT': ['aquisicoes.seplag.mt.gov.br', 'licitacoes-e.com.br'],
+        'MS': ['compraspublicas.ms.gov.br', 'licitacoes-e.com.br'],
+        'PB': ['centraldecompras.pb.gov.br', 'licitacoes-e.com.br'],
+        'RN': ['compras.rn.gov.br', 'licitacoes-e.com.br'],
+        'AL': ['comprasnet.al.gov.br', 'licitacoes-e.com.br'],
+        'PI': ['licitacao.pi.gov.br', 'licitacoes-e.com.br'],
+        'SE': ['comprasnet.se.gov.br', 'licitacoes-e.com.br'],
+        'TO': ['compras.to.gov.br', 'licitacoes-e.com.br'],
+        'RO': ['compras.ro.gov.br', 'licitacoes-e.com.br'],
+        'AC': ['compras.ac.gov.br', 'licitacoes-e.com.br'],
+        'RR': ['compras.rr.gov.br', 'licitacoes-e.com.br'],
+        'AP': ['compras.ap.gov.br', 'licitacoes-e.com.br'],
+        'MA': ['compras.ma.gov.br', 'licitacoes-e.com.br']
       }
 
       if (!estado || !plataforma) return true
       
-      // Se não houver restrição específica para o estado, permite qualquer plataforma
-      if (!plataformasRegionais[estado]) return true
+      // Lista de plataformas nacionais compatíveis com todos os estados
+      const plataformasNacionais = ['comprasnet.gov.br', 'gov.br/compras', 'licitacoes-e.com.br'];
       
-      const plataformasPermitidas = plataformasRegionais[estado]
-      return plataformasPermitidas.some(p => plataforma.toLowerCase().includes(p.toLowerCase()))
+      // Verifica se a plataforma é nacional (compatível com qualquer estado)
+      const plataformaLower = plataforma.toLowerCase();
+      const isPlataformaNacional = plataformasNacionais.some(p => 
+        plataformaLower.includes(p.toLowerCase())
+      );
+      
+      if (isPlataformaNacional) return true;
+      
+      // Verifica se a plataforma está mapeada para o estado selecionado
+      if (plataformasRegionais[estado] && 
+          plataformasRegionais[estado].some(p => plataformaLower.includes(p.toLowerCase()))) {
+        return true;
+      }
+      
+      // Verifica se a plataforma é específica para algum outro estado
+      let plataformaEspecifica = false;
+      let estadosPermitidos = [];
+      
+      Object.entries(plataformasRegionais).forEach(([estadoKey, plataformasList]) => {
+        if (plataformasList.some(p => plataformaLower.includes(p.toLowerCase()))) {
+          plataformaEspecifica = true;
+          estadosPermitidos.push(estadoKey);
+        }
+      });
+      
+      // Se a plataforma é específica de outros estados, não é compatível
+      if (plataformaEspecifica) {
+        return false;
+      }
+      
+      // Verifica se é uma plataforma não reconhecida
+      // Para plataformas não reconhecidas, podemos optar por ser mais restritivos
+      // Aqui estamos considerando incompatível se contém algumas palavras-chave de plataformas
+      const keywordsPlatform = ['compras', 'licitacao', 'pregao', 'bbmnet', 'bll', 'bolsa'];
+      const containsPlatformKeyword = keywordsPlatform.some(keyword => 
+        plataformaLower.includes(keyword.toLowerCase())
+      );
+      
+      if (containsPlatformKeyword) {
+        // Se parece ser uma plataforma específica não reconhecida, retorna incompatível
+        return false;
+      }
+      
+      // Se não foi identificada como plataforma específica, permite o uso
+      return true;
     }
   }
 

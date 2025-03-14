@@ -444,7 +444,48 @@ export default {
       
       // Funções de plataformas
       loadPlataformas,
-      handleAddPlataforma,
+      handleAddPlataforma: async () => {
+        try {
+          // Validações básicas
+          if (!novaPlatforma.value.nome || !novaPlatforma.value.url) {
+            showToast('Nome e URL são obrigatórios', 'error')
+            return
+          }
+      
+          // Verificar explicitamente se a plataforma é adequada para o estado selecionado
+          if (formData.value.estado) {
+            const valid = validacoesCruzadas.validarEstadoPlataforma(
+              formData.value.estado, 
+              novaPlatforma.value.nome
+            )
+            
+            if (!valid) {
+              showToast(`Atenção: "${novaPlatforma.value.nome}" não é uma plataforma comum para o estado ${formData.value.estado}`, 'warning')
+              // A mensagem é exibida, mas permitimos continuar com o salvamento
+            }
+          }
+      
+          // Continua com o salvamento da plataforma
+          const { error } = await supabase
+            .from('plataformas')
+            .insert({
+              nome: novaPlatforma.value.nome,
+              url: novaPlatforma.value.url
+            })
+      
+          if (error) throw error
+      
+          // Recarrega as plataformas e fecha o modal
+          await loadPlataformas()
+          novaPlatforma.value = { nome: '', url: '' }
+          showPlataformaModal.value = false
+          
+          showToast('Plataforma adicionada com sucesso', 'success')
+        } catch (error) {
+          console.error('Erro ao adicionar plataforma:', error)
+          showToast('Erro ao salvar plataforma', 'error')
+        }
+      },
       
       // Funções de representantes
       loadRepresentantes,

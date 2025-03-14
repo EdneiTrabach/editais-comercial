@@ -134,7 +134,7 @@
               <div class="pontos-container">
                 <!-- ORDEM INVERTIDA: Primeiro a Cidade do Órgão -->
                 <div class="ponto-destino">
-                  <label>Cidade do Órgão (Origem)</label>
+                  <label>Cidade do Órgão</label>
                   <div class="cidade-input">
                     <select v-model="estadoDestino" @change="carregarMunicipios">
                       <option value="">Estado...</option>
@@ -153,7 +153,7 @@
 
                 <!-- E depois o Ponto de Referência -->
                 <div class="ponto-origem">
-                  <label>Ponto de Destino (Referência)</label>
+                  <label>Ponto Referência</label>
                   <div class="referencia-container">
                     <select v-model="filtroEstadoReferencia">
                       <option value="">Todos os Estados</option>
@@ -295,6 +295,13 @@
         <div class="form-group-cfg-usuarios">
           <label class="label-cfg-usuarios">URL</label>
           <input v-model="novaPlatforma.url" type="url" required class="input-cfg-usuarios">
+        </div>
+
+        <div v-if="formData.estado" class="form-group-cfg-usuarios validation-info">
+          <div class="info-message">
+            <strong>Nota:</strong> Certifique-se que esta plataforma é utilizada no estado 
+            selecionado ({{ formData.estado }}). Plataformas não comuns podem causar problemas na validação.
+          </div>
         </div>
 
         <div class="modal-actions-cfg-usuarios">
