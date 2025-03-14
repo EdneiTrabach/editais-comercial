@@ -145,6 +145,19 @@ export function useCurrencyFormatter() {
     // Remove qualquer caractere que não seja dígito ou vírgula
     valor = valor.replace(/[^\d,]/g, '');
     
+    // Se não tem vírgula, consideramos os dois últimos dígitos como centavos
+    if (!valor.includes(',')) {
+      // Garantimos que tenha pelo menos 3 dígitos (100 = R$ 1,00)
+      if (valor.length > 2) {
+        const parteInteira = valor.substring(0, valor.length - 2);
+        const parteDecimal = valor.substring(valor.length - 2);
+        valor = parteInteira + ',' + parteDecimal;
+      } else {
+        // Para valores menores que 1 real (ex: 45 centavos)
+        valor = '0,' + valor.padStart(2, '0');
+      }
+    }
+    
     const partes = valor.split(',');
     
     // Trata parte inteira
