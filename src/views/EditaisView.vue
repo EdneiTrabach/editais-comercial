@@ -367,7 +367,7 @@
         <button class="btn-cancel-cfg-usuarios" @click="closeImportModal">
           Cancelar
         </button>
-        <button class="btn-confirm-cfg-usuarios" @click="processarPublicacao">
+        <button class="btn-confirm-cfg-usuarios" @click="handleProcessPublication">
           Processar Publicação
         </button>
       </div>
