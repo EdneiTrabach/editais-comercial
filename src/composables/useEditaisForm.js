@@ -34,6 +34,7 @@ export function useEditaisForm() {
 
   // Computed property para controlar a visibilidade do campo de plataforma
   const showPlataformaField = computed(() => {
+    // O método requiresPlataforma deve verificar todas as modalidades eletrônicas
     return requiresPlataforma(formData.value.modalidade)
   })
 

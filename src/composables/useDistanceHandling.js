@@ -46,6 +46,10 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
 
     const novaDistancia = {
       distancia_km: parseFloat(distanciaCalculada.value.replace(' km', '').replace('(aproximado)', '').trim()),
+      // A cidade de origem (órgão) é agora o ponto de partida
+      cidade_origem: cidadeOrgao.value.nome,
+      uf_origem: estadoDestino.value,
+      // O ponto de referência é agora o destino
       ponto_referencia_cidade: pontoReferencia.value.cidade,
       ponto_referencia_uf: pontoReferencia.value.uf,
       cidade_destino: cidadeOrgao.value.nome,

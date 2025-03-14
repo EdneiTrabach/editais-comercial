@@ -1,20 +1,29 @@
 <template>
   <div class="layout">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
+
+    <!-- Indicador de carregamento -->
     <div v-if="isLoading" class="loading-overlay">
       <div class="loading-spinner"></div>
       <div v-if="showTimeoutMessage" class="timeout-message">
-        Se o carregamento persistir, por favor recarregue a página
+        Carregamento demorado, por favor aguarde...
       </div>
     </div>
+
+    <!-- Indicador de reconexão -->
+    <div v-if="isReconnecting" class="reconnecting-indicator">
+      Reconectando...
+    </div>
+
+    <!-- Conteúdo principal -->
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <!-- Loading overlay -->
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
         <!-- Adicione após o header no template -->
-          <button class="btn-import" @click="showImportModal = true">
-            Importar Publicação
-          </button>
+        <button class="btn-import" @click="showImportModal = true">
+          Importar Publicação
+        </button>
       </div>
 
 
@@ -95,7 +104,7 @@
           <div class="form-group full-width">
             <RequiredLabel text="Objeto Resumido (máx. 700 caracteres)" :isRequired="false" />
             <div class="objeto-container">
-              <input v-model="formData.objeto_resumido" type="string" maxlength="700" required
+              <input v-model="formData.objeto_resumido" type="string" maxlength="700"
                 placeholder="Breve descrição do objeto" />
               <small>{{ formData.objeto_resumido?.length || 0 }}/700</small>
 
@@ -123,28 +132,9 @@
             <RequiredLabel text="Cálculo de Distância" :isRequired="false" />
             <div class="distancia-container">
               <div class="pontos-container">
-                <!-- Ponto de Origem -->
-                <div class="ponto-origem">
-                  <label>Ponto de Origem (Referência)</label>
-                  <div class="referencia-container">
-                    <select v-model="filtroEstadoReferencia">
-                      <option value="">Todos os Estados</option>
-                      <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-                        {{ estado.nome }}
-                      </option>
-                    </select>
-                    <select v-model="pontoReferencia">
-                      <option value="">Selecione o ponto de referência...</option>
-                      <option v-for="ponto in pontosFiltrados" :key="ponto.cidade" :value="ponto">
-                        {{ ponto.cidade }}/{{ ponto.uf }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Cidade do Órgão -->
+                <!-- ORDEM INVERTIDA: Primeiro a Cidade do Órgão -->
                 <div class="ponto-destino">
-                  <label>Cidade do Órgão</label>
+                  <label>Cidade do Órgão (Origem)</label>
                   <div class="cidade-input">
                     <select v-model="estadoDestino" @change="carregarMunicipios">
                       <option value="">Estado...</option>
@@ -160,14 +150,33 @@
                     </select>
                   </div>
                 </div>
+
+                <!-- E depois o Ponto de Referência -->
+                <div class="ponto-origem">
+                  <label>Ponto de Destino (Referência)</label>
+                  <div class="referencia-container">
+                    <select v-model="filtroEstadoReferencia">
+                      <option value="">Todos os Estados</option>
+                      <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                        {{ estado.nome }}
+                      </option>
+                    </select>
+                    <select v-model="pontoReferencia">
+                      <option value="">Selecione o ponto de referência...</option>
+                      <option v-for="ponto in pontosFiltrados" :key="ponto.cidade" :value="ponto">
+                        {{ ponto.cidade }}/{{ ponto.uf }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <!-- Botões e Resultado -->
               <div class="distancia-actions">
                 <button @click="calcularDistancia" class="btn-calcular"
-                :disabled="calculandoDistancia || !pontoReferencia || !cidadeOrgao || !formData.estado">
-                {{ calculandoDistancia ? 'Calculando...' : 'Calcular Distância' }}
-              </button>
+                  :disabled="calculandoDistancia || !pontoReferencia || !cidadeOrgao || !formData.estado">
+                  {{ calculandoDistancia ? 'Calculando...' : 'Calcular Distância' }}
+                </button>
 
                 <div v-if="distanciaCalculada" class="distancia-result">
                   <span class="distance-value">{{ distanciaCalculada }}</span>
@@ -179,12 +188,17 @@
               </div>
 
               <!-- Adicione após o div.distancia-actions -->
+              <!-- Exibição aprimorada das distâncias calculadas -->
               <div v-if="distanciasSalvas.length > 0" class="distancias-lista">
                 <h4>Distâncias Calculadas</h4>
                 <div class="distancia-items">
                   <div v-for="(dist, index) in distanciasSalvas" :key="index" class="distancia-item">
-                    <span class="distancia-valor">{{ dist.distancia_km }}km</span>
-                    <span class="distancia-cidade">de {{ dist.cidade_destino }}/{{ dist.uf_destino }}</span>
+                    <div class="distancia-info">
+                      <span class="distancia-valor">{{ dist.distancia_km }} km</span>
+                      <!-- Exibindo de: cidadeOrgao para: pontoReferencia -->
+                      <span class="distancia-rota">de {{ dist.cidade_origem }}/{{ dist.uf_origem }} para {{
+                        dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }}</span>
+                    </div>
                     <button @click="removerDaLista(index)" class="btn-remover">×</button>
                   </div>
                 </div>
@@ -211,13 +225,9 @@
           <div class="form-group">
             <RequiredLabel text="Valor Estimado" :isRequired="false" />
             <div class="valor-container">
-              <span class="currency-symbol">R$</span>
-              <input 
-                v-model="formData.valor_estimado" 
-                type="text" 
-                placeholder="0,00"
-                @input="formatarValorEstimado"
-              />
+              <input v-model="formData.valor_estimado" type="text" placeholder="0,00" 
+                @input="formatarValorEstimado" inputmode="numeric" 
+                class="input-valor-com-prefixo" />
             </div>
           </div>
 
@@ -276,12 +286,12 @@
           <label class="label-cfg-usuarios">Nome da Plataforma</label>
           <input v-model="novaPlatforma.nome" required class="input-cfg-usuarios">
         </div>
-        
+
         <div class="form-group-cfg-usuarios">
           <label class="label-cfg-usuarios">URL</label>
           <input v-model="novaPlatforma.url" type="url" required class="input-cfg-usuarios">
         </div>
-        
+
         <div class="modal-actions-cfg-usuarios">
           <button type="button" class="btn-cancel-cfg-usuarios" @click="showPlataformaModal = false">
             Cancelar
@@ -303,22 +313,22 @@
           <label class="label-cfg-usuarios">Nome</label>
           <input v-model="novoRepresentante.nome" required class="input-cfg-usuarios">
         </div>
-        
+
         <div class="form-group-cfg-usuarios">
           <label class="label-cfg-usuarios">Documento (CPF/CNPJ)</label>
           <input v-model="novoRepresentante.documento" class="input-cfg-usuarios">
         </div>
-        
+
         <div class="form-group-cfg-usuarios">
           <label class="label-cfg-usuarios">Email</label>
           <input v-model="novoRepresentante.email" type="email" class="input-cfg-usuarios">
         </div>
-        
+
         <div class="form-group-cfg-usuarios">
           <label class="label-cfg-usuarios">Telefone</label>
           <input v-model="novoRepresentante.telefone" class="input-cfg-usuarios">
         </div>
-        
+
         <div class="modal-actions-cfg-usuarios">
           <button type="button" class="btn-cancel-cfg-usuarios" @click="showRepresentanteModal = false">
             Cancelar
@@ -337,11 +347,10 @@
       <h3 class="modal-title-cfg-usuarios">Importar Publicação</h3>
       <div class="form-group-cfg-usuarios">
         <label class="label-cfg-usuarios">Cole aqui o texto da publicação:</label>
-        <textarea v-model="publicacaoText" rows="10" 
-          placeholder="Cole aqui o texto completo da publicação..." 
+        <textarea v-model="publicacaoText" rows="10" placeholder="Cole aqui o texto completo da publicação..."
           class="input-cfg-usuarios textarea-cfg-usuarios"></textarea>
       </div>
-      
+
       <div class="modal-actions-cfg-usuarios">
         <button class="btn-cancel-cfg-usuarios" @click="closeImportModal">
           Cancelar

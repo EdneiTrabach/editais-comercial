@@ -1,73 +1,111 @@
 // src/lib/supabaseManager.js
+import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 
-/**
- * Gerencia as inscrições do Supabase Realtime
- */
-export const SupabaseManager = {
-  subscriptions: new Map(),
-  reconnecting: false,
-  reconnectTimeout: null,
+class SupabaseChannelManager {
+  constructor() {
+    this.subscriptions = new Map()
+    this.reconnecting = false
+  }
+
+  addSubscription(name, channel) {
+    if (this.subscriptions.has(name)) {
+      console.warn(`Canal '${name}' já existe. Removendo o anterior.`)
+      this.removeSubscription(name)
+    }
+    this.subscriptions.set(name, channel)
+    return channel
+  }
+
+  removeSubscription(name) {
+    const channel = this.subscriptions.get(name)
+    if (channel) {
+      try {
+        supabase.removeChannel(channel)
+      } catch (e) {
+        console.warn(`Erro ao remover canal ${name}:`, e)
+      }
+      this.subscriptions.delete(name)
+    }
+  }
+
+  getSubscription(name) {
+    return this.subscriptions.get(name)
+  }
 
   async handleReconnect() {
-    // Evita múltiplas reconexões simultâneas
-    if (this.reconnecting) return;
+    if (this.reconnecting) {
+      console.log('Reconexão já em andamento, ignorando solicitação...')
+      return
+    }
     
     try {
-      this.reconnecting = true;
+      this.reconnecting = true
+      console.log('Tentando reconectar canais...')
       
-      // Tenta renovar a sessão
-      const { error } = await supabase.auth.refreshSession();
-      if (error) {
-        console.error('Erro ao renovar sessão:', error);
-        return;
+      // Tentar renovar a sessão primeiro
+      try {
+        await supabase.auth.refreshSession()
+      } catch (e) {
+        console.warn('Erro ao renovar sessão:', e)
       }
       
-      // Reativa inscrições
-      for (const [channelName, channel] of this.subscriptions.entries()) {
-        await channel.subscribe();
-        console.log(`Reativado canal: ${channelName}`);
+      // Para cada canal existente
+      for (const [name, channel] of this.subscriptions.entries()) {
+        if (!channel) continue
+        
+        try {
+          // Verificar o estado do canal antes de tentar reconectar
+          if (channel.state === 'joined' || channel.state === 'joining') {
+            console.log(`Canal ${name} já está ativo (estado: ${channel.state})`)
+          } else {
+            // Se o canal estiver em estado problemático, recriá-lo
+            console.log(`Recriando canal ${name} (estado atual: ${channel.state})`)
+            
+            // Salvar tópico e callbacks
+            const topic = channel._topic || channel.topic
+            const callbacks = channel._listeners?.postgres_changes || []
+            
+            // Remover canal antigo
+            try {
+              await supabase.removeChannel(channel)
+            } catch (e) {
+              console.warn(`Erro ao remover canal antigo ${name}:`, e)
+            }
+            
+            // Criar novo canal
+            const newChannel = supabase.channel(name)
+            
+            // Recriar callbacks
+            for (const callback of callbacks) {
+              if (callback && callback.event && callback.schema && callback.table && callback.callback) {
+                newChannel.on('postgres_changes', 
+                  { event: callback.event, schema: callback.schema, table: callback.table }, 
+                  callback.callback)
+              }
+            }
+            
+            // Inscrever no novo canal
+            await newChannel.subscribe()
+            
+            // Substituir no map
+            this.subscriptions.set(name, newChannel)
+            console.log(`Canal ${name} recriado com sucesso`)
+          }
+        } catch (err) {
+          console.warn(`Erro ao reconectar canal ${name}:`, err)
+        }
       }
       
     } catch (err) {
-      console.error('Erro ao reconectar:', err);
+      console.error('Erro ao reconectar:', err)
     } finally {
-      this.reconnecting = false;
-      
-      // Limpa timeout anterior se houver
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-      }
+      this.reconnecting = false
     }
-  },
-
-  addSubscription(name, channel) {
-    // Remove inscrição existente com o mesmo nome, se houver
-    if (this.subscriptions.has(name)) {
-      supabase.removeChannel(this.subscriptions.get(name))
-    }
-    this.subscriptions.set(name, channel)
-  },
-
-  removeSubscription(name) {
-    this.subscriptions.delete(name)
-  },
-
-  getSubscription(channelName) {
-    return this.subscriptions.get(channelName)
-  },
-
-  removeAllSubscriptions() {
-    for (const [name, channel] of this.subscriptions.entries()) {
-      try {
-        supabase.removeChannel(channel)
-      } catch (error) {
-        console.error(`Erro ao remover canal ${name}:`, error)
-      }
-    }
-    this.subscriptions.clear()
   }
 }
+
+export const SupabaseManager = new SupabaseChannelManager()
 
 const setupRealtimeSubscription = () => {
   const channel = supabase

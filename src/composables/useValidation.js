@@ -108,9 +108,9 @@ export function useValidation() {
   }
 
   // Função para formatar valor estimado
-  const formatarValorEstimado = (valor) => {
-    if (!valor) return ''
-    
+  const formatarValorEstimado = () => {
+    // Remova o R$ se estiver presente no valor
+    let valor = formData.value.valor_estimado || ''
     // Remove qualquer caracter que não seja número
     let valorNumerico = valor.toString().replace(/\D/g, '')
     
@@ -118,8 +118,10 @@ export function useValidation() {
     valorNumerico = (parseInt(valorNumerico) / 100).toFixed(2)
     
     // Formata para o padrão brasileiro
-    return valorNumerico.replace('.', ',')
+    valor = valorNumerico.replace('.', ',')
       .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    
+    formData.value.valor_estimado = valor
   }
 
   return {

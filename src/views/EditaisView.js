@@ -57,6 +57,28 @@ export default {
     
     // === INICIALIZAÇÃO DE COMPOSABLES ===
     
+    // PRIMEIRO: Inicialize useEditaisForm para ter acesso a formData
+    const {
+      formData,
+      loading,
+      showPlataformaField,
+      validateForm,
+      handleSubmit,
+      setupWatchers
+    } = useEditaisForm()
+    
+    // DEPOIS: Inicialize os outros composables que usam formData
+    const {
+      errors,
+      validationState,
+      clearErrors,
+      addError,
+      removeError,
+      validacoesCruzadas,
+      executarValidacoesCruzadas,
+      formatarValorEstimado
+    } = useValidation(formData) // Agora formData já está definido
+    
     // Composables de dados
     const { 
       plataformas, 
@@ -124,30 +146,13 @@ export default {
     } = usePublicationProcessing()
     
     // Composables de interface e validação
-    const {
-      errors,
-      validationState,
-      clearErrors,
-      addError,
-      removeError,
-      validacoesCruzadas,
-      executarValidacoesCruzadas,
-      formatarValorEstimado
-    } = useValidation()
-    
     const { toast, showToast } = useToast()
     
-    const { isVisible } = useVisibilityHandler()
-    
-    // Composables específicos da view
-    const {
-      formData,
-      loading,
-      showPlataformaField,
-      validateForm,
-      handleSubmit,
-      setupWatchers
-    } = useEditaisForm()
+    const { isVisible, isReconnecting } = useVisibilityHandler(async (visible) => {
+      if (visible) {
+        await loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
+      }
+    })
     
     const {
       isLoading,
@@ -215,6 +220,78 @@ export default {
       }
     }
     
+    // Função para validar entrada de teclado - permite apenas números e vírgula
+    const validarInput = (event) => {
+      // Permite apenas números e vírgula
+      const charCode = (event.which) ? event.which : event.keyCode;
+      
+      // Códigos: 44 = vírgula, 48-57 = números 0-9
+      if (charCode !== 44 && (charCode < 48 || charCode > 57)) {
+        event.preventDefault();
+        return false;
+      }
+      
+      // Verifica se já existe uma vírgula
+      if (charCode === 44 && formData.value.valor_estimado.includes(',')) {
+        event.preventDefault();
+        return false;
+      }
+      
+      return true;
+    }
+
+    // Função para formatar valor monetário com até 4 casas decimais
+    const formatarValorEstimadoLocal = () => {
+      // Remove o prefixo "R$ " se presente
+      let valor = formData.value.valor_estimado || '';
+      valor = valor.replace(/^R\$\s?/, '');
+      
+      // Remove todos os caracteres não numéricos, exceto vírgula
+      valor = valor.replace(/[^\d,]/g, '');
+      
+      // Garante apenas uma vírgula
+      const partes = valor.split(',');
+      if (partes.length > 2) {
+        valor = partes[0] + ',' + partes[1];
+      }
+      
+      // Limita a 4 casas decimais após a vírgula
+      if (partes.length > 1 && partes[1].length > 4) {
+        valor = partes[0] + ',' + partes[1].substring(0, 4);
+      }
+      
+      // Formata com pontos para separar milhares
+      if (partes[0].length > 3) {
+        let inteiros = partes[0].replace(/\D/g, '');
+        inteiros = inteiros.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        
+        valor = inteiros + (partes.length > 1 ? ',' + partes[1] : '');
+      }
+      
+      formData.value.valor_estimado = valor;
+    }
+
+    const formatarValorMoeda = () => {
+      // Pega o valor atual e remove tudo exceto números
+      let valor = formData.value.valor_estimado || '';
+      const numeros = valor.replace(/\D/g, '');
+      
+      // Se não houver números, limpa o campo
+      if (!numeros) {
+        formData.value.valor_estimado = '';
+        return;
+      }
+      
+      // Converte para número e divide por 100 para obter o valor real
+      const valorNumerico = parseInt(numeros, 10) / 100;
+      
+      // Formata para o padrão brasileiro (separador de milhar e vírgula decimal)
+      formData.value.valor_estimado = valorNumerico.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
     // === CONFIGURAÇÃO DE WATCHERS ===
     
     // Configuração de watchers do formulário
@@ -449,7 +526,11 @@ export default {
       
       // Funções de formatação
       formatarModalidade,
-      formatarValorEstimado
+      isReconnecting,
+      validarInput,
+      formatarValorEstimado,
+      formatarValorMoeda,
+      formatarValorEstimadoLocal,
     }
   }
 }

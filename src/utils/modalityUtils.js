@@ -25,12 +25,23 @@ export const MODALIDADES = {
   'srp_internacional': 'Sistema de Registro de Preços Internacional',
 }
 
-// Modalidades que necessitam de plataforma eletrônica
+// Lista completa de modalidades que podem requerer plataforma digital
 export const MODALIDADES_ELETRONICAS = [
   'pregao_eletronico',
   'rdc_eletronico',
   'srp_eletronico',
-  'srp_internacional'
+  'srp_internacional',
+  'credenciamento',
+  'licitacao_internacional',
+  'dialogo_competitivo',
+  'chamamento_publico',
+  'pre_qualificacao',
+  'manifestacao_interesse',
+  'concurso',
+  'srp_internacional',
+  'srp_eletronico',
+  'rdc',
+  'toma_precos',
 ]
 
 // Prazos mínimos em dias úteis para cada modalidade
