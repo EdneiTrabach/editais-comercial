@@ -64,7 +64,7 @@
 
           <div class="form-group">
             <RequiredLabel text="Órgão" :isRequired="true" />
-            <input v-model="formData.orgao" type="text" required placeholder="Nome do órgão" />
+            <input v-model="formData.orgao" type="text" required placeholder="Nome do órgão" class="input-orgao"/>
           </div>
 
           <div class="form-group">
@@ -105,7 +105,7 @@
             <RequiredLabel text="Objeto Resumido (máx. 700 caracteres)" :isRequired="false" />
             <div class="objeto-container">
               <input v-model="formData.objeto_resumido" type="string" maxlength="700"
-                placeholder="Breve descrição do objeto" />
+                placeholder="Breve descrição do objeto" class="input-descricao"/>
               <small>{{ formData.objeto_resumido?.length || 0 }}/700</small>
 
               <div class="form-group">
@@ -136,13 +136,13 @@
                 <div class="ponto-destino">
                   <label>Cidade do Órgão</label>
                   <div class="cidade-input">
-                    <select v-model="estadoDestino" @change="carregarMunicipios">
+                    <select v-model="estadoDestino" @change="carregarMunicipios" class="estado-select">
                       <option value="">Estado...</option>
                       <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                         {{ estado.nome }}
                       </option>
                     </select>
-                    <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados">
+                    <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados" class="cidade-select">
                       <option value="">Cidade...</option>
                       <option v-for="municipio in municipios" :key="municipio.id" :value="municipio">
                         {{ municipio.nome }}
@@ -225,14 +225,9 @@
           <div class="form-group">
             <RequiredLabel text="Valor Estimado" :isRequired="false" />
             <div class="valor-container">
-              <input 
-                v-model="formData.valor_estimado"
-                @keypress="validarInput($event, formData.valor_estimado)"
-                @input="sanitizarInput"
-                @blur="formData.valor_estimado = formatarValorEstimado(formData.valor_estimado)"
-                class="input-valor-com-prefixo form-control"
-                type="text"
-              />
+              <input v-model="formData.valor_estimado" @keypress="validarInput($event, formData.valor_estimado)"
+                @input="sanitizarInput" @blur="formData.valor_estimado = formatarValorEstimado(formData.valor_estimado)"
+                class="input-valor-com-prefixo form-control" type="text" />
             </div>
           </div>
 
@@ -246,7 +241,7 @@
 
           <div class="form-group">
             <RequiredLabel text="Observações" :isRequired="false" />
-            <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais" />
+            <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais" class="input-orgao" />
           </div>
 
           <div class="form-group">
@@ -260,7 +255,7 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-cancelar" @click="router.push('/funcionalidades')">
+            <button type="button" class="btn-cancelar" @click="handleCancel">
               Cancelar
             </button>
             <button v-if="formData.extraction_id" type="button" class="btn-correcoes" @click="salvarCorrecoes">
@@ -299,7 +294,7 @@
 
         <div v-if="formData.estado" class="form-group-cfg-usuarios validation-info">
           <div class="info-message">
-            <strong>Nota:</strong> Certifique-se que esta plataforma é utilizada no estado 
+            <strong>Nota:</strong> Certifique-se que esta plataforma é utilizada no estado
             selecionado ({{ formData.estado }}). Plataformas não comuns podem causar problemas na validação.
           </div>
         </div>

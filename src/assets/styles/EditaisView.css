@@ -70,6 +70,10 @@ label,
   /* Adicione essa margem */
 }
 
+input.custom-cursor-default-hover {
+  width: 95%;
+}
+
 .full-width {
   grid-column: 1 / -1;
 }
@@ -388,6 +392,15 @@ input[type="date"]:focus:not(.error) {
   gap: 1rem;
 }
 
+input.input-descricao {
+  width: 98%;
+}
+
+input.input-orgao {
+  width: 95%;
+}
+
+
 .sistemas-selection {
   background: #f8f9fa;
   padding: 1rem;
@@ -630,6 +643,10 @@ input[type="date"]:focus:not(.error) {
 
 .cidade-input input {
   flex: 1;
+}
+
+select.cidade-select {
+  width: 100%;
 }
 
 .distancia-actions {
