@@ -22,6 +22,7 @@
     "maska": "^3.1.0",
     "rate-limiter-flexible": "^5.0.5",
     "redis": "^4.7.0",
+    "v-money": "^0.8.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vue-the-mask": "^0.11.1",

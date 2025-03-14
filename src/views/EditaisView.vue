@@ -225,9 +225,14 @@
           <div class="form-group">
             <RequiredLabel text="Valor Estimado" :isRequired="false" />
             <div class="valor-container">
-              <input v-model="formData.valor_estimado" type="text" placeholder="0,00" 
-                @input="formatarValorEstimado" inputmode="numeric" 
-                class="input-valor-com-prefixo" />
+              <input 
+                v-model="formData.valor_estimado"
+                @keypress="validarInput($event, formData.valor_estimado)"
+                @input="sanitizarInput"
+                @blur="formData.valor_estimado = formatarValorEstimado(formData.valor_estimado)"
+                class="input-valor-com-prefixo form-control"
+                type="text"
+              />
             </div>
           </div>
 
