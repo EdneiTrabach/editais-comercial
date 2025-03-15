@@ -136,7 +136,7 @@
                 <div class="ponto-destino">
                   <label>Cidade do Órgão</label>
                   <div class="cidade-input">
-                    <select v-model="estadoDestino" @change="carregarMunicipios" class="estado-select">
+                    <select v-model="filtroEstadoReferencia" @change="carregarMunicipios" class="estado-select">
                       <option value="">Estado...</option>
                       <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                         {{ estado.nome }}

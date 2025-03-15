@@ -376,143 +376,69 @@ export default {
       )
     }
     
-    // Adicione esta função antes do handleSubmitWrapper
-    const verificarEstruturaBanco = async () => {
-      try {
-        // Verifica a estrutura da tabela processos
-        const { data, error } = await supabase.rpc('postgres_schema', {
-          table_name: 'processos'
-        });
-        
-        if (error) {
-          console.error('Erro ao verificar schema:', error);
-          return false;
-        }
-        
-        console.log('Estrutura da tabela processos:', data);
-        return true;
-      } catch (err) {
-        console.error('Erro na verificação de schema:', err);
-        return false;
-      }
-    };
-
     // Substitua a função handleSubmit atual por esta implementação
     const handleSubmitWrapper = async () => {
       try {
         loading.value = true;
-        
-        // Validar campos obrigatórios antes de enviar
+
+        // Validar campos obrigatórios
         if (!formData.value.numero || !formData.value.ano || !formData.value.data_pregao ||
-            !formData.value.hora_pregao || !formData.value.estado || !formData.value.orgao ||
-            !formData.value.modalidade || !formData.value.objeto_completo || !formData.value.representante) {
+            !formData.value.hora_pregao || !formData.value.orgao || !formData.value.modalidade) {
           showToast('Preencha todos os campos obrigatórios.', 'error');
-          loading.value = false;
           return;
         }
-        
-        // Criando o número do processo no formato esperado
+
+        // Número do processo no formato padrão
         const numero_processo = `${formData.value.numero}/${formData.value.ano}`;
-        
-        // 1. Primeiro tentar descobrir o esquema da tabela processos
-        try {
-          const { data: schemaColumns, error } = await supabase
-            .rpc('get_table_columns', { table_name: 'processos' })
-            .select('column_name');
-            
-          if (error) console.error("Erro ao obter colunas:", error);
+
+        // Criar objeto de dados diretamente sem tentar detectar o esquema
+        const processoData = {
+          numero_processo,
+          ano: formData.value.ano,
+          orgao: formData.value.orgao,
+          data_pregao: formData.value.data_pregao,
+          hora_pregao: formData.value.hora_pregao,
+          modalidade: formData.value.modalidade,
+          site_pregao: formData.value.site_pregao,
+          objeto_resumido: formData.value.objeto_resumido,
+          sistemas_ativos: sistemasSelecionados.value,
+          objeto_completo: formData.value.objeto_completo || formData.value.objeto_resumido,
+          status: '',
+          estado: formData.value.estado,
+          representante_id: formData.value.representante,
+          // Converter o valor_estimado para o formato correto
+          valor_estimado: formData.value.valor_estimado ? 
+            parseFloat(formData.value.valor_estimado.replace(/\./g, '').replace(',', '.')) : 
+            null,
+          codigo_analise: formData.value.codigo_analise || null,
+          campo_adicional1: formData.value.campo_adicional1 || null,
+          campo_adicional2: formData.value.campo_adicional2 || null,
+          publicacao_original: formData.value.publicacao_original || null,
+          responsavel_id: (await supabase.auth.getUser())?.data?.user?.id || null
+        };
           
-          const colunas = schemaColumns ? schemaColumns.map(c => c.column_name) : [];
-          console.log("Colunas disponíveis:", colunas);
-          
-          // 2. Construir objeto de dados adaptado com base nas colunas existentes
-          const processoData = {};
-          
-          // Dados básicos que devem existir em qualquer esquema
-          processoData.numero_processo = numero_processo;
-          processoData.ano = formData.value.ano;
-          processoData.orgao = formData.value.orgao;
-          processoData.data_pregao = formData.value.data_pregao;
-          processoData.hora_pregao = formData.value.hora_pregao;
-          processoData.modalidade = formData.value.modalidade;
-          processoData.status = formData.value.status || 'NOVO';
-          
-          // Dados condicionais baseados no esquema detectado
-          if (colunas.includes('estado')) processoData.estado = formData.value.estado;
-          if (colunas.includes('site_pregao')) processoData.site_pregao = formData.value.site_pregao;
-          if (colunas.includes('objeto_resumido')) processoData.objeto_resumido = formData.value.objeto_resumido;
-          if (colunas.includes('objeto_completo')) processoData.objeto_completo = formData.value.objeto_completo;
-          if (colunas.includes('representante_id')) processoData.representante_id = formData.value.representante;
-          if (colunas.includes('valor_estimado')) processoData.valor_estimado = formData.value.valor_estimado;
-          if (colunas.includes('sistemas_ativos')) processoData.sistemas_ativos = sistemasSelecionados.value;
-          
-          // Campos opcionais
-          if (colunas.includes('campo_adicional1') && formData.value.campo_adicional1) 
-            processoData.campo_adicional1 = formData.value.campo_adicional1;
-          
-          if (colunas.includes('campo_adicional2') && formData.value.campo_adicional2)
-            processoData.campo_adicional2 = formData.value.campo_adicional2;
-          
-          if (colunas.includes('publicacao_original') && formData.value.publicacao_original)
-            processoData.publicacao_original = formData.value.publicacao_original;
-          
-          // Distâncias se disponíveis
-          if (distanciasSalvas.value?.length > 0) {
-            const primeiraDistancia = distanciasSalvas.value[0];
-            if (colunas.includes('distancia_km')) 
-              processoData.distancia_km = primeiraDistancia.distancia_km;
-            if (colunas.includes('ponto_referencia_cidade')) 
-              processoData.ponto_referencia_cidade = primeiraDistancia.ponto_referencia_cidade;
-            if (colunas.includes('ponto_referencia_uf')) 
-              processoData.ponto_referencia_uf = primeiraDistancia.ponto_referencia_uf;
-          }
-          
-          console.log('Enviando dados adaptados:', processoData);
-          
-          // 3. Tentar inserção com os dados adaptados
-          const { data, error: insertError } = await supabase
-            .from('processos')
-            .insert(processoData)
-            .select();
-          
-          if (insertError) throw insertError;
-          
-          console.log('Processo salvo com sucesso!', data);
-          showToast('Processo salvo com sucesso!', 'success');
-          
-          setTimeout(() => {
-            router.push('/funcionalidades');
-          }, 1500);
-          
-        } catch (schemaError) {
-          console.error("Erro ao determinar esquema:", schemaError);
-          
-          // Tentar salvar com conjunto mínimo garantido de colunas
-          const dadosMinimos = {
-            numero_processo,
-            ano: formData.value.ano,
-            orgao: formData.value.orgao,
-            data_pregao: formData.value.data_pregao,
-            hora_pregao: formData.value.hora_pregao,
-            modalidade: formData.value.modalidade, // Coluna obrigatória!
-            objeto_resumido: formData.value.objeto_resumido || formData.value.objeto_completo.substring(0, 100),
-            status: 'NOVO'
-          };
-          
-          console.log('Tentando com dados mínimos:', dadosMinimos);
-          
-          const { error } = await supabase
-            .from('processos')
-            .insert(dadosMinimos);
-          
-          if (error) throw error;
-          
-          showToast('Processo salvo com dados básicos. Complete-o mais tarde.', 'warning');
-          setTimeout(() => {
-            router.push('/funcionalidades');
-          }, 1500);
+        // Adicionar distâncias se disponíveis
+        if (distanciasSalvas.value?.length > 0) {
+          const primeiraDistancia = distanciasSalvas.value[0];
+          processoData.distancia_km = primeiraDistancia.distancia_km;
+          processoData.ponto_referencia_cidade = primeiraDistancia.ponto_referencia_cidade;
+          processoData.ponto_referencia_uf = primeiraDistancia.ponto_referencia_uf;
         }
-        
+
+        console.log('Salvando dados:', processoData);
+          
+        // Salvar dados diretamente
+        const { data, error } = await supabase
+          .from('processos')
+          .insert(processoData)
+          .select();
+          
+        if (error) throw error;
+          
+        showToast('Processo salvo com sucesso!', 'success');
+        setTimeout(() => {
+          router.push('/funcionalidades');
+        }, 1500);
       } catch (error) {
         console.error('Erro ao salvar processo:', error);
         showToast(`Erro ao salvar: ${error.message || 'Verifique os dados e tente novamente'}`, 'error');
