@@ -48,7 +48,9 @@
                     </button>
                   </div>
 
-                  <div v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)" class="filtro-container">
+                  <div
+                    v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
+                    class="filtro-container">
                     <button @click="toggleFiltro(coluna.campo)" class="btn-filtro">
                       <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
                     </button>
@@ -180,73 +182,72 @@
                       {{ getEmpresaNome(processo.empresa_id) }}
                     </span>
                   </template>
-                  <td v-else-if="coluna.campo === 'distancias'">
-                    <div class="distancias-stack">
-                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
-                      </div>
-                    </div>
-                  </td>
-                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
-                    <div class="sistemas-chips">
-                      {{ processo.sistemas_nomes }}
-                    </div>
-                  </template>
-                  <span v-else>
-                    {{ processo[coluna.campo] || '-' }}
-                  </span>
-                </template>
-              </td>
-              <td class="actions-cell">
-                <div class="action-buttons">
-                  <button class="btn-icon delete" @click="handleDelete(processo)">
-                    <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete"
-                      fallbackImage="icons/fallback.svg" />
-                  </button>
+              <td v-else-if="coluna.campo === 'distancias'">
+                <div class="distancias-stack">
+                  <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                    {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                  </div>
                 </div>
               </td>
-              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              <template v-else-if="coluna.campo === 'sistemas_ativos'">
+                <div class="sistemas-chips">
+                  {{ processo.sistemas_nomes }}
+                </div>
+              </template>
+              <span v-else>
+                {{ processo[coluna.campo] || '-' }}
+              </span>
+</template>
+</td>
+<td class="actions-cell">
+  <div class="action-buttons">
+    <button class="btn-icon delete" @click="handleDelete(processo)">
+      <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
+    </button>
+  </div>
+</td>
+<div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+</tr>
+</tbody>
+</table>
+</div>
 
-      <div class="anos-tabs">
-        <div class="tabs-header">
-          <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
-            @click="selecionarAno(ano)">
-            {{ ano }}
-          </button>
-        </div>
-      </div>
+<div class="anos-tabs">
+  <div class="tabs-header">
+    <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+      @click="selecionarAno(ano)">
+      {{ ano }}
+    </button>
+  </div>
+</div>
 
-      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
-        <div class="confirm-content">
-          <p>Deseja editar este campo?</p>
-          <div class="confirm-actions">
-            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
+<div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+  <div class="confirm-content">
+    <p>Deseja editar este campo?</p>
+    <div class="confirm-actions">
+      <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
+      <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
 
-      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
-        <div class="confirm-dialog">
-          <div class="confirm-content">
-            <h3>Confirmar Exclusão</h3>
-            <p>Tem certeza que deseja excluir este processo?</p>
-            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
-            <div class="confirm-actions">
-              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-              <button class="btn-confirm delete" @click="confirmDelete">
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
+<div v-if="deleteConfirmDialog.show" class="modal-overlay">
+  <div class="confirm-dialog">
+    <div class="confirm-content">
+      <h3>Confirmar Exclusão</h3>
+      <p>Tem certeza que deseja excluir este processo?</p>
+      <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+        <button class="btn-confirm delete" @click="confirmDelete">
+          Excluir
+        </button>
       </div>
     </div>
   </div>
+</div>
+</div>
+</div>
 </template>
 
 <script setup>
@@ -287,7 +288,7 @@ const pageVisibilityHandler = () => {
 const startVisibilityMonitoring = () => {
   document.addEventListener('visibilitychange', pageVisibilityHandler)
   window.addEventListener('focus', pageVisibilityHandler)
-  window.addEventListener('online', pageVisibilityHandler) 
+  window.addEventListener('online', pageVisibilityHandler)
 }
 
 const stopVisibilityMonitoring = () => {
@@ -322,8 +323,8 @@ const colunas = [
   { titulo: 'Estado', campo: 'estado' },                // processo.estado
   { titulo: 'Nº Processo', campo: 'numero_processo' },  // processo.numero_processo
   { titulo: 'Objeto Resumido', campo: 'objeto_resumido' }, // processo.objeto_resumido
-  { 
-    titulo: 'Sistemas', 
+  {
+    titulo: 'Sistemas',
     campo: 'sistemas_ativos',  // Alterado para refletir o nome correto da coluna
     tabela: 'processo',
     tipo: 'array'  // Para indicar que é um array de IDs
@@ -332,28 +333,28 @@ const colunas = [
   { titulo: 'Órgão', campo: 'orgao' },                  // processo.orgao
   { titulo: 'Objeto Completo', campo: 'objeto_completo' }, // processo.objeto_completo
   { titulo: 'Status', campo: 'status' },                // processo.status
-  { 
-    titulo: 'Responsável', 
+  {
+    titulo: 'Responsável',
     campo: 'responsavel_id',                            // processo.responsavel_id
     tabelaRelacionada: 'profiles',
     campoExibicao: 'nome'
   },
-  { 
-    titulo: 'Distâncias', 
+  {
+    titulo: 'Distâncias',
     campo: 'processo_distancias',                       // tabela processo_distancias
     tabelaRelacionada: 'processo_distancias',
     camposExibicao: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
   },
   { titulo: 'Portal', campo: 'site_pregao' },          // processo.site_pregao
-  { 
-    titulo: 'Representante', 
+  {
+    titulo: 'Representante',
     campo: 'representante_id',                          // processo.representante_id
     tabelaRelacionada: 'representantes',
     campoExibicao: 'nome'
   },
   { titulo: 'Impugnações', campo: 'impugnacoes' },     // processo.impugnacoes
-  { 
-    titulo: 'Empresa Participante', 
+  {
+    titulo: 'Empresa Participante',
     campo: 'empresa_id',                                // processo.empresa_id
     tabelaRelacionada: 'empresas',
     campoExibicao: 'nome'
@@ -423,7 +424,7 @@ const formatDate = (dateString) => {
     // Garante que estamos tratando apenas a data, sem considerar timezone
     const [date] = dateString.split('T');
     const [year, month, day] = date.split('-');
-    
+
     // Retorna a data formatada sem manipulação de timezone
     return `${day}/${month}/${year}`;
   } catch (error) {
@@ -506,18 +507,18 @@ const formatStatus = (status) => {
 
 const loadProcessos = async () => {
   if (isLoading.value) return
-  
+
   try {
     isLoading.value = true
     console.log('Iniciando carregamento de processos...')
-    
+
     // Teste simples para verificar conexão
-    const { data: testData, error: testError } = await supabase
+    const { count: testData, error: testError } = await supabase
       .from('processos')
-      .select('count(*)')
-    
-    console.log('Teste de conexão:', { testData, testError })
-    
+      .select('*', { count: 'exact', head: true })
+
+      console.log('Teste de conexão:', { testData, testError })
+
     // Consulta real
     const { data, error } = await supabase
       .from('processos')
@@ -526,7 +527,7 @@ const loadProcessos = async () => {
 
     console.log('Dados retornados:', data)
     console.log('Erro (se houver):', error)
-    
+
     if (error) throw error
 
     // Restante do código...
@@ -862,7 +863,7 @@ const handleUpdate = async (processo) => {
     // Log da alteração
     await logSystemAction({
       tipo: 'atualizacao',
-      tabela: 'processos', 
+      tabela: 'processos',
       registro_id: processo.id,
       campo_alterado: editingCell.value.field,
       dados_anteriores: processo[editingCell.value.field],
@@ -1163,7 +1164,7 @@ const getDistancias = async (processoId) => {
     .select('*')
     .eq('processo_id', processoId)
     .order('created_at', { ascending: true })
-  
+
   return data || []
 }
 
@@ -1172,7 +1173,7 @@ const processamentosCache = {
   dados: new Map(),
   coordenadas: new Map(),
   orgaos: new Map(),
-  
+
   limparCache() {
     this.dados.clear();
     this.coordenadas.clear();
@@ -1186,12 +1187,12 @@ onMounted(async () => {
   try {
     // 1. Iniciar monitoramento de visibilidade da página
     startVisibilityMonitoring()
-    
+
     // 2. Limpar cache antes de carregar novos dados
     if (processamentosCache) {
       processamentosCache.limparCache()
     }
-    
+
     // 3. Registrar listener para fechar dropdowns de filtros ao clicar fora
     document.addEventListener('click', (e) => {
       const isFilterClick = e.target.closest('.filtro-container')
@@ -1201,7 +1202,7 @@ onMounted(async () => {
         })
       }
     })
-    
+
     // 4. Carregar dados em paralelo para melhor desempenho
     await Promise.all([
       loadProcessos(),
@@ -1209,14 +1210,14 @@ onMounted(async () => {
       loadEmpresas(),
       loadPlataformas()
     ])
-    
+
     // 5. Carregar configurações da interface
     loadColumnWidths()
-    
+
     // 6. Configurar canal Realtime para atualizações em tempo real
     const channel = supabase.channel('processos-updates')
       .on('postgres_changes',
-        { 
+        {
           event: '*',
           schema: 'public',
           table: 'processos'
@@ -1226,13 +1227,13 @@ onMounted(async () => {
         }
       )
       .subscribe()
-    
+
     // 7. Registrar canal no gerenciador
     SupabaseManager.addSubscription('processos-updates', channel)
-    
+
     // 8. Iniciar atualização automática
     startAutoRefresh()
-    
+
   } catch (error) {
     console.error('Erro na inicialização do componente:', error)
   }
@@ -1242,10 +1243,10 @@ onMounted(async () => {
 onUnmounted(() => {
   // Parar monitoramento de visibilidade
   stopVisibilityMonitoring()
-  
+
   // Parar auto-refresh
   stopAutoRefresh()
-  
+
   // Remover canal do Supabase
   const channel = SupabaseManager.getSubscription('processos-updates')
   if (channel) {

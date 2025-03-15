@@ -72,9 +72,22 @@
   z-index: 10;
 }
 
+/* Tamanho padrão do scrollbar */
 .table-container::-webkit-scrollbar {
   width: 4px;
   height: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Aumenta o tamanho quando o mouse está sobre o container */
+.table-container:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Também ajuste a aparência do thumb para melhor visibilidade */
+.table-container:hover::-webkit-scrollbar-thumb {
+  background: #254677;
 }
 
 .table-container::-webkit-scrollbar-track {
