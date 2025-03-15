@@ -1,0 +1,22 @@
+export const coordenadasAM = {
+  "Manaus": { latitude: -3.1190, longitude: -60.0217 },
+  "Parintins": { latitude: -2.6279, longitude: -56.7366 },
+  "Tefé": { latitude: -3.3689, longitude: -64.7111 },
+  "Coari": { latitude: -4.0850, longitude: -63.1414 },
+  "Itacoatiara": { latitude: -3.1433, longitude: -58.4442 },
+  "Manacapuru": { latitude: -3.2997, longitude: -60.6208 },
+  "Tabatinga": { latitude: -4.2314, longitude: -69.9386 },
+  "São Gabriel da Cachoeira": { latitude: -0.1306, longitude: -67.0892 },
+  "Humaitá": { latitude: -7.5114, longitude: -63.0208 },
+  "Maués": { latitude: -3.3839, longitude: -57.7186 },
+  "Presidente Figueiredo": { latitude: -2.0508, longitude: -60.0239 },
+  "Novo Airão": { latitude: -2.6208, longitude: -60.9439 },
+  "Barcelos": { latitude: -0.9736, longitude: -62.9250 },
+  "Lábrea": { latitude: -7.2597, longitude: -64.7989 },
+  "Eirunepé": { latitude: -6.6608, longitude: -69.8739 },
+  "Fonte Boa": { latitude: -2.5139, longitude: -66.0919 },
+  "Benjamin Constant": { latitude: -4.3767, longitude: -70.0314 },
+  "Iranduba": { latitude: -3.2850, longitude: -60.1861 },
+  "Autazes": { latitude: -3.5797, longitude: -59.1308 },
+  "Borba": { latitude: -4.3914, longitude: -59.5886 }
+};

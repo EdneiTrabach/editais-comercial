@@ -1,0 +1,22 @@
+export const coordenadasAL = {
+  "Maceió": { latitude: -9.6498, longitude: -35.7089 },
+  "Arapiraca": { latitude: -9.7545, longitude: -36.6641 },
+  "Rio Largo": { latitude: -9.4800, longitude: -35.8533 },
+  "Palmeira dos Índios": { latitude: -9.4097, longitude: -36.6328 },
+  "União dos Palmares": { latitude: -9.1628, longitude: -36.0319 },
+  "São Miguel dos Campos": { latitude: -9.7811, longitude: -36.0936 },
+  "Penedo": { latitude: -10.2903, longitude: -36.5864 },
+  "Delmiro Gouveia": { latitude: -9.3853, longitude: -37.9992 },
+  "Santana do Ipanema": { latitude: -9.3767, longitude: -37.2464 },
+  "Campo Alegre": { latitude: -9.7847, longitude: -36.3525 },
+  "Marechal Deodoro": { latitude: -9.7097, longitude: -35.8969 },
+  "Coruripe": { latitude: -10.1275, longitude: -36.1756 },
+  "Teotônio Vilela": { latitude: -9.9061, longitude: -36.3528 },
+  "Pilar": { latitude: -9.6011, longitude: -35.9569 },
+  "São Luís do Quitunde": { latitude: -9.3183, longitude: -35.5611 },
+  "Atalaia": { latitude: -9.5119, longitude: -36.0086 },
+  "Boca da Mata": { latitude: -9.6439, longitude: -36.2128 },
+  "Maragogi": { latitude: -9.0128, longitude: -35.2225 },
+  "Viçosa": { latitude: -9.3717, longitude: -36.2431 },
+  "Murici": { latitude: -9.3069, longitude: -35.9428 }
+};

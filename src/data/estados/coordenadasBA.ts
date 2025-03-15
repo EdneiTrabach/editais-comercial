@@ -1,0 +1,22 @@
+export const coordenadasBA = {
+  "Salvador": { latitude: -12.9704, longitude: -38.5124 },
+  "Feira de Santana": { latitude: -12.2667, longitude: -38.9667 },
+  "Vitória da Conquista": { latitude: -14.8611, longitude: -40.8442 },
+  "Camaçari": { latitude: -12.6996, longitude: -38.3263 },
+  "Itabuna": { latitude: -14.7856, longitude: -39.2803 },
+  "Juazeiro": { latitude: -9.4117, longitude: -40.4983 },
+  "Lauro de Freitas": { latitude: -12.8944, longitude: -38.3278 },
+  "Ilhéus": { latitude: -14.7933, longitude: -39.0328 },
+  "Jequié": { latitude: -13.8511, longitude: -40.0828 },
+  "Alagoinhas": { latitude: -12.1339, longitude: -38.4208 },
+  "Barreiras": { latitude: -12.1524, longitude: -44.9892 },
+  "Teixeira de Freitas": { latitude: -17.5397, longitude: -39.7428 },
+  "Porto Seguro": { latitude: -16.4497, longitude: -39.0644 },
+  "Simões Filho": { latitude: -12.7866, longitude: -38.4029 },
+  "Paulo Afonso": { latitude: -9.3983, longitude: -38.2142 },
+  "Eunápolis": { latitude: -16.3717, longitude: -39.5800 },
+  "Santo Antônio de Jesus": { latitude: -12.9686, longitude: -39.2586 },
+  "Valença": { latitude: -13.3669, longitude: -39.0731 },
+  "Candeias": { latitude: -12.6717, longitude: -38.5472 },
+  "Guanambi": { latitude: -14.2231, longitude: -42.7831 }
+};

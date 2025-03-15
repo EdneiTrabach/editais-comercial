@@ -1,0 +1,22 @@
+export const coordenadasSE = {
+  "Aracaju": { latitude: -10.9091, longitude: -37.0677 },
+  "Nossa Senhora do Socorro": { latitude: -10.8557, longitude: -37.1261 },
+  "Lagarto": { latitude: -10.9167, longitude: -37.6500 },
+  "Itabaiana": { latitude: -10.6850, longitude: -37.4250 },
+  "São Cristóvão": { latitude: -11.0147, longitude: -37.2061 },
+  "Estância": { latitude: -11.2658, longitude: -37.4389 },
+  "Tobias Barreto": { latitude: -11.1839, longitude: -37.9989 },
+  "Itabaianinha": { latitude: -11.2739, longitude: -37.7878 },
+  "Simão Dias": { latitude: -10.7389, longitude: -37.8100 },
+  "Nossa Senhora da Glória": { latitude: -10.2158, longitude: -37.4208 },
+  "Poço Redondo": { latitude: -9.8069, longitude: -37.6839 },
+  "Capela": { latitude: -10.5069, longitude: -37.0531 },
+  "Propriá": { latitude: -10.2139, longitude: -36.8419 },
+  "Porto da Folha": { latitude: -9.9169, longitude: -37.2789 },
+  "Itaporanga d'Ajuda": { latitude: -10.9939, longitude: -37.3078 },
+  "Japaratuba": { latitude: -10.5919, longitude: -36.9400 },
+  "Laranjeiras": { latitude: -10.8069, longitude: -37.1700 },
+  "Riachão do Dantas": { latitude: -11.0669, longitude: -37.7289 },
+  "Boquim": { latitude: -11.1489, longitude: -37.6208 },
+  "Canindé de São Francisco": { latitude: -9.6608, longitude: -37.7889 }
+};
