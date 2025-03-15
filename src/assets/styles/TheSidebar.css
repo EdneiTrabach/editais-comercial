@@ -1,0 +1,372 @@
+
+/* Reset e container */
+.sidebar-container {
+  position: relative;
+  height: 100%;
+  min-height: 100vh;
+}
+
+/* Sidebar principal */
+.sidebar {
+  position: fixed;
+  left: -330px;
+  top: 0;
+  height: 95%;
+  width: 260px;
+  background: linear-gradient(135deg,#193155,#254677);
+  /* Bordô elegante */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  padding: 2rem 1rem;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.active,
+.sidebar.pinned {
+  left: 0;
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Modifique a visibilidade do trigger */
+.sidebar.active:not(.pinned) .sidebar-trigger {
+  background: #2f3b72;
+  /* Mantém consistente com o sidebar */
+}
+
+.sidebar.pinned .sidebar-trigger {
+  background: linear-gradient(135deg,#193155,#254677);;
+  /* Tom mais escuro quando fixado */
+}
+
+/* Ajuste main-content */
+:deep(.main-content) {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0;
+}
+
+:deep(.main-content.expanded) {
+  margin-left: 260px;
+}
+
+@media (min-width: 1536px) {
+  :deep(.main-content.expanded) {
+    margin-left: 280px;
+  }
+}
+
+.sidebar.dark {
+  background: linear-gradient(180deg, #461D22 0%, #2D1013 100%);
+  /* Bordô escuro para modo dark */
+}
+
+.sidebar.pinned {
+  left: 0;
+}
+
+.sidebar-trigger {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg,#193155,#254677);;
+  /* Mesma cor do topo do sidebar */
+  width: 35px;
+  height: 75px;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.sidebar-trigger:hover {
+  background: #8B4B52;
+  /* Tom mais claro para hover */
+  width: 40px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.logo {
+  width: 90px;
+  height: 100%;
+}
+
+.sidebar-title {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+
+/* Ajuste do trigger */
+.sidebar-trigger {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--company-red, #193155);
+  width: 35px;
+  height: 75px;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.sidebar-trigger:hover {
+  background: #1f2937;
+  width: 40px;
+}
+
+
+
+/* Ajuste do menu para scroll */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  /* Adiciona overflow-x: hidden */
+  overflow-y: auto;
+  width: 100%;
+  /* Garante largura total */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo */
+}
+
+.nav-links {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  padding-left: 0;
+  width: 100%;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar personalizada */
+.nav-links::-webkit-scrollbar {
+  width: 6px;
+  /* Largura da scrollbar */
+}
+
+.nav-links::-webkit-scrollbar-track {
+  background: rgba(181, 102, 111, 0.1);
+  /* Track em bordô sutil */
+  border-radius: 3px;
+}
+
+.nav-links::-webkit-scrollbar-thumb {
+  background: rgba(181, 102, 111, 0.3);
+  /* Thumb em bordô */
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Hover na scrollbar */
+.nav-links::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 102, 111, 0.5);
+  /* Hover em bordô mais forte */
+}
+
+.sidebar-menu-item {
+  margin-bottom: 0.5rem;
+  list-style-type: none;
+  /* Garante que não haja marcadores */
+
+}
+
+.sidebar-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  /* Evita quebra de texto */
+  width: 100%;
+  /* Alterado de 80% para 100% */
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-menu-link:hover,
+.sidebar-menu-link.router-link-active {
+  background: linear-gradient(135deg,#193155,#254677);
+  /* Bordô transparente para hover */
+  border-left: 3px solid #77b2d9;
+  /* Detalhe em cobre */
+  padding-left: calc(1.2rem - 3px);
+  /* Compensa a borda */
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+/* Bottom section sempre visível */
+.bottom-section {
+  margin-top: auto;
+  border-radius: 10px;
+  border-top: 1px solid rgba(217, 142, 119, 0.2);
+  /* Separador em cobre sutil */
+  background: linear-gradient(135deg,#193155,#254677);;
+  overflow-x: hidden;
+  /* Previne scroll horizontal */
+  width: 100%;
+  /* Garante largura total */
+  padding: 0.5rem;
+  /* Adiciona um pequeno padding */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo da largura */
+}
+
+/* Ajuste os links dentro do bottom-section */
+.bottom-section .sidebar-menu-link {
+  width: 100%;
+  /* Faz os links ocuparem toda a largura */
+  box-sizing: border-box;
+  /* Inclui padding no cálculo */
+  white-space: nowrap;
+  /* Mantém texto em uma linha */
+  overflow: hidden;
+  /* Esconde overflow */
+  text-overflow: ellipsis;
+  /* Adiciona ... quando texto é muito longo */
+}
+
+.theme-toggle,
+.logout-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.notification-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #D98E77;
+  /* Notificações em cobre */
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notifications-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+/* Media queries ajustadas */
+@media (min-width: 1536px) {
+  .sidebar {
+    width: 280px;
+    /* Aumenta levemente a largura */
+    padding: 2rem 1.5rem;
+    /* Mais espaço interno */
+  }
+
+  .sidebar-menu-link {
+    padding: 1rem 1.4rem;
+    /* Mais espaço para itens */
+  }
+
+  .icon {
+    width: 26px;
+    /* Ícones um pouco maiores */
+    height: 26px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+    padding: 1.5rem 0.5rem;
+  }
+
+  .sidebar-trigger {
+    display: none;
+  }
+
+  .link-text,
+  .sidebar-title {
+    display: none;
+  }
+
+  .sidebar-logo {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.sidebar.pinned {
+  left: 0;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disabled:hover {
+  background-color: transparent;
+}
