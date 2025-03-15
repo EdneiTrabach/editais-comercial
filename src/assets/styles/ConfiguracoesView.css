@@ -13,7 +13,7 @@
   background: white;
   border-radius: 12px;
   margin: 0.5rem;
-  margin-left: 260px; /* Valor padrão quando o sidebar está expandido */
+  margin-left: 330px; /* Valor padrão quando o sidebar está expandido */
 }
 
 .main-content-cfg-usuarios.expanded {
@@ -156,6 +156,7 @@ input {
   transition: all 0.3s ease;
   font-family: inherit;
   background: none;
+  border: none;
 }
 
 .name-input-cfg-usuarios:focus {
