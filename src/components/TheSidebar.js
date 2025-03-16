@@ -252,13 +252,16 @@ export default {
       document.removeEventListener('visibilitychange', () => {})
       
       // Limpar canais do Supabase se necessário
-      const channels = SupabaseManager.getAllSubscriptions()
-      channels.forEach(channel => {
+      
+      // Use apenas esta abordagem:
+      const channelNames = ['processos-changes', 'editais-updates', 'lances-updates']
+      channelNames.forEach(name => {
+        const channel = SupabaseManager.getSubscription(name)
         if (channel) {
           supabase.removeChannel(channel)
+          SupabaseManager.removeSubscription(name)
         }
       })
-      SupabaseManager.removeAllSubscriptions()
     })
 
     // Observer para mudanças no estado do sidebar

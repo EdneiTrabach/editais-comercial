@@ -178,11 +178,7 @@
   
   /* Links */
   [data-theme="dark"] a {
-    color: var(--action-primary);
-  }
-  
-  [data-theme="dark"] a:hover {
-    color: var(--action-primary-hover);
+    color: white;
   }
   
   /* Sombras */

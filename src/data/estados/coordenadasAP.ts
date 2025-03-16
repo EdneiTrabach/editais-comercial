@@ -1,18 +1,18 @@
 export const coordenadasAP = {
-  "Amapá": { latitude: 2.0528, longitude: -50.7958 },
-  "Calçoene": { latitude: 2.4969, longitude: -50.9489 },
-  "Cutias": { latitude: 0.9878, longitude: -50.8000 },
-  "Ferreira Gomes": { latitude: 0.8572, longitude: -51.1819 },
-  "Itaubal": { latitude: 0.5975, longitude: -50.6706 },
-  "Laranjal do Jari": { latitude: 0.8561, longitude: -52.5161 },
-  "Macapá": { latitude: 0.0356, longitude: -51.0705 }, // Capital
-  "Mazagão": { latitude: 0.1136, longitude: -51.2889 },
-  "Oiapoque": { latitude: 3.8400, longitude: -51.8333 }, // Fronteira com a França
-  "Pedra Branca do Amapari": { latitude: 0.7783, longitude: -51.9500 },
-  "Porto Grande": { latitude: 0.7125, longitude: -51.4128 },
-  "Pracuúba": { latitude: 1.7422, longitude: -50.7892 },
-  "Santana": { latitude: -0.0456, longitude: -51.1729 }, // 2º maior município
-  "Serra do Navio": { latitude: 0.9014, longitude: -52.0036 },
-  "Tartarugalzinho": { latitude: 1.5067, longitude: -50.9128 },
-  "Vitória do Jari": { latitude: 0.9383, longitude: -52.4239 }
+  "Amapá": { latitude: 2.052669, longitude: -50.795653 },
+  "Calçoene": { latitude: 2.504747, longitude: -50.951233 },
+  "Cutias": { latitude: 0.987565, longitude: -50.799169 },
+  "Ferreira Gomes": { latitude: 0.857256, longitude: -51.179523 },
+  "Itaubal": { latitude: 0.596137, longitude: -50.670828 },
+  "Laranjal do Jari": { latitude: -0.804911, longitude: -52.452962 },
+  "Macapá": { latitude: 0.034934, longitude: -51.069395 },
+  "Mazagão": { latitude: -0.11336, longitude: -51.28913 },
+  "Oiapoque": { latitude: 3.84074, longitude: -51.833123 },
+  "Pedra Branca do Amaparí": { latitude: 0.777424, longitude: -51.950306 },
+  "Porto Grande": { latitude: 0.71243, longitude: -51.415499 },
+  "Pracuúba": { latitude: 1.745427, longitude: -50.789248 },
+  "Santana": { latitude: -0.045434, longitude: -51.172924 },
+  "Serra do Navio": { latitude: 0.901357, longitude: -52.003636 },
+  "Tartarugalzinho": { latitude: 1.506519, longitude: -50.90874 },
+  "Vitória do Jari": { latitude: -0.938, longitude: -52.424001 }
 };
