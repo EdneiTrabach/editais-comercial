@@ -564,16 +564,6 @@
     border: 1px solid #2d3748;
   }
   
-  /* Botões de ação */
-  [data-theme="dark"] .action-buttons .btn-icon {
-    background-color: #2d3748;
-    border: 1px solid #3b82f6;
-  }
-  
-  [data-theme="dark"] .action-buttons .btn-icon:hover {
-    background-color: #374151;
-  }
-  
   /* Scrollbar personalizada */
   [data-theme="dark"] .table-container::-webkit-scrollbar {
     width: 10px;
