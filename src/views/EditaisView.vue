@@ -190,19 +190,41 @@
               <!-- Adicione após o div.distancia-actions -->
               <!-- Exibição aprimorada das distâncias calculadas -->
               <div v-if="distanciasSalvas.length > 0" class="distancias-lista">
-                <h4>Distâncias Calculadas</h4>
+                <h4>Distâncias</h4>
                 <div class="distancia-items">
                   <div v-for="(dist, index) in distanciasSalvas" :key="index" class="distancia-item">
                     <div class="distancia-info">
-                      <span class="distancia-valor">{{ dist.distancia_km }} km</span>
-                      <!-- Exibindo de: cidadeOrgao para: pontoReferencia -->
-                      <span class="distancia-rota">de {{ dist.cidade_origem }}/{{ dist.uf_origem }} para {{
-                        dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }}</span>
+                      <!-- Verifica se é entrada manual e exibe apenas o texto digitado -->
+                      <template v-if="dist.isManual">
+                        <span class="distancia-valor">{{ dist.distancia_km }}</span>
+                      </template>
+                      <!-- Para entradas calculadas, mantém a formatação original -->
+                      <template v-else>
+                        <span class="distancia-valor">{{ dist.distancia_km }} km</span>
+                        <span class="distancia-rota">de {{ dist.cidade_origem }}/{{ dist.uf_origem }} para {{
+                          dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }}</span>
+                      </template>
                     </div>
                     <button @click="removerDaLista(index)" class="btn-remover">×</button>
                   </div>
                 </div>
               </div>
+
+              <!-- Modo manual -->
+                <div class="distancia-manual-input">
+                  <label class="label-distancia">Distância:</label>
+                  <input 
+                    type="text" 
+                    v-model="distanciaManualValue" 
+                    class="input-distancia-manual" 
+                    placeholder="Digite a distância (ex: 50 km, aprox. 2h, etc.)" 
+                    />
+                  
+                  <button @click="salvarDistanciaManual" class="btn-add-distancia">
+                    <span>Adicionar à Lista</span>
+                    <span class="icon">+</span>
+                  </button>
+                </div>
 
               <!-- Lista de Distâncias Salvas -->
             </div>

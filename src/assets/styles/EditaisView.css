@@ -1784,3 +1784,12 @@ input-processLicitatorio:focus-processLicitatorio {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+input.input-distancia-manual {
+  margin-bottom: 1rem;
+}
+
+.label-distancia {
+  margin: 2rem auto;
+}
+

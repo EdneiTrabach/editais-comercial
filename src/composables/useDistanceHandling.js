@@ -25,16 +25,26 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
 
   // Função para salvar distância manual
   const salvarDistanciaManual = () => {
-    if (!distanciaManualValue.value || !pontoReferencia.value) {
-      showToast('Digite um valor de distância e selecione um ponto de referência', 'error')
+    if (!distanciaManualValue.value) {
+      showToast('Digite um valor para a distância', 'error')
       return
     }
 
-    formData.value.distancia_km = parseFloat(distanciaManualValue.value)
-    formData.value.ponto_referencia_cidade = pontoReferencia.value.cidade
-    formData.value.ponto_referencia_uf = pontoReferencia.value.uf
-
-    showToast('Distância manual salva com sucesso!', 'success')
+    // Cria um objeto simplificado apenas com o texto digitado
+    const novaDistancia = {
+      distancia_km: distanciaManualValue.value, // Texto exato digitado
+      isManual: true, // Flag para identificar entrada manual
+      
+      // Campos obrigatórios para o banco de dados, mas não exibidos
+      ponto_referencia_cidade: pontoReferencia.value?.cidade || '',
+      ponto_referencia_uf: pontoReferencia.value?.uf || '',
+      cidade_origem: cidadeOrgao.value?.nome || '',
+      uf_origem: estadoDestino.value || ''
+    }
+    
+    distanciasSalvas.value.push(novaDistancia)
+    distanciaManualValue.value = '' // Limpa o campo após salvar
+    showToast('Distância adicionada com sucesso!', 'success')
   }
 
   // Funções relacionadas a distância e municípios
