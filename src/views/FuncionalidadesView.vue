@@ -49,16 +49,22 @@ const features = [
     route: '/processos'
   },
   {
+    icon: '/icons/certificado.svg',
+    title: 'Novo Processo',
+    description: 'Cadastre e gerencie processos licitatórios',
+    route: '/editais'
+  },
+  {
     icon: '/icons/calculadora.svg',
     title: 'Planilha de Lances',
     description: 'Registre e gerencie lances de processos',
     route: '/lances'
   },
   {
-    icon: '/icons/certificado.svg',
-    title: 'Novo Processo',
-    description: 'Cadastre e gerencie processos licitatórios',
-    route: '/editais'
+    icon: '/icons/edicao.svg',
+    title: 'Declarações dos Processos',
+    description: 'Visualize e gerencie declarações de processos',
+    route: '/declaracoes'
   },
     {
     icon: '/icons/app.svg',

@@ -1,5 +1,7 @@
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import { SupabaseManager } from '@/lib/supabaseManager'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 
@@ -7,18 +9,26 @@ export default {
   components: {
     TheSidebar
   },
+  
   setup() {
+    const router = useRouter()
     const isSidebarExpanded = ref(true)
-    const showModal = ref(false)
-    const editingId = ref(null)
     const representantes = ref([])
-    
+    const isLoading = ref(false)
+    const showModal = ref(false)
     const formData = ref({
       nome: '',
-      documento: '',
       email: '',
-      telefone: ''
+      telefone: '',
+      cidade: '',
+      estado: '',
+      empresa: '',
+      observacoes: ''
     })
+    const isEditing = ref(false)
+    const currentId = ref(null)
+    
+    const editingId = ref(null)
     
     // Adicione o ref para o toast
     const toast = ref({
@@ -177,7 +187,10 @@ export default {
       confirmDelete,
       closeModal,
       handleSidebarToggle,
-      showToast
+      showToast,
+      isLoading,
+      isEditing,
+      currentId
     }
   }
 }

@@ -122,5 +122,5 @@
   </div>
 </template>
 
-<script src="./Thesidebar.js"></script>
+<script src="./TheSidebar.js"></script>
 <style src="../assets/styles/TheSidebar.css"></style>
