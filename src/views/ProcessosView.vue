@@ -191,10 +191,7 @@
               </td>
               <template v-else-if="coluna.campo === 'sistemas_ativos'">
                 <div class="sistemas-chips">
-                  <div v-if="processo.sistemas_nomes !== '-'" class="sistema-item" v-for="(sistema, i) in processo.sistemas_nomes.split(', ')" :key="i">
-                    {{ sistema }}
-                  </div>
-                  <div v-else>-</div>
+                  {{ processo.sistemas_nomes || getSistemasNomes(processo.sistemas_ativos) }}
                 </div>
               </template>
               <span v-else>
@@ -265,6 +262,27 @@ import BaseImage from '@/components/BaseImage.vue'
 import '../assets/styles/dark-mode.css'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
+
+// Adicione esta função no início do setup() em src/views/ProcessosView.vue
+const sistemasNomesCache = ref({});
+
+const getSistemasNomesFromCache = async (sistemasIds) => {
+  if (!sistemasIds || !sistemasIds.length) return '-';
+  
+  // Cria uma chave única para este conjunto de IDs
+  const cacheKey = sistemasIds.sort().join(',');
+  
+  // Verifica se já temos este resultado em cache
+  if (sistemasNomesCache.value[cacheKey]) {
+    return sistemasNomesCache.value[cacheKey];
+  }
+  
+  // Se não tem em cache, busca e armazena
+  const resultado = await getSistemasNomes(sistemasIds);
+  sistemasNomesCache.value[cacheKey] = resultado;
+  
+  return resultado;
+}
 
 // Adicione aqui o código de monitoramento de visibilidade
 const loadingTimeout = ref(null)
@@ -508,73 +526,84 @@ const formatStatus = (status) => {
   return statusMap[status] || status
 }
 
+// Modifique a função loadProcessos() em src/views/ProcessosView.vue
 const loadProcessos = async () => {
   if (isLoading.value) return
-
+  
   try {
     isLoading.value = true
     console.log('Iniciando carregamento de processos...')
-
-    // Teste simples para verificar conexão
-    const { count: testData, error: testError } = await supabase
-      .from('processos')
-      .select('*', { count: 'exact', head: true })
-
-    console.log('Teste de conexão:', { testData, testError })
-
-    // Consulta real
+    
+    // Consulta aos processos
     const { data, error } = await supabase
       .from('processos')
       .select(`*`)
       .order('data_pregao', { ascending: true })
 
-    console.log('Dados retornados:', data)
-    console.log('Erro (se houver):', error)
-
     if (error) throw error
 
-    // Processar cada processo para obter nomes dos sistemas
-    for (const processo of data) {
+    // Processamento adicional dos dados
+    const processosComNomes = []
+    
+    for (const processo of data || []) {
+      // Buscar os nomes dos sistemas para cada processo
+      let sistemasNomes = '-'
       if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
-        // Buscar nomes dos sistemas para este processo
-        const sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
-        
-        // Adicionar os nomes como uma propriedade do processo
-        processo.sistemas_nomes = sistemasNomes
-      } else {
-        processo.sistemas_nomes = '-'
+        sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
       }
+      
+      // Adicionar o processo com o campo sistemas_nomes preenchido
+      processosComNomes.push({
+        ...processo,
+        sistemas_nomes: sistemasNomes
+      })
     }
-
-    processos.value = data || []
+    
+    processos.value = processosComNomes
+    console.log('Processos carregados com nomes de sistemas:', processos.value.length)
+    
   } catch (error) {
-    console.error('Erro detalhado ao carregar processos:', error)
+    console.error('Erro ao carregar processos:', error)
   } finally {
     isLoading.value = false
   }
 }
 
-// Nova função para buscar nomes dos sistemas
+// Otimize a função getSistemasNomes em src/views/ProcessosView.vue
 const getSistemasNomes = async (sistemasIds) => {
-  if (!sistemasIds?.length) return '-'
+  if (!sistemasIds || !sistemasIds.length) return '-'
 
   try {
-    const { data } = await supabase
+    console.log('Buscando nomes dos sistemas para IDs:', sistemasIds)
+    
+    const { data, error } = await supabase
       .from('sistemas')
       .select('nome')
       .in('id', sistemasIds)
 
-    // Ordenar nomes alfabeticamente
-    if (data && data.length > 0) {
-      const nomes = data.map(s => s.nome).sort()
-      return nomes.join(', ')
-    }
-    return '-'
+    if (error) throw error
+    
+    const nomes = data?.map(s => s.nome) || []
+    console.log('Nomes encontrados:', nomes)
+    
+    return nomes.join(', ') || '-'
   } catch (error) {
     console.error('Erro ao buscar nomes dos sistemas:', error)
     return '-'
   }
 }
+
+// Adicione este método computado em src/views/ProcessosView.vue
+const processosComSistemasNomes = computed(async () => {
+  const resultado = [];
+  for (const processo of processos.value) {
+    if (!processo.sistemas_nomes && processo.sistemas_ativos?.length > 0) {
+      processo.sistemas_nomes = await getSistemasNomes(processo.sistemas_ativos);
+    }
+    resultado.push(processo);
+  }
+  return resultado;
+});
 
 const handleNewProcess = () => {
   router.push('/editais')
@@ -633,34 +662,24 @@ const logSystemAction = async (dados) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Verifica se o usuário está autenticado
-    if (!user) {
-      console.warn('Usuário não autenticado. Log não registrado.')
-      return
-    }
-
     const logData = {
       usuario_id: user.id,
       usuario_email: user.email,
       tipo: dados.tipo,
       tabela: dados.tabela,
       registro_id: dados.registro_id,
-      campo_alterado: dados.campo_alterado,
       dados_anteriores: dados.dados_anteriores,
       dados_novos: dados.dados_novos,
       data_hora: new Date().toISOString()
     }
 
-    // Tente inserir o log, mas continue mesmo se falhar
-    try {
-      await supabase.from('system_logs').insert(logData)
-    } catch (logError) {
-      console.warn('Não foi possível registrar o log:', logError)
-      // Continua a execução mesmo com erro no log
-    }
+    const { error } = await supabase
+      .from('system_logs')
+      .insert(logData)
+
+    if (error) throw error
   } catch (error) {
-    console.error('Erro ao processar ação de log:', error)
-    // Não propaga o erro para que a operação principal continue
+    console.error('Erro ao registrar log:', error)
   }
 }
 
@@ -856,75 +875,30 @@ const handleUpdate = async (processo) => {
       return
     }
 
-    const field = editingCell.value.field
     let updateValue = editingCell.value.value
-    
-    // Validação específica para o campo modalidade
-    if (field === 'modalidade') {
-      const validModalidades = [
-        'pregao_eletronico', 'pregao_presencial', 'credenciamento',
-        'concorrencia', 'concurso', 'leilao', 'dialogo_competitivo',
-        'tomada_precos', 'chamamento_publico', 'rdc', 'rdc_eletronico',
-        'srp', 'srp_eletronico', 'srp_internacional'
-      ]
-      
-      if (!validModalidades.includes(updateValue)) {
-        throw new Error('Modalidade inválida. Por favor, selecione uma das opções disponíveis.')
-      }
-      
-      // Valores adicionais que podem ser necessários dependendo da modalidade
-      const camposExtras = {}
-      
-      // Se for pregão eletrônico, garante que há um site
-      if (updateValue === 'pregao_eletronico' && !processo.site_pregao) {
-        camposExtras.site_pregao = 'https://comprasnet.gov.br'
-      }
-      
-      // Atualiza apenas o campo modalidade e os campos extras se houver
-      const { error } = await supabase
-        .from('processos')
-        .update({
-          modalidade: updateValue.trim(),
-          updated_at: new Date().toISOString(),
-          ...camposExtras
-        })
-        .eq('id', processo.id)
 
-      if (error) throw error
-      
-      // Recarrega os processos e termina a função
-      await loadProcessos()
-      return
-    }
-
-    // Para outros campos, continua com o código atual
-    switch (field) {
+    // Formatação específica por tipo de campo
+    switch (editingCell.value.field) {
       case 'data_pregao':
-        if (editingCell.value.value.includes('-')) {
-          updateValue = editingCell.value.value
-        } else if (editingCell.value.value.includes('/')) {
-          const [day, month, year] = editingCell.value.value.split('/')
-          if (day && month && year) {
-            updateValue = `${year}-${month}-${day}`
-          } else {
-            throw new Error('Formato de data inválido. Use DD/MM/AAAA.')
-          }
-        } else {
-          throw new Error('Formato de data não reconhecido')
-        }
+        // Converte data para formato ISO
+        const [day, month, year] = editingCell.value.value.split('/')
+        updateValue = `${year}-${month}-${day}`
         break
       case 'hora_pregao':
+        // Garante formato HH:mm
         updateValue = editingCell.value.value.split(':').slice(0, 2).join(':')
         break
       case 'sistemas_ativos':
+        // Garante que é um array
         updateValue = Array.isArray(editingCell.value.value) ? editingCell.value.value : []
         break
     }
 
-    // Prepara dados para atualização - apenas o campo atual
+    // Prepara dados para atualização
     const updateData = {
-      [field]: updateValue,
-      updated_at: new Date().toISOString()
+      [editingCell.value.field]: updateValue,
+      updated_at: new Date().toISOString(),
+      updated_by: (await supabase.auth.getUser()).data.user?.id
     }
 
     // Atualiza no banco de dados
@@ -935,12 +909,23 @@ const handleUpdate = async (processo) => {
 
     if (error) throw error
 
-    // Recarrega os processos
+    // Log da alteração
+    await logSystemAction({
+      tipo: 'atualizacao',
+      tabela: 'processos',
+      registro_id: processo.id,
+      campo_alterado: editingCell.value.field,
+      dados_anteriores: processo[editingCell.value.field],
+      dados_novos: updateValue
+    })
+
+    // Recarrega os processos após atualização bem-sucedida
     await loadProcessos()
 
   } catch (error) {
     console.error('Erro ao atualizar:', error)
-    alert(`Erro ao atualizar o campo: ${error.message || 'Verifique o formato dos dados'}`)
+    // Exibe mensagem de erro para o usuário
+    alert('Erro ao atualizar o campo. Por favor, tente novamente.')
   } finally {
     cancelEdit()
   }
@@ -1253,8 +1238,11 @@ onMounted(async () => {
     startVisibilityMonitoring()
 
     // 2. Limpar cache antes de carregar novos dados
-    if (processamentosCache) {
+    if (processamentosCache && !processamentosCache.dados.size) {
+      console.log('Cache vazio, não é necessário limpar')
+    } else if (processamentosCache) {
       processamentosCache.limparCache()
+      console.log('Cache limpo com sucesso')
     }
 
     // 3. Registrar listener para fechar dropdowns de filtros ao clicar fora
@@ -1344,4 +1332,4 @@ const loadData = async () => {
 useConnectionManager(loadData)
 </script>
 
-<style src="../assets/styles/ProcessosView.css"></style>
+<style src="@/assets/styles/ProcessosView.css"></style>

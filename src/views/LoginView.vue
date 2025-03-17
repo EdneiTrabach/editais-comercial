@@ -106,7 +106,8 @@ const handleResetPassword = async () => {
 }
 
 const loadData = async () => {
-  await loadProcessos() // ou qualquer outra função que carregue seus dados
+  // Não tente carregar dados específicos no login
+  console.log('Login bem-sucedido')
 }
 
 // Use o composable
