@@ -191,7 +191,10 @@
               </td>
               <template v-else-if="coluna.campo === 'sistemas_ativos'">
                 <div class="sistemas-chips">
-                  {{ processo.sistemas_nomes }}
+                  <div v-if="processo.sistemas_nomes !== '-'" class="sistema-item" v-for="(sistema, i) in processo.sistemas_nomes.split(', ')" :key="i">
+                    {{ sistema }}
+                  </div>
+                  <div v-else>-</div>
                 </div>
               </template>
               <span v-else>
@@ -517,7 +520,7 @@ const loadProcessos = async () => {
       .from('processos')
       .select('*', { count: 'exact', head: true })
 
-      console.log('Teste de conexão:', { testData, testError })
+    console.log('Teste de conexão:', { testData, testError })
 
     // Consulta real
     const { data, error } = await supabase
@@ -530,7 +533,19 @@ const loadProcessos = async () => {
 
     if (error) throw error
 
-    // Restante do código...
+    // Processar cada processo para obter nomes dos sistemas
+    for (const processo of data) {
+      if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
+        // Buscar nomes dos sistemas para este processo
+        const sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
+        
+        // Adicionar os nomes como uma propriedade do processo
+        processo.sistemas_nomes = sistemasNomes
+      } else {
+        processo.sistemas_nomes = '-'
+      }
+    }
+
     processos.value = data || []
   } catch (error) {
     console.error('Erro detalhado ao carregar processos:', error)
@@ -549,7 +564,12 @@ const getSistemasNomes = async (sistemasIds) => {
       .select('nome')
       .in('id', sistemasIds)
 
-    return data?.map(s => s.nome).join(', ') || '-'
+    // Ordenar nomes alfabeticamente
+    if (data && data.length > 0) {
+      const nomes = data.map(s => s.nome).sort()
+      return nomes.join(', ')
+    }
+    return '-'
   } catch (error) {
     console.error('Erro ao buscar nomes dos sistemas:', error)
     return '-'
@@ -613,24 +633,34 @@ const logSystemAction = async (dados) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Verifica se o usuário está autenticado
+    if (!user) {
+      console.warn('Usuário não autenticado. Log não registrado.')
+      return
+    }
+
     const logData = {
       usuario_id: user.id,
       usuario_email: user.email,
       tipo: dados.tipo,
       tabela: dados.tabela,
       registro_id: dados.registro_id,
+      campo_alterado: dados.campo_alterado,
       dados_anteriores: dados.dados_anteriores,
       dados_novos: dados.dados_novos,
       data_hora: new Date().toISOString()
     }
 
-    const { error } = await supabase
-      .from('system_logs')
-      .insert(logData)
-
-    if (error) throw error
+    // Tente inserir o log, mas continue mesmo se falhar
+    try {
+      await supabase.from('system_logs').insert(logData)
+    } catch (logError) {
+      console.warn('Não foi possível registrar o log:', logError)
+      // Continua a execução mesmo com erro no log
+    }
   } catch (error) {
-    console.error('Erro ao registrar log:', error)
+    console.error('Erro ao processar ação de log:', error)
+    // Não propaga o erro para que a operação principal continue
   }
 }
 
@@ -826,30 +856,75 @@ const handleUpdate = async (processo) => {
       return
     }
 
+    const field = editingCell.value.field
     let updateValue = editingCell.value.value
+    
+    // Validação específica para o campo modalidade
+    if (field === 'modalidade') {
+      const validModalidades = [
+        'pregao_eletronico', 'pregao_presencial', 'credenciamento',
+        'concorrencia', 'concurso', 'leilao', 'dialogo_competitivo',
+        'tomada_precos', 'chamamento_publico', 'rdc', 'rdc_eletronico',
+        'srp', 'srp_eletronico', 'srp_internacional'
+      ]
+      
+      if (!validModalidades.includes(updateValue)) {
+        throw new Error('Modalidade inválida. Por favor, selecione uma das opções disponíveis.')
+      }
+      
+      // Valores adicionais que podem ser necessários dependendo da modalidade
+      const camposExtras = {}
+      
+      // Se for pregão eletrônico, garante que há um site
+      if (updateValue === 'pregao_eletronico' && !processo.site_pregao) {
+        camposExtras.site_pregao = 'https://comprasnet.gov.br'
+      }
+      
+      // Atualiza apenas o campo modalidade e os campos extras se houver
+      const { error } = await supabase
+        .from('processos')
+        .update({
+          modalidade: updateValue.trim(),
+          updated_at: new Date().toISOString(),
+          ...camposExtras
+        })
+        .eq('id', processo.id)
 
-    // Formatação específica por tipo de campo
-    switch (editingCell.value.field) {
+      if (error) throw error
+      
+      // Recarrega os processos e termina a função
+      await loadProcessos()
+      return
+    }
+
+    // Para outros campos, continua com o código atual
+    switch (field) {
       case 'data_pregao':
-        // Converte data para formato ISO
-        const [day, month, year] = editingCell.value.value.split('/')
-        updateValue = `${year}-${month}-${day}`
+        if (editingCell.value.value.includes('-')) {
+          updateValue = editingCell.value.value
+        } else if (editingCell.value.value.includes('/')) {
+          const [day, month, year] = editingCell.value.value.split('/')
+          if (day && month && year) {
+            updateValue = `${year}-${month}-${day}`
+          } else {
+            throw new Error('Formato de data inválido. Use DD/MM/AAAA.')
+          }
+        } else {
+          throw new Error('Formato de data não reconhecido')
+        }
         break
       case 'hora_pregao':
-        // Garante formato HH:mm
         updateValue = editingCell.value.value.split(':').slice(0, 2).join(':')
         break
       case 'sistemas_ativos':
-        // Garante que é um array
         updateValue = Array.isArray(editingCell.value.value) ? editingCell.value.value : []
         break
     }
 
-    // Prepara dados para atualização
+    // Prepara dados para atualização - apenas o campo atual
     const updateData = {
-      [editingCell.value.field]: updateValue,
-      updated_at: new Date().toISOString(),
-      updated_by: (await supabase.auth.getUser()).data.user?.id
+      [field]: updateValue,
+      updated_at: new Date().toISOString()
     }
 
     // Atualiza no banco de dados
@@ -860,23 +935,12 @@ const handleUpdate = async (processo) => {
 
     if (error) throw error
 
-    // Log da alteração
-    await logSystemAction({
-      tipo: 'atualizacao',
-      tabela: 'processos',
-      registro_id: processo.id,
-      campo_alterado: editingCell.value.field,
-      dados_anteriores: processo[editingCell.value.field],
-      dados_novos: updateValue
-    })
-
-    // Recarrega os processos após atualização bem-sucedida
+    // Recarrega os processos
     await loadProcessos()
 
   } catch (error) {
     console.error('Erro ao atualizar:', error)
-    // Exibe mensagem de erro para o usuário
-    alert('Erro ao atualizar o campo. Por favor, tente novamente.')
+    alert(`Erro ao atualizar o campo: ${error.message || 'Verifique o formato dos dados'}`)
   } finally {
     cancelEdit()
   }
