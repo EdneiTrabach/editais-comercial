@@ -344,28 +344,6 @@
                     </div>
                   </template>
                   
-                  <!-- Responsible ID field -->
-                  <template v-else-if="coluna.campo === 'responsavel_id'">
-                    <!-- Edit mode -->
-                    <select 
-                      v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                      v-model="editingCell.value" 
-                      @blur="handleUpdate(processo)" 
-                      @change="handleUpdate(processo)"
-                      @keyup.esc="cancelEdit()" 
-                      class="responsavel-select">
-                      <option :value="null">Sem responsável</option>
-                      <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
-                        {{ resp.nome }} {{ resp.departamento ? `(${resp.departamento})` : '' }}
-                      </option>
-                    </select>
-
-                    <!-- View mode -->
-                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="responsavel-badge">
-                      {{ getResponsavelNome(processo.responsavel_id) }}
-                    </span>
-                  </template>
-                  
                   <!-- Distance type display -->
                   <template v-else-if="coluna.tipoExibicao === 'distancia'">
                     <span class="distancia-badge" v-if="formatarDistancia(processo) !== '-'">
