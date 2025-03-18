@@ -219,14 +219,14 @@
                 <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
                   v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
                   @keyup.esc="cancelEdit()" class="responsavel-select">
-                  <option value="">Sem responsável</option>
-                  <option v-for="resp in responsaveis" :key="resp.id" :value="resp.id">
-                    {{ resp.nome }} {{ resp.email ? `(${resp.email})` : '' }}
+                  <option :value="null">Sem responsável</option>
+                  <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
+                    {{ resp.nome }} {{ resp.departamento ? `(${resp.departamento})` : '' }}
                   </option>
                 </select>
 
                 <!-- Modo de visualização -->
-                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)">
+                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="responsavel-badge">
                   {{ getResponsavelNome(processo.responsavel_id) }}
                 </span>
               </template>
@@ -239,17 +239,14 @@
               <template v-else-if="coluna.campo === 'representante_id'">
                 <!-- Modo de edição -->
                 <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                  v-model="editingCell.value" 
-                  @blur="handleUpdate(processo)" 
-                  @change="handleUpdate(processo)" 
-                  @keyup.esc="cancelEdit()"
-                  class="representante-select">
+                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
+                  @keyup.esc="cancelEdit()" class="representante-select">
                   <option value="">Sem representante</option>
                   <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                     {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
                   </option>
                 </select>
-                
+
                 <!-- Modo de visualização -->
                 <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
                   {{ getRepresentanteNome(processo.representante_id) }}
@@ -455,9 +452,9 @@ const colunas = [
   {
     titulo: 'Representante',
     campo: 'representante_id',
-    tabelaRelacionada: 'representsantes',
+    tabelaRelacionada: 'representantes',  // Estava escrito errado como "representsantes"
     campoExibicao: 'nome',
-    tipoEdicao: 'select'  // Adicionado para indicar que deve ser editado como select
+    tipoEdicao: 'select'
   },
   { titulo: 'Impugnações', campo: 'impugnacoes' },     // processo.impugnacoes
   {
@@ -917,18 +914,19 @@ const loadResponsaveis = async () => {
   try {
     console.log('Carregando responsáveis...');
     const { data, error } = await supabase
-      .from('responsaveis_processos')
+      .from('responsaveis_processos')  // Esta é a tabela correta
       .select('id, nome, email, departamento')
       .eq('status', 'ACTIVE')
       .order('nome');
 
     if (error) throw error;
 
-    // Atribuir aos dois refs de responsáveis
+    // Atribuir aos refs de responsáveis
     responsaveis.value = data || [];
     responsaveisAtivos.value = data || [];
 
-    // Pré-carregar o cache de responsáveis
+    // Pré-carregar o cache de responsáveis como um Map (importante!)
+    responsaveisCache.value.clear(); // Limpar cache antes
     data?.forEach(resp => {
       if (resp && resp.id) {
         responsaveisCache.value.set(resp.id, resp);
@@ -1076,7 +1074,13 @@ const hideSistemasDialog = () => {
 
 const handleUpdate = async (processo) => {
   try {
-    if (!editingCell.value.value && editingCell.value.field !== 'status') {
+    // Caso especial para responsavel_id:
+    // Converte string vazia para null - importante para o tipo UUID
+    if (editingCell.value.field === 'responsavel_id' && editingCell.value.value === '') {
+      editingCell.value.value = null;
+    }
+
+    if (!editingCell.value.value && editingCell.value.field !== 'status' && editingCell.value.field !== 'responsavel_id') {
       cancelEdit()
       return
     }
@@ -1114,17 +1118,17 @@ const handleUpdate = async (processo) => {
         break
 
       case 'responsavel_id':
-        // Garantir que temos um valor válido ou null
+        // Sem conversão necessária, mas garantimos que seja UUID ou null
         updateValue = updateValue || null;
         console.log('Atualizando responsável para:', updateValue);
 
         if (updateValue) {
-          // Verificar se o responsável existe
+          // Verificar se o responsável existe na lista carregada
           const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
           if (responsavel) {
             console.log(`Nome do responsável selecionado: ${responsavel.nome}`);
             // Atualizar cache se necessário
-            responsaveisCache.value[updateValue] = responsavel.nome;
+            responsaveisCache.value.set(updateValue, responsavel);
           } else {
             console.warn('ID de responsável selecionado não encontrado na lista!');
             // Recarregar responsáveis caso necessário
@@ -1301,17 +1305,22 @@ const representantes = ref([])
 // Melhore a função getResponsavelNome para usar o cache
 const getResponsavelNome = (id) => {
   if (!id) return 'Sem responsável';
-
-  const responsavel = responsaveisCache.value.get(id) ||
-    responsaveis.value.find(r => r.id === id);
-
-  if (responsavel) {
-    // Armazena no cache para próximas consultas
-    responsaveisCache.value.set(id, responsavel);
-    return responsavel.nome;
+  
+  // Tentar buscar do cache primeiro
+  const cachedResp = responsaveisCache.value.get(id);
+  if (cachedResp) {
+    return cachedResp.nome || 'Sem nome';
   }
-
-  return 'Carregando...';
+  
+  // Se não estiver no cache, buscar do array
+  const responsavel = responsaveisAtivos.value.find(r => r.id === id);
+  if (responsavel) {
+    // Atualizar cache para futuras consultas
+    responsaveisCache.value.set(id, responsavel);
+    return responsavel.nome || 'Sem nome';
+  }
+  
+  return 'Responsável não encontrado';
 };
 
 const loadRepresentantes = async () => {
@@ -1426,7 +1435,7 @@ const handleSubmit = async () => {
       site_pregao: formData.value.site_pregao,
       objeto_resumido: formData.value.objeto_resumido,
       objeto_completo: formData.value.objeto_completo,
-      responsavel: user.id,
+      responsavel: representante.id,
       representante: formData.value.representante
     }
 
@@ -1739,9 +1748,133 @@ const formatarDistancia = (processo) => {
 // Adicione esta função junto com as outras funções auxiliares
 const getRepresentanteNome = (id) => {
   if (!id) return 'Sem representante';
-  
+
   const representante = representantes.value.find(r => r.id === id);
   return representante ? representante.nome : 'Carregando...';
+};
+
+const validarIdRelacionamento = async (tabela, campo, id) => {
+  if (!id) return null; // Valores nulos são válidos
+  
+  try {
+    const { data, error } = await supabase
+      .from(tabela)
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (error || !data) {
+      console.warn(`ID ${id} não encontrado na tabela ${tabela}, será considerado null`);
+      return null;
+    }
+    
+    return id; // ID válido
+  } catch (err) {
+    console.error(`Erro ao validar ID em ${tabela}:`, err);
+    return null;
+  }
+};
+
+// Adicione ao componente ProcessosView.vue
+const atribuirResponsavelRandom = async (processoId) => {
+  try {
+    // Certifique-se de que temos responsáveis carregados
+    if (responsaveisAtivos.value.length === 0) {
+      await loadResponsaveis();
+    }
+    
+    if (responsaveisAtivos.value.length === 0) {
+      console.error("Não há responsáveis ativos cadastrados");
+      return;
+    }
+    
+    // Selecione um responsável aleatório
+    const randomIndex = Math.floor(Math.random() * responsaveisAtivos.value.length);
+    const responsavelSelecionado = responsaveisAtivos.value[randomIndex];
+    
+    // Atualize o processo
+    const { error } = await supabase
+      .from('processos')
+      .update({ 
+        responsavel_id: responsavelSelecionado.id,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', processoId);
+      
+    if (error) throw error;
+    console.log(`Responsável ${responsavelSelecionado.nome} atribuído ao processo ${processoId}`);
+    
+    // Recarregar processos
+    await loadProcessos();
+  } catch (error) {
+    console.error("Erro ao atribuir responsável:", error);
+  }
+};
+
+// Adicione esta função para atribuir responsáveis a todos os processos sem responsável
+const atribuirResponsaveisAProcessosPendentes = async () => {
+  try {
+    // Certifique-se de que temos responsáveis carregados
+    if (responsaveisAtivos.value.length === 0) {
+      await loadResponsaveis();
+    }
+    
+    if (responsaveisAtivos.value.length === 0) {
+      console.error("Não há responsáveis ativos cadastrados");
+      return;
+    }
+    
+    // Filtrar processos sem responsável
+    const processosSemResponsavel = processos.value.filter(p => !p.responsavel_id);
+    console.log(`Encontrados ${processosSemResponsavel.length} processos sem responsável`);
+    
+    if (processosSemResponsavel.length === 0) {
+      alert("Todos os processos já possuem responsáveis atribuídos!");
+      return;
+    }
+    
+    // Confirmar a operação
+    if (!confirm(`Deseja atribuir responsáveis a ${processosSemResponsavel.length} processos pendentes?`)) {
+      return;
+    }
+    
+    // Distribuir os responsáveis de forma equilibrada
+    let contadorResponsaveis = 0;
+    const totalResponsaveis = responsaveisAtivos.value.length;
+    
+    // Para cada processo sem responsável
+    for (const processo of processosSemResponsavel) {
+      // Escolher um responsável de forma rotativa
+      const responsavelSelecionado = responsaveisAtivos.value[contadorResponsaveis % totalResponsaveis];
+      
+      // Atualizar o processo com o responsável escolhido
+      const { error } = await supabase
+        .from('processos')
+        .update({ 
+          responsavel_id: responsavelSelecionado.id,
+          updated_at: new Date().toISOString(),
+          updated_by: (await supabase.auth.getUser()).data.user?.id || null
+        })
+        .eq('id', processo.id);
+        
+      if (error) {
+        console.error(`Erro ao atribuir responsável ao processo ${processo.numero_processo}:`, error);
+      } else {
+        console.log(`Responsável ${responsavelSelecionado.nome} atribuído ao processo ${processo.numero_processo}`);
+      }
+      
+      // Avançar para o próximo responsável
+      contadorResponsaveis++;
+    }
+    
+    // Recarregar os processos após as atualizações
+    await loadProcessos();
+    
+    alert(`Responsáveis atribuídos com sucesso a ${processosSemResponsavel.length} processos!`);
+  } catch (error) {
+    console.error("Erro ao atribuir responsáveis:", error);
+    alert("Ocorreu um erro ao atribuir responsáveis");
+  }
 };
 </script>
 
