@@ -973,21 +973,35 @@ export default {
             break
 
           case 'responsavel_id':
-            // No conversion needed, but ensure it's UUID or null
+            // Ensure it's UUID or null
             updateValue = updateValue || null;
-            console.log('Updating responsible to:', updateValue);
-
+            console.log('Valor do responsável antes da atualização:', updateValue);
+            
             if (updateValue) {
-              // Check if the responsible exists in the loaded list
-              const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
-              if (responsavel) {
-                console.log(`Selected responsible name: ${responsavel.nome}`);
-                // Update cache if needed
-                responsaveisCache.value.set(updateValue, responsavel);
-              } else {
-                console.warn('Selected responsible ID not found in list!');
-                // Reload responsibles if needed
-                await loadResponsaveis();
+              try {
+                // Buscar o email do responsável selecionado
+                const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
+                
+                if (responsavel && responsavel.email) {
+                  // Usar o email para encontrar o usuário correspondente na tabela profiles
+                  const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('email', responsavel.email)
+                    .single();
+                    
+                  if (profileError || !profileData) {
+                    console.error('Usuário correspondente não encontrado para o email:', responsavel.email);
+                    throw new Error('Não foi possível encontrar um usuário para este responsável');
+                  }
+                  
+                  // Usar o ID do perfil do usuário em vez do ID do responsável
+                  updateValue = profileData.id;
+                  console.log('Convertendo ID do responsável para ID do perfil:', updateValue);
+                }
+              } catch (err) {
+                console.error('Erro ao buscar usuário correspondente:', err);
+                throw new Error('Erro ao atribuir responsável');
               }
             }
             break;
@@ -1031,6 +1045,13 @@ export default {
         if (user?.id) {
           updateData.updated_by = user.id
         }
+
+        // Antes da chamada ao supabase
+        console.log('Dados para atualização:', {
+          campo: editingCell.value.field,
+          valor: updateValue,
+          tipo: typeof updateValue
+        });
 
         // Update in database
         console.log('Update data:', updateData)
