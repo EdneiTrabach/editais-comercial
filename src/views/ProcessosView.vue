@@ -131,7 +131,8 @@
                     <option value="cancelado">Cancelado</option>
                     <option value="nao_participar">Decidido Não Participar</option>
                   </select>
-                  <template v-else-if="coluna.campo === 'sistemas_ativos' && editingCell.id === processo.id && editingCell.field === coluna.campo">
+                  <template
+                    v-else-if="coluna.campo === 'sistemas_ativos' && editingCell.id === processo.id && editingCell.field === coluna.campo">
                     <div class="sistemas-dropdown-container">
                       <div class="sistemas-selected">
                         <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
@@ -140,8 +141,7 @@
                         </div>
                       </div>
                       <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" 
-                          :value="sistema.id" 
+                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
                           :selected="editingCell.value && editingCell.value.includes(sistema.id)">
                           {{ sistema.nome }}
                         </option>
@@ -208,32 +208,26 @@
               </td>
               <template v-else-if="coluna.campo === 'sistemas_ativos'">
                 <div class="sistemas-chips">
-                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" 
-                       class="sistemas-lista">
+                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
                     {{ getSistemasNomesString(processo.sistemas_ativos) }}
                   </div>
                   <div v-else class="sem-sistemas">-</div>
                 </div>
               </template>
               <template v-else-if="coluna.campo === 'responsavel_id'">
-                <!-- Edição -->
-                <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                  <select v-model="editingCell.value" 
-                          @change="handleUpdate(processo)" 
-                          @blur="handleUpdate(processo)" 
-                          @keyup.esc="cancelEdit()" 
-                          class="responsavel-select">
-                    <option value="">Sem responsável</option>
-                    <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
-                      {{ resp.nome }} {{ resp.email ? `(${resp.email})` : '' }}
-                    </option>
-                  </select>
-                </template>
-                <!-- Visualização -->
+                <!-- Modo de edição -->
+                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
+                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
+                  @keyup.esc="cancelEdit()" class="responsavel-select">
+                  <option value="">Sem responsável</option>
+                  <option v-for="resp in responsaveis" :key="resp.id" :value="resp.id">
+                    {{ resp.nome }} {{ resp.email ? `(${resp.email})` : '' }}
+                  </option>
+                </select>
+
+                <!-- Modo de visualização -->
                 <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)">
-                  <template v-if="field === 'responsavel_id'">
-                    {{ getResponsavelNome(processo.responsavel_id) }}
-                  </template>
+                  {{ getResponsavelNome(processo.responsavel_id) }}
                 </span>
               </template>
               <span v-else>
@@ -299,8 +293,7 @@
       </div>
     </div>
     <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-      <option v-for="sistema in sistemasAtivos" :key="sistema.id" 
-        :value="sistema.id" 
+      <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
         :selected="editingCell.value && editingCell.value.includes(sistema.id)">
         {{ sistema.nome }}
       </option>
@@ -334,19 +327,19 @@ const sistemasNomesCache = ref({});
 
 const getSistemasNomesFromCache = async (sistemasIds) => {
   if (!sistemasIds || !sistemasIds.length) return '-';
-  
+
   // Cria uma chave única para este conjunto de IDs
   const cacheKey = sistemasIds.sort().join(',');
-  
+
   // Verifica se já temos este resultado em cache
   if (sistemasNomesCache.value[cacheKey]) {
     return sistemasNomesCache.value[cacheKey];
   }
-  
+
   // Se não tem em cache, busca e armazena
   const resultado = await getSistemasNomes(sistemasIds);
   sistemasNomesCache.value[cacheKey] = resultado;
-  
+
   return resultado;
 }
 
@@ -422,9 +415,10 @@ const colunas = [
   { titulo: 'Status', campo: 'status' },                // processo.status
   {
     titulo: 'Responsável',
-    campo: 'responsavel_id',                            // processo.responsavel_id
-    tabelaRelacionada: 'profiles',
-    campoExibicao: 'nome'
+    campo: 'responsavel_id',
+    tabelaRelacionada: 'responsaveis_processos',  // Tabela correta
+    campoExibicao: 'nome',
+    tipoEdicao: 'select'  // Indica que deve ser editado como select
   },
   {
     titulo: 'Distâncias',
@@ -595,11 +589,11 @@ const formatStatus = (status) => {
 // Modifique a função loadProcessos() em src/views/ProcessosView.vue
 const loadProcessos = async () => {
   if (isLoading.value) return
-  
+
   try {
     isLoading.value = true
     console.log('Iniciando carregamento de processos...')
-    
+
     // Consulta aos processos
     const { data, error } = await supabase
       .from('processos')
@@ -610,24 +604,24 @@ const loadProcessos = async () => {
 
     // Processamento adicional dos dados
     const processosComNomes = []
-    
+
     for (const processo of data || []) {
       // Buscar os nomes dos sistemas para cada processo
       let sistemasNomes = '-'
       if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
         sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
       }
-      
+
       // Adicionar o processo com o campo sistemas_nomes preenchido
       processosComNomes.push({
         ...processo,
         sistemas_nomes: sistemasNomes
       })
     }
-    
+
     processos.value = processosComNomes
     console.log('Processos carregados com nomes de sistemas:', processos.value.length)
-    
+
   } catch (error) {
     console.error('Erro ao carregar processos:', error)
   } finally {
@@ -641,17 +635,17 @@ const getSistemasNomes = async (sistemasIds) => {
 
   try {
     console.log('Buscando nomes dos sistemas para IDs:', sistemasIds)
-    
+
     const { data, error } = await supabase
       .from('sistemas')
       .select('nome')
       .in('id', sistemasIds)
 
     if (error) throw error
-    
+
     const nomes = data?.map(s => s.nome) || []
     console.log('Nomes encontrados:', nomes)
-    
+
     return nomes.join(', ') || '-'
   } catch (error) {
     console.error('Erro ao buscar nomes dos sistemas:', error)
@@ -887,6 +881,42 @@ const editingCell = ref({
   value: null
 })
 
+// Adicione estas declarações de variáveis no início do script junto com outros refs
+const responsaveis = ref([]);
+const responsaveisAtivos = ref([]);
+const responsaveisCache = ref(new Map());
+
+// Corrija a função loadResponsaveis
+const loadResponsaveis = async () => {
+  try {
+    console.log('Carregando responsáveis...');
+    const { data, error } = await supabase
+      .from('responsaveis_processos')
+      .select('id, nome, email, departamento')
+      .eq('status', 'ACTIVE')
+      .order('nome');
+
+    if (error) throw error;
+
+    // Atribuir aos dois refs de responsáveis
+    responsaveis.value = data || [];
+    responsaveisAtivos.value = data || [];
+
+    // Pré-carregar o cache de responsáveis
+    data?.forEach(resp => {
+      if (resp && resp.id) {
+        responsaveisCache.value.set(resp.id, resp);
+      }
+    });
+
+    console.log(`Carregados ${data?.length || 0} responsáveis`);
+    return data;
+  } catch (error) {
+    console.error('Erro ao carregar responsáveis:', error);
+    return [];
+  }
+};
+
 // Adicione estas linhas dentro do setup do seu componente
 const sistemasDialog = ref({
   show: false,
@@ -910,7 +940,7 @@ const handleDblClick = async (field, processo, event) => {
       field,
       value: Array.isArray(processo[field]) ? [...processo[field]] : []
     };
-    
+
     sistemasDialog.value = {
       show: true,
       position: {
@@ -935,7 +965,7 @@ const handleDblClick = async (field, processo, event) => {
   confirmDialog.value = {
     show: true,
     position: {
-      top: `${rect.bottom + 10}px`,
+      top: `${rect.bottom + 2}px`,
       left: `${rect.left}px`
     },
     callback: () => {
@@ -954,26 +984,26 @@ const saveSistemas = async () => {
       hideSistemasDialog();
       return;
     }
-    
+
     const processo = sistemasDialog.value.processo;
     const updateData = {
       sistemas_ativos: editingCell.value.value,
       updated_at: new Date().toISOString()
     };
-    
+
     // Adiciona usuário que está alterando se disponível
     const { data: { user } } = await supabase.auth.getUser();
     if (user?.id) {
       updateData.updated_by = user.id;
     }
-    
+
     const { error } = await supabase
       .from('processos')
       .update(updateData)
       .eq('id', processo.id);
-      
+
     if (error) throw error;
-    
+
     // Log da alteração
     await logSystemAction({
       tipo: 'atualizacao',
@@ -983,10 +1013,10 @@ const saveSistemas = async () => {
       dados_anteriores: processo.sistemas_ativos,
       dados_novos: editingCell.value.value
     });
-    
+
     // Recarrega os processos
     await loadProcessos();
-    
+
     hideSistemasDialog();
   } catch (error) {
     console.error('Erro ao salvar sistemas:', error);
@@ -1000,7 +1030,7 @@ const hideSistemasDialog = () => {
     position: {},
     processo: null
   };
-  
+
   // Limpa o estado de edição
   editingCell.value = {
     id: null,
@@ -1034,7 +1064,7 @@ const handleUpdate = async (processo) => {
           }
         }
         break
-        
+
       case 'hora_pregao':
         // Garante formato HH:mm
         if (typeof updateValue === 'string') {
@@ -1042,7 +1072,7 @@ const handleUpdate = async (processo) => {
           updateValue = `${hours.padStart(2, '0')}:${minutes ? minutes.padStart(2, '0') : '00'}`
         }
         break
-        
+
       case 'sistemas_ativos':
         // Garante que é um array
         updateValue = Array.isArray(updateValue) ? updateValue : []
@@ -1052,7 +1082,7 @@ const handleUpdate = async (processo) => {
         // Garantir que temos um valor válido ou null
         updateValue = updateValue || null;
         console.log('Atualizando responsável para:', updateValue);
-        
+
         if (updateValue) {
           // Verificar se o responsável existe
           const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
@@ -1083,7 +1113,7 @@ const handleUpdate = async (processo) => {
       [editingCell.value.field]: updateValue,
       updated_at: new Date().toISOString()
     }
-    
+
     // Adiciona usuário que está alterando se disponível
     const { data: { user } } = await supabase.auth.getUser()
     if (user?.id) {
@@ -1092,7 +1122,7 @@ const handleUpdate = async (processo) => {
 
     // Atualiza no banco de dados
     console.log('Dados de atualização:', updateData)
-    
+
     const { error } = await supabase
       .from('processos')
       .update(updateData)
@@ -1233,45 +1263,19 @@ const estados = ref([
 ])
 
 const representantes = ref([])
-
-// Melhorias na função de carregamento de responsáveis
-const loadResponsaveis = async () => {
-  try {
-    console.log('Carregando responsáveis...');
-    const { data, error } = await supabase
-      .select('id, nome, email')
-      .eq('status', 'ACTIVE')
-      .order('nome');
-    
-    if (error) throw error;
-    responsaveis.value = data || [];
-    
-    // Pré-carrega o cache de responsáveis
-    data.forEach(resp => {
-      responsaveisCache.value.set(resp.id, resp);
-    });
-    
-  } catch (error) {
-    console.error('Erro ao carregar responsáveis:', error);
-  }
-};
-
-// Adicione esta variável para cache de responsáveis
-const responsaveisCache = ref(new Map());
-
 // Melhore a função getResponsavelNome para usar o cache
 const getResponsavelNome = (id) => {
   if (!id) return 'Sem responsável';
-  
-  const responsavel = responsaveisCache.value.get(id) || 
-                      responsaveis.value.find(r => r.id === id);
-                      
+
+  const responsavel = responsaveisCache.value.get(id) ||
+    responsaveis.value.find(r => r.id === id);
+
   if (responsavel) {
     // Armazena no cache para próximas consultas
     responsaveisCache.value.set(id, responsavel);
     return responsavel.nome;
   }
-  
+
   return 'Carregando...';
 };
 
@@ -1525,11 +1529,11 @@ onMounted(async () => {
 
     // 4. Carregar dados em paralelo para melhor desempenho
     console.log('Iniciando carregamento dos dados...');
-    
+
     // Carregar responsáveis logo no início
     await loadResponsaveis();
     console.log('Responsáveis carregados inicialmente:', responsaveisAtivos.value.length);
-    
+
     // Depois carregar os outros dados em paralelo
     await Promise.all([
       loadProcessos(),
@@ -1538,7 +1542,7 @@ onMounted(async () => {
       loadPlataformas(),
       loadSistemas(),
     ]);
-    
+
     console.log('Todos os outros dados carregados com sucesso!');
 
     // 5. Carregar configurações da interface
@@ -1620,10 +1624,10 @@ const loadSistemas = async () => {
       .select('id, nome')
       .eq('status', 'ACTIVE')
       .order('nome')
-    
+
     if (error) throw error
     sistemasAtivos.value = data || []
-    
+
     // Atualiza o cache de nomes
     data.forEach(sistema => {
       sistemasNomesCache.value[sistema.id] = sistema.nome
@@ -1645,7 +1649,7 @@ const handleSistemasChange = (event) => {
 
 const removerSistema = (id) => {
   if (!editingCell.value.value) return
-  
+
   const index = editingCell.value.value.indexOf(id)
   if (index !== -1) {
     const newSistemas = [...editingCell.value.value]
@@ -1658,9 +1662,6 @@ const getSistemasNomesString = (ids) => {
   if (!ids || !ids.length) return '-'
   return ids.map(id => getSistemaNome(id)).join(', ')
 }
-
-// Adicione esta variável com outros refs
-const responsaveisAtivos = ref([])
 
 // Adicione este método para verificar e forçar o carregamento dos responsáveis se necessário
 const ensureResponsaveisCarregados = async () => {
@@ -1675,14 +1676,14 @@ const ensureResponsaveisCarregados = async () => {
 // No handler de edição para o campo responsavel_id
 const handleEdit = (processo, field) => {
   // ...código existente...
-  
+
   // Se estiver editando o responsável, precisamos carregar as opções
   if (field === 'responsavel_id') {
     // Certifique-se de que responsáveis estão carregados
     if (responsaveis.value.length === 0) {
       loadResponsaveis();
     }
-    
+
     // Código específico para edição de responsável
     // A interface de edição deve mostrar um select com os nomes, não os IDs
   }

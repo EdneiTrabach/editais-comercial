@@ -546,6 +546,7 @@ td select option {
   margin-top: 0px;
   top: 15%;
   height: 60px;
+  left: 13px;
 }
 
 .editing-cell {
@@ -1388,17 +1389,6 @@ td[data-field="impugnacoes"] {
   animation: pulseEditingBorder 2s infinite;
 }
 
-/* Melhorias para o diálogo de confirmação */
-.confirm-dialog {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  padding: 1rem 1.5rem;
-  min-width: 250px;
-  z-index: 1000;
-  animation: fadeInScale 0.2s ease;
-}
-
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -1501,18 +1491,6 @@ td[data-field="impugnacoes"] {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Melhorias para o diálogo de confirmação */
-.confirm-dialog {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 1.2rem 1.5rem;
-  min-width: 280px;
-  z-index: 1000;
-  animation: fadeInScale 0.2s ease;
-  border: 1px solid rgba(25, 49, 85, 0.1);
 }
 
 .confirm-content h3 {
@@ -1851,3 +1829,21 @@ td[data-field="impugnacoes"] {
   color: #6c757d;
 }
 
+/* Estilo para o select de responsáveis */
+.responsavel-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: #fff;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  appearance: menulist;
+}
+
+.responsavel-select:focus {
+  outline: none;
+  border-color: #106ba3;
+  box-shadow: 0 0 0 3px rgba(16, 107, 163, 0.2);
+}
