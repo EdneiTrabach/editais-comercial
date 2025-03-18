@@ -3,6 +3,7 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
+      <!-- Header Section -->
       <div class="header">
         <h1>Processos Licitatórios</h1>
 
@@ -18,6 +19,7 @@
         </div>
       </div>
 
+      <!-- Active Filters -->
       <div class="filtros-ativos" v-if="temFiltrosAtivos">
         <span>Filtros ativos:</span>
         <button @click="limparFiltros" class="btn-limpar-filtros">
@@ -25,29 +27,38 @@
         </button>
       </div>
 
+      <!-- Data Table -->
       <div class="table-container">
         <table class="excel-table resizable">
           <thead>
             <tr>
               <th class="row-number-cell"></th>
-              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column" :data-field="coluna.campo"
+              <th 
+                v-for="(coluna, index) in colunas" 
+                :key="index" 
+                class="resizable-column" 
+                :data-field="coluna.campo"
                 :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
 
+                  <!-- Sort buttons for date column -->
                   <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
-                    <button class="btn-sort"
+                    <button 
+                      class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
                       @click="handleSort('data_pregao', 'asc')">
                       ▲
                     </button>
-                    <button class="btn-sort"
+                    <button 
+                      class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
                       @click="handleSort('data_pregao', 'desc')">
                       ▼
                     </button>
                   </div>
 
+                  <!-- Filter button for filterable columns -->
                   <div
                     v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
                     class="filtro-container">
@@ -62,44 +73,112 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
-              :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
-              @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
+            <tr 
+              v-for="(processo, index) in processosFiltrados" 
+              :key="processo.id" 
+              class="resizable-row"
+              :class="{ 'selected-row': selectedRow === processo.id }" 
+              :data-status="processo.status"
+              @click="selectRow(processo.id)" 
+              :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td>
-              <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
+              <td 
+                v-for="coluna in colunas" 
+                :key="coluna.campo" 
+                :data-field="coluna.campo"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
+                <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                  <!-- Analysis Code field -->
+                  <input 
+                    v-if="coluna.campo === 'codigo_analise'" 
+                    type="text" 
+                    v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" 
+                    @keyup.enter="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
                     placeholder="Digite o código">
-                  <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
-                    :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value" min="08:00"
-                    max="18:00" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+
+                  <!-- Date field -->
+                  <input 
+                    v-if="coluna.campo === 'data_pregao'" 
+                    ref="editInput" 
+                    type="date" 
+                    v-model="editingCell.value"
+                    :min="new Date().toISOString().split('T')[0]" 
+                    @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" 
                     @keyup.esc="cancelEdit()">
-                  <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+
+                  <!-- Time field -->
+                  <input 
+                    v-else-if="coluna.campo === 'hora_pregao'" 
+                    type="time" 
+                    v-model="editingCell.value" 
+                    min="08:00"
+                    max="18:00" 
+                    @blur="handleUpdate(processo)" 
+                    @keyup.enter="handleUpdate(processo)"
+                    @keyup.esc="cancelEdit()">
+
+                  <!-- State field -->
+                  <select 
+                    v-else-if="coluna.campo === 'estado'" 
+                    v-model="editingCell.value"
+                    @change="handleUpdate(processo)" 
+                    @blur="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()">
                     <option value="">Selecione o estado...</option>
-                    <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                    <option 
+                      v-for="estado in estados" 
+                      :key="estado.uf" 
+                      :value="estado.uf">
                       {{ estado.nome }}
                     </option>
                   </select>
-                  <textarea v-if="coluna.campo === 'impugnacoes'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    rows="3" placeholder="Digite as impugnações..."></textarea>
-                  <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+
+                  <!-- Impugnações field -->
+                  <textarea 
+                    v-else-if="coluna.campo === 'impugnacoes'" 
+                    v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" 
+                    @keyup.enter="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
+                    rows="3" 
+                    placeholder="Digite as impugnações..."></textarea>
+
+                  <!-- Representative field -->
+                  <select 
+                    v-else-if="coluna.campo === 'representante'" 
+                    v-model="editingCell.value"
+                    @change="handleUpdate(processo)" 
+                    @blur="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()">
                     <option value="">Selecione o representante...</option>
-                    <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                    <option 
+                      v-for="rep in representantes" 
+                      :key="rep.id" 
+                      :value="rep.id">
                       {{ rep.nome }}
                     </option>
                   </select>
-                  <textarea v-else-if="coluna.campo === 'objeto_completo'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+
+                  <!-- Full Object field -->
+                  <textarea 
+                    v-else-if="coluna.campo === 'objeto_completo'" 
+                    v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" 
+                    @keyup.enter="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
                     rows="3"></textarea>
-                  <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+
+                  <!-- Modality field -->
+                  <select 
+                    v-else-if="coluna.campo === 'modalidade'" 
+                    v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" 
+                    @change="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()">
                     <option value="pregao_eletronico">Pregão Eletrônico</option>
                     <option value="pregao_presencial">Pregão Presencial</option>
                     <option value="credenciamento">Credenciamento</option>
@@ -115,8 +194,14 @@
                     <option value="srp_eletronico">SRP Eletrônico</option>
                     <option value="srp_internacional">SRP Internacional</option>
                   </select>
-                  <select v-else-if="coluna.campo === 'status'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+
+                  <!-- Status field -->
+                  <select 
+                    v-else-if="coluna.campo === 'status'" 
+                    v-model="editingCell.value"
+                    @change="handleUpdate(processo)" 
+                    @blur="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
                     class="status-select">
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
@@ -131,6 +216,8 @@
                     <option value="cancelado">Cancelado</option>
                     <option value="nao_participar">Decidido Não Participar</option>
                   </select>
+
+                  <!-- Systems field -->
                   <template
                     v-else-if="coluna.campo === 'sistemas_ativos' && editingCell.id === processo.id && editingCell.field === coluna.campo">
                     <div class="sistemas-dropdown-container">
@@ -141,54 +228,92 @@
                         </div>
                       </div>
                       <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
+                        <option 
+                          v-for="sistema in sistemasAtivos" 
+                          :key="sistema.id" 
+                          :value="sistema.id"
                           :selected="editingCell.value && editingCell.value.includes(sistema.id)">
                           {{ sistema.nome }}
                         </option>
                       </select>
                     </div>
                   </template>
-                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+
+                  <!-- Default input for other fields -->
+                  <input 
+                    v-else 
+                    type="text" 
+                    v-model="editingCell.value" 
+                    @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()">
                 </template>
+
+                <!-- View Mode -->
                 <template v-else>
+                  <!-- Date field -->
                   <template v-if="coluna.campo === 'data_pregao'">
                     {{ formatDate(processo.data_pregao) }}
                   </template>
+
+                  <!-- Time field -->
                   <template v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo.hora_pregao) }}
                   </template>
+
+                  <!-- Modality field -->
                   <template v-else-if="coluna.campo === 'modalidade'">
                     <span :title="formatModalidadeCompleta(processo.modalidade)">
                       {{ getModalidadeSigla(processo.modalidade) }}
                     </span>
                   </template>
-                  <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
+
+                  <!-- Object fields -->
+                  <span 
+                    v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
                     class="objeto-cell">
                     {{ processo[coluna.campo] || '-' }}
                   </span>
+
+                  <!-- Representative field -->
                   <span v-else-if="coluna.campo === 'representante'">
                     {{ processo.representantes?.nome || '-' }}
                   </span>
+
+                  <!-- Responsible name field -->
                   <span v-else-if="coluna.campo === 'responsavel_nome'">
                     {{ processo.profiles?.nome || '-' }}
                   </span>
+
+                  <!-- Site field -->
                   <template v-else-if="coluna.campo === 'site_pregao'">
                     <div class="portal-link">
-                      <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
-                        rel="noopener noreferrer" class="portal-button">
+                      <a 
+                        v-if="processo.site_pregao" 
+                        :href="processo.site_pregao" 
+                        target="_blank"
+                        rel="noopener noreferrer" 
+                        class="portal-button">
                         {{ getPlataformaNome(processo.site_pregao) }}
                       </a>
                       <span v-else>-</span>
                     </div>
                   </template>
+
+                  <!-- Status field -->
                   <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
                     {{ formatStatus(processo.status) }}
                   </span>
+                  
+                  <!-- Company field -->
                   <template v-else-if="coluna.campo === 'empresa'">
                     <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                      <select v-model="editingCell.value" @change="handleUpdate(processo)"
-                        @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()" class="empresa-select">
+                      <select 
+                        v-model="editingCell.value" 
+                        @change="handleUpdate(processo)"
+                        @blur="handleUpdate(processo)" 
+                        @keyup.esc="cancelEdit()" 
+                        class="empresa-select">
                         <option value="">Selecione uma empresa</option>
                         <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
                           {{ empresa.nome }}
@@ -199,143 +324,173 @@
                       {{ getEmpresaNome(processo.empresa_id) }}
                     </span>
                   </template>
-              <td v-else-if="coluna.campo === 'distancias'">
-                <div class="distancias-stack">
-                  <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                    {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
-                  </div>
+
+                  <!-- Distances field -->
+                  <td v-else-if="coluna.campo === 'distancias'">
+                    <div class="distancias-stack">
+                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Systems field -->
+                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
+                    <div class="sistemas-chips">
+                      <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
+                        {{ getSistemasNomesString(processo.sistemas_ativos) }}
+                      </div>
+                      <div v-else class="sem-sistemas">-</div>
+                    </div>
+                  </template>
+                  
+                  <!-- Responsible ID field -->
+                  <template v-else-if="coluna.campo === 'responsavel_id'">
+                    <!-- Edit mode -->
+                    <select 
+                      v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
+                      v-model="editingCell.value" 
+                      @blur="handleUpdate(processo)" 
+                      @change="handleUpdate(processo)"
+                      @keyup.esc="cancelEdit()" 
+                      class="responsavel-select">
+                      <option :value="null">Sem responsável</option>
+                      <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
+                        {{ resp.nome }} {{ resp.departamento ? `(${resp.departamento})` : '' }}
+                      </option>
+                    </select>
+
+                    <!-- View mode -->
+                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="responsavel-badge">
+                      {{ getResponsavelNome(processo.responsavel_id) }}
+                    </span>
+                  </template>
+                  
+                  <!-- Distance type display -->
+                  <template v-else-if="coluna.tipoExibicao === 'distancia'">
+                    <span class="distancia-badge" v-if="formatarDistancia(processo) !== '-'">
+                      {{ formatarDistancia(processo) }}
+                    </span>
+                    <span v-else>-</span>
+                  </template>
+                  
+                  <!-- Representative ID field -->
+                  <template v-else-if="coluna.campo === 'representante_id'">
+                    <!-- Edit mode -->
+                    <select 
+                      v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
+                      v-model="editingCell.value" 
+                      @blur="handleUpdate(processo)" 
+                      @change="handleUpdate(processo)" 
+                      @keyup.esc="cancelEdit()" 
+                      class="representante-select">
+                      <option value="">Sem representante</option>
+                      <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                        {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
+                      </option>
+                    </select>
+
+                    <!-- View mode -->
+                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
+                      {{ getRepresentanteNome(processo.representante_id) }}
+                    </span>
+                  </template>
+                  
+                  <!-- Default display for other fields -->
+                  <span v-else>
+                    {{ processo[coluna.campo] || '-' }}
+                  </span>
+                </template>
+              </td>
+              
+              <!-- Actions cell -->
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <button class="btn-icon delete" @click="handleDelete(processo)">
+                    <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
+                  </button>
                 </div>
               </td>
-              <template v-else-if="coluna.campo === 'sistemas_ativos'">
-                <div class="sistemas-chips">
-                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
-                    {{ getSistemasNomesString(processo.sistemas_ativos) }}
-                  </div>
-                  <div v-else class="sem-sistemas">-</div>
-                </div>
-              </template>
-              <template v-else-if="coluna.campo === 'responsavel_id'">
-                <!-- Modo de edição -->
-                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
-                  @keyup.esc="cancelEdit()" class="responsavel-select">
-                  <option :value="null">Sem responsável</option>
-                  <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
-                    {{ resp.nome }} {{ resp.departamento ? `(${resp.departamento})` : '' }}
-                  </option>
-                </select>
+              
+              <!-- Row resize handle -->
+              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-                <!-- Modo de visualização -->
-                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="responsavel-badge">
-                  {{ getResponsavelNome(processo.responsavel_id) }}
-                </span>
-              </template>
-              <template v-else-if="coluna.tipoExibicao === 'distancia'">
-                <span class="distancia-badge" v-if="formatarDistancia(processo) !== '-'">
-                  {{ formatarDistancia(processo) }}
-                </span>
-                <span v-else>-</span>
-              </template>
-              <template v-else-if="coluna.campo === 'representante_id'">
-                <!-- Modo de edição -->
-                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                  v-model="editingCell.value" 
-                  @blur="handleUpdate(processo)" 
-                  @change="handleUpdate(processo)" 
-                  @keyup.esc="cancelEdit()" 
-                  class="representante-select">
-                  <option value="">Sem representante</option>
-                  <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
-                    {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
-                  </option>
-                </select>
+      <!-- Year tabs -->
+      <div class="anos-tabs">
+        <div class="tabs-header">
+          <button 
+            v-for="ano in anosDisponiveis" 
+            :key="ano" 
+            :class="['tab-button', { active: anoSelecionado === ano }]"
+            @click="selecionarAno(ano)">
+            {{ ano }}
+          </button>
+        </div>
+      </div>
 
-                <!-- Modo de visualização -->
-                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
-                  {{ getRepresentanteNome(processo.representante_id) }}
-                </span>
-              </template>
-              <span v-else>
-                {{ processo[coluna.campo] || '-' }}
-              </span>
-</template>
-</td>
-<td class="actions-cell">
-  <div class="action-buttons">
-    <button class="btn-icon delete" @click="handleDelete(processo)">
-      <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
-    </button>
-  </div>
-</td>
-<div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-</tr>
-</tbody>
-</table>
-</div>
+      <!-- Confirm dialog -->
+      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+        <div class="confirm-content">
+          <p>Deseja editar este campo?</p>
+          <div class="confirm-actions">
+            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
+            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
 
-<div class="anos-tabs">
-  <div class="tabs-header">
-    <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
-      @click="selecionarAno(ano)">
-      {{ ano }}
-    </button>
-  </div>
-</div>
+      <!-- Delete confirm dialog -->
+      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
+        <div class="confirm-dialog">
+          <div class="confirm-content">
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir este processo?</p>
+            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+              <button class="btn-confirm delete" @click="confirmDelete">
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
-  <div class="confirm-content">
-    <p>Deseja editar este campo?</p>
-    <div class="confirm-actions">
-      <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-      <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<div v-if="deleteConfirmDialog.show" class="modal-overlay">
-  <div class="confirm-dialog">
-    <div class="confirm-content">
-      <h3>Confirmar Exclusão</h3>
-      <p>Tem certeza que deseja excluir este processo?</p>
-      <p class="warning-text">Esta ação não poderá ser desfeita!</p>
-      <div class="confirm-actions">
-        <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-        <button class="btn-confirm delete" @click="confirmDelete">
-          Excluir
-        </button>
+      <!-- Systems dialog -->
+      <div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+        <div class="sistemas-dialog-content">
+          <h3>Selecionar Sistemas</h3>
+          <div class="sistemas-selected">
+            <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+              {{ getSistemaNome(id) }}
+              <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+            </div>
+          </div>
+          <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+            <option 
+              v-for="sistema in sistemasAtivos" 
+              :key="sistema.id" 
+              :value="sistema.id"
+              :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+              {{ sistema.nome }}
+            </option>
+          </select>
+          <div class="sistemas-dialog-actions">
+            <button @click="saveSistemas" class="btn-confirm">Salvar</button>
+            <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
-  <div class="sistemas-dialog-content">
-    <h3>Selecionar Sistemas</h3>
-    <div class="sistemas-selected">
-      <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
-        {{ getSistemaNome(id) }}
-        <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
-      </div>
-    </div>
-    <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-      <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
-        :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-        {{ sistema.nome }}
-      </option>
-    </select>
-    <div class="sistemas-dialog-actions">
-      <button @click="saveSistemas" class="btn-confirm">Salvar</button>
-      <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-</div>
-</div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick, onUnmounted, watch } from 'vue' // Adicione onUnmounted e watch
+import { ref, onMounted, computed, nextTick, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -347,71 +502,40 @@ import '../assets/styles/dark-mode.css'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
 
-// Adicione esta função no início do setup() em src/views/ProcessosView.vue
-const sistemasNomesCache = ref({});
-
-const getSistemasNomesFromCache = async (sistemasIds) => {
-  if (!sistemasIds || !sistemasIds.length) return '-';
-
-  // Cria uma chave única para este conjunto de IDs
-  const cacheKey = sistemasIds.sort().join(',');
-
-  // Verifica se já temos este resultado em cache
-  if (sistemasNomesCache.value[cacheKey]) {
-    return sistemasNomesCache.value[cacheKey];
-  }
-
-  // Se não tem em cache, busca e armazena
-  const resultado = await getSistemasNomes(sistemasIds);
-  sistemasNomesCache.value[cacheKey] = resultado;
-
-  return resultado;
-}
-
-// Adicione aqui o código de monitoramento de visibilidade
-const loadingTimeout = ref(null)
-const isLoading = ref(false)
-
-const handleLoading = async (loadingFunction) => {
-  try {
-    isLoading.value = true
-    await loadingFunction()
-  } catch (error) {
-    console.error('Erro:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Simplifique o pageVisibilityHandler
-const pageVisibilityHandler = () => {
-  if (!document.hidden) {
-    loadProcessos().catch(console.error) // Carrega em background
-  }
-}
-
-const startVisibilityMonitoring = () => {
-  document.addEventListener('visibilitychange', pageVisibilityHandler)
-  window.addEventListener('focus', pageVisibilityHandler)
-  window.addEventListener('online', pageVisibilityHandler)
-}
-
-const stopVisibilityMonitoring = () => {
-  document.removeEventListener('visibilitychange', pageVisibilityHandler)
-  window.removeEventListener('focus', pageVisibilityHandler)
-  window.removeEventListener('online', pageVisibilityHandler)
-}
-
-// Restante do código existente...
-
+// Router and basic component state
 const router = useRouter()
 const isSidebarExpanded = ref(true)
 const processos = ref([])
 const loading = ref(false)
+const isLoading = ref(false)
+const loadingTimeout = ref(null)
+
+// System cache
+const sistemasNomesCache = ref({})
+const responsaveisCache = ref(new Map())
+
+// UI state
+const confirmDialog = ref({
+  show: false,
+  position: {},
+  callback: null
+})
 
 const deleteConfirmDialog = ref({
   show: false,
   processo: null
+})
+
+const sistemasDialog = ref({
+  show: false,
+  position: {},
+  processo: null
+})
+
+const editingCell = ref({
+  id: null,
+  field: null,
+  value: null
 })
 
 const sortConfig = ref({
@@ -420,74 +544,126 @@ const sortConfig = ref({
 })
 
 const selectedRow = ref(null)
+const anoSelecionado = ref(new Date().getFullYear())
+const mostrarFiltro = ref({})
+const filtros = ref({})
+const estadoSearch = ref('')
+const refreshInterval = ref(null)
 
+// Reference Data
+const responsaveis = ref([])
+const responsaveisAtivos = ref([])
+const representantes = ref([])
+const empresas = ref([])
+const sistemasAtivos = ref([])
+const plataformas = ref([])
+
+// UI Configuration
+const colunasWidth = ref({})
+const rowsHeight = ref({})
+
+// Table columns definition
 const colunas = [
-  { titulo: 'Data', campo: 'data_pregao' },             // processo.data_pregao
-  { titulo: 'Hora', campo: 'hora_pregao' },             // processo.hora_pregao
-  { titulo: 'Modalidade', campo: 'modalidade' },        // processo.modalidade
-  { titulo: 'Estado', campo: 'estado' },                // processo.estado
-  { titulo: 'Nº Processo', campo: 'numero_processo' },  // processo.numero_processo
-  { titulo: 'Objeto Resumido', campo: 'objeto_resumido' }, // processo.objeto_resumido
+  { titulo: 'Data', campo: 'data_pregao' },
+  { titulo: 'Hora', campo: 'hora_pregao' },
+  { titulo: 'Modalidade', campo: 'modalidade' },
+  { titulo: 'Estado', campo: 'estado' },
+  { titulo: 'Nº Processo', campo: 'numero_processo' },
+  { titulo: 'Objeto Resumido', campo: 'objeto_resumido' },
   {
     titulo: 'Sistemas',
-    campo: 'sistemas_ativos',  // Alterado para refletir o nome correto da coluna
+    campo: 'sistemas_ativos',
     tabela: 'processo',
-    tipo: 'array'  // Para indicar que é um array de IDs
+    tipo: 'array'
   },
-  { titulo: 'Código Análise', campo: 'codigo_analise' }, // processo.codigo_analise
-  { titulo: 'Órgão', campo: 'orgao' },                  // processo.orgao
-  { titulo: 'Objeto Completo', campo: 'objeto_completo' }, // processo.objeto_completo
-  { titulo: 'Status', campo: 'status' },                // processo.status
+  { titulo: 'Código Análise', campo: 'codigo_analise' },
+  { titulo: 'Órgão', campo: 'orgao' },
+  { titulo: 'Objeto Completo', campo: 'objeto_completo' },
+  { titulo: 'Status', campo: 'status' },
   {
     titulo: 'Responsável',
     campo: 'responsavel_id',
-    tabelaRelacionada: 'responsaveis_processos',  // Tabela correta
-    campoExibicao: 'nome',
-    tipoEdicao: 'select'  // Indica que deve ser editado como select
-  },
-  {
-    titulo: 'Distâncias',
-    campo: 'distancia_km',                           // Usando o campo direto do processo
-    tipoExibicao: 'distancia',                       // Tipo especial para exibição
-    camposDisplay: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
-  },
-  { titulo: 'Portal', campo: 'site_pregao' },          // processo.site_pregao
-  {
-    titulo: 'Representante',
-    campo: 'representante_id',
-    tabelaRelacionada: 'representantes',  // Estava escrito errado como "representsantes"
+    tabelaRelacionada: 'responsaveis_processos',
     campoExibicao: 'nome',
     tipoEdicao: 'select'
   },
-  { titulo: 'Impugnações', campo: 'impugnacoes' },     // processo.impugnacoes
+  {
+    titulo: 'Distâncias',
+    campo: 'distancia_km',
+    tipoExibicao: 'distancia',
+    camposDisplay: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
+  },
+  { titulo: 'Portal', campo: 'site_pregao' },
+  {
+    titulo: 'Representante',
+    campo: 'representante_id',
+    tabelaRelacionada: 'representantes',
+    campoExibicao: 'nome',
+    tipoEdicao: 'select'
+  },
+  { titulo: 'Impugnações', campo: 'impugnacoes' },
   {
     titulo: 'Empresa Participante',
-    campo: 'empresa_id',                                // processo.empresa_id
+    campo: 'empresa_id',
     tabelaRelacionada: 'empresas',
     campoExibicao: 'nome'
   }
 ]
 
-const initializeFiltros = () => {
-  const filtrosIniciais = {}
-  colunas.forEach(coluna => {
-    filtrosIniciais[coluna.campo] = []
-  })
-  return filtrosIniciais
-}
+// Brazilian states
+const estados = ref([
+  { uf: 'AC', nome: 'Acre' },
+  { uf: 'AL', nome: 'Alagoas' },
+  { uf: 'AP', nome: 'Amapá' },
+  { uf: 'AM', nome: 'Amazonas' },
+  { uf: 'BA', nome: 'Bahia' },
+  { uf: 'CE', nome: 'Ceará' },
+  { uf: 'DF', nome: 'Distrito Federal' },
+  { uf: 'ES', nome: 'Espírito Santo' },
+  { uf: 'GO', nome: 'Goiás' },
+  { uf: 'MA', nome: 'Maranhão' },
+  { uf: 'MT', nome: 'Mato Grosso' },
+  { uf: 'MS', nome: 'Mato Grosso do Sul' },
+  { uf: 'MG', nome: 'Minas Gerais' },
+  { uf: 'PA', nome: 'Pará' },
+  { uf: 'PB', nome: 'Paraíba' },
+  { uf: 'PR', nome: 'Paraná' },
+  { uf: 'PE', nome: 'Pernambuco' },
+  { uf: 'PI', nome: 'Piauí' },
+  { uf: 'RJ', nome: 'Rio de Janeiro' },
+  { uf: 'RN', nome: 'Rio Grande do Norte' },
+  { uf: 'RS', nome: 'Rio Grande do Sul' },
+  { uf: 'RO', nome: 'Rondônia' },
+  { uf: 'RR', nome: 'Roraima' },
+  { uf: 'SC', nome: 'Santa Catarina' },
+  { uf: 'SP', nome: 'São Paulo' },
+  { uf: 'SE', nome: 'Sergipe' },
+  { uf: 'TO', nome: 'Tocantins' }
+])
 
-const filtros = ref(initializeFiltros())
+// Form data
+const formData = ref({
+  status: null
+})
 
-const anoSelecionado = ref(new Date().getFullYear())
+// Computed properties
 const anosDisponiveis = computed(() => {
   const anos = new Set(processos.value.map(p => p.ano))
-  return Array.from(anos).sort((a, b) => b - a) // Ordena decrescente
+  return Array.from(anos).sort((a, b) => b - a) // Descending order
+})
+
+const estadosFiltrados = computed(() => {
+  if (!estadoSearch.value) return estados.value
+
+  const busca = estadoSearch.value.toLowerCase()
+  return estados.value.filter(estado =>
+    estado.nome.toLowerCase().includes(busca) ||
+    estado.uf.toLowerCase().includes(busca)
+  )
 })
 
 const processosFiltrados = computed(() => {
   if (!processos.value) return []
-
-
 
   return processos.value
     .filter(processo => processo.ano === anoSelecionado.value)
@@ -517,25 +693,48 @@ const processosFiltrados = computed(() => {
     })
 })
 
-const selecionarAno = (ano) => {
-  anoSelecionado.value = ano
-}
+const temFiltrosAtivos = computed(() => {
+  return Object.values(filtros.value).some(f => f.length > 0)
+})
 
-const handleSidebarToggle = (expanded) => {
-  isSidebarExpanded.value = expanded
+const empresasCadastradas = computed(() => {
+  return empresas.value.filter(empresa => empresa.id) // Filter only valid companies
+})
+
+const showPlataformaField = computed(() => {
+  return formData.value.modalidade === 'pregao_eletronico';
+});
+
+// Helper functions
+const getSistemasNomesFromCache = async (sistemasIds) => {
+  if (!sistemasIds || !sistemasIds.length) return '-';
+
+  // Create a unique key for this set of IDs
+  const cacheKey = sistemasIds.sort().join(',');
+
+  // Check if we already have this result in cache
+  if (sistemasNomesCache.value[cacheKey]) {
+    return sistemasNomesCache.value[cacheKey];
+  }
+
+  // If not in cache, fetch and store
+  const resultado = await getSistemasNomes(sistemasIds);
+  sistemasNomesCache.value[cacheKey] = resultado;
+
+  return resultado;
 }
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
-    // Garante que estamos tratando apenas a data, sem considerar timezone
+    // Ensure we're only dealing with the date part
     const [date] = dateString.split('T');
     const [year, month, day] = date.split('-');
 
-    // Retorna a data formatada sem manipulação de timezone
+    // Return the formatted date without timezone manipulation
     return `${day}/${month}/${year}`;
   } catch (error) {
-    console.error('Erro ao formatar data:', error);
+    console.error('Error formatting date:', error);
     return '-';
   }
 }
@@ -546,7 +745,7 @@ const formatTime = (time) => {
     const cleanTime = time.split(':').slice(0, 2).join(':');
     return cleanTime;
   } catch (error) {
-    console.error('Erro ao formatar hora:', error);
+    console.error('Error formatting time:', error);
     return '-';
   }
 }
@@ -612,16 +811,120 @@ const formatStatus = (status) => {
   return statusMap[status] || status
 }
 
-// Modifique a função loadProcessos() em src/views/ProcessosView.vue
+const getModalidadeSigla = (modalidade) => {
+  const modalidades = {
+    'pregao_eletronico': 'PE',
+    'pregao_presencial': 'PP',
+    'credenciamento': 'CR',
+    'concorrencia': 'CC',
+    'concurso': 'CS',
+    'leilao': 'LL',
+    'dialogo_competitivo': 'DC',
+    'tomada_precos': 'TP',
+    'chamamento_publico': 'CP',
+    'rdc': 'RDC',
+    'rdc_eletronico': 'RDC-E',
+    'srp': 'SRP',
+    'srp_eletronico': 'SRP-E',
+    'srp_internacional': 'SRP-I'
+  }
+
+  return modalidades[modalidade] || modalidade
+}
+
+const getPlataformaNome = (url) => {
+  if (!url) return '-'
+  const plataforma = plataformas.value.find(p => p.url === url)
+  return plataforma ? plataforma.nome : url
+}
+
+const getPortalName = (url) => {
+  if (!url) return '-'
+  try {
+    const hostname = new URL(url).hostname
+    return hostname
+      .replace('www.', '')
+      .split('.')
+      .slice(0, -1)
+      .join('.')
+      .toUpperCase()
+  } catch (e) {
+    return url
+  }
+}
+
+const getEmpresaNome = (empresaId) => {
+  const empresa = empresas.value.find(e => e.id === empresaId)
+  return empresa ? empresa.nome : '-'
+}
+
+const getResponsavelNome = (id) => {
+  if (!id) return 'Sem responsável';
+  
+  // Try to fetch from cache first
+  const cachedResp = responsaveisCache.value.get(id);
+  if (cachedResp) {
+    return cachedResp.nome || 'Sem nome';
+  }
+  
+  // If not in cache, search the array
+  const responsavel = responsaveisAtivos.value.find(r => r.id === id);
+  if (responsavel) {
+    // Update cache for future queries
+    responsaveisCache.value.set(id, responsavel);
+    return responsavel.nome || 'Sem nome';
+  }
+  
+  return 'Responsável não encontrado';
+};
+
+const getRepresentanteNome = (id) => {
+  if (!id) return 'Sem representante';
+
+  const representante = representantes.value.find(r => r.id === id);
+  return representante ? representante.nome : 'Carregando...';
+};
+
+const getSistemaNome = (id) => {
+  return sistemasNomesCache.value[id] || 'Sistema não encontrado'
+}
+
+const getSistemasNomesString = (ids) => {
+  if (!ids || !ids.length) return '-'
+  return ids.map(id => getSistemaNome(id)).join(', ')
+}
+
+const formatarDistancia = (processo) => {
+  if (!processo) return '-';
+
+  // Check if the process has basic distance data
+  if (processo.distancia_km && processo.ponto_referencia_cidade && processo.ponto_referencia_uf) {
+    return `${processo.distancia_km} km (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})`;
+  }
+
+  return '-';
+};
+
+// API and data loading functions
+const handleLoading = async (loadingFunction) => {
+  try {
+    isLoading.value = true
+    await loadingFunction()
+  } catch (error) {
+    console.error('Error:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const loadProcessos = async () => {
   if (isLoading.value) return
 
   try {
     isLoading.value = true
-    console.log('Iniciando carregamento de processos...')
-    console.log('Representantes carregados:', representantes.value.length);
+    console.log('Starting process loading...')
 
-    // Consulta aos processos
+    // Query processes
     const { data, error } = await supabase
       .from('processos')
       .select(`*`)
@@ -629,17 +932,17 @@ const loadProcessos = async () => {
 
     if (error) throw error
 
-    // Processamento adicional dos dados
+    // Additional data processing
     const processosComNomes = []
 
     for (const processo of data || []) {
-      // Buscar os nomes dos sistemas para cada processo
+      // Fetch system names for each process
       let sistemasNomes = '-'
       if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
         sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
       }
 
-      // Adicionar o processo com o campo sistemas_nomes preenchido
+      // Add the process with sistemas_nomes field populated
       processosComNomes.push({
         ...processo,
         sistemas_nomes: sistemasNomes
@@ -647,21 +950,20 @@ const loadProcessos = async () => {
     }
 
     processos.value = processosComNomes
-    console.log('Processos carregados com nomes de sistemas:', processos.value.length)
+    console.log('Processes loaded with system names:', processos.value.length)
 
   } catch (error) {
-    console.error('Erro ao carregar processos:', error)
+    console.error('Error loading processes:', error)
   } finally {
     isLoading.value = false
   }
 }
 
-// Otimize a função getSistemasNomes em src/views/ProcessosView.vue
 const getSistemasNomes = async (sistemasIds) => {
   if (!sistemasIds || !sistemasIds.length) return '-'
 
   try {
-    console.log('Buscando nomes dos sistemas para IDs:', sistemasIds)
+    console.log('Fetching system names for IDs:', sistemasIds)
 
     const { data, error } = await supabase
       .from('sistemas')
@@ -671,43 +973,149 @@ const getSistemasNomes = async (sistemasIds) => {
     if (error) throw error
 
     const nomes = data?.map(s => s.nome) || []
-    console.log('Nomes encontrados:', nomes)
+    console.log('Names found:', nomes)
 
     return nomes.join(', ') || '-'
   } catch (error) {
-    console.error('Erro ao buscar nomes dos sistemas:', error)
+    console.error('Error fetching system names:', error)
     return '-'
   }
 }
 
-// Adicione este método computado em src/views/ProcessosView.vue
-const processosComSistemasNomes = computed(async () => {
-  const resultado = [];
-  for (const processo of processos.value) {
-    if (!processo.sistemas_nomes && processo.sistemas_ativos?.length > 0) {
-      processo.sistemas_nomes = await getSistemasNomes(processo.sistemas_ativos);
-    }
-    resultado.push(processo);
+const loadResponsaveis = async () => {
+  try {
+    console.log('Loading responsibles...');
+    const { data, error } = await supabase
+      .from('responsaveis_processos')
+      .select('id, nome, email, departamento')
+      .eq('status', 'ACTIVE')
+      .order('nome');
+
+    if (error) throw error;
+
+    // Assign to responsibles refs
+    responsaveis.value = data || [];
+    responsaveisAtivos.value = data || [];
+
+    // Pre-load the responsibles cache as a Map
+    responsaveisCache.value.clear(); // Clear cache first
+    data?.forEach(resp => {
+      if (resp && resp.id) {
+        responsaveisCache.value.set(resp.id, resp);
+      }
+    });
+
+    console.log(`Loaded ${data?.length || 0} responsibles`);
+    return data;
+  } catch (error) {
+    console.error('Error loading responsibles:', error);
+    return [];
   }
-  return resultado;
-});
+};
+
+const loadRepresentantes = async () => {
+  try {
+    console.log('Starting representatives loading...');
+    
+    const { data, error } = await supabase
+      .from('representantes')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      console.error('Error in representatives query:', error);
+      throw error;
+    }
+    
+    console.log(`Loaded ${data?.length || 0} representatives:`, data);
+    representantes.value = data || [];
+    
+    return data;
+  } catch (error) {
+    console.error('Error loading representatives:', error);
+    representantes.value = [];
+    return [];
+  }
+}
+
+const loadEmpresas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('id, nome, cnpj')
+      .order('nome')
+
+    if (error) throw error
+    empresas.value = data || []
+  } catch (error) {
+    console.error('Error loading companies:', error)
+    empresas.value = []
+  }
+}
+
+const loadPlataformas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('plataformas')
+      .select('*')
+
+    if (error) throw error
+    plataformas.value = data
+  } catch (error) {
+    console.error('Error loading platforms:', error)
+  }
+}
+
+const loadSistemas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('sistemas')
+      .select('id, nome')
+      .eq('status', 'ACTIVE')
+      .order('nome')
+
+    if (error) throw error
+    sistemasAtivos.value = data || []
+
+    // Update names cache
+    data.forEach(sistema => {
+      sistemasNomesCache.value[sistema.id] = sistema.nome
+    })
+  } catch (error) {
+    console.error('Error loading systems:', error)
+  }
+}
+
+const getDistancias = async (processoId) => {
+  const { data } = await supabase
+    .from('processo_distancias')
+    .select('*')
+    .eq('processo_id', processoId)
+    .order('created_at', { ascending: true })
+
+  return data || []
+}
+
+// Event handlers
+const handleSidebarToggle = (expanded) => {
+  isSidebarExpanded.value = expanded
+}
 
 const handleNewProcess = () => {
   router.push('/editais')
-}
-
-const editProcess = (processo) => {
-  router.push(`/editais/${processo.id}/edit`)
-}
-
-const viewDetails = (processo) => {
-  router.push(`/editais/${processo.id}`)
 }
 
 const handleDelete = (processo) => {
   deleteConfirmDialog.value = {
     show: true,
     processo
+  }
+}
+
+const hideDeleteDialog = () => {
+  deleteConfirmDialog.value = {
+    show: false,
+    processo: null
   }
 }
 
@@ -733,15 +1141,8 @@ const confirmDelete = async () => {
 
     hideDeleteDialog()
   } catch (error) {
-    console.error('Erro ao excluir:', error)
-    alert('Erro ao excluir processo')
-  }
-}
-
-const hideDeleteDialog = () => {
-  deleteConfirmDialog.value = {
-    show: false,
-    processo: null
+    console.error('Error deleting:', error)
+    alert('Error deleting process')
   }
 }
 
@@ -766,7 +1167,7 @@ const logSystemAction = async (dados) => {
 
     if (error) throw error
   } catch (error) {
-    console.error('Erro ao registrar log:', error)
+    console.error('Error logging action:', error)
   }
 }
 
@@ -775,7 +1176,7 @@ const exportToExcel = () => {
     'Data': formatDate(processo.data_pregao),
     'Hora': formatTime(processo.hora_pregao),
     'Número do Processo': processo.numero_processo,
-    'Código Análise': processo.codigo_analise || '-',  // Novo campo
+    'Código Análise': processo.codigo_analise || '-',
     'Ano': processo.ano,
     'Órgão': processo.orgao,
     'Modalidade': formatModalidade(processo.modalidade),
@@ -791,33 +1192,9 @@ const exportToExcel = () => {
   writeFileXLSX(wb, 'processos_licitatorios.xlsx')
 }
 
-const mostrarFiltro = ref({})
-
 const toggleFiltro = (coluna) => {
   mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna]
 }
-
-const opcoesUnicas = (coluna) => {
-  const opcoes = new Set()
-  processos.value.forEach(processo => {
-    let valor = processo[coluna]
-
-    if (coluna === 'data_pregao') {
-      valor = formatDate(valor)
-    } else if (coluna === 'hora_pregao') {
-      valor = formatTime(valor)
-    } else if (coluna === 'modalidade') {
-      valor = formatModalidade(valor)
-    }
-
-    if (valor) opcoes.add(valor)
-  })
-  return Array.from(opcoes).sort()
-}
-
-const temFiltrosAtivos = computed(() => {
-  return Object.values(filtros.value).some(f => f.length > 0)
-})
 
 const limparFiltros = () => {
   Object.keys(filtros.value).forEach(key => {
@@ -825,9 +1202,34 @@ const limparFiltros = () => {
   })
 }
 
-const STORAGE_KEY = 'table-columns-width'
-const colunasWidth = ref({})
+const handleSort = async (field, direction) => {
+  if (sortConfig.value.field === field && sortConfig.value.direction === direction) {
+    return
+  }
 
+  sortConfig.value = {
+    field,
+    direction
+  }
+
+  await loadProcessos()
+}
+
+const selecionarAno = (ano) => {
+  anoSelecionado.value = ano
+}
+
+const selectRow = (id) => {
+  selectedRow.value = id
+}
+
+const handleModalidadeChange = () => {
+  if (formData.value.modalidade !== 'pregao_eletronico') {
+    formData.value.site_pregao = '';
+  }
+};
+
+// Table editing functions
 const startColumnResize = (event, campo) => {
   event.preventDefault()
   const th = event.target.closest('th')
@@ -853,31 +1255,6 @@ const startColumnResize = (event, campo) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const loadColumnWidths = () => {
-  try {
-    const savedWidths = localStorage.getItem(STORAGE_KEY)
-    if (savedWidths) {
-      colunasWidth.value = JSON.parse(savedWidths)
-    } else {
-      colunas.forEach(coluna => {
-        colunasWidth.value[coluna.campo] = '150px'
-      })
-    }
-  } catch (error) {
-    console.error('Erro ao carregar larguras das colunas:', error)
-  }
-}
-
-const saveColumnWidths = () => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(colunasWidth.value))
-  } catch (error) {
-    console.error('Erro ao salvar larguras das colunas:', error)
-  }
-}
-
-const rowsHeight = ref({})
-
 const startRowResize = (event, id) => {
   event.preventDefault()
   const tr = event.target.closest('tr')
@@ -902,57 +1279,30 @@ const startRowResize = (event, id) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const editingCell = ref({
-  id: null,
-  field: null,
-  value: null
-})
-
-// Adicione estas declarações de variáveis no início do script junto com outros refs
-const responsaveis = ref([]);
-const responsaveisAtivos = ref([]);
-const responsaveisCache = ref(new Map());
-
-// Corrija a função loadResponsaveis
-const loadResponsaveis = async () => {
+const loadColumnWidths = () => {
   try {
-    console.log('Carregando responsáveis...');
-    const { data, error } = await supabase
-      .from('responsaveis_processos')  // Esta é a tabela correta
-      .select('id, nome, email, departamento')
-      .eq('status', 'ACTIVE')
-      .order('nome');
-
-    if (error) throw error;
-
-    // Atribuir aos refs de responsáveis
-    responsaveis.value = data || [];
-    responsaveisAtivos.value = data || [];
-
-    // Pré-carregar o cache de responsáveis como um Map (importante!)
-    responsaveisCache.value.clear(); // Limpar cache antes
-    data?.forEach(resp => {
-      if (resp && resp.id) {
-        responsaveisCache.value.set(resp.id, resp);
-      }
-    });
-
-    console.log(`Carregados ${data?.length || 0} responsáveis`);
-    return data;
+    const savedWidths = localStorage.getItem('table-columns-width')
+    if (savedWidths) {
+      colunasWidth.value = JSON.parse(savedWidths)
+    } else {
+      colunas.forEach(coluna => {
+        colunasWidth.value[coluna.campo] = '150px'
+      })
+    }
   } catch (error) {
-    console.error('Erro ao carregar responsáveis:', error);
-    return [];
+    console.error('Error loading column widths:', error)
   }
-};
+}
 
-// Adicione estas linhas dentro do setup do seu componente
-const sistemasDialog = ref({
-  show: false,
-  position: {},
-  processo: null
-});
+const saveColumnWidths = () => {
+  try {
+    localStorage.setItem('table-columns-width', JSON.stringify(colunasWidth.value))
+  } catch (error) {
+    console.error('Error saving column widths:', error)
+  }
+}
 
-// No método handleDblClick, adicione uma verificação específica para o campo responsavel_id
+// Cell editing functions
 const handleDblClick = async (field, processo, event) => {
   if (editingCell.value.id === processo.id && editingCell.value.field === field) {
     return;
@@ -961,7 +1311,7 @@ const handleDblClick = async (field, processo, event) => {
   const cell = event.target.closest('td');
   const rect = cell.getBoundingClientRect();
 
-  // Tratamento especial para o campo sistemas_ativos
+  // Special handling for sistemas_ativos field
   if (field === 'sistemas_ativos') {
     editingCell.value = {
       id: processo.id,
@@ -980,37 +1330,37 @@ const handleDblClick = async (field, processo, event) => {
     return;
   }
 
-  // Verificar se o campo é responsavel_id
+  // Check if field is responsavel_id
   if (field === 'responsavel_id') {
-    // Verificar se temos responsáveis carregados
+    // Check if we have responsibles loaded
     if (responsaveisAtivos.value.length === 0) {
-      console.warn('Lista de responsáveis não carregada. Carregando agora...');
+      console.warn('Responsibles list not loaded. Loading now...');
       await loadResponsaveis();
     }
   }
 
-  // Verificar se o campo é representante_id
+  // Check if field is representante_id
   if (field === 'representante_id') {
-    console.log('Clicado no campo de representante');
-    debugRepresentantes(); // Adicione este log
+    console.log('Clicked on representative field');
+    debugRepresentantes(); // Add this log
 
-    // Verificar se temos representantes carregados
+    // Check if we have representatives loaded
     if (representantes.value.length === 0) {
-      console.log('Carregando representantes sob demanda...');
+      console.log('Loading representatives on demand...');
       await loadRepresentantes();
       
-      debugRepresentantes(); // Log após carregamento
+      debugRepresentantes(); // Log after loading
       
-      // Verificar novamente após o carregamento
+      // Check again after loading
       if (representantes.value.length === 0) {
-        console.error('Não foi possível carregar representantes.');
-        alert('Não foi possível carregar a lista de representantes.');
+        console.error('Could not load representatives.');
+        alert('Could not load the list of representatives.');
         return;
       }
     }
   }
 
-  // Comportamento padrão para outros campos
+  // Default behavior for other fields
   confirmDialog.value = {
     show: true,
     position: {
@@ -1021,241 +1371,18 @@ const handleDblClick = async (field, processo, event) => {
       editingCell.value = {
         id: processo.id,
         field,
-        value: processo[field] // Isso já captura o ID do responsável corretamente
+        value: processo[field]
       };
     }
   };
 };
 
-const saveSistemas = async () => {
-  try {
-    if (!editingCell.value.id || !sistemasDialog.value.processo) {
-      hideSistemasDialog();
-      return;
-    }
-
-    const processo = sistemasDialog.value.processo;
-    const updateData = {
-      sistemas_ativos: editingCell.value.value,
-      updated_at: new Date().toISOString()
-    };
-
-    // Adiciona usuário que está alterando se disponível
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.id) {
-      updateData.updated_by = user.id;
-    }
-
-    const { error } = await supabase
-      .from('processos')
-      .update(updateData)
-      .eq('id', processo.id);
-
-    if (error) throw error;
-
-    // Log da alteração
-    await logSystemAction({
-      tipo: 'atualizacao',
-      tabela: 'processos',
-      registro_id: processo.id,
-      campo_alterado: 'sistemas_ativos',
-      dados_anteriores: processo.sistemas_ativos,
-      dados_novos: editingCell.value.value
-    });
-
-    // Recarrega os processos
-    await loadProcessos();
-
-    hideSistemasDialog();
-  } catch (error) {
-    console.error('Erro ao salvar sistemas:', error);
-    alert('Erro ao salvar sistemas');
-  }
-};
-
-const hideSistemasDialog = () => {
-  sistemasDialog.value = {
-    show: false,
-    position: {},
-    processo: null
-  };
-
-  // Limpa o estado de edição
-  editingCell.value = {
-    id: null,
-    field: null,
-    value: null
-  };
-};
-
-const handleUpdate = async (processo) => {
-  try {
-    // Caso especial para responsavel_id:
-    // Converte string vazia para null - importante para o tipo UUID
-    if (editingCell.value.field === 'responsavel_id' && editingCell.value.value === '') {
-      editingCell.value.value = null;
-    }
-
-    if (!editingCell.value.value && editingCell.value.field !== 'status' && editingCell.value.field !== 'responsavel_id') {
-      cancelEdit()
-      return
-    }
-
-    let updateValue = editingCell.value.value
-
-    // Formatação específica por tipo de campo
-    switch (editingCell.value.field) {
-      case 'data_pregao':
-        // Garante que a data esteja no formato correto para o banco
-        if (typeof updateValue === 'string') {
-          if (updateValue.includes('/')) {
-            // Converte de DD/MM/YYYY para YYYY-MM-DD
-            const [day, month, year] = updateValue.split('/')
-            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-          } else if (updateValue.includes('-')) {
-            // Já está em formato YYYY-MM-DD, apenas garantir
-            const [year, month, day] = updateValue.split('-')
-            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-          }
-        }
-        break
-
-      case 'hora_pregao':
-        // Garante formato HH:mm
-        if (typeof updateValue === 'string') {
-          const [hours, minutes] = updateValue.split(':')
-          updateValue = `${hours.padStart(2, '0')}:${minutes ? minutes.padStart(2, '0') : '00'}`
-        }
-        break
-
-      case 'sistemas_ativos':
-        // Garante que é um array
-        updateValue = Array.isArray(updateValue) ? updateValue : []
-        break
-
-      case 'responsavel_id':
-        // Sem conversão necessária, mas garantimos que seja UUID ou null
-        updateValue = updateValue || null;
-        console.log('Atualizando responsável para:', updateValue);
-
-        if (updateValue) {
-          // Verificar se o responsável existe na lista carregada
-          const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
-          if (responsavel) {
-            console.log(`Nome do responsável selecionado: ${responsavel.nome}`);
-            // Atualizar cache se necessário
-            responsaveisCache.value.set(updateValue, responsavel);
-          } else {
-            console.warn('ID de responsável selecionado não encontrado na lista!');
-            // Recarregar responsáveis caso necessário
-            await loadResponsaveis();
-          }
-        }
-        break;
-
-      case 'representante_id':
-        // Garante que seja UUID ou null
-        updateValue = updateValue || null;
-        console.log('Atualizando representante para:', updateValue);
-
-        if (updateValue) {
-          // Verificar se o representante existe na lista carregada
-          const representante = representantes.value.find(r => r.id === updateValue);
-          if (representante) {
-            console.log(`Nome do representante selecionado: ${representante.nome}`);
-          } else {
-            console.warn('ID de representante selecionado não encontrado na lista!');
-            // Em caso de não encontrado, podemos recarregar a lista
-            await loadRepresentantes();
-          }
-        }
-        break;
-    }
-
-    // Verifica se o valor realmente mudou para evitar atualizações desnecessárias
-    if (updateValue === processo[editingCell.value.field]) {
-      console.log('Valor não mudou, cancelando atualização')
-      cancelEdit()
-      return
-    }
-
-    console.log(`Atualizando ${editingCell.value.field} para:`, updateValue)
-
-    // Prepara dados para atualização
-    const updateData = {
-      [editingCell.value.field]: updateValue,
-      updated_at: new Date().toISOString()
-    }
-
-    // Adiciona usuário que está alterando se disponível
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user?.id) {
-      updateData.updated_by = user.id
-    }
-
-    // Atualiza no banco de dados
-    console.log('Dados de atualização:', updateData)
-
-    const { error } = await supabase
-      .from('processos')
-      .update(updateData)
-      .eq('id', processo.id)
-
-    if (error) {
-      console.error('Erro ao atualizar:', error)
-      throw error
-    }
-
-    // Log da alteração
-    try {
-      await logSystemAction({
-        tipo: 'atualizacao',
-        tabela: 'processos',
-        registro_id: processo.id,
-        campo_alterado: editingCell.value.field,
-        dados_anteriores: processo[editingCell.value.field],
-        dados_novos: updateValue
-      })
-    } catch (logError) {
-      // Se o log falhar, apenas reportamos o erro mas continuamos
-      console.warn('Erro no log de alteração:', logError)
-    }
-
-    // Recarrega os processos após atualização bem-sucedida
-    await loadProcessos()
-    console.log('Atualização concluída com sucesso')
-
-  } catch (error) {
-    console.error('Erro ao atualizar:', error)
-    // Exibe mensagem de erro para o usuário
-    alert(`Erro ao atualizar o campo: ${error.message || 'Verifique os dados e tente novamente'}`)
-  } finally {
-    cancelEdit()
-  }
-}
-
-const cancelEdit = () => {
-  editingCell.value = {
-    id: null,
-    field: null,
-    value: null
-  }
-}
-
-// Adicione logo após esta definição:
-const confirmDialog = ref({
-  show: false,
-  position: {},
-  callback: null
-})
-
-// Adicione essas duas funções aqui
 const handleConfirmEdit = () => {
-  // Executa o callback para iniciar a edição
+  // Execute callback to start editing
   confirmDialog.value.callback?.()
   hideConfirmDialog()
 
-  // Foca no campo de entrada após a renderização
+  // Focus on input field after rendering
   nextTick(() => {
     const input = document.querySelector('.editing-cell input, .editing-cell textarea, .editing-cell select')
     if (input) {
@@ -1275,192 +1402,304 @@ const hideConfirmDialog = () => {
   }
 }
 
-const checkAdminStatus = async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    console.log('Usuário atual:', user?.email)
-
-    if (user) {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*') // Selecionar todos os campos para debug
-        .eq('id', user.id)
-        .single()
-
-      console.log('Perfil encontrado:', profile)
-      console.log('Erro:', error)
-
-      if (error) {
-        console.error('Erro ao verificar perfil:', error)
-        return false
-      }
-
-      isAdmin.value = profile?.role === 'admin'
-      console.log('É admin?', isAdmin.value)
-      return isAdmin.value
-    }
-  } catch (error) {
-    console.error('Erro ao verificar status de admin:', error)
-    return false
+const cancelEdit = () => {
+  editingCell.value = {
+    id: null,
+    field: null,
+    value: null
   }
 }
 
-const estados = ref([
-  { uf: 'AC', nome: 'Acre' },
-  { uf: 'AL', nome: 'Alagoas' },
-  { uf: 'AP', nome: 'Amapá' },
-  { uf: 'AM', nome: 'Amazonas' },
-  { uf: 'BA', nome: 'Bahia' },
-  { uf: 'CE', nome: 'Ceará' },
-  { uf: 'DF', nome: 'Distrito Federal' },
-  { uf: 'ES', nome: 'Espírito Santo' },
-  { uf: 'GO', nome: 'Goiás' },
-  { uf: 'MA', nome: 'Maranhão' },
-  { uf: 'MT', nome: 'Mato Grosso' },
-  { uf: 'MS', nome: 'Mato Grosso do Sul' },
-  { uf: 'MG', nome: 'Minas Gerais' },
-  { uf: 'PA', nome: 'Pará' },
-  { uf: 'PB', nome: 'Paraíba' },
-  { uf: 'PR', nome: 'Paraná' },
-  { uf: 'PE', nome: 'Pernambuco' },
-  { uf: 'PI', nome: 'Piauí' },
-  { uf: 'RJ', nome: 'Rio de Janeiro' },
-  { uf: 'RN', nome: 'Rio Grande do Norte' },
-  { uf: 'RS', nome: 'Rio Grande do Sul' },
-  { uf: 'RO', nome: 'Rondônia' },
-  { uf: 'RR', nome: 'Roraima' },
-  { uf: 'SC', nome: 'Santa Catarina' },
-  { uf: 'SP', nome: 'São Paulo' },
-  { uf: 'SE', nome: 'Sergipe' },
-  { uf: 'TO', nome: 'Tocantins' }
-])
-
-const representantes = ref([])
-// Melhore a função getResponsavelNome para usar o cache
-const getResponsavelNome = (id) => {
-  if (!id) return 'Sem responsável';
-  
-  // Tentar buscar do cache primeiro
-  const cachedResp = responsaveisCache.value.get(id);
-  if (cachedResp) {
-    return cachedResp.nome || 'Sem nome';
-  }
-  
-  // Se não estiver no cache, buscar do array
-  const responsavel = responsaveisAtivos.value.find(r => r.id === id);
-  if (responsavel) {
-    // Atualizar cache para futuras consultas
-    responsaveisCache.value.set(id, responsavel);
-    return responsavel.nome || 'Sem nome';
-  }
-  
-  return 'Responsável não encontrado';
-};
-
-const loadRepresentantes = async () => {
+const handleUpdate = async (processo) => {
   try {
-    console.log('Iniciando carregamento de representantes...');
-    
-    const { data, error } = await supabase
-      .from('representantes')
-      .select('*')
-      .order('nome');
+    // Special case for responsavel_id:
+    // Convert empty string to null - important for UUID type
+    if (editingCell.value.field === 'responsavel_id' && editingCell.value.value === '') {
+      editingCell.value.value = null;
+    }
+
+    if (!editingCell.value.value && editingCell.value.field !== 'status' && editingCell.value.field !== 'responsavel_id') {
+      cancelEdit()
+      return
+    }
+
+    let updateValue = editingCell.value.value
+
+    // Specific formatting by field type
+    switch (editingCell.value.field) {
+      case 'data_pregao':
+        // Ensure date is in the correct format for the database
+        if (typeof updateValue === 'string') {
+          if (updateValue.includes('/')) {
+            // Convert from DD/MM/YYYY to YYYY-MM-DD
+            const [day, month, year] = updateValue.split('/')
+            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          } else if (updateValue.includes('-')) {
+            // Already in YYYY-MM-DD format, just ensure
+            const [year, month, day] = updateValue.split('-')
+            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          }
+        }
+        break
+
+      case 'hora_pregao':
+        // Ensure HH:mm format
+        if (typeof updateValue === 'string') {
+          const [hours, minutes] = updateValue.split(':')
+          updateValue = `${hours.padStart(2, '0')}:${minutes ? minutes.padStart(2, '0') : '00'}`
+        }
+        break
+
+      case 'sistemas_ativos':
+        // Ensure it's an array
+        updateValue = Array.isArray(updateValue) ? updateValue : []
+        break
+
+      case 'responsavel_id':
+        // No conversion needed, but ensure it's UUID or null
+        updateValue = updateValue || null;
+        console.log('Updating responsible to:', updateValue);
+
+        if (updateValue) {
+          // Check if the responsible exists in the loaded list
+          const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
+          if (responsavel) {
+            console.log(`Selected responsible name: ${responsavel.nome}`);
+            // Update cache if needed
+            responsaveisCache.value.set(updateValue, responsavel);
+          } else {
+            console.warn('Selected responsible ID not found in list!');
+            // Reload responsibles if needed
+            await loadResponsaveis();
+          }
+        }
+        break;
+
+      case 'representante_id':
+        // Ensure it's UUID or null
+        updateValue = updateValue || null;
+        console.log('Updating representative to:', updateValue);
+
+        if (updateValue) {
+          // Check if the representative exists in the loaded list
+          const representante = representantes.value.find(r => r.id === updateValue);
+          if (representante) {
+            console.log(`Selected representative name: ${representante.nome}`);
+          } else {
+            console.warn('Selected representative ID not found in list!');
+            // Reload the list if not found
+            await loadRepresentantes();
+          }
+        }
+        break;
+    }
+
+    // Check if value actually changed to avoid unnecessary updates
+    if (updateValue === processo[editingCell.value.field]) {
+      console.log('Value did not change, canceling update')
+      cancelEdit()
+      return
+    }
+
+    console.log(`Updating ${editingCell.value.field} to:`, updateValue)
+
+    // Prepare data for update
+    const updateData = {
+      [editingCell.value.field]: updateValue,
+      updated_at: new Date().toISOString()
+    }
+
+    // Add user who is making the change if available
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id) {
+      updateData.updated_by = user.id
+    }
+
+    // Update in database
+    console.log('Update data:', updateData)
+
+    const { error } = await supabase
+      .from('processos')
+      .update(updateData)
+      .eq('id', processo.id)
 
     if (error) {
-      console.error('Erro na consulta de representantes:', error);
-      throw error;
+      console.error('Error updating:', error)
+      throw error
     }
-    
-    console.log(`Carregados ${data?.length || 0} representantes:`, data);
-    representantes.value = data || [];
-    
-    return data;
+
+    // Log the change
+    try {
+      await logSystemAction({
+        tipo: 'atualizacao',
+        tabela: 'processos',
+        registro_id: processo.id,
+        campo_alterado: editingCell.value.field,
+        dados_anteriores: processo[editingCell.value.field],
+        dados_novos: updateValue
+      })
+    } catch (logError) {
+      // If log fails, just report the error but continue
+      console.warn('Error in change log:', logError)
+    }
+
+    // Reload processes after successful update
+    await loadProcessos()
+    console.log('Update completed successfully')
+
   } catch (error) {
-    console.error('Erro ao carregar representantes:', error);
-    representantes.value = [];
-    return [];
+    console.error('Error updating:', error)
+    // Display error message to the user
+    alert(`Error updating field: ${error.message || 'Check the data and try again'}`)
+  } finally {
+    cancelEdit()
   }
 }
 
-const getPortalName = (url) => {
-  if (!url) return '-'
+// Systems handling
+const handleSistemasChange = (event) => {
+  // Get selected values from the multiple select
+  const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value)
+  editingCell.value.value = selectedOptions
+}
+
+const removerSistema = (id) => {
+  if (!editingCell.value.value) return
+
+  const index = editingCell.value.value.indexOf(id)
+  if (index !== -1) {
+    const newSistemas = [...editingCell.value.value]
+    newSistemas.splice(index, 1)
+    editingCell.value.value = newSistemas
+  }
+}
+
+const saveSistemas = async () => {
   try {
-    const hostname = new URL(url).hostname
-    return hostname
-      .replace('www.', '')
-      .split('.')
-      .slice(0, -1)
-      .join('.')
-      .toUpperCase()
-  } catch (e) {
-    return url
-  }
-}
+    if (!editingCell.value.id || !sistemasDialog.value.processo) {
+      hideSistemasDialog();
+      return;
+    }
 
-const handleSort = async (field, direction) => {
-  if (sortConfig.value.field === field && sortConfig.value.direction === direction) {
-    return
-  }
+    const processo = sistemasDialog.value.processo;
+    const updateData = {
+      sistemas_ativos: editingCell.value.value,
+      updated_at: new Date().toISOString()
+    };
 
-  sortConfig.value = {
-    field,
-    direction
-  }
+    // Add user who is making the change if available
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      updateData.updated_by = user.id;
+    }
 
-  await loadProcessos()
-}
+    const { error } = await supabase
+      .from('processos')
+      .update(updateData)
+      .eq('id', processo.id);
 
-const estadoSearch = ref('')
+    if (error) throw error;
 
-const estadosFiltrados = computed(() => {
-  if (!estadoSearch.value) return estados.value
+    // Log the change
+    await logSystemAction({
+      tipo: 'atualizacao',
+      tabela: 'processos',
+      registro_id: processo.id,
+      campo_alterado: 'sistemas_ativos',
+      dados_anteriores: processo.sistemas_ativos,
+      dados_novos: editingCell.value.value
+    });
 
-  const busca = estadoSearch.value.toLowerCase()
-  return estados.value.filter(estado =>
-    estado.nome.toLowerCase().includes(busca) ||
-    estado.uf.toLowerCase().includes(busca)
-  )
-})
+    // Reload processes
+    await loadProcessos();
 
-const plataformas = ref([])
-
-const loadPlataformas = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('plataformas')
-      .select('*')
-
-    if (error) throw error
-    plataformas.value = data
+    hideSistemasDialog();
   } catch (error) {
-    console.error('Erro ao carregar plataformas:', error)
-  }
-}
-
-const getPlataformaNome = (url) => {
-  if (!url) return '-'
-  const plataforma = plataformas.value.find(p => p.url === url)
-  return plataforma ? plataforma.nome : url
-}
-
-const formData = ref({
-  status: null
-})
-
-const selectRow = (id) => {
-  selectedRow.value = id
-}
-
-const showPlataformaField = computed(() => {
-  return formData.value.modalidade === 'pregao_eletronico';
-});
-
-const handleModalidadeChange = () => {
-  if (formData.value.modalidade !== 'pregao_eletronico') {
-    formData.value.site_pregao = '';
+    console.error('Error saving systems:', error);
+    alert('Error saving systems');
   }
 };
 
+const hideSistemasDialog = () => {
+  sistemasDialog.value = {
+    show: false,
+    position: {},
+    processo: null
+  };
+
+  // Clear editing state
+  editingCell.value = {
+    id: null,
+    field: null,
+    value: null
+  };
+};
+
+// Page visibility and auto-refresh
+const pageVisibilityHandler = () => {
+  if (!document.hidden) {
+    loadProcessos().catch(console.error) // Load in background
+  }
+}
+
+const startVisibilityMonitoring = () => {
+  document.addEventListener('visibilitychange', pageVisibilityHandler)
+  window.addEventListener('focus', pageVisibilityHandler)
+  window.addEventListener('online', pageVisibilityHandler)
+}
+
+const stopVisibilityMonitoring = () => {
+  document.removeEventListener('visibilitychange', pageVisibilityHandler)
+  window.removeEventListener('focus', pageVisibilityHandler)
+  window.removeEventListener('online', pageVisibilityHandler)
+}
+
+const startAutoRefresh = () => {
+  stopAutoRefresh() // To avoid multiple intervals
+  refreshInterval.value = setInterval(() => {
+    loadProcessos()
+  }, 30000) // Update every 30 seconds
+}
+
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = null
+  }
+}
+
+// Debugging function
+const debugRepresentantes = () => {
+  console.log(`Status of representatives: 
+  - Array loaded: ${representantes.value ? 'Yes' : 'No'}
+  - Quantity: ${representantes.value?.length || 0}
+  - First representative: ${representantes.value?.[0]?.nome || 'None'}`);
+}
+
+// Validation helpers
+const validarIdRelacionamento = async (tabela, campo, id) => {
+  if (!id) return null; // Null values are valid
+  
+  try {
+    const { data, error } = await supabase
+      .from(tabela)
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (error || !data) {
+      console.warn(`ID ${id} not found in table ${tabela}, will be considered null`);
+      return null;
+    }
+    
+    return id; // Valid ID
+  } catch (err) {
+    console.error(`Error validating ID in ${tabela}:`, err);
+    return null;
+  }
+};
+
+// Form submission
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -1479,11 +1718,11 @@ const handleSubmit = async () => {
       site_pregao: formData.value.site_pregao,
       objeto_resumido: formData.value.objeto_resumido,
       objeto_completo: formData.value.objeto_completo,
-      responsavel_id: responsavel.id, // Alterado de "responsavel" para "responsavel_id"
-      representante_id: formData.value.representante // Alterado de "representante" para "representante_id"
+      responsavel_id: formData.value.responsavel_id,
+      representante_id: formData.value.representante_id
     }
 
-    console.log('Dados a serem inseridos:', {
+    console.log('Data to be inserted:', {
       data_pregao: dataPregao.toISOString().split('T')[0],
       hora_pregao: formData.value.hora_pregao
     });
@@ -1493,119 +1732,162 @@ const handleSubmit = async () => {
       .insert(processoData)
 
     if (error) throw error
-    alert('Processo cadastrado com sucesso!')
+    alert('Process registered successfully!')
     router.push('/processos')
   } catch (error) {
-    console.error('Erro:', error)
-    alert('Erro ao cadastrar processo')
+    console.error('Error:', error)
+    alert('Error registering process')
   }
 };
 
-const getModalidadeSigla = (modalidade) => {
-  const modalidades = {
-    'pregao_eletronico': 'PE',
-    'pregao_presencial': 'PP',
-    'credenciamento': 'CR',
-    'concorrencia': 'CC',
-    'concurso': 'CS',
-    'leilao': 'LL',
-    'dialogo_competitivo': 'DC',
-    'tomada_precos': 'TP',
-    'chamamento_publico': 'CP',
-    'rdc': 'RDC',
-    'rdc_eletronico': 'RDC-E',
-    'srp': 'SRP',
-    'srp_eletronico': 'SRP-E',
-    'srp_internacional': 'SRP-I'
+// Responsible assignment functions
+const ensureResponsaveisCarregados = async () => {
+  if (responsaveisAtivos.value.length === 0) {
+    console.log('Responsibles not loaded, loading now...');
+    await loadResponsaveis();
+    return true;
   }
-
-  return modalidades[modalidade] || modalidade
+  return false;
 }
 
-// Adicione no início do script junto com outros refs
-const empresas = ref([])
-
-// Adicione este computed
-const empresasCadastradas = computed(() => {
-  return empresas.value.filter(empresa => empresa.id) // Filtra apenas empresas válidas
-})
-
-// Modifique a função loadEmpresas
-const loadEmpresas = async () => {
+const atribuirResponsavelRandom = async (processoId) => {
   try {
-    const { data, error } = await supabase
-      .from('empresas')
-      .select('id, nome, cnpj')
-      .order('nome')
-
-    if (error) throw error
-    empresas.value = data || []
-  } catch (error) {
-    console.error('Erro ao carregar empresas:', error)
-    empresas.value = []
-  }
-}
-
-const handleEmpresaChange = async (processo) => {
-  try {
+    // Make sure we have responsibles loaded
+    if (responsaveisAtivos.value.length === 0) {
+      await loadResponsaveis();
+    }
+    
+    if (responsaveisAtivos.value.length === 0) {
+      console.error("No active responsibles registered");
+      return;
+    }
+    
+    // Select a random responsible
+    const randomIndex = Math.floor(Math.random() * responsaveisAtivos.value.length);
+    const responsavelSelecionado = responsaveisAtivos.value[randomIndex];
+    
+    // Update the process
     const { error } = await supabase
       .from('processos')
-      .update({ empresa_id: processo.empresa_id })
-      .eq('id', processo.id)
-
-    if (error) throw error
+      .update({ 
+        responsavel_id: responsavelSelecionado.id,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', processoId);
+      
+    if (error) throw error;
+    console.log(`Responsible ${responsavelSelecionado.nome} assigned to process ${processoId}`);
+    
+    // Reload processes
+    await loadProcessos();
   } catch (error) {
-    console.error('Erro ao atualizar empresa:', error)
-    alert('Erro ao atualizar empresa')
+    console.error("Error assigning responsible:", error);
   }
-}
+};
 
-// Adicione esta função junto com as outras
-const getEmpresaNome = (empresaId) => {
-  const empresa = empresas.value.find(e => e.id === empresaId)
-  return empresa ? empresa.nome : '-'
-}
-
-// Adicione esta função
-const getDistancias = async (processoId) => {
-  const { data } = await supabase
-    .from('processo_distancias')
-    .select('*')
-    .eq('processo_id', processoId)
-    .order('created_at', { ascending: true })
-
-  return data || []
-}
-
-// Para cada cache no sistema (exemplo para processamentosCache):
-const processamentosCache = {
-  dados: new Map(),
-  coordenadas: new Map(),
-  orgaos: new Map(),
-
-  limparCache() {
-    this.dados.clear();
-    this.coordenadas.clear();
-    this.orgaos.clear();
-    console.log('Cache limpo com sucesso');
-  }
-}
-
-// Consolidação de todos os onMounted em um único bloco
-onMounted(async () => {
+const atribuirResponsaveisAProcessosPendentes = async () => {
   try {
-    // 1. Iniciar monitoramento de visibilidade da página
-    startVisibilityMonitoring()
+    // Make sure we have responsibles loaded
+    if (responsaveisAtivos.value.length === 0) {
+      await loadResponsaveis();
+    }
+    
+    if (responsaveisAtivos.value.length === 0) {
+      console.error("No active responsibles registered");
+      return;
+    }
+    
+    // Filter processes without responsibles
+    const processosSemResponsavel = processos.value.filter(p => !p.responsavel_id);
+    console.log(`Found ${processosSemResponsavel.length} processes without responsible`);
+    
+    if (processosSemResponsavel.length === 0) {
+      alert("All processes already have assigned responsibles!");
+      return;
+    }
+    
+    // Confirm operation
+    if (!confirm(`Do you want to assign responsibles to ${processosSemResponsavel.length} pending processes?`)) {
+      return;
+    }
+    
+    // Distribute responsibles in a balanced way
+    let contadorResponsaveis = 0;
+    const totalResponsaveis = responsaveisAtivos.value.length;
+    
+    // For each process without responsible
+    for (const processo of processosSemResponsavel) {
+      // Choose a responsible in a rotating fashion
+      const responsavelSelecionado = responsaveisAtivos.value[contadorResponsaveis % totalResponsaveis];
+      
+      // Update the process with the chosen responsible
+      const { error } = await supabase
+        .from('processos')
+        .update({ 
+          responsavel_id: responsavelSelecionado.id,
+          updated_at: new Date().toISOString(),
+          updated_by: (await supabase.auth.getUser()).data.user?.id || null
+        })
+        .eq('id', processo.id);
+        
+      if (error) {
+        console.error(`Error assigning responsible to process ${processo.numero_processo}:`, error);
+      } else {
+        console.log(`Responsible ${responsavelSelecionado.nome} assigned to process ${processo.numero_processo}`);
+      }
+      
+      // Advance to the next responsible
+      contadorResponsaveis++;
+    }
+    
+    // Reload processes after updates
+    await loadProcessos();
+    
+    alert(`Responsibles successfully assigned to ${processosSemResponsavel.length} processes!`);
+  } catch (error) {
+    console.error("Error assigning responsibles:", error);
+    alert("An error occurred while assigning responsibles");
+  }
+};
 
-    // 2. Limpar cache antes de carregar novos dados
-    if (processamentosCache && !processamentosCache.dados.size) {
-      console.log('Cache vazio, não é necessário limpar')
-    } else if (processamentosCache) {
-      processamentosCache.limparCache()
-      console.log('Cache limpo com sucesso')
+// Helper for filter options
+const opcoesUnicas = (coluna) => {
+  const opcoes = new Set()
+  processos.value.forEach(processo => {
+    let valor = processo[coluna]
+
+    if (coluna === 'data_pregao') {
+      valor = formatDate(valor)
+    } else if (coluna === 'hora_pregao') {
+      valor = formatTime(valor)
+    } else if (coluna === 'modalidade') {
+      valor = formatModalidade(valor)
     }
 
-    // 3. Registrar listener para fechar dropdowns de filtros ao clicar fora
+    if (valor) opcoes.add(valor)
+  })
+  return Array.from(opcoes).sort()
+}
+
+// Initialize filters
+const initializeFiltros = () => {
+  const filtrosIniciais = {}
+  colunas.forEach(coluna => {
+    filtrosIniciais[coluna.campo] = []
+  })
+  return filtrosIniciais
+}
+
+// Lifecycle hooks
+onMounted(async () => {
+  try {
+    // 1. Start page visibility monitoring
+    startVisibilityMonitoring()
+
+    // 2. Initialize filters
+    filtros.value = initializeFiltros()
+
+    // 3. Register listener to close filter dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       const isFilterClick = e.target.closest('.filtro-container')
       if (!isFilterClick) {
@@ -1615,14 +1897,14 @@ onMounted(async () => {
       }
     })
 
-    // 4. Carregar dados em paralelo para melhor desempenho
-    console.log('Iniciando carregamento dos dados...');
+    // 4. Load data in parallel for better performance
+    console.log('Starting data loading...');
 
-    // Carregar responsáveis logo no início
+    // Load responsibles early
     await loadResponsaveis();
-    console.log('Responsáveis carregados inicialmente:', responsaveisAtivos.value.length);
+    console.log('Responsibles initially loaded:', responsaveisAtivos.value.length);
 
-    // Depois carregar os outros dados em paralelo
+    // Then load other data in parallel
     await Promise.all([
       loadProcessos(),
       loadRepresentantes(),
@@ -1631,12 +1913,12 @@ onMounted(async () => {
       loadSistemas(),
     ]);
 
-    console.log('Todos os outros dados carregados com sucesso!');
+    console.log('All other data loaded successfully!');
 
-    // 5. Carregar configurações da interface
+    // 5. Load interface settings
     loadColumnWidths()
 
-    // 6. Configurar canal Realtime para atualizações em tempo real
+    // 6. Set up Realtime channel for real-time updates
     const channel = supabase.channel('processos-updates')
       .on('postgres_changes',
         {
@@ -1650,26 +1932,26 @@ onMounted(async () => {
       )
       .subscribe()
 
-    // 7. Registrar canal no gerenciador
+    // 7. Register channel in manager
     SupabaseManager.addSubscription('processos-updates', channel)
 
-    // 8. Iniciar atualização automática
+    // 8. Start auto-refresh
     startAutoRefresh()
 
   } catch (error) {
-    console.error('Erro na inicialização do componente:', error)
+    console.error('Error in component initialization:', error)
   }
 })
 
-// Manter o onUnmounted original para limpeza adequada
+// Cleanup on unmount
 onUnmounted(() => {
-  // Parar monitoramento de visibilidade
+  // Stop visibility monitoring
   stopVisibilityMonitoring()
 
-  // Parar auto-refresh
+  // Stop auto-refresh
   stopAutoRefresh()
 
-  // Remover canal do Supabase
+  // Remove Supabase channel
   const channel = SupabaseManager.getSubscription('processos-updates')
   if (channel) {
     supabase.removeChannel(channel)
@@ -1677,257 +1959,8 @@ onUnmounted(() => {
   }
 })
 
-const refreshInterval = ref(null)
-
-const startAutoRefresh = () => {
-  stopAutoRefresh() // Para evitar múltiplos intervalos
-  refreshInterval.value = setInterval(() => {
-    loadProcessos()
-  }, 30000) // Atualiza a cada 30 segundos
-}
-
-const stopAutoRefresh = () => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value)
-    refreshInterval.value = null
-  }
-}
-
-// No setup do componente
-const loadData = async () => {
-  await loadProcessos() // ou qualquer outra função que carregue seus dados
-}
-
-// Use o composable
-useConnectionManager(loadData)
-
-// Adicione essas propriedades e métodos
-const sistemasAtivos = ref([])
-
-// Na configuração do componente (setup)
-const loadSistemas = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('sistemas')
-      .select('id, nome')
-      .eq('status', 'ACTIVE')
-      .order('nome')
-
-    if (error) throw error
-    sistemasAtivos.value = data || []
-
-    // Atualiza o cache de nomes
-    data.forEach(sistema => {
-      sistemasNomesCache.value[sistema.id] = sistema.nome
-    })
-  } catch (error) {
-    console.error('Erro ao carregar sistemas:', error)
-  }
-}
-
-const getSistemaNome = (id) => {
-  return sistemasNomesCache.value[id] || 'Sistema não encontrado'
-}
-
-const handleSistemasChange = (event) => {
-  // Obtém os valores selecionados do select múltiplo
-  const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value)
-  editingCell.value.value = selectedOptions
-}
-
-const removerSistema = (id) => {
-  if (!editingCell.value.value) return
-
-  const index = editingCell.value.value.indexOf(id)
-  if (index !== -1) {
-    const newSistemas = [...editingCell.value.value]
-    newSistemas.splice(index, 1)
-    editingCell.value.value = newSistemas
-  }
-}
-
-const getSistemasNomesString = (ids) => {
-  if (!ids || !ids.length) return '-'
-  return ids.map(id => getSistemaNome(id)).join(', ')
-}
-
-// Adicione este método para verificar e forçar o carregamento dos responsáveis se necessário
-const ensureResponsaveisCarregados = async () => {
-  if (responsaveisAtivos.value.length === 0) {
-    console.log('Responsáveis não carregados, carregando agora...');
-    await loadResponsaveis();
-    return true;
-  }
-  return false;
-}
-
-// No handler de edição para o campo responsavel_id
-const handleEdit = (processo, field) => {
-  // ...código existente...
-
-  // Se estiver editando o responsável, precisamos carregar as opções
-  if (field === 'responsavel_id') {
-    // Certifique-se de que responsáveis estão carregados
-    if (responsaveis.value.length === 0) {
-      loadResponsaveis();
-    }
-
-    // Código específico para edição de responsável
-    // A interface de edição deve mostrar um select com os nomes, não os IDs
-  }
-};
-
-// Adicione esta função ao componente para depuração
-const debugRepresentantes = () => {
-  console.log(`Status dos representantes: 
-  - Array carregado: ${representantes.value ? 'Sim' : 'Não'}
-  - Quantidade: ${representantes.value?.length || 0}
-  - Primeiro representante: ${representantes.value?.[0]?.nome || 'Nenhum'}`);
-}
-
-// Adicione esta função ao componente
-const formatarDistancia = (processo) => {
-  if (!processo) return '-';
-
-  // Verifica se o processo tem dados básicos de distância
-  if (processo.distancia_km && processo.ponto_referencia_cidade && processo.ponto_referencia_uf) {
-    return `${processo.distancia_km} km (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})`;
-  }
-
-  return '-';
-};
-
-// Adicione esta função junto com as outras funções auxiliares
-const getRepresentanteNome = (id) => {
-  if (!id) return 'Sem representante';
-
-  const representante = representantes.value.find(r => r.id === id);
-  return representante ? representante.nome : 'Carregando...';
-};
-
-const validarIdRelacionamento = async (tabela, campo, id) => {
-  if (!id) return null; // Valores nulos são válidos
-  
-  try {
-    const { data, error } = await supabase
-      .from(tabela)
-      .select('id')
-      .eq('id', id)
-      .single();
-      
-    if (error || !data) {
-      console.warn(`ID ${id} não encontrado na tabela ${tabela}, será considerado null`);
-      return null;
-    }
-    
-    return id; // ID válido
-  } catch (err) {
-    console.error(`Erro ao validar ID em ${tabela}:`, err);
-    return null;
-  }
-};
-
-// Adicione ao componente ProcessosView.vue
-const atribuirResponsavelRandom = async (processoId) => {
-  try {
-    // Certifique-se de que temos responsáveis carregados
-    if (responsaveisAtivos.value.length === 0) {
-      await loadResponsaveis();
-    }
-    
-    if (responsaveisAtivos.value.length === 0) {
-      console.error("Não há responsáveis ativos cadastrados");
-      return;
-    }
-    
-    // Selecione um responsável aleatório
-    const randomIndex = Math.floor(Math.random() * responsaveisAtivos.value.length);
-    const responsavelSelecionado = responsaveisAtivos.value[randomIndex];
-    
-    // Atualize o processo
-    const { error } = await supabase
-      .from('processos')
-      .update({ 
-        responsavel_id: responsavelSelecionado.id,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', processoId);
-      
-    if (error) throw error;
-    console.log(`Responsável ${responsavelSelecionado.nome} atribuído ao processo ${processoId}`);
-    
-    // Recarregar processos
-    await loadProcessos();
-  } catch (error) {
-    console.error("Erro ao atribuir responsável:", error);
-  }
-};
-
-// Adicione esta função para atribuir responsáveis a todos os processos sem responsável
-const atribuirResponsaveisAProcessosPendentes = async () => {
-  try {
-    // Certifique-se de que temos responsáveis carregados
-    if (responsaveisAtivos.value.length === 0) {
-      await loadResponsaveis();
-    }
-    
-    if (responsaveisAtivos.value.length === 0) {
-      console.error("Não há responsáveis ativos cadastrados");
-      return;
-    }
-    
-    // Filtrar processos sem responsável
-    const processosSemResponsavel = processos.value.filter(p => !p.responsavel_id);
-    console.log(`Encontrados ${processosSemResponsavel.length} processos sem responsável`);
-    
-    if (processosSemResponsavel.length === 0) {
-      alert("Todos os processos já possuem responsáveis atribuídos!");
-      return;
-    }
-    
-    // Confirmar a operação
-    if (!confirm(`Deseja atribuir responsáveis a ${processosSemResponsavel.length} processos pendentes?`)) {
-      return;
-    }
-    
-    // Distribuir os responsáveis de forma equilibrada
-    let contadorResponsaveis = 0;
-    const totalResponsaveis = responsaveisAtivos.value.length;
-    
-    // Para cada processo sem responsável
-    for (const processo of processosSemResponsavel) {
-      // Escolher um responsável de forma rotativa
-      const responsavelSelecionado = responsaveisAtivos.value[contadorResponsaveis % totalResponsaveis];
-      
-      // Atualizar o processo com o responsável escolhido
-      const { error } = await supabase
-        .from('processos')
-        .update({ 
-          responsavel_id: responsavelSelecionado.id,
-          updated_at: new Date().toISOString(),
-          updated_by: (await supabase.auth.getUser()).data.user?.id || null
-        })
-        .eq('id', processo.id);
-        
-      if (error) {
-        console.error(`Erro ao atribuir responsável ao processo ${processo.numero_processo}:`, error);
-      } else {
-        console.log(`Responsável ${responsavelSelecionado.nome} atribuído ao processo ${processo.numero_processo}`);
-      }
-      
-      // Avançar para o próximo responsável
-      contadorResponsaveis++;
-    }
-    
-    // Recarregar os processos após as atualizações
-    await loadProcessos();
-    
-    alert(`Responsáveis atribuídos com sucesso a ${processosSemResponsavel.length} processos!`);
-  } catch (error) {
-    console.error("Erro ao atribuir responsáveis:", error);
-    alert("Ocorreu um erro ao atribuir responsáveis");
-  }
-};
+// Use connection manager
+useConnectionManager(loadProcessos)
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>
