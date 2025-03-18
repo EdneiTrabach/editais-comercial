@@ -1847,3 +1847,18 @@ td[data-field="impugnacoes"] {
   border-color: #106ba3;
   box-shadow: 0 0 0 3px rgba(16, 107, 163, 0.2);
 }
+
+.distancia-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  /* background-color: #e8f5e9; */
+  color: #4b5563;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

@@ -230,6 +230,12 @@
                   {{ getResponsavelNome(processo.responsavel_id) }}
                 </span>
               </template>
+              <template v-else-if="coluna.tipoExibicao === 'distancia'">
+                <span class="distancia-badge" v-if="formatarDistancia(processo) !== '-'">
+                  {{ formatarDistancia(processo) }}
+                </span>
+                <span v-else>-</span>
+              </template>
               <span v-else>
                 {{ processo[coluna.campo] || '-' }}
               </span>
@@ -422,9 +428,9 @@ const colunas = [
   },
   {
     titulo: 'Distâncias',
-    campo: 'processo_distancias',                       // tabela processo_distancias
-    tabelaRelacionada: 'processo_distancias',
-    camposExibicao: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
+    campo: 'distancia_km',                           // Usando o campo direto do processo
+    tipoExibicao: 'distancia',                       // Tipo especial para exibição
+    camposDisplay: ['distancia_km', 'ponto_referencia_cidade', 'ponto_referencia_uf']
   },
   { titulo: 'Portal', campo: 'site_pregao' },          // processo.site_pregao
   {
@@ -1687,6 +1693,18 @@ const handleEdit = (processo, field) => {
     // Código específico para edição de responsável
     // A interface de edição deve mostrar um select com os nomes, não os IDs
   }
+};
+
+// Adicione esta função ao componente
+const formatarDistancia = (processo) => {
+  if (!processo) return '-';
+
+  // Verifica se o processo tem dados básicos de distância
+  if (processo.distancia_km && processo.ponto_referencia_cidade && processo.ponto_referencia_uf) {
+    return `${processo.distancia_km} km (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})`;
+  }
+
+  return '-';
 };
 </script>
 

@@ -1,0 +1,1 @@
+INSERT INTO "public"."empresas" ("id", "nome", "cnpj", "razao_social", "contato", "telefone", "email", "created_at", "updated_at") VALUES ('63ddf2e9-23d0-4b46-8bd1-78113e9fcd0b', 'E&L', '39781752000172', 'E&L PRODUÇÕES DE SOFTWARE LTDA', '27 3268-3123', '27 3268-3123', 'COMERCIAL@EL.COM.BR', '2025-02-13 14:53:05.335812+00', '2025-03-13 22:40:51.817+00');

@@ -1,0 +1,1 @@
+INSERT INTO "public"."responsaveis_processos" ("id", "nome", "email", "departamento", "status", "created_at", "updated_at") VALUES ('62610010-56d7-4035-8467-99a6ef46ce23', 'Samella', 'Samella.oliosi@el.com.br', 'Comercial', 'ACTIVE', '2025-03-18 14:48:16.171+00', '2025-03-18 14:50:09.515565+00');
