@@ -312,13 +312,6 @@
   min-width: 100px;
 }
 
-.th-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
-}
-
 .th-content span {
   flex: 1;
 }
@@ -623,6 +616,7 @@ td select option {
   align-items: center;
   justify-content: space-between;
   padding: 8px;
+  justify-content: center;
 }
 
 .th-content span {
@@ -1855,29 +1849,5 @@ td[data-field="impugnacoes"] {
 
 .sem-sistemas {
   color: #6c757d;
-}
-
-.responsavel-select {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ced4da;
-  background-color: #fff;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  max-width: 800px; /* Limita a largura para melhor usabilidade */
-  appearance: menulist; /* Garante que o dropdown apareça corretamente */
-}
-
-.responsavel-select option {
-  padding: 8px;
-  font-size: 0.9rem;
-}
-
-.responsavel-select:focus {
-  border-color: #193155;
-  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
-  outline: none;
 }
 
