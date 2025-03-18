@@ -759,6 +759,7 @@
     background-color: #1e293b;
     color: #f9fafb;
     border: 1px solid #2d3748;
+    top: 0;
   }
 
   [data-theme="dark"] .main-content input:focus,

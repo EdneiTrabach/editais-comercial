@@ -126,6 +126,12 @@ export function useEditableCells(loadProcessosFunction) {
           break
       }
 
+      // Em useEditableCells.js, dentro de handleUpdate
+      if (editingCell.value.field === 'sistemas_ativos') {
+        // Certifica que estamos lidando com um array
+        updateValue = Array.isArray(editingCell.value.value) ? editingCell.value.value : []
+      }
+
       // Prepara dados para atualização
       const updateData = {
         [editingCell.value.field]: updateValue,

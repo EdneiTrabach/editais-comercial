@@ -131,6 +131,23 @@
                     <option value="cancelado">Cancelado</option>
                     <option value="nao_participar">Decidido Não Participar</option>
                   </select>
+                  <template v-else-if="coluna.campo === 'sistemas_ativos' && editingCell.id === processo.id && editingCell.field === coluna.campo">
+                    <div class="sistemas-dropdown-container">
+                      <div class="sistemas-selected">
+                        <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+                          {{ getSistemaNome(id) }}
+                          <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+                        </div>
+                      </div>
+                      <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" 
+                          :value="sistema.id" 
+                          :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+                          {{ sistema.nome }}
+                        </option>
+                      </select>
+                    </div>
+                  </template>
                   <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
@@ -191,7 +208,11 @@
               </td>
               <template v-else-if="coluna.campo === 'sistemas_ativos'">
                 <div class="sistemas-chips">
-                  {{ processo.sistemas_nomes || getSistemasNomes(processo.sistemas_ativos) }}
+                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" 
+                       class="sistemas-lista">
+                    {{ getSistemasNomesString(processo.sistemas_ativos) }}
+                  </div>
+                  <div v-else class="sem-sistemas">-</div>
                 </div>
               </template>
               <span v-else>
@@ -246,6 +267,30 @@
     </div>
   </div>
 </div>
+
+<div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Sistemas</h3>
+    <div class="sistemas-selected">
+      <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+        {{ getSistemaNome(id) }}
+        <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+      <option v-for="sistema in sistemasAtivos" :key="sistema.id" 
+        :value="sistema.id" 
+        :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+        {{ sistema.nome }}
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveSistemas" class="btn-confirm">Salvar</button>
+      <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 </div>
 </div>
 </template>
@@ -821,14 +866,41 @@ const editingCell = ref({
   value: null
 })
 
+// Adicione estas linhas dentro do setup do seu componente
+const sistemasDialog = ref({
+  show: false,
+  position: {},
+  processo: null
+});
+
 const handleDblClick = async (field, processo, event) => {
   if (editingCell.value.id === processo.id && editingCell.value.field === field) {
-    return
+    return;
   }
 
-  const cell = event.target.closest('td')
-  const rect = cell.getBoundingClientRect()
+  const cell = event.target.closest('td');
+  const rect = cell.getBoundingClientRect();
 
+  // Tratamento especial para o campo sistemas_ativos
+  if (field === 'sistemas_ativos') {
+    editingCell.value = {
+      id: processo.id,
+      field,
+      value: Array.isArray(processo[field]) ? [...processo[field]] : []
+    };
+    
+    sistemasDialog.value = {
+      show: true,
+      position: {
+        top: `${rect.bottom + 10}px`,
+        left: `${rect.left}px`
+      },
+      processo
+    };
+    return;
+  }
+
+  // Comportamento padrão para outros campos
   confirmDialog.value = {
     show: true,
     position: {
@@ -840,15 +912,196 @@ const handleDblClick = async (field, processo, event) => {
         id: processo.id,
         field,
         value: field === 'empresa' ? processo.empresa_id : processo[field]
-      }
+      };
     }
+  };
+};
+
+const saveSistemas = async () => {
+  try {
+    if (!editingCell.value.id || !sistemasDialog.value.processo) {
+      hideSistemasDialog();
+      return;
+    }
+    
+    const processo = sistemasDialog.value.processo;
+    const updateData = {
+      sistemas_ativos: editingCell.value.value,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Adiciona usuário que está alterando se disponível
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      updateData.updated_by = user.id;
+    }
+    
+    const { error } = await supabase
+      .from('processos')
+      .update(updateData)
+      .eq('id', processo.id);
+      
+    if (error) throw error;
+    
+    // Log da alteração
+    await logSystemAction({
+      tipo: 'atualizacao',
+      tabela: 'processos',
+      registro_id: processo.id,
+      campo_alterado: 'sistemas_ativos',
+      dados_anteriores: processo.sistemas_ativos,
+      dados_novos: editingCell.value.value
+    });
+    
+    // Recarrega os processos
+    await loadProcessos();
+    
+    hideSistemasDialog();
+  } catch (error) {
+    console.error('Erro ao salvar sistemas:', error);
+    alert('Erro ao salvar sistemas');
+  }
+};
+
+const hideSistemasDialog = () => {
+  sistemasDialog.value = {
+    show: false,
+    position: {},
+    processo: null
+  };
+  
+  // Limpa o estado de edição
+  editingCell.value = {
+    id: null,
+    field: null,
+    value: null
+  };
+};
+
+const handleUpdate = async (processo) => {
+  try {
+    if (!editingCell.value.value && editingCell.value.field !== 'status') {
+      cancelEdit()
+      return
+    }
+
+    let updateValue = editingCell.value.value
+
+    // Formatação específica por tipo de campo
+    switch (editingCell.value.field) {
+      case 'data_pregao':
+        // Garante que a data esteja no formato correto para o banco
+        if (typeof updateValue === 'string') {
+          if (updateValue.includes('/')) {
+            // Converte de DD/MM/YYYY para YYYY-MM-DD
+            const [day, month, year] = updateValue.split('/')
+            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          } else if (updateValue.includes('-')) {
+            // Já está em formato YYYY-MM-DD, apenas garantir
+            const [year, month, day] = updateValue.split('-')
+            updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          }
+        }
+        break
+        
+      case 'hora_pregao':
+        // Garante formato HH:mm
+        if (typeof updateValue === 'string') {
+          const [hours, minutes] = updateValue.split(':')
+          updateValue = `${hours.padStart(2, '0')}:${minutes ? minutes.padStart(2, '0') : '00'}`
+        }
+        break
+        
+      case 'sistemas_ativos':
+        // Garante que é um array
+        updateValue = Array.isArray(updateValue) ? updateValue : []
+        break
+    }
+
+    // Verifica se o valor realmente mudou para evitar atualizações desnecessárias
+    if (updateValue === processo[editingCell.value.field]) {
+      console.log('Valor não mudou, cancelando atualização')
+      cancelEdit()
+      return
+    }
+
+    console.log(`Atualizando ${editingCell.value.field} para:`, updateValue)
+
+    // Prepara dados para atualização
+    const updateData = {
+      [editingCell.value.field]: updateValue,
+      updated_at: new Date().toISOString()
+    }
+    
+    // Adiciona usuário que está alterando se disponível
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id) {
+      updateData.updated_by = user.id
+    }
+
+    // Atualiza no banco de dados
+    console.log('Dados de atualização:', updateData)
+    
+    const { error } = await supabase
+      .from('processos')
+      .update(updateData)
+      .eq('id', processo.id)
+
+    if (error) {
+      console.error('Erro ao atualizar:', error)
+      throw error
+    }
+
+    // Log da alteração
+    try {
+      await logSystemAction({
+        tipo: 'atualizacao',
+        tabela: 'processos',
+        registro_id: processo.id,
+        campo_alterado: editingCell.value.field,
+        dados_anteriores: processo[editingCell.value.field],
+        dados_novos: updateValue
+      })
+    } catch (logError) {
+      // Se o log falhar, apenas reportamos o erro mas continuamos
+      console.warn('Erro no log de alteração:', logError)
+    }
+
+    // Recarrega os processos após atualização bem-sucedida
+    await loadProcessos()
+    console.log('Atualização concluída com sucesso')
+
+  } catch (error) {
+    console.error('Erro ao atualizar:', error)
+    // Exibe mensagem de erro para o usuário
+    alert(`Erro ao atualizar o campo: ${error.message || 'Verifique os dados e tente novamente'}`)
+  } finally {
+    cancelEdit()
   }
 }
 
+const cancelEdit = () => {
+  editingCell.value = {
+    id: null,
+    field: null,
+    value: null
+  }
+}
+
+// Adicione logo após esta definição:
+const confirmDialog = ref({
+  show: false,
+  position: {},
+  callback: null
+})
+
+// Adicione essas duas funções aqui
 const handleConfirmEdit = () => {
+  // Executa o callback para iniciar a edição
   confirmDialog.value.callback?.()
   hideConfirmDialog()
 
+  // Foca no campo de entrada após a renderização
   nextTick(() => {
     const input = document.querySelector('.editing-cell input, .editing-cell textarea, .editing-cell select')
     if (input) {
@@ -867,83 +1120,6 @@ const hideConfirmDialog = () => {
     callback: null
   }
 }
-
-const handleUpdate = async (processo) => {
-  try {
-    if (!editingCell.value.value) {
-      cancelEdit()
-      return
-    }
-
-    let updateValue = editingCell.value.value
-
-    // Formatação específica por tipo de campo
-    switch (editingCell.value.field) {
-      case 'data_pregao':
-        // Converte data para formato ISO
-        const [day, month, year] = editingCell.value.value.split('/')
-        updateValue = `${year}-${month}-${day}`
-        break
-      case 'hora_pregao':
-        // Garante formato HH:mm
-        updateValue = editingCell.value.value.split(':').slice(0, 2).join(':')
-        break
-      case 'sistemas_ativos':
-        // Garante que é um array
-        updateValue = Array.isArray(editingCell.value.value) ? editingCell.value.value : []
-        break
-    }
-
-    // Prepara dados para atualização
-    const updateData = {
-      [editingCell.value.field]: updateValue,
-      updated_at: new Date().toISOString(),
-      updated_by: (await supabase.auth.getUser()).data.user?.id
-    }
-
-    // Atualiza no banco de dados
-    const { error } = await supabase
-      .from('processos')
-      .update(updateData)
-      .eq('id', processo.id)
-
-    if (error) throw error
-
-    // Log da alteração
-    await logSystemAction({
-      tipo: 'atualizacao',
-      tabela: 'processos',
-      registro_id: processo.id,
-      campo_alterado: editingCell.value.field,
-      dados_anteriores: processo[editingCell.value.field],
-      dados_novos: updateValue
-    })
-
-    // Recarrega os processos após atualização bem-sucedida
-    await loadProcessos()
-
-  } catch (error) {
-    console.error('Erro ao atualizar:', error)
-    // Exibe mensagem de erro para o usuário
-    alert('Erro ao atualizar o campo. Por favor, tente novamente.')
-  } finally {
-    cancelEdit()
-  }
-}
-
-const cancelEdit = () => {
-  editingCell.value = {
-    id: null,
-    field: null,
-    value: null
-  }
-}
-
-const confirmDialog = ref({
-  show: false,
-  position: {},
-  callback: null
-})
 
 const checkAdminStatus = async () => {
   try {
@@ -1260,7 +1436,8 @@ onMounted(async () => {
       loadProcessos(),
       loadRepresentantes(),
       loadEmpresas(),
-      loadPlataformas()
+      loadPlataformas(),
+      loadSistemas() // Adicione esta linha
     ])
 
     // 5. Carregar configurações da interface
@@ -1330,6 +1507,56 @@ const loadData = async () => {
 
 // Use o composable
 useConnectionManager(loadData)
+
+// Adicione essas propriedades e métodos
+const sistemasAtivos = ref([])
+
+// Na configuração do componente (setup)
+const loadSistemas = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('sistemas')
+      .select('id, nome')
+      .eq('status', 'ACTIVE')
+      .order('nome')
+    
+    if (error) throw error
+    sistemasAtivos.value = data || []
+    
+    // Atualiza o cache de nomes
+    data.forEach(sistema => {
+      sistemasNomesCache.value[sistema.id] = sistema.nome
+    })
+  } catch (error) {
+    console.error('Erro ao carregar sistemas:', error)
+  }
+}
+
+const getSistemaNome = (id) => {
+  return sistemasNomesCache.value[id] || 'Sistema não encontrado'
+}
+
+const handleSistemasChange = (event) => {
+  // Obtém os valores selecionados do select múltiplo
+  const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value)
+  editingCell.value.value = selectedOptions
+}
+
+const removerSistema = (id) => {
+  if (!editingCell.value.value) return
+  
+  const index = editingCell.value.value.indexOf(id)
+  if (index !== -1) {
+    const newSistemas = [...editingCell.value.value]
+    newSistemas.splice(index, 1)
+    editingCell.value.value = newSistemas
+  }
+}
+
+const getSistemasNomesString = (ids) => {
+  if (!ids || !ids.length) return '-'
+  return ids.map(id => getSistemaNome(id)).join(', ')
+}
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>
