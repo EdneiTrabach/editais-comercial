@@ -36,5 +36,11 @@
 @import 'ProcessosView.css';
 @import 'RelatoriosView.css';
 @import 'RepresentantesView.css';
+@import 'ResponsaveisAdminView.css'; /* Adicione esta linha */
 @import 'SistemasView.css';
 @import 'theme.css';
+@import 'UsuariosView.css';
+@import 'VagasView.css';
+@import 'VencedoresView.css';
+@import 'VinculosView.css';
+@import 'VotacoesView.css';

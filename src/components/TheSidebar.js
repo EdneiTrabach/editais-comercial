@@ -29,7 +29,8 @@ export default {
       { path: '/plataformas', name: 'Plataformas', icon: '/icons/links.svg' },
       { path: '/empresas', name: 'Empresas', icon: '/icons/empresa.svg' },
       { path: '/relatorios', name: 'Relatórios', icon: '/icons/check.svg' },
-      { path: '/configuracoes', name: 'Admin. de Usuários', icon: '/icons/config-usuario.svg' }
+      { path: '/configuracoes', name: 'Admin. de Usuários', icon: '/icons/config-usuario.svg' },
+      { path: '/responsaveis', name: 'Responsáveis', icon: '/icons/responsavel.svg' }
     ]
 
     // ===== GERENCIAMENTO DO SIDEBAR =====
@@ -151,10 +152,13 @@ export default {
     // Verificar acesso à área de administração
     const handleAdminClick = (e) => {
       if (!isAdmin.value) {
-        alert('Você não tem permissão para acessar esta área')
-        return
+        e.preventDefault();
+        alert('Você não tem permissão para acessar esta área');
+        return;
       }
-      router.push('/configuracoes')
+      
+      // Se for admin, permita a navegação seguindo o link normalmente
+      // Não precisa fazer nada aqui, pois o router-link navegará automaticamente
     }
 
     // ===== LISTENERS DE EVENTOS =====

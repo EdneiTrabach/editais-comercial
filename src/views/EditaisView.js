@@ -55,6 +55,7 @@ export default {
     const currentYear = ref(new Date().getFullYear())
     const showTimeoutMessage = ref(false)
     const loadingTimeout = ref(null)
+    const responsaveis_usuario = ref([]);
     
     // === INICIALIZAÇÃO DE COMPOSABLES ===
     
@@ -300,38 +301,20 @@ export default {
 
     // === CICLO DE VIDA DO COMPONENTE ===
     
-    onMounted(() => {
-      // Adicionar listener de visibilidade
-      document.addEventListener('visibilitychange', handleVisibilityChange)
-      
-      // Gerenciamento de conexão
-      useConnectionManager(() => loadPageData(loadPlataformas, loadRepresentantes, loadSistemas))
-      
-      // Configurações de realtime
-      setupRealtimeSubscription()
-      startAutoRefresh()
-      
-      // Carregamento de dados iniciais
-      Promise.all([
-        loadPlataformas(),
-        loadRepresentantes(),
-        loadSistemas()
-      ]).catch(error => {
-        console.error('Erro ao carregar dados iniciais:', error)
-      })
-      
-      // Limpeza de cache
-      processamentosCache.limparCache()
-      
-      // Configuração de canal para atualizações
-      const channel = supabase.channel('editais-updates')
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'processos' }, 
-          () => loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
-        )
-        .subscribe()
-      
-      addSubscription('editais-updates', channel)
+    onMounted(async () => {
+      try {
+        // Carregar dados iniciais em paralelo
+        await Promise.all([
+          loadPlataformas(),
+          loadRepresentantes(),
+          loadResponsaveis_usuario(), // Certifique-se de que esta linha existe
+          loadSistemas()
+        ]);
+        
+        // Restante do código ...
+      } catch (error) {
+        console.error('Erro ao inicializar formulário:', error);
+      }
     })
 
     // Limpeza ao desmontar o componente
@@ -413,9 +396,32 @@ export default {
           codigo_analise: formData.value.codigo_analise || null,
           campo_adicional1: formData.value.campo_adicional1 || null,
           campo_adicional2: formData.value.campo_adicional2 || null,
-          publicacao_original: formData.value.publicacao_original || null,
-          responsavel_id: (await supabase.auth.getUser())?.data?.user?.id || null
+          publicacao_original: formData.value.publicacao_original || null
         };
+        
+        // REMOVA o campo responsavel_id do processoData e adicione-o apenas se o valor for válido
+        // após verificar se o ID existe na tabela profiles
+        if (formData.value.responsavel_id) {
+          try {
+            // Verificamos primeiro se o ID existe na tabela profiles
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', formData.value.responsavel_id)
+              .single();
+              
+            if (profileError || !profileData) {
+              // Se o ID não existe em profiles, não incluímos ele no processoData
+              console.warn('ID de responsável não encontrado em profiles, salvando processo sem responsável.');
+            } else {
+              // Só incluímos o responsavel_id se ele existir em profiles
+              processoData.responsavel_id = formData.value.responsavel_id;
+            }
+          } catch (err) {
+            console.error('Erro ao verificar responsável:', err);
+            // Em caso de erro, não incluímos o responsável
+          }
+        }
           
         // Adicionar distâncias se disponíveis
         if (distanciasSalvas.value?.length > 0) {
@@ -487,6 +493,25 @@ export default {
       
       // Redirecionar para a página de funcionalidades
       router.push('/funcionalidades');
+    };
+
+    // Função para carregar os responsáveis
+    const loadResponsaveis_usuario = async () => {
+      try {
+        // Alterado para buscar da tabela de responsaveis_processos em vez de profiles
+        const { data, error } = await supabase
+          .from('responsaveis_processos')
+          .select('id, nome, email, departamento')
+          .eq('status', 'ACTIVE') // Filtra apenas responsáveis ativos
+          .order('nome');
+          
+        if (error) throw error;
+        responsaveis_usuario.value = data || [];
+        console.log('Responsáveis ativos carregados:', responsaveis_usuario.value.length);
+      } catch (error) {
+        console.error('Erro ao carregar responsáveis:', error);
+        responsaveis_usuario.value = [];
+      }
     };
 
     // === RETORNO DE VALORES E FUNÇÕES PARA O TEMPLATE ===
@@ -630,6 +655,7 @@ export default {
       formatarValorMoeda: formatarValorMoedaWrapper,
       formatarValorEstimadoLocal: formatarValorEstimadoLocalWrapper,
       handleCancel,
+      responsaveis_usuario,
     }
   }
 }

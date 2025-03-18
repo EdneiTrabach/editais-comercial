@@ -7,6 +7,7 @@ import ProcessosView from '../views/ProcessosView.vue' // Importe diretamente
 import RelatoriosView from '@/views/RelatoriosView.vue'
 import EmpresasView from '../views/EmpresasView.vue'
 import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
+import ResponsaveisAdminView from '../views/ResponsaveisAdminView.vue'
 
 const requireAdmin = async (to, from, next) => {
   try {
@@ -137,6 +138,15 @@ const router = createRouter({
       name: 'sistemas',
       component: () => import('../views/SistemasView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/responsaveis',
+      name: 'ResponsaveisAdmin',
+      component: ResponsaveisAdminView,
+      meta: { 
+        requiresAuth: true,
+        requiresAdmin: true // Para proteger a rota apenas para admins
+      }
     },
     // Adicione um catch-all route
     {

@@ -29,7 +29,8 @@ export function useEditaisForm() {
     distancia_km: null,
     ponto_referencia_cidade: '',
     ponto_referencia_uf: '',
-    valor_estimado: ''
+    valor_estimado: '',
+    responsavel_id: '' // Adicione esta linha
   })
 
   // Computed property para controlar a visibilidade do campo de plataforma

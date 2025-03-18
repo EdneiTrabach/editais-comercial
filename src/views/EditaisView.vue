@@ -64,7 +64,7 @@
 
           <div class="form-group">
             <RequiredLabel text="Órgão" :isRequired="true" />
-            <input v-model="formData.orgao" type="text" required placeholder="Nome do órgão" class="input-orgao"/>
+            <input v-model="formData.orgao" type="text" required placeholder="Nome do órgão" class="input-orgao" />
           </div>
 
           <div class="form-group">
@@ -105,7 +105,7 @@
             <RequiredLabel text="Objeto Resumido (máx. 700 caracteres)" :isRequired="false" />
             <div class="objeto-container">
               <input v-model="formData.objeto_resumido" type="string" maxlength="700"
-                placeholder="Breve descrição do objeto" class="input-descricao"/>
+                placeholder="Breve descrição do objeto" class="input-descricao" />
               <small>{{ formData.objeto_resumido?.length || 0 }}/700</small>
 
               <div class="form-group">
@@ -142,7 +142,8 @@
                         {{ estado.nome }}
                       </option>
                     </select>
-                    <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados" class="cidade-select">
+                    <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados"
+                      class="cidade-select">
                       <option value="">Cidade...</option>
                       <option v-for="municipio in municipios" :key="municipio.id" :value="municipio">
                         {{ municipio.nome }}
@@ -211,20 +212,16 @@
               </div>
 
               <!-- Modo manual -->
-                <div class="distancia-manual-input">
-                  <label class="label-distancia">Distância:</label>
-                  <input 
-                    type="text" 
-                    v-model="distanciaManualValue" 
-                    class="input-distancia-manual" 
-                    placeholder="Digite a distância (ex: 50 km, aprox. 2h, etc.)" 
-                    />
-                  
-                  <button @click="salvarDistanciaManual" class="btn-add-distancia">
-                    <span>Adicionar à Lista</span>
-                    <span class="icon">+</span>
-                  </button>
-                </div>
+              <div class="distancia-manual-input">
+                <label class="label-distancia">Distância:</label>
+                <input type="text" v-model="distanciaManualValue" class="input-distancia-manual"
+                  placeholder="Digite a distância (ex: 50 km, aprox. 2h, etc.)" />
+
+                <button @click="salvarDistanciaManual" class="btn-add-distancia">
+                  <span>Adicionar à Lista</span>
+                  <span class="icon">+</span>
+                </button>
+              </div>
 
               <!-- Lista de Distâncias Salvas -->
             </div>
@@ -263,7 +260,8 @@
 
           <div class="form-group">
             <RequiredLabel text="Observações" :isRequired="false" />
-            <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais" class="input-orgao" />
+            <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais"
+              class="input-orgao" />
           </div>
 
           <div class="form-group">
@@ -271,10 +269,16 @@
             <input v-model="formData.campo_adicional2" type="text" placeholder="Campo opcional 2" />
           </div>
 
+          <!-- Substitua o campo de responsável existente por este -->
           <div class="form-group">
-            <RequiredLabel text="Responsável" :isRequired="false" />
-            <input type="text" :value="'(definir)'" disabled />
-          </div>
+  <RequiredLabel text="Responsável" :isRequired="false" />
+  <select v-model="formData.responsavel_id" class="responsavel-select">
+    <option value="">Sem responsável definido</option>
+    <option v-for="resp in responsaveis_usuario" :key="resp.id" :value="resp.id">
+      {{ resp.nome }} ({{ resp.email }}){{ resp.departamento ? ` - ${resp.departamento}` : '' }}
+    </option>
+  </select>
+</div>
 
           <div class="form-actions">
             <button type="button" class="btn-cancelar" @click="handleCancel">

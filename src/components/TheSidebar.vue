@@ -88,6 +88,13 @@
             </router-link>
           </li>
           <li class="sidebar-menu-item">
+            <router-link to="/responsaveis" class="sidebar-menu-link" v-slot="{ isActive }"
+              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
+              <img src="/icons/responsavel.svg" alt="Responsáveis" class="icon" />
+              <span class="link-text">Responsáveis</span>
+            </router-link>
+          </li>
+          <li class="sidebar-menu-item">
             <router-link to="/configuracoes" class="sidebar-menu-link" v-slot="{ isActive }"
               :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
               <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />

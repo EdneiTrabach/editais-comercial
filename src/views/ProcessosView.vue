@@ -215,6 +215,27 @@
                   <div v-else class="sem-sistemas">-</div>
                 </div>
               </template>
+              <template v-else-if="coluna.campo === 'responsavel_id'">
+                <!-- Edição -->
+                <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                  <select v-model="editingCell.value" 
+                          @change="handleUpdate(processo)" 
+                          @blur="handleUpdate(processo)" 
+                          @keyup.esc="cancelEdit()" 
+                          class="responsavel-select">
+                    <option value="">Sem responsável</option>
+                    <option v-for="resp in responsaveisAtivos" :key="resp.id" :value="resp.id">
+                      {{ resp.nome }} {{ resp.email ? `(${resp.email})` : '' }}
+                    </option>
+                  </select>
+                </template>
+                <!-- Visualização -->
+                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)">
+                  <template v-if="field === 'responsavel_id'">
+                    {{ getResponsavelNome(processo.responsavel_id) }}
+                  </template>
+                </span>
+              </template>
               <span v-else>
                 {{ processo[coluna.campo] || '-' }}
               </span>
@@ -873,6 +894,7 @@ const sistemasDialog = ref({
   processo: null
 });
 
+// No método handleDblClick, adicione uma verificação específica para o campo responsavel_id
 const handleDblClick = async (field, processo, event) => {
   if (editingCell.value.id === processo.id && editingCell.value.field === field) {
     return;
@@ -900,6 +922,15 @@ const handleDblClick = async (field, processo, event) => {
     return;
   }
 
+  // Verificar se o campo é responsavel_id
+  if (field === 'responsavel_id') {
+    // Verificar se temos responsáveis carregados
+    if (responsaveisAtivos.value.length === 0) {
+      console.warn('Lista de responsáveis não carregada. Carregando agora...');
+      await loadResponsaveis();
+    }
+  }
+
   // Comportamento padrão para outros campos
   confirmDialog.value = {
     show: true,
@@ -911,7 +942,7 @@ const handleDblClick = async (field, processo, event) => {
       editingCell.value = {
         id: processo.id,
         field,
-        value: field === 'empresa' ? processo.empresa_id : processo[field]
+        value: processo[field] // Isso já captura o ID do responsável corretamente
       };
     }
   };
@@ -1016,6 +1047,26 @@ const handleUpdate = async (processo) => {
         // Garante que é um array
         updateValue = Array.isArray(updateValue) ? updateValue : []
         break
+
+      case 'responsavel_id':
+        // Garantir que temos um valor válido ou null
+        updateValue = updateValue || null;
+        console.log('Atualizando responsável para:', updateValue);
+        
+        if (updateValue) {
+          // Verificar se o responsável existe
+          const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
+          if (responsavel) {
+            console.log(`Nome do responsável selecionado: ${responsavel.nome}`);
+            // Atualizar cache se necessário
+            responsaveisCache.value[updateValue] = responsavel.nome;
+          } else {
+            console.warn('ID de responsável selecionado não encontrado na lista!');
+            // Recarregar responsáveis caso necessário
+            await loadResponsaveis();
+          }
+        }
+        break;
     }
 
     // Verifica se o valor realmente mudou para evitar atualizações desnecessárias
@@ -1182,6 +1233,47 @@ const estados = ref([
 ])
 
 const representantes = ref([])
+
+// Melhorias na função de carregamento de responsáveis
+const loadResponsaveis = async () => {
+  try {
+    console.log('Carregando responsáveis...');
+    const { data, error } = await supabase
+      .select('id, nome, email')
+      .eq('status', 'ACTIVE')
+      .order('nome');
+    
+    if (error) throw error;
+    responsaveis.value = data || [];
+    
+    // Pré-carrega o cache de responsáveis
+    data.forEach(resp => {
+      responsaveisCache.value.set(resp.id, resp);
+    });
+    
+  } catch (error) {
+    console.error('Erro ao carregar responsáveis:', error);
+  }
+};
+
+// Adicione esta variável para cache de responsáveis
+const responsaveisCache = ref(new Map());
+
+// Melhore a função getResponsavelNome para usar o cache
+const getResponsavelNome = (id) => {
+  if (!id) return 'Sem responsável';
+  
+  const responsavel = responsaveisCache.value.get(id) || 
+                      responsaveis.value.find(r => r.id === id);
+                      
+  if (responsavel) {
+    // Armazena no cache para próximas consultas
+    responsaveisCache.value.set(id, responsavel);
+    return responsavel.nome;
+  }
+  
+  return 'Carregando...';
+};
 
 const loadRepresentantes = async () => {
   try {
@@ -1432,13 +1524,22 @@ onMounted(async () => {
     })
 
     // 4. Carregar dados em paralelo para melhor desempenho
+    console.log('Iniciando carregamento dos dados...');
+    
+    // Carregar responsáveis logo no início
+    await loadResponsaveis();
+    console.log('Responsáveis carregados inicialmente:', responsaveisAtivos.value.length);
+    
+    // Depois carregar os outros dados em paralelo
     await Promise.all([
       loadProcessos(),
       loadRepresentantes(),
       loadEmpresas(),
       loadPlataformas(),
-      loadSistemas() // Adicione esta linha
-    ])
+      loadSistemas(),
+    ]);
+    
+    console.log('Todos os outros dados carregados com sucesso!');
 
     // 5. Carregar configurações da interface
     loadColumnWidths()
@@ -1557,6 +1658,35 @@ const getSistemasNomesString = (ids) => {
   if (!ids || !ids.length) return '-'
   return ids.map(id => getSistemaNome(id)).join(', ')
 }
+
+// Adicione esta variável com outros refs
+const responsaveisAtivos = ref([])
+
+// Adicione este método para verificar e forçar o carregamento dos responsáveis se necessário
+const ensureResponsaveisCarregados = async () => {
+  if (responsaveisAtivos.value.length === 0) {
+    console.log('Responsáveis não carregados, carregando agora...');
+    await loadResponsaveis();
+    return true;
+  }
+  return false;
+}
+
+// No handler de edição para o campo responsavel_id
+const handleEdit = (processo, field) => {
+  // ...código existente...
+  
+  // Se estiver editando o responsável, precisamos carregar as opções
+  if (field === 'responsavel_id') {
+    // Certifique-se de que responsáveis estão carregados
+    if (responsaveis.value.length === 0) {
+      loadResponsaveis();
+    }
+    
+    // Código específico para edição de responsável
+    // A interface de edição deve mostrar um select com os nomes, não os IDs
+  }
+};
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>
