@@ -239,8 +239,11 @@
               <template v-else-if="coluna.campo === 'representante_id'">
                 <!-- Modo de edição -->
                 <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
-                  @keyup.esc="cancelEdit()" class="representante-select">
+                  v-model="editingCell.value" 
+                  @blur="handleUpdate(processo)" 
+                  @change="handleUpdate(processo)" 
+                  @keyup.esc="cancelEdit()" 
+                  class="representante-select">
                   <option value="">Sem representante</option>
                   <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                     {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
@@ -616,6 +619,7 @@ const loadProcessos = async () => {
   try {
     isLoading.value = true
     console.log('Iniciando carregamento de processos...')
+    console.log('Representantes carregados:', representantes.value.length);
 
     // Consulta aos processos
     const { data, error } = await supabase
@@ -987,10 +991,22 @@ const handleDblClick = async (field, processo, event) => {
 
   // Verificar se o campo é representante_id
   if (field === 'representante_id') {
+    console.log('Clicado no campo de representante');
+    debugRepresentantes(); // Adicione este log
+
     // Verificar se temos representantes carregados
     if (representantes.value.length === 0) {
-      console.warn('Lista de representantes não carregada. Carregando agora...');
+      console.log('Carregando representantes sob demanda...');
       await loadRepresentantes();
+      
+      debugRepresentantes(); // Log após carregamento
+      
+      // Verificar novamente após o carregamento
+      if (representantes.value.length === 0) {
+        console.error('Não foi possível carregar representantes.');
+        alert('Não foi possível carregar a lista de representantes.');
+        return;
+      }
     }
   }
 
@@ -1133,6 +1149,24 @@ const handleUpdate = async (processo) => {
             console.warn('ID de responsável selecionado não encontrado na lista!');
             // Recarregar responsáveis caso necessário
             await loadResponsaveis();
+          }
+        }
+        break;
+
+      case 'representante_id':
+        // Garante que seja UUID ou null
+        updateValue = updateValue || null;
+        console.log('Atualizando representante para:', updateValue);
+
+        if (updateValue) {
+          // Verificar se o representante existe na lista carregada
+          const representante = representantes.value.find(r => r.id === updateValue);
+          if (representante) {
+            console.log(`Nome do representante selecionado: ${representante.nome}`);
+          } else {
+            console.warn('ID de representante selecionado não encontrado na lista!');
+            // Em caso de não encontrado, podemos recarregar a lista
+            await loadRepresentantes();
           }
         }
         break;
@@ -1325,16 +1359,26 @@ const getResponsavelNome = (id) => {
 
 const loadRepresentantes = async () => {
   try {
+    console.log('Iniciando carregamento de representantes...');
+    
     const { data, error } = await supabase
       .from('representantes')
       .select('*')
-      .order('nome')
+      .order('nome');
 
-    if (error) throw error
-    representantes.value = data
+    if (error) {
+      console.error('Erro na consulta de representantes:', error);
+      throw error;
+    }
+    
+    console.log(`Carregados ${data?.length || 0} representantes:`, data);
+    representantes.value = data || [];
+    
+    return data;
   } catch (error) {
-    console.error('Erro ao carregar representantes:', error)
-    representantes.value = []
+    console.error('Erro ao carregar representantes:', error);
+    representantes.value = [];
+    return [];
   }
 }
 
@@ -1435,8 +1479,8 @@ const handleSubmit = async () => {
       site_pregao: formData.value.site_pregao,
       objeto_resumido: formData.value.objeto_resumido,
       objeto_completo: formData.value.objeto_completo,
-      responsavel: representante.id,
-      representante: formData.value.representante
+      responsavel_id: responsavel.id, // Alterado de "responsavel" para "responsavel_id"
+      representante_id: formData.value.representante // Alterado de "representante" para "representante_id"
     }
 
     console.log('Dados a serem inseridos:', {
@@ -1732,6 +1776,14 @@ const handleEdit = (processo, field) => {
     // A interface de edição deve mostrar um select com os nomes, não os IDs
   }
 };
+
+// Adicione esta função ao componente para depuração
+const debugRepresentantes = () => {
+  console.log(`Status dos representantes: 
+  - Array carregado: ${representantes.value ? 'Sim' : 'Não'}
+  - Quantidade: ${representantes.value?.length || 0}
+  - Primeiro representante: ${representantes.value?.[0]?.nome || 'Nenhum'}`);
+}
 
 // Adicione esta função ao componente
 const formatarDistancia = (processo) => {

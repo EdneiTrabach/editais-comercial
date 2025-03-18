@@ -110,7 +110,6 @@
   max-width: 300px;
   vertical-align: top;
   height: auto;
-  padding: 10px;
   user-select: text;
   cursor: text;
   text-align: center;
@@ -874,7 +873,7 @@ td select option {
 .status {
   padding: 0.25rem 0.75rem;
   border-radius: 50px;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
   user-select: text;
   cursor: text;
@@ -1184,7 +1183,7 @@ th[data-field="objeto_completo"] {
 }
 
 .selected-row .row-number-cell {
-  background-color: transparent !important;
+  /* background-color: transparent !important; */
   color: inherit;
   font-weight: 600;
   color: #000000;
