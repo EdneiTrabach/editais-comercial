@@ -29,7 +29,6 @@ export default {
 
     // System cache
     const sistemasNomesCache = ref({})
-    const responsaveisCache = ref(new Map())
 
     // UI state
     const confirmDialog = ref({
@@ -68,8 +67,6 @@ export default {
     const refreshInterval = ref(null)
 
     // Reference Data
-    const responsaveis = ref([])
-    const responsaveisAtivos = ref([])
     const representantes = ref([])
     const empresas = ref([])
     const sistemasAtivos = ref([])
@@ -97,13 +94,6 @@ export default {
       { titulo: 'Órgão', campo: 'orgao' },
       { titulo: 'Objeto Completo', campo: 'objeto_completo' },
       { titulo: 'Status', campo: 'status' },
-      {
-        titulo: 'Responsável',
-        campo: 'responsavel_id',
-        tabelaRelacionada: 'responsaveis_processos',
-        campoExibicao: 'nome',
-        tipoEdicao: 'select'
-      },
       {
         titulo: 'Distâncias',
         campo: 'distancia_km',
@@ -375,26 +365,6 @@ export default {
       return empresa ? empresa.nome : '-'
     }
 
-    const getResponsavelNome = (id) => {
-      if (!id) return 'Sem responsável';
-      
-      // Try to fetch from cache first
-      const cachedResp = responsaveisCache.value.get(id);
-      if (cachedResp) {
-        return cachedResp.nome || 'Sem nome';
-      }
-      
-      // If not in cache, search the array
-      const responsavel = responsaveisAtivos.value.find(r => r.id === id);
-      if (responsavel) {
-        // Update cache for future queries
-        responsaveisCache.value.set(id, responsavel);
-        return responsavel.nome || 'Sem nome';
-      }
-      
-      return 'Responsável não encontrado';
-    };
-
     const getRepresentanteNome = (id) => {
       if (!id) return 'Sem representante';
 
@@ -498,37 +468,6 @@ export default {
         return '-'
       }
     }
-
-    const loadResponsaveis = async () => {
-      try {
-        console.log('Loading responsibles...');
-        const { data, error } = await supabase
-          .from('responsaveis_processos')
-          .select('id, nome, email, departamento')
-          .eq('status', 'ACTIVE')
-          .order('nome');
-
-        if (error) throw error;
-
-        // Assign to responsibles refs
-        responsaveis.value = data || [];
-        responsaveisAtivos.value = data || [];
-
-        // Pre-load the responsibles cache as a Map
-        responsaveisCache.value.clear(); // Clear cache first
-        data?.forEach(resp => {
-          if (resp && resp.id) {
-            responsaveisCache.value.set(resp.id, resp);
-          }
-        });
-
-        console.log(`Loaded ${data?.length || 0} responsibles`);
-        return data;
-      } catch (error) {
-        console.error('Error loading responsibles:', error);
-        return [];
-      }
-    };
 
     const loadRepresentantes = async () => {
       try {
@@ -847,15 +786,6 @@ export default {
         return;
       }
 
-      // Check if field is responsavel_id
-      if (field === 'responsavel_id') {
-        // Check if we have responsibles loaded
-        if (responsaveisAtivos.value.length === 0) {
-          console.warn('Responsibles list not loaded. Loading now...');
-          await loadResponsaveis();
-        }
-      }
-
       // Check if field is representante_id
       if (field === 'representante_id') {
         console.log('Clicked on representative field');
@@ -929,12 +859,6 @@ export default {
 
     const handleUpdate = async (processo) => {
       try {
-        // Special case for responsavel_id:
-        // Convert empty string to null - important for UUID type
-        if (editingCell.value.field === 'responsavel_id' && editingCell.value.value === '') {
-          editingCell.value.value = null;
-        }
-
         if (!editingCell.value.value && editingCell.value.field !== 'status' && editingCell.value.field !== 'responsavel_id') {
           cancelEdit()
           return
@@ -971,40 +895,6 @@ export default {
             // Ensure it's an array
             updateValue = Array.isArray(updateValue) ? updateValue : []
             break
-
-          case 'responsavel_id':
-            // Ensure it's UUID or null
-            updateValue = updateValue || null;
-            console.log('Valor do responsável antes da atualização:', updateValue);
-            
-            if (updateValue) {
-              try {
-                // Buscar o email do responsável selecionado
-                const responsavel = responsaveisAtivos.value.find(r => r.id === updateValue);
-                
-                if (responsavel && responsavel.email) {
-                  // Usar o email para encontrar o usuário correspondente na tabela profiles
-                  const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', responsavel.email)
-                    .single();
-                    
-                  if (profileError || !profileData) {
-                    console.error('Usuário correspondente não encontrado para o email:', responsavel.email);
-                    throw new Error('Não foi possível encontrar um usuário para este responsável');
-                  }
-                  
-                  // Usar o ID do perfil do usuário em vez do ID do responsável
-                  updateValue = profileData.id;
-                  console.log('Convertendo ID do responsável para ID do perfil:', updateValue);
-                }
-              } catch (err) {
-                console.error('Erro ao buscar usuário correspondente:', err);
-                throw new Error('Erro ao atribuir responsável');
-              }
-            }
-            break;
 
           case 'representante_id':
             // Ensure it's UUID or null
@@ -1256,7 +1146,6 @@ export default {
           site_pregao: formData.value.site_pregao,
           objeto_resumido: formData.value.objeto_resumido,
           objeto_completo: formData.value.objeto_completo,
-          responsavel_id: formData.value.responsavel_id,
           representante_id: formData.value.representante_id
         }
 
@@ -1275,116 +1164,6 @@ export default {
       } catch (error) {
         console.error('Error:', error)
         alert('Error registering process')
-      }
-    };
-
-    // Responsible assignment functions
-    const ensureResponsaveisCarregados = async () => {
-      if (responsaveisAtivos.value.length === 0) {
-        console.log('Responsibles not loaded, loading now...');
-        await loadResponsaveis();
-        return true;
-      }
-      return false;
-    }
-
-    const atribuirResponsavelRandom = async (processoId) => {
-      try {
-        // Make sure we have responsibles loaded
-        if (responsaveisAtivos.value.length === 0) {
-          await loadResponsaveis();
-        }
-        
-        if (responsaveisAtivos.value.length === 0) {
-          console.error("No active responsibles registered");
-          return;
-        }
-        
-        // Select a random responsible
-        const randomIndex = Math.floor(Math.random() * responsaveisAtivos.value.length);
-        const responsavelSelecionado = responsaveisAtivos.value[randomIndex];
-        
-        // Update the process
-        const { error } = await supabase
-          .from('processos')
-          .update({ 
-            responsavel_id: responsavelSelecionado.id,
-            updated_at: new Date().toISOString() 
-          })
-          .eq('id', processoId);
-          
-        if (error) throw error;
-        console.log(`Responsible ${responsavelSelecionado.nome} assigned to process ${processoId}`);
-        
-        // Reload processes
-        await loadProcessos();
-      } catch (error) {
-        console.error("Error assigning responsible:", error);
-      }
-    };
-
-    const atribuirResponsaveisAProcessosPendentes = async () => {
-      try {
-        // Make sure we have responsibles loaded
-        if (responsaveisAtivos.value.length === 0) {
-          await loadResponsaveis();
-        }
-        
-        if (responsaveisAtivos.value.length === 0) {
-          console.error("No active responsibles registered");
-          return;
-        }
-        
-        // Filter processes without responsibles
-        const processosSemResponsavel = processos.value.filter(p => !p.responsavel_id);
-        console.log(`Found ${processosSemResponsavel.length} processes without responsible`);
-        
-        if (processosSemResponsavel.length === 0) {
-          alert("All processes already have assigned responsibles!");
-          return;
-        }
-        
-        // Confirm operation
-        if (!confirm(`Do you want to assign responsibles to ${processosSemResponsavel.length} pending processes?`)) {
-          return;
-        }
-        
-        // Distribute responsibles in a balanced way
-        let contadorResponsaveis = 0;
-        const totalResponsaveis = responsaveisAtivos.value.length;
-        
-        // For each process without responsible
-        for (const processo of processosSemResponsavel) {
-          // Choose a responsible in a rotating fashion
-          const responsavelSelecionado = responsaveisAtivos.value[contadorResponsaveis % totalResponsaveis];
-          
-          // Update the process with the chosen responsible
-          const { error } = await supabase
-            .from('processos')
-            .update({ 
-              responsavel_id: responsavelSelecionado.id,
-              updated_at: new Date().toISOString(),
-              updated_by: (await supabase.auth.getUser()).data.user?.id || null
-            })
-            .eq('id', processo.id);
-            
-          if (error) {
-            console.error(`Error assigning responsible to process ${processo.numero_processo}:`, error);
-          } else {
-            console.log(`Responsible ${responsavelSelecionado.nome} assigned to process ${processo.numero_processo}`);
-          }
-          
-          // Advance to the next responsible
-          contadorResponsaveis++;
-        }
-        
-        // Reload processes after updates
-        await loadProcessos();
-        
-        alert(`Responsibles successfully assigned to ${processosSemResponsavel.length} processes!`);
-      } catch (error) {
-        console.error("Error assigning responsibles:", error);
-        alert("An error occurred while assigning responsibles");
       }
     };
 
@@ -1437,10 +1216,6 @@ export default {
 
         // 4. Load data in parallel for better performance
         console.log('Starting data loading...');
-
-        // Load responsibles early
-        await loadResponsaveis();
-        console.log('Responsibles initially loaded:', responsaveisAtivos.value.length);
 
         // Then load other data in parallel
         await Promise.all([
@@ -1519,8 +1294,6 @@ export default {
       estadoSearch,
       
       // Reference data
-      responsaveis,
-      responsaveisAtivos,
       representantes,
       empresas,
       sistemasAtivos,
@@ -1549,7 +1322,6 @@ export default {
       getPlataformaNome,
       getPortalName,
       getEmpresaNome,
-      getResponsavelNome,
       getRepresentanteNome,
       getSistemaNome,
       getSistemasNomesString,
@@ -1589,10 +1361,6 @@ export default {
       
       // Form submission
       handleSubmit,
-      
-      // Responsible assignment
-      atribuirResponsavelRandom,
-      atribuirResponsaveisAProcessosPendentes,
       
       // Filter options
       opcoesUnicas
