@@ -236,6 +236,25 @@
                 </span>
                 <span v-else>-</span>
               </template>
+              <template v-else-if="coluna.campo === 'representante_id'">
+                <!-- Modo de edição -->
+                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
+                  v-model="editingCell.value" 
+                  @blur="handleUpdate(processo)" 
+                  @change="handleUpdate(processo)" 
+                  @keyup.esc="cancelEdit()"
+                  class="representante-select">
+                  <option value="">Sem representante</option>
+                  <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                    {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
+                  </option>
+                </select>
+                
+                <!-- Modo de visualização -->
+                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
+                  {{ getRepresentanteNome(processo.representante_id) }}
+                </span>
+              </template>
               <span v-else>
                 {{ processo[coluna.campo] || '-' }}
               </span>
@@ -435,9 +454,10 @@ const colunas = [
   { titulo: 'Portal', campo: 'site_pregao' },          // processo.site_pregao
   {
     titulo: 'Representante',
-    campo: 'representante_id',                          // processo.representante_id
-    tabelaRelacionada: 'representantes',
-    campoExibicao: 'nome'
+    campo: 'representante_id',
+    tabelaRelacionada: 'representsantes',
+    campoExibicao: 'nome',
+    tipoEdicao: 'select'  // Adicionado para indicar que deve ser editado como select
   },
   { titulo: 'Impugnações', campo: 'impugnacoes' },     // processo.impugnacoes
   {
@@ -964,6 +984,15 @@ const handleDblClick = async (field, processo, event) => {
     if (responsaveisAtivos.value.length === 0) {
       console.warn('Lista de responsáveis não carregada. Carregando agora...');
       await loadResponsaveis();
+    }
+  }
+
+  // Verificar se o campo é representante_id
+  if (field === 'representante_id') {
+    // Verificar se temos representantes carregados
+    if (representantes.value.length === 0) {
+      console.warn('Lista de representantes não carregada. Carregando agora...');
+      await loadRepresentantes();
     }
   }
 
@@ -1705,6 +1734,14 @@ const formatarDistancia = (processo) => {
   }
 
   return '-';
+};
+
+// Adicione esta função junto com as outras funções auxiliares
+const getRepresentanteNome = (id) => {
+  if (!id) return 'Sem representante';
+  
+  const representante = representantes.value.find(r => r.id === id);
+  return representante ? representante.nome : 'Carregando...';
 };
 </script>
 

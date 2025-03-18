@@ -1862,3 +1862,39 @@ td[data-field="impugnacoes"] {
   text-overflow: ellipsis;
 }
 
+/* Estilo para o select de representantes */
+.representante-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: #fff;
+  appearance: menulist !important;
+  -webkit-appearance: menulist !important;
+  -moz-appearance: menulist !important;
+}
+
+.representante-select option {
+  padding: 6px;
+  font-size: 0.9rem;
+}
+
+.representante-select:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
+}
+
+.representante-display {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 16px;
+  /* background-color: #f0f4f8; */
+  color: #193155;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
