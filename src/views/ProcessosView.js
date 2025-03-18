@@ -1275,6 +1275,169 @@ export default {
     // Use connection manager
     useConnectionManager(loadProcessos)
 
+    // Dialog para distâncias
+    const distanciaDialog = ref({
+      show: false,
+      position: {},
+      processo: null,
+      distancias: [],
+      editandoIndex: -1,
+      novaDistancia: {
+        distancia_km: '',
+        ponto_referencia_cidade: '',
+        ponto_referencia_uf: ''
+      }
+    });
+
+    // Funções para gerenciamento das distâncias
+    const abrirDialogDistancia = async (processo, event) => {
+      try {
+        // Carregar as distâncias do processo
+        const { data, error } = await supabase
+          .from('processo_distancias')
+          .select('*')
+          .eq('processo_id', processo.id)
+          .order('created_at');
+          
+        if (error) throw error;
+        
+        // Configurar o dialog
+        const rect = event.target.getBoundingClientRect();
+        distanciaDialog.value = {
+          show: true,
+          position: {
+            top: `${rect.bottom + 10}px`,
+            left: `${rect.left}px`
+          },
+          processo: processo,
+          distancias: data || [],
+          editandoIndex: -1,
+          novaDistancia: {
+            distancia_km: '',
+            ponto_referencia_cidade: '',
+            ponto_referencia_uf: ''
+          }
+        };
+      } catch (error) {
+        console.error('Erro ao abrir diálogo de distâncias:', error);
+      }
+    };
+
+    const iniciarEdicaoDistancia = (distancia, index) => {
+      distanciaDialog.value.editandoIndex = index;
+      distanciaDialog.value.novaDistancia = {
+        distancia_km: distancia.distancia_km,
+        ponto_referencia_cidade: distancia.ponto_referencia_cidade,
+        ponto_referencia_uf: distancia.ponto_referencia_uf,
+        id: distancia.id
+      };
+    };
+
+    const cancelarEdicaoDistancia = () => {
+      distanciaDialog.value.editandoIndex = -1;
+      distanciaDialog.value.novaDistancia = {
+        distancia_km: '',
+        ponto_referencia_cidade: '',
+        ponto_referencia_uf: ''
+      };
+    };
+
+    const salvarEdicaoDistancia = async () => {
+      try {
+        const { distancia_km, ponto_referencia_cidade, ponto_referencia_uf, id } = distanciaDialog.value.novaDistancia;
+        
+        if (!distancia_km || !ponto_referencia_cidade || !ponto_referencia_uf) {
+          alert('Todos os campos são obrigatórios');
+          return;
+        }
+        
+        const { error } = await supabase
+          .from('processo_distancias')
+          .update({
+            distancia_km,
+            ponto_referencia_cidade, 
+            ponto_referencia_uf,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+          
+        if (error) throw error;
+        
+        // Atualiza a distância na lista local
+        distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex] = {
+          ...distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex],
+          distancia_km,
+          ponto_referencia_cidade,
+          ponto_referencia_uf
+        };
+        
+        // Limpa o formulário de edição
+        cancelarEdicaoDistancia();
+      } catch (error) {
+        console.error('Erro ao salvar distância:', error);
+      }
+    };
+
+    const adicionarDistancia = async () => {
+      try {
+        const { distancia_km, ponto_referencia_cidade, ponto_referencia_uf } = distanciaDialog.value.novaDistancia;
+        
+        if (!distancia_km || !ponto_referencia_cidade || !ponto_referencia_uf) {
+          alert('Todos os campos são obrigatórios');
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from('processo_distancias')
+          .insert({
+            processo_id: distanciaDialog.value.processo.id,
+            distancia_km,
+            ponto_referencia_cidade,
+            ponto_referencia_uf,
+            created_at: new Date().toISOString()
+          })
+          .select();
+          
+        if (error) throw error;
+        
+        // Adiciona a nova distância à lista local
+        distanciaDialog.value.distancias.push(data[0]);
+        
+        // Limpa o formulário
+        distanciaDialog.value.novaDistancia = {
+          distancia_km: '',
+          ponto_referencia_cidade: '',
+          ponto_referencia_uf: ''
+        };
+      } catch (error) {
+        console.error('Erro ao adicionar distância:', error);
+      }
+    };
+
+    const excluirDistancia = async (distancia, index) => {
+      if (!confirm('Tem certeza que deseja excluir esta distância?')) return;
+      
+      try {
+        const { error } = await supabase
+          .from('processo_distancias')
+          .delete()
+          .eq('id', distancia.id);
+          
+        if (error) throw error;
+        
+        // Remove a distância da lista local
+        distanciaDialog.value.distancias.splice(index, 1);
+      } catch (error) {
+        console.error('Erro ao excluir distância:', error);
+      }
+    };
+
+    const fecharDistanciaDialog = () => {
+      distanciaDialog.value.show = false;
+      // Recarregar processos para atualizar as distâncias na interface
+      loadProcessos();
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // State
@@ -1363,7 +1526,17 @@ export default {
       handleSubmit,
       
       // Filter options
-      opcoesUnicas
+      opcoesUnicas,
+
+      // Distances dialog
+      distanciaDialog,
+      abrirDialogDistancia,
+      iniciarEdicaoDistancia,
+      excluirDistancia,
+      salvarEdicaoDistancia,
+      adicionarDistancia,
+      cancelarEdicaoDistancia,
+      fecharDistanciaDialog
     }
   }
 }

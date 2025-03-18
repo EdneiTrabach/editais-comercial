@@ -1897,3 +1897,157 @@ td[data-field="impugnacoes"] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+
+/* Estilos para o container de distâncias */
+.distancia-container {
+  cursor: pointer;
+  min-height: 20px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.distancia-container:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.distancia-preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.distancia-multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.distancia-item {
+  padding: 2px 4px;
+  border-radius: 3px;
+  background-color: #f3f4f6;
+  font-size: 0.9em;
+}
+
+.sem-distancia {
+  color: #888;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* Diálogo de distâncias */
+.distancia-dialog {
+  position: absolute;
+  z-index: 1000;
+  min-width: 500px;
+  max-width: 90%;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.distancia-dialog-content {
+  padding: 16px;
+}
+
+.distancia-dialog h3 {
+  margin-top: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 1.2em;
+}
+
+.distancia-dialog h4 {
+  margin: 12px 0 8px 0;
+  font-size: 1.1em;
+  color: #444;
+}
+
+.distancias-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.distancias-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.distancias-table th,
+.distancias-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.distancias-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.distancia-acoes {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.distancia-form {
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.9em;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-footer {
+  text-align: right;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.no-records {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 12px 0;
+}
+

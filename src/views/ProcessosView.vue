@@ -346,10 +346,19 @@
                   
                   <!-- Distance type display -->
                   <template v-else-if="coluna.tipoExibicao === 'distancia'">
-                    <span class="distancia-badge" v-if="formatarDistancia(processo) !== '-'">
-                      {{ formatarDistancia(processo) }}
-                    </span>
-                    <span v-else>-</span>
+                    <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
+                      <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
+                        {{ formatarDistancia(processo) }}
+                      </div>
+                      <div v-else class="distancia-multiple">
+                        <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
+                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                            {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
+                          </div>
+                        </span>
+                        <span v-else class="sem-distancia">Clique para adicionar</span>
+                      </div>
+                    </div>
                   </template>
                   
                   <!-- Representative ID field -->
@@ -460,6 +469,108 @@
           <div class="sistemas-dialog-actions">
             <button @click="saveSistemas" class="btn-confirm">Salvar</button>
             <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialog para gerenciar distâncias -->
+      <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
+        <div class="distancia-dialog-content">
+          <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
+          
+          <div class="distancias-list">
+            <table class="distancias-table">
+              <thead>
+                <tr>
+                  <th>Distância (km)</th>
+                  <th>Cidade</th>
+                  <th>UF</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
+                  <td>{{ distancia.distancia_km }}</td>
+                  <td>{{ distancia.ponto_referencia_cidade }}</td>
+                  <td>{{ distancia.ponto_referencia_uf }}</td>
+                  <td class="distancia-acoes">
+                    <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
+                      <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
+                    </button>
+                    <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
+                      <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="distanciaDialog.distancias.length === 0">
+                  <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="distancia-form">
+            <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Distância (km)</label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="0.1" 
+                  v-model="distanciaDialog.novaDistancia.distancia_km" 
+                  placeholder="Digite a distância"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label>Cidade</label>
+                <input 
+                  type="text" 
+                  v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade" 
+                  placeholder="Digite a cidade"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label>UF</label>
+                <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
+                  <option value="">Selecione</option>
+                  <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                    {{ estado.uf }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button 
+                v-if="distanciaDialog.editandoIndex >= 0" 
+                class="btn-save" 
+                @click="salvarEdicaoDistancia"
+              >
+                Salvar Alterações
+              </button>
+              <button 
+                v-else 
+                class="btn-add" 
+                @click="adicionarDistancia"
+              >
+                Adicionar
+              </button>
+              
+              <button 
+                v-if="distanciaDialog.editandoIndex >= 0" 
+                class="btn-cancel" 
+                @click="cancelarEdicaoDistancia"
+              >
+                Cancelar Edição
+              </button>
+            </div>
+          </div>
+          
+          <div class="dialog-footer">
+            <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
           </div>
         </div>
       </div>
