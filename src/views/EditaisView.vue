@@ -231,7 +231,7 @@
           <div class="form-group">
             <RequiredLabel text="Representante" :isRequired="true" />
             <div class="representante-container">
-              <select v-model="formData.representante" required>
+              <select v-model="formData.representante" required  class="responsavel-select">
                 <option value="">Selecione o representante...</option>
                 <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                   {{ rep.nome }}
