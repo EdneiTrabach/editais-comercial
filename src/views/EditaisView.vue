@@ -54,7 +54,7 @@
 
           <div class="form-group">
             <RequiredLabel text="Estado" :isRequired="true" />
-            <select v-model="formData.estado" required>
+            <select v-model="formData.estado" class="responsavel-select" required>
               <option value="">Selecione o estado...</option>
               <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                 {{ estado.nome }}
@@ -69,7 +69,7 @@
 
           <div class="form-group">
             <RequiredLabel text="Modalidade" :isRequired="true" />
-            <select v-model="formData.modalidade" required @change="handleModalidadeChange">
+            <select v-model="formData.modalidade" required @change="handleModalidadeChange" class="responsavel-select">
               <option value="">Selecione...</option>
               <option value="pregao_eletronico">Pregão Eletrônico</option>
               <option value="pregao_presencial">Pregão Presencial</option>

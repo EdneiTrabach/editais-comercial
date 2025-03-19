@@ -1830,15 +1830,14 @@ td[data-field="impugnacoes"] {
 
 /* Estilo para o select de responsáveis */
 .responsavel-select {
+  height: 45px;
   width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  padding: 6px 8px ! important;
+  border: 1px solid #ccc ! important;
+  border-radius: 4px ! important;
+  font-size: 0.9rem ! important;
   background-color: #fff;
-  -webkit-appearance: menulist;
-  -moz-appearance: menulist;
-  appearance: menulist;
+  appearance: menulist ! important;
 }
 
 .responsavel-select:focus {
@@ -2031,6 +2030,7 @@ td[data-field="impugnacoes"] {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.9em;
+  height: 45px ;
 }
 
 .form-actions {
