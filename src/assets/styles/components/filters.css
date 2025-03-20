@@ -233,16 +233,6 @@
   background-color: rgba(25, 49, 85, 0.1);
 }
 
-.sorted-asc::after {
-  content: " ↑";
-  color: #193155;
-}
-
-.sorted-desc::after {
-  content: " ↓";
-  color: #193155;
-}
-
 .btn-filtro {
   background: transparent;
   border: none;

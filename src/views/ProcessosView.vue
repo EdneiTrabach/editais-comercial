@@ -187,8 +187,7 @@
                   </select>
 
                   <!-- Systems field -->
-                  <template
-                    v-else-if="coluna.campo === 'sistemas_ativos' && editingCell.id === processo.id && editingCell.field === coluna.campo">
+                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
                     <div class="sistemas-dropdown-container">
                       <div class="sistemas-selected">
                         <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
@@ -196,28 +195,28 @@
                           <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
                         </div>
                       </div>
-                      <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+                      <!-- <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
                         <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
                           :selected="editingCell.value && editingCell.value.includes(sistema.id)">
                           {{ sistema.nome }}
                         </option>
-                      </select>
+                      </select> -->
                     </div>
                   </template>
 
-                  <!-- Additional field -->
-                  <template v-if="coluna.campo === 'campo_adicional1'">
-                    <textarea v-model="editingCell.value" rows="3" class="observacoes-edit"
-                      @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
-                      @keyup.esc="cancelEdit()"></textarea>
-                  </template>
+                  <!-- Additional field (Observações) -->
+                  <textarea v-else-if="coluna.campo === 'campo_adicional1'" v-model="editingCell.value" rows="3" 
+                    class="observacoes-edit" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+                    @keyup.esc="cancelEdit()"></textarea>
 
-                  <!-- Default input for other fields -->
-                  <!-- <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"> -->
-                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                  <!-- Default input for codigo_analise -->
+                  <input v-else-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
                     @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     placeholder="Digite o código">
+                    
+                  <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
+                  <input v-else type="text" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
 
                 <!-- View Mode -->
