@@ -1,10 +1,13 @@
-/* Estilos para toast notifications */
+/* Adicione ou atualize estes estilos */
 
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  bottom: 5rem;
+  right: 5rem;
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .toast {
@@ -19,13 +22,23 @@
   gap: 0.5rem;
 }
 
-.toast-success {
+.toast.success {
   background: #28a745;
   color: white;
 }
 
-.toast-error {
+.toast.error {
   background: #dc3545;
+  color: white;
+}
+
+.toast.warning {
+  background: #ffc107;
+  color: #333;
+}
+
+.toast.info {
+  background: #17a2b8;
   color: white;
 }
 
@@ -34,6 +47,25 @@
   font-weight: bold;
 }
 
-.toast-error::before {
+.toast.error::before {
   content: '✕';
+}
+
+.toast.warning::before {
+  content: '⚠';
+}
+
+.toast.info::before {
+  content: 'ℹ';
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

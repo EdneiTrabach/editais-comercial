@@ -396,45 +396,6 @@ th {
   }
 }
 
-/* Adicione os estilos do toast */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-}
-
-.toast {
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toast-success {
-  background: #10B981;
-  color: white;
-}
-
-.toast-error {
-  background: #EF4444;
-  color: white;
-}
-
-.toast::before {
-  content: '✓';
-  font-weight: bold;
-}
-
-.toast-error::before {
-  content: '✕';
-}
-
 /* Estilos do diálogo de confirmação */
 .confirm-dialog {
   background: white;

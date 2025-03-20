@@ -16,11 +16,68 @@
 }
 
 .btn-action-actions:disabled {
-  opacity: 0.5;
+  opacity: 0;
   cursor: not-allowed;
 }
 
 .btn-action-actions img {
   width: 16px;
   height: 16px;
+}
+
+
+.actions-header, .actions-cell {
+  position: sticky !important;
+  right: 0;
+  background-color: #f8f9fa;
+  z-index: 10;
+  min-width: 70px;
+}
+
+.actions-header {
+  z-index: 15;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+
+/* Estilo para manter a coluna de ações fixa */
+.actions-column, .actions-cell {
+  position: sticky !important;
+  right: 0;
+  z-index: 10;
+}
+
+.actions-column {
+  background-color: #f8f9fa;
+}
+
+.actions-cell {
+  background-color: white;
+}
+
+/* Garantir que os botões de ação apareçam corretamente */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-icon.delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e74c3c;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-icon.delete:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
 }

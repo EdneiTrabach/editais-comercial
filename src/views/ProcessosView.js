@@ -29,7 +29,7 @@ export default {
     const loadingTimeout = ref(null)
     const filtroModalidadeSearch = ref('');
     const filtroSearch = ref({})
-    
+
     // System cache
     const sistemasNomesCache = ref({})
 
@@ -123,38 +123,55 @@ export default {
     const handleColumnDrop = (event, targetIndex) => {
       event.preventDefault()
       const draggedIndex = parseInt(event.dataTransfer.getData('text/plain'))
-      
+
       // Remove a classe de arrasto de todos os elementos
       document.querySelectorAll('th').forEach(th => th.classList.remove('dragging'))
-      
+
       // Evita reordenar se for o mesmo índice
       if (draggedIndex === targetIndex) return
-      
+
       // Reordena as colunas
       const columnOrder = [...colunasOrder.value]
       const draggedColumn = columnOrder[draggedIndex]
-      
+
       // Remove a coluna arrastada
       columnOrder.splice(draggedIndex, 1)
-      
+
       // Insere no novo local
       columnOrder.splice(targetIndex, 0, draggedColumn)
-      
+
       // Atualiza a ordem
       colunasOrder.value = columnOrder
-      
+
       // Salva a nova ordem
       saveColumnsOrder()
     }
 
-    // Função para obter colunas na ordem correta
+    // Modificar a função ordenarColunas para excluir explicitamente a coluna de ações
     const ordenarColunas = computed(() => {
-      if (colunasOrder.value.length === 0) return colunas
-      
-      return colunasOrder.value.map(campo => 
-        colunas.find(coluna => coluna.campo === campo)
-      ).filter(Boolean) // Filtra valores undefined/null
+      if (colunasOrder.value.length === 0) {
+        // Retorna todas as colunas exceto a de ações (que será adicionada separadamente)
+        return colunas.filter(coluna => coluna.campo !== 'acoes');
+      }
+
+      return colunasOrder.value
+        .map(campo => colunas.find(coluna => coluna.campo === campo))
+        .filter(Boolean) // Filtra valores undefined/null
+        .filter(coluna => coluna.campo !== 'acoes'); // Exclui a coluna de ações da ordem
     })
+
+    // Modificar/adicionar esta função computada 
+    const colunasOrdenadas = computed(() => {
+      // Usa as colunas na ordem armazenada ou na ordem original
+      if (colunasOrder.value.length > 0) {
+        return colunasOrder.value
+          .map(campo => colunas.find(coluna => coluna.campo === campo))
+          .filter(Boolean); // Remove valores undefined
+      }
+      
+      // Ordem padrão (todas as colunas)
+      return colunas;
+    });
 
     // Table columns definition
     const colunas = [
@@ -802,22 +819,22 @@ export default {
 
       // Inverte o estado do filtro atual
       mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna];
-      
+
       // Se estiver abrindo o filtro, certifique-se de posicioná-lo corretamente
       if (mostrarFiltro.value[coluna]) {
         // Reset search input when opening
         filtroModalidadeSearch.value = '';
-        
+
         nextTick(() => {
           // Find the dropdown
           const dropdown = document.querySelector(`.filtro-dropdown[data-campo="${coluna}"]`);
-          
+
           if (dropdown) {
             // Get the container dimensions to ensure the dropdown stays visible
             const container = dropdown.closest('.filtro-container');
             if (container) {
               const rect = container.getBoundingClientRect();
-              
+
               // Position based on available space
               if (window.innerWidth - rect.right < 250) {
                 dropdown.style.right = '0';
@@ -826,7 +843,7 @@ export default {
                 dropdown.style.left = '0';
                 dropdown.style.right = 'auto';
               }
-              
+
               // Ensure dropdown doesn't go off-screen bottom
               const dropdownHeight = dropdown.offsetHeight;
               if (rect.bottom + dropdownHeight > window.innerHeight) {
@@ -841,7 +858,7 @@ export default {
                 dropdown.style.marginBottom = '0';
               }
             }
-            
+
             // Focus the search input
             const searchInput = dropdown.querySelector('input[type="search"]');
             if (searchInput) {
@@ -1200,7 +1217,7 @@ export default {
               return;
             }
             */
-            
+
             // Permitimos explicitamente valores null (campo em branco)
             console.log(`Atualizando empresa para: ${updateValue === null ? 'vazio' : updateValue} (validado)`);
             break;
@@ -1501,21 +1518,21 @@ export default {
 
     const opcoesUnicas = (coluna) => {
       if (!processos.value || processos.value.length === 0) return [];
-      
+
       const opcoes = new Set();
-      
+
       // Para colunas especiais que precisam de tratamento diferenciado
       if (coluna === 'modalidade') {
         // Retorna diretamente as opções pré-definidas
         return opcoesModalidade;
       }
-      
+
       processos.value.forEach(processo => {
         let valor = processo[coluna];
-        
+
         // Pular valores nulos ou indefinidos
         if (valor === null || valor === undefined) return;
-        
+
         // Tratamento específico para diferentes tipos de coluna
         switch (coluna) {
           case 'data_pregao':
@@ -1543,10 +1560,10 @@ export default {
             valor = { value: valor, text: empresa ? empresa.nome : valor };
             break;
         }
-        
+
         if (valor) opcoes.add(JSON.stringify(valor));
       });
-      
+
       // Convertemos de volta os objetos JSON para JavaScript
       return Array.from(opcoes).map(item => {
         try {
@@ -2116,6 +2133,20 @@ export default {
       };
     };
 
+    // Adicionar no início do setup()
+    const toasts = ref([])
+
+    // Adicionar esta função dentro do setup()
+    const showToast = (message, type = 'success') => {
+      const id = Date.now()
+      toasts.value = [{ id, message, type }] // Usar apenas um toast por vez, substituindo o anterior
+      
+      // Auto-remove após 3 segundos
+      setTimeout(() => {
+        toasts.value = toasts.value.filter(t => t.id !== id)
+      }, 3000)
+    }
+
     // Adicionar no setup(), próximo aos outros refs
     const undoHistory = ref([]);  // Histórico de mudanças
     const redoHistory = ref([]);  // Histórico de mudanças refeitas
@@ -2188,10 +2219,10 @@ export default {
         await loadProcessos();
 
         // Mostrar mensagem de confirmação
-        alert(`Ação desfeita: ${lastAction.field}`);
+        showToast(`Ação desfeita: ${lastAction.field}`, 'success')
       } catch (error) {
         console.error('Erro ao desfazer ação:', error);
-        alert('Erro ao desfazer: ' + (error.message || 'Verifique os dados e tente novamente'));
+        showToast('Erro ao desfazer: ' + (error.message || 'Verifique os dados e tente novamente'), 'error')
       }
     };
 
@@ -2247,7 +2278,7 @@ export default {
         await loadProcessos();
 
         // Mostrar mensagem de confirmação
-        alert(`Ação refeita: ${nextAction.field}`);
+        showToast(`Ação refeita: ${nextAction.field}`, 'success')
       } catch (error) {
         console.error('Erro ao refazer ação:', error);
         alert('Erro ao refazer: ' + (error.message || 'Verifique os dados e tente novamente'));
@@ -2285,9 +2316,9 @@ export default {
       if (!filtroSearch.value[coluna]) {
         return opcoes;
       }
-      
+
       const busca = filtroSearch.value[coluna].toLowerCase();
-      
+
       return opcoes.filter(opcao => {
         if (typeof opcao === 'object' && opcao.text) {
           return opcao.text.toLowerCase().includes(busca);
@@ -2458,8 +2489,11 @@ export default {
       startColumnDrag,
       allowColumnDrop,
       handleColumnDrop,
-      
 
+      // Adicionar no return
+      toasts,
+      showToast,
+      colunasOrdenadas,
 
     }
   }

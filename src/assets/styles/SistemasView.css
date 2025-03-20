@@ -504,44 +504,6 @@ th {
   }
 }
 
-/* Adicione ao final do seu <style> */
-
-/* Toast */
-.toast-container {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-}
-
-.toast {
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  animation: slideIn 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toast-success {
-  background: #10B981;
-  color: white;
-}
-
-.toast-error {
-  background: #EF4444;
-  color: white;
-}
-
-.toast::before {
-  content: '✓';
-  font-weight: bold;
-}
-
-.toast-error::before {
-  content: '✕';
-}
 
 /* Dialog de confirmação */
 .dialog-overlay {
