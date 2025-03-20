@@ -1,0 +1,48 @@
+/* Estilos para o componente de publicação */
+
+.publicacao-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.publicacao-text {
+  width: 100%;
+  background: #f8f9fa;
+  border: none;
+  font-family: monospace;
+  cursor: default;
+}
+
+.publicacao-text:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.objeto-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plataforma-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.plataforma-container select {
+  flex: 1;
+}
+
+.representante-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.representante-container select {
+  flex: 1;
+  min-width: 0;
+}

@@ -26,10 +26,6 @@
   text-overflow: ellipsis;
 }
 
-.distancia-container:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
 .distancia-preview {
   white-space: nowrap;
   overflow: hidden;

@@ -1,0 +1,64 @@
+/* Estilos responsivos */
+
+@media (max-width: 1228px) {
+  .pontos-container {
+    grid-template-columns: 1fr;
+  }
+
+  .referencia-container {
+    flex-direction: column;
+  }
+
+  .referencia-container select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancelar,
+  .btn-salvar {
+    width: 100%;
+  }
+  
+  .representante-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Processo licitatório */
+  .main-content-processLicitatorio {
+    margin-left: 70px;
+    padding: 1rem;
+  }
+
+  .form-grid-processLicitatorio {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions-processLicitatorio {
+    flex-direction: column;
+  }
+
+  .btn-cancelar-processLicitatorio,
+  .btn-salvar-processLicitatorio {
+    width: 100%;
+  }
+  
+  .representante-container-processLicitatorio {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

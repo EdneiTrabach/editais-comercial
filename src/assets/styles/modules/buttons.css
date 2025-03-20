@@ -1,0 +1,121 @@
+/* Estilos para botões */
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-cancelar,
+.btn-salvar {
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-cancelar {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-salvar {
+  background: #193155;
+  color: white;
+}
+
+.btn-cancelar:hover,
+.btn-salvar:hover {
+  transform: translateY(-2px);
+}
+
+.btn-cancelar:hover {
+  background: #dee2e6;
+}
+
+.btn-salvar:hover {
+  background: #254677;
+  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.2);
+}
+
+.btn-add-plataforma {
+  padding: 0.9rem 1rem;
+  background: #193155;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-add-plataforma:hover {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-add-representante {
+  padding: 0.9rem 1rem;
+  background: #193155;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.btn-add-representante:hover {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-correcoes {
+  padding: 0.9rem 2rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-correcoes:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+.btn-import {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.5rem;
+  background: #193155;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-import:hover {
+  background: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-remover {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btn-remover:hover {
+  background: #ffebeb;
+}

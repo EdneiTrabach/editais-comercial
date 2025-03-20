@@ -1,0 +1,77 @@
+/* Estilos para sistemas e componentes de chips */
+
+.sistemas-selection {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.sistemas-selection h4 {
+  color: #193155;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.sistemas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sistema-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.sistema-chip:hover {
+  border-color: #193155;
+}
+
+.sistema-chip.selected {
+  background: #193155;
+  color: white;
+  border-color: #193155;
+}
+
+[data-theme="dark"] .sistema-chip.selected.custom-cursor-on-hover {
+  background: green;
+}
+
+[data-theme="dark"] .sistema-chip {
+  background: #1e293b;
+  color: white;
+  border-color: #ffffff79;
+}
+
+.check-icon {
+  font-size: 0.8rem;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sistemas-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sistema-item {
+  background-color: #e5f0fd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+  color: #193155;
+  white-space: nowrap;
+}

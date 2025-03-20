@@ -168,7 +168,7 @@ td[data-field="impugnacoes"] {
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.8rem;
-  background: #e3f2fd;
+  /* background: #e3f2fd; */
   color: #193155;
   border-radius: 6px;
   text-decoration: none;

@@ -305,9 +305,9 @@
   
   /* Portal links no modo escuro */
   [data-theme="dark"] .portal-button {
-    background: #1e293b;
+    /* background: #1e293b; */
     color: #60a5fa;
-    border-color: #2d3748;
+    border: none;
   }
   
   [data-theme="dark"] .portal-button:hover {
@@ -612,17 +612,6 @@
   /* Ajuste para o texto dos objetos */
   [data-theme="dark"] .objeto-cell {
     color: var(--text-primary);
-  }
-  
-  /* Links dos portais */
-  [data-theme="dark"] .portal-button {
-    background-color: #2d3748;
-    border: 1px solid #3b82f6;
-    color: #60a5fa;
-  }
-  
-  [data-theme="dark"] .portal-button:hover {
-    background-color: #374151;
   }
   
   /* Botões de ordenação */

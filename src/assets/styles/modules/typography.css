@@ -1,0 +1,54 @@
+/* Estilos de tipografia */
+
+.main-content,
+input,
+select,
+textarea,
+button,
+label,
+.modal-content {
+  font-family: 'Roboto', sans-serif;
+}
+
+small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.warning-text {
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.progress-stage {
+  color: #495057;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #193155;
+  font-weight: 600;
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-detail-item {
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding: 0.25rem 0;
+}

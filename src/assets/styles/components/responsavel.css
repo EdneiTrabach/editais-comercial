@@ -3,7 +3,6 @@
   display: inline-block;
   padding: 3px 8px;
   border-radius: 16px;
-  background-color: #f3f4f6;
   color: #193155;
   font-size: 0.9rem;
   white-space: nowrap;
@@ -11,6 +10,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+[data-theme="dark"] .responsavel-display {
+  color: white;
+}
+
+
 
 .responsavel-select {
   height: 45px;

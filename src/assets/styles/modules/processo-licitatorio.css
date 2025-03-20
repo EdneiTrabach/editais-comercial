@@ -1,0 +1,217 @@
+/* Estilos para o processo licitatório */
+
+/* Estilos base */
+.layout-processLicitatorio {
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content-processLicitatorio,
+input-processLicitatorio,
+select-processLicitatorio,
+textarea-processLicitatorio,
+button-processLicitatorio,
+label-processLicitatorio,
+.modal-content-processLicitatorio {
+  font-family: 'Roboto', sans-serif;
+}
+
+.main-content-processLicitatorio {
+  padding: 2rem;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  background: #f8f9fa;
+}
+
+.main-content-processLicitatorio.expanded-processLicitatorio {
+  margin-left: 0px;
+}
+
+.header-processLicitatorio {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.header-processLicitatorio h1 {
+  color: #193155;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.form-container-processLicitatorio {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-grid-processLicitatorio {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.form-group-processLicitatorio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.full-width-processLicitatorio {
+  grid-column: 1 / -1;
+}
+
+.processo-input-processLicitatorio {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Inputs e campos */
+input-processLicitatorio,
+select-processLicitatorio,
+textarea-processLicitatorio {
+  padding: 0.9rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+input-processLicitatorio.error-processLicitatorio {
+  border-color: #dc3545;
+  background-color: #fff8f8;
+}
+
+input-processLicitatorio:focus-processLicitatorio {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+  background: white;
+}
+
+.error-message-processLicitatorio {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+/* Botões e ações */
+.form-actions-processLicitatorio {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-cancelar-processLicitatorio,
+.btn-salvar-processLicitatorio {
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-cancelar-processLicitatorio {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-salvar-processLicitatorio {
+  background: #193155;
+  color: white;
+}
+
+.btn-correcoes-processLicitatorio {
+  padding: 0.9rem 2rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-import-processLicitatorio {
+  padding: 0.9rem 1.5rem;
+  background: #193155;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Containers específicos */
+.plataforma-container-processLicitatorio {
+  display: flex;
+  gap: 1rem;
+}
+
+.representante-container-processLicitatorio {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.objeto-container-processLicitatorio {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input-descricao-processLicitatorio {
+  width: 98%;
+}
+
+.input-orgao-processLicitatorio {
+  width: 95%;
+}
+
+/* Sistemas */
+.sistemas-grid-processLicitatorio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sistema-chip-processLicitatorio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.sistema-chip-processLicitatorio.selected-processLicitatorio {
+  background: #193155;
+  color: white;
+  border-color: #193155;
+}
+
+.check-icon-processLicitatorio {
+  font-size: 0.8rem;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Demais componentes do processo licitatório */
+/* ...outros componentes específicos do processo licitatório... */

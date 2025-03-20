@@ -1,0 +1,59 @@
+/* Estilos de layout e estrutura */
+
+.main-content {
+  padding: 2rem;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  background: #f8f9fa;
+}
+
+.main-content.expanded {
+  margin-left: 0px;
+}
+
+.header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.header h1 {
+  color: #193155;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.form-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
