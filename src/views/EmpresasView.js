@@ -15,7 +15,7 @@ export default {
     const isLoading = ref(false)
     const loadError = ref(null)
     const isEditing = ref(false);
-    const editingId = ref(null);
+    const editingId = ref(null); 
 
     const showDeleteDialog = ref(false);
     const empresaToDelete = ref(null);

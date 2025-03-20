@@ -466,42 +466,42 @@
 
   [data-theme="dark"] .excel-table tbody tr[data-status="em_analise"]:hover td {
     background-color: #334155 !important;
-    border-left: 4px solid #94a3b8;
+    border-left: 2px solid #94a3b8;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="em_andamento"]:hover td {
     background-color: #451a03 !important;
-    border-left: 4px solid #f59e0b;
+    border-left: 2px solid #f59e0b;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="ganhamos"]:hover td {
     background-color: #064e3b !important;
-    border-left: 4px solid #10b981;
+    border-left: 2px solid #10b981;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="perdemos"]:hover td {
     background-color: #7f1d1d !important;
-    border-left: 4px solid #ef4444;
+    border-left: 2px solid #ef4444;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="suspenso"]:hover td {
     background-color: #1e3a8a !important;
-    border-left: 4px solid #3b82f6;
+    border-left: 2px solid #3b82f6;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="demonstracao"]:hover td {
     background-color: #92400e !important;
-    border-left: 4px solid #f59e0b;
+    border-left: 2px solid #f59e0b;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="cancelado"]:hover td {
     background-color: #1e3a8a !important;
-    border-left: 4px solid #3b82f6;
+    border-left: 2px solid #3b82f6;
   }
 
   [data-theme="dark"] .excel-table tbody tr[data-status="nao_participar"]:hover td {
     background-color: #78350f !important;
-    border-left: 4px solid #d97706;
+    border-left: 2px solid #d97706;
   }
 
   /* Ajuste para células específicas durante o hover */
@@ -518,7 +518,7 @@
 
   [data-theme="dark"] .selected-row:hover td {
     background-color: #1e40af50 !important;
-    border-left: 4px solid #3b82f6;
+    border-left: 2px solid #3b82f6;
   }
 
   /* Transições suaves */

@@ -13,12 +13,12 @@ import { useResponsaveis } from '@/composables/useResponsaveis'
 
 export default {
   name: 'ProcessosView',
-  
+
   components: {
     TheSidebar,
     BaseImage
   },
-  
+
   setup() {
     // Router and basic component state
     const router = useRouter()
@@ -27,7 +27,9 @@ export default {
     const loading = ref(false)
     const isLoading = ref(false)
     const loadingTimeout = ref(null)
-
+    const filtroModalidadeSearch = ref('');
+    const filtroSearch = ref({})
+    
     // System cache
     const sistemasNomesCache = ref({})
 
@@ -95,7 +97,7 @@ export default {
       { titulo: 'Órgão', campo: 'orgao' },
       { titulo: 'Objeto Completo', campo: 'objeto_completo' },
       { titulo: 'Status', campo: 'status' },
-      
+
       // Nova coluna Responsáveis
       {
         titulo: 'Responsáveis',
@@ -104,7 +106,7 @@ export default {
         campoExibicao: 'nome',
         tipoEdicao: 'select'
       },
-      
+
       // Continuar com as outras colunas
       {
         titulo: 'Distâncias',
@@ -182,36 +184,66 @@ export default {
       )
     })
 
+    // Substitua a implementação de processosFiltrados por esta versão melhorada:
+
     const processosFiltrados = computed(() => {
-      if (!processos.value) return []
+      if (!processos.value) return [];
 
       return processos.value
         .filter(processo => processo.ano === anoSelecionado.value)
         .filter(processo => {
           return colunas.every(coluna => {
+            // Se não há filtros ativos para esta coluna, incluir o processo
             if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
-              return true
+              return true;
             }
 
-            let valorProcesso = processo[coluna.campo]
-            if (!valorProcesso) return false
+            // Obter o valor do processo para esta coluna
+            let valorProcesso = processo[coluna.campo];
 
+            // Se o valor não existe, não incluir no resultado do filtro
+            if (valorProcesso === null || valorProcesso === undefined) {
+              return false;
+            }
+
+            // Tratamento especial para diferentes tipos de colunas
             switch (coluna.campo) {
               case 'data_pregao':
-                valorProcesso = formatDate(valorProcesso)
-                break
-              case 'hora_pregao':
-                valorProcesso = formatTime(valorProcesso)
-                break
-              case 'modalidade':
-                valorProcesso = formatModalidade(valorProcesso)
-                break
-            }
+                // Comparar o valor formatado
+                return filtros.value[coluna.campo].includes(formatDate(valorProcesso));
 
-            return filtros.value[coluna.campo].includes(valorProcesso)
-          })
-        })
-    })
+              case 'hora_pregao':
+                // Comparar o valor formatado
+                return filtros.value[coluna.campo].includes(formatTime(valorProcesso));
+
+              case 'modalidade':
+                // Para modalidade, o filtro armazena o valor interno (ex: pregao_eletronico)
+                // mas precisa comparar com o valor do processo diretamente
+                return filtros.value[coluna.campo].includes(valorProcesso);
+
+              case 'status':
+                // Comparar o status diretamente
+                return filtros.value[coluna.campo].includes(valorProcesso);
+
+              case 'representante_id':
+              case 'responsavel_id':
+              case 'empresa_id':
+                // Para chaves estrangeiras, o filtro armazena o ID
+                return filtros.value[coluna.campo].includes(valorProcesso);
+
+              default:
+                // Para outros campos, fazer uma comparação simples
+                if (typeof valorProcesso === 'string') {
+                  return filtros.value[coluna.campo].some(filtro =>
+                    valorProcesso.toLowerCase().includes(filtro.toLowerCase())
+                  );
+                } else {
+                  return filtros.value[coluna.campo].includes(valorProcesso);
+                }
+            }
+          });
+        });
+    });
 
     const temFiltrosAtivos = computed(() => {
       return Object.values(filtros.value).some(f => f.length > 0)
@@ -224,6 +256,25 @@ export default {
     const showPlataformaField = computed(() => {
       return formData.value.modalidade === 'pregao_eletronico';
     });
+
+    // Adicione este computed para filtrar as opções de modalidade
+
+    const opcoesFiltradasModalidade = computed(() => {
+      if (!filtroModalidadeSearch.value) {
+        return opcoesModalidade;
+      }
+
+      const busca = filtroModalidadeSearch.value.toLowerCase();
+      return opcoesModalidade.filter(opcao =>
+        opcao.texto.toLowerCase().includes(busca)
+      );
+    });
+
+    // Adicione esta função para filtrar as opções genéricas
+    const filtrarOpcoes = (coluna) => {
+      // Esta função pode ser expandida para outros tipos de colunas
+      console.log('Filtrando opções para coluna:', coluna);
+    };
 
     // Helper functions
     const getSistemasNomesFromCache = async (sistemasIds) => {
@@ -485,7 +536,7 @@ export default {
     const loadRepresentantes = async () => {
       try {
         console.log('Starting representatives loading...');
-        
+
         const { data, error } = await supabase
           .from('representantes')
           .select('*')
@@ -495,10 +546,10 @@ export default {
           console.error('Error in representatives query:', error);
           throw error;
         }
-        
+
         console.log(`Loaded ${data?.length || 0} representatives:`, data);
         representantes.value = data || [];
-        
+
         return data;
       } catch (error) {
         console.error('Error loading representatives:', error);
@@ -661,9 +712,67 @@ export default {
       writeFileXLSX(wb, 'processos_licitatorios.xlsx')
     }
 
+    // Substitua a função toggleFiltro existente por esta versão melhorada
+
     const toggleFiltro = (coluna) => {
-      mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna]
-    }
+      // Fecha todos os outros filtros primeiro
+      Object.keys(mostrarFiltro.value).forEach(key => {
+        if (key !== coluna) {
+          mostrarFiltro.value[key] = false;
+        }
+      });
+
+      // Inverte o estado do filtro atual
+      mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna];
+      
+      // Se estiver abrindo o filtro, certifique-se de posicioná-lo corretamente
+      if (mostrarFiltro.value[coluna]) {
+        // Reset search input when opening
+        filtroModalidadeSearch.value = '';
+        
+        nextTick(() => {
+          // Find the dropdown
+          const dropdown = document.querySelector(`.filtro-dropdown[data-campo="${coluna}"]`);
+          
+          if (dropdown) {
+            // Get the container dimensions to ensure the dropdown stays visible
+            const container = dropdown.closest('.filtro-container');
+            if (container) {
+              const rect = container.getBoundingClientRect();
+              
+              // Position based on available space
+              if (window.innerWidth - rect.right < 250) {
+                dropdown.style.right = '0';
+                dropdown.style.left = 'auto';
+              } else {
+                dropdown.style.left = '0';
+                dropdown.style.right = 'auto';
+              }
+              
+              // Ensure dropdown doesn't go off-screen bottom
+              const dropdownHeight = dropdown.offsetHeight;
+              if (rect.bottom + dropdownHeight > window.innerHeight) {
+                dropdown.style.bottom = '100%';
+                dropdown.style.top = 'auto';
+                dropdown.style.marginBottom = '5px';
+                dropdown.style.marginTop = '0';
+              } else {
+                dropdown.style.top = '100%';
+                dropdown.style.bottom = 'auto';
+                dropdown.style.marginTop = '5px';
+                dropdown.style.marginBottom = '0';
+              }
+            }
+            
+            // Focus the search input
+            const searchInput = dropdown.querySelector('input[type="search"]');
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }
+        });
+      }
+    };
 
     const limparFiltros = () => {
       Object.keys(filtros.value).forEach(key => {
@@ -672,17 +781,48 @@ export default {
     }
 
     const handleSort = async (field, direction) => {
-      if (sortConfig.value.field === field && sortConfig.value.direction === direction) {
-        return
-      }
+      try {
+        sortConfig.value = {
+          field,
+          direction
+        };
 
-      sortConfig.value = {
-        field,
-        direction
-      }
+        // Para ordenação local (sem fazer nova consulta ao servidor)
+        processos.value.sort((a, b) => {
+          let comparison = 0;
 
-      await loadProcessos()
-    }
+          // Ordenação específica para datas
+          if (field === 'data_pregao') {
+            const dateA = new Date(a[field] || '1900-01-01');
+            const dateB = new Date(b[field] || '1900-01-01');
+            comparison = dateA - dateB;
+          }
+          // Ordenação para campos de texto
+          else if (typeof a[field] === 'string' && typeof b[field] === 'string') {
+            comparison = a[field].localeCompare(b[field], 'pt-BR');
+          }
+          // Ordenação para campos numéricos
+          else {
+            comparison = (a[field] || 0) - (b[field] || 0);
+          }
+
+          // Aplicar direção da ordenação
+          return direction === 'asc' ? comparison : -comparison;
+        });
+
+        // Indica visualmente a coluna ordenada
+        const thElements = document.querySelectorAll('th');
+        thElements.forEach(th => {
+          th.classList.remove('sorted-asc', 'sorted-desc');
+          const thField = th.getAttribute('data-field');
+          if (thField === field) {
+            th.classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao ordenar dados:', error);
+      }
+    };
 
     const selecionarAno = (ano) => {
       anoSelecionado.value = ano
@@ -808,9 +948,9 @@ export default {
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
-          
+
           debugRepresentantes(); // Log after loading
-          
+
           // Check again after loading
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
@@ -825,12 +965,12 @@ export default {
       // Verifique se o campo é responsavel_id
       if (field === 'responsavel_id') {
         console.log('Clicked on responsável field');
-        
+
         // Verificar se os responsáveis foram carregados
         if (responsaveisProcessos.value.length === 0) {
           console.log('Loading responsáveis on demand...');
           await loadResponsaveisProcessos();
-          
+
           // Verificar novamente após carregar
           if (responsaveisProcessos.value.length === 0) {
             console.error('Could not load responsáveis.');
@@ -894,7 +1034,7 @@ export default {
       try {
         // Verifica se o campo está em edição
         if (editingCell.value.id !== processo.id) return;
-        
+
         // Importante: Permitir valores vazios (string vazia)
         // O valor atual e anterior devem ser diferentes para prosseguir
         if (editingCell.value.value === processo[editingCell.value.field]) {
@@ -956,7 +1096,7 @@ export default {
           case 'responsavel_id':
             // Usar o helper para garantir ID válido
             updateValue = ensureValidResponsavelId(updateValue)
-            
+
             // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
             if (!updateValue) {
               console.error('Valor inválido para responsável:', editingCell.value.value)
@@ -964,14 +1104,14 @@ export default {
               cancelEdit()
               return
             }
-            
+
             console.log(`Atualizando responsável para: ${updateValue} (validado)`)
             break
 
           case 'empresa_id':
             // Usar o helper para garantir ID válido
             updateValue = ensureValidEmpresaId(updateValue);
-            
+
             // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
             if (!updateValue) {
               console.error('Valor inválido para empresa:', editingCell.value.value);
@@ -979,7 +1119,7 @@ export default {
               cancelEdit();
               return;
             }
-            
+
             console.log(`Atualizando empresa para: ${updateValue} (validado)`);
             break;
         }
@@ -1192,19 +1332,19 @@ export default {
     // Validation helpers
     const validarIdRelacionamento = async (tabela, campo, id) => {
       if (!id) return null; // Null values are valid
-      
+
       try {
         const { data, error } = await supabase
           .from(tabela)
           .select('id')
           .eq('id', id)
           .single();
-          
+
         if (error || !data) {
           console.warn(`ID ${id} not found in table ${tabela}, will be considered null`);
           return null;
         }
-        
+
         return id; // Valid ID
       } catch (err) {
         console.error(`Error validating ID in ${tabela}:`, err);
@@ -1218,17 +1358,17 @@ export default {
     const ensureValidResponsavelId = (value) => {
       // Se o valor for vazio ou null, retorna null (sem responsável)
       if (!value) return null;
-      
+
       // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
-      
+
       // Se não for UUID, tenta encontrar por nome (improvável neste caso)
-      const responsavel = responsaveisProcessos.value.find(r => 
+      const responsavel = responsaveisProcessos.value.find(r =>
         r.nome.toLowerCase() === value.toLowerCase());
-      
+
       if (responsavel) return responsavel.id;
-      
+
       // Se não encontrar, retorna null
       console.warn(`Valor inválido para responsável: ${value}`);
       return null;
@@ -1275,23 +1415,86 @@ export default {
     };
 
     // Helper for filter options
+    // Substitua a função opcoesUnicas por esta versão melhorada:
+
     const opcoesUnicas = (coluna) => {
-      const opcoes = new Set()
+      if (!processos.value || processos.value.length === 0) return [];
+      
+      const opcoes = new Set();
+      
+      // Para colunas especiais que precisam de tratamento diferenciado
+      if (coluna === 'modalidade') {
+        // Retorna diretamente as opções pré-definidas
+        return opcoesModalidade;
+      }
+      
       processos.value.forEach(processo => {
-        let valor = processo[coluna]
-
-        if (coluna === 'data_pregao') {
-          valor = formatDate(valor)
-        } else if (coluna === 'hora_pregao') {
-          valor = formatTime(valor)
-        } else if (coluna === 'modalidade') {
-          valor = formatModalidade(valor)
+        let valor = processo[coluna];
+        
+        // Pular valores nulos ou indefinidos
+        if (valor === null || valor === undefined) return;
+        
+        // Tratamento específico para diferentes tipos de coluna
+        switch (coluna) {
+          case 'data_pregao':
+            valor = formatDate(valor);
+            break;
+          case 'hora_pregao':
+            valor = formatTime(valor);
+            break;
+          case 'status':
+            valor = { value: valor, text: formatStatus(valor) };
+            break;
+          case 'responsavel_id':
+            // Busca o nome do responsável
+            const responsavel = responsaveisProcessos.value.find(r => r.id === valor);
+            valor = { value: valor, text: responsavel ? responsavel.nome : valor };
+            break;
+          case 'representante_id':
+            // Busca o nome do representante
+            const representante = representantes.value.find(r => r.id === valor);
+            valor = { value: valor, text: representante ? representante.nome : valor };
+            break;
+          case 'empresa_id':
+            // Busca o nome da empresa
+            const empresa = empresas.value.find(e => e.id === valor);
+            valor = { value: valor, text: empresa ? empresa.nome : valor };
+            break;
         }
+        
+        if (valor) opcoes.add(JSON.stringify(valor));
+      });
+      
+      // Convertemos de volta os objetos JSON para JavaScript
+      return Array.from(opcoes).map(item => {
+        try {
+          return JSON.parse(item);
+        } catch {
+          return item;
+        }
+      }).sort((a, b) => {
+        // Ordenar string ou objeto com campo text
+        const textA = typeof a === 'object' ? a.text : a;
+        const textB = typeof b === 'object' ? b.text : b;
+        return textA.localeCompare(textB);
+      });
+    };
 
-        if (valor) opcoes.add(valor)
-      })
-      return Array.from(opcoes).sort()
-    }
+    // Atualizar filtros quando um item é selecionado
+    const toggleFiltroItem = (coluna, valor) => {
+      if (!filtros.value[coluna]) {
+        filtros.value[coluna] = [];
+      }
+
+      const index = filtros.value[coluna].indexOf(valor);
+      if (index === -1) {
+        // Adiciona o item ao filtro
+        filtros.value[coluna].push(valor);
+      } else {
+        // Remove o item do filtro
+        filtros.value[coluna].splice(index, 1);
+      }
+    };
 
     // Initialize filters
     const initializeFiltros = () => {
@@ -1412,9 +1615,9 @@ export default {
           .select('*')
           .eq('processo_id', processo.id)
           .order('created_at');
-          
+
         if (error) throw error;
-        
+
         // Configurar o dialog
         const rect = event.target.getBoundingClientRect();
         distanciaDialog.value = {
@@ -1459,24 +1662,24 @@ export default {
     const salvarEdicaoDistancia = async () => {
       try {
         const { distancia_km, ponto_referencia_cidade, ponto_referencia_uf, id } = distanciaDialog.value.novaDistancia;
-        
+
         if (!distancia_km || !ponto_referencia_cidade || !ponto_referencia_uf) {
           alert('Todos os campos são obrigatórios');
           return;
         }
-        
+
         const { error } = await supabase
           .from('processo_distancias')
           .update({
             distancia_km,
-            ponto_referencia_cidade, 
+            ponto_referencia_cidade,
             ponto_referencia_uf,
             updated_at: new Date().toISOString()
           })
           .eq('id', id);
-          
+
         if (error) throw error;
-        
+
         // Atualiza a distância na lista local
         distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex] = {
           ...distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex],
@@ -1484,7 +1687,7 @@ export default {
           ponto_referencia_cidade,
           ponto_referencia_uf
         };
-        
+
         // Limpa o formulário de edição
         cancelarEdicaoDistancia();
       } catch (error) {
@@ -1495,12 +1698,12 @@ export default {
     const adicionarDistancia = async () => {
       try {
         const { distancia_km, ponto_referencia_cidade, ponto_referencia_uf } = distanciaDialog.value.novaDistancia;
-        
+
         if (!distancia_km || !ponto_referencia_cidade || !ponto_referencia_uf) {
           alert('Todos os campos são obrigatórios');
           return;
         }
-        
+
         const { data, error } = await supabase
           .from('processo_distancias')
           .insert({
@@ -1511,12 +1714,12 @@ export default {
             created_at: new Date().toISOString()
           })
           .select();
-          
+
         if (error) throw error;
-        
+
         // Adiciona a nova distância à lista local
         distanciaDialog.value.distancias.push(data[0]);
-        
+
         // Limpa o formulário
         distanciaDialog.value.novaDistancia = {
           distancia_km: '',
@@ -1530,15 +1733,15 @@ export default {
 
     const excluirDistancia = async (distancia, index) => {
       if (!confirm('Tem certeza que deseja excluir esta distância?')) return;
-      
+
       try {
         const { error } = await supabase
           .from('processo_distancias')
           .delete()
           .eq('id', distancia.id);
-          
+
         if (error) throw error;
-        
+
         // Remove a distância da lista local
         distanciaDialog.value.distancias.splice(index, 1);
       } catch (error) {
@@ -1552,10 +1755,10 @@ export default {
       loadProcessos();
     };
 
-    const { 
-      responsaveis: responsaveisProcessos, 
+    const {
+      responsaveis: responsaveisProcessos,
       loadResponsaveis: loadResponsaveisProcessos,
-      getResponsavelNome: getResponsavelProcessoNome 
+      getResponsavelNome: getResponsavelProcessoNome
     } = useResponsaveis()
 
     // Adicionar esta função dentro do setup()
@@ -1585,18 +1788,18 @@ export default {
       if (responsaveisProcessos.value.length === 0) {
         await loadResponsaveisProcessos();
       }
-      
+
       // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
-      
+
       // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
         value: processo[field]
       };
-      
+
       responsaveisDialog.value = {
         show: true,
         position: {
@@ -1653,17 +1856,17 @@ export default {
     const ensureValidRepresentanteId = (value) => {
       // Se o valor for vazio ou null, retorna null (sem representante)
       if (!value) return null;
-      
+
       // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
-      
+
       // Se não for UUID, tenta encontrar por nome (improvável neste caso)
-      const representante = representantes.value.find(r => 
+      const representante = representantes.value.find(r =>
         r.nome.toLowerCase() === value.toLowerCase());
-      
+
       if (representante) return representante.id;
-      
+
       // Se não encontrar, retorna null
       console.warn(`Valor inválido para representante: ${value}`);
       return null;
@@ -1675,18 +1878,18 @@ export default {
       if (representantes.value.length === 0) {
         await loadRepresentantes();
       }
-      
+
       // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
-      
+
       // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
         value: processo[field]
       };
-      
+
       representantesDialog.value = {
         show: true,
         position: {
@@ -1749,17 +1952,17 @@ export default {
     const ensureValidEmpresaId = (value) => {
       // Se o valor for vazio ou null, retorna null (sem empresa)
       if (!value) return null;
-      
+
       // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
-      
+
       // Se não for UUID, tenta encontrar por nome
-      const empresa = empresas.value.find(e => 
+      const empresa = empresas.value.find(e =>
         e.nome.toLowerCase() === value.toLowerCase());
-      
+
       if (empresa) return empresa.id;
-      
+
       // Se não encontrar, retorna null
       console.warn(`Valor inválido para empresa: ${value}`);
       return null;
@@ -1771,18 +1974,18 @@ export default {
       if (empresas.value.length === 0) {
         await loadEmpresas();
       }
-      
+
       // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
-      
+
       // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
         value: processo[field]
       };
-      
+
       empresasDialog.value = {
         show: true,
         position: {
@@ -1857,7 +2060,7 @@ export default {
 
         const lastAction = undoHistory.value.pop();
         console.log('Desfazendo ação:', lastAction);
-        
+
         // Adicionar ao histórico de refazer
         redoHistory.value.push({
           id: lastAction.id,
@@ -1916,7 +2119,7 @@ export default {
 
         const nextAction = redoHistory.value.pop();
         console.log('Refazendo ação:', nextAction);
-        
+
         // Adicionar de volta ao histórico de desfazer
         undoHistory.value.push({
           id: nextAction.id,
@@ -1966,13 +2169,57 @@ export default {
       }
     };
 
+    // Completar a lista de opções de modalidade
+    const opcoesModalidade = [
+      { valor: 'pregao_eletronico', texto: 'Pregão Eletrônico' },
+      { valor: 'pregao_presencial', texto: 'Pregão Presencial' },
+      { valor: 'credenciamento', texto: 'Credenciamento' },
+      { valor: 'concorrencia', texto: 'Concorrência' },
+      { valor: 'concurso', texto: 'Concurso' },
+      { valor: 'leilao', texto: 'Leilão' },
+      { valor: 'dialogo_competitivo', texto: 'Diálogo Competitivo' },
+      { valor: 'tomada_precos', texto: 'Tomada de Preços' },
+      { valor: 'chamamento_publico', texto: 'Chamamento Público' },
+      { valor: 'rdc', texto: 'RDC' },
+      { valor: 'rdc_eletronico', texto: 'RDC Eletrônico' },
+      { valor: 'srp', texto: 'SRP' },
+      { valor: 'srp_eletronico', texto: 'SRP Eletrônico' },
+      { valor: 'srp_internacional', texto: 'SRP Internacional' }
+    ];
+
+    // Adicione esta nova função
+
+    const limparFiltroColuna = (coluna) => {
+      if (filtros.value[coluna]) {
+        filtros.value[coluna] = [];
+      }
+    };
+
+    // Adicione esta função para filtrar as opções com base na pesquisa
+    const filtrarOpcoesPorColuna = (coluna, opcoes) => {
+      if (!filtroSearch.value[coluna]) {
+        return opcoes;
+      }
+      
+      const busca = filtroSearch.value[coluna].toLowerCase();
+      
+      return opcoes.filter(opcao => {
+        if (typeof opcao === 'object' && opcao.text) {
+          return opcao.text.toLowerCase().includes(busca);
+        } else if (typeof opcao === 'string') {
+          return opcao.toLowerCase().includes(busca);
+        }
+        return false;
+      });
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // Estado, dados, etc...
-      
+
       // Funções auxiliares
       getOpcoesParaCampo,
-      
+
       // Resto do return...
 
       // State
@@ -1990,7 +2237,7 @@ export default {
       mostrarFiltro,
       filtros,
       estadoSearch,
-      
+
       // Reference data
       representantes,
       empresas,
@@ -2001,7 +2248,7 @@ export default {
       colunas,
       colunasWidth,
       rowsHeight,
-      
+
       // Computed properties
       anosDisponiveis,
       estadosFiltrados,
@@ -2009,7 +2256,7 @@ export default {
       temFiltrosAtivos,
       empresasCadastradas,
       showPlataformaField,
-      
+
       // Helper functions
       formatDate,
       formatTime,
@@ -2025,7 +2272,7 @@ export default {
       getSistemasNomesString,
       formatarDistancia,
       getDistancias,
-      
+
       // Event handlers
       handleSidebarToggle,
       handleNewProcess,
@@ -2039,27 +2286,27 @@ export default {
       selecionarAno,
       selectRow,
       handleModalidadeChange,
-      
+
       // Table editing
       startColumnResize,
       startRowResize,
-      
+
       // Cell editing
       handleDblClick,
       handleConfirmEdit,
       hideConfirmDialog,
       cancelEdit,
       handleUpdate,
-      
+
       // Systems handling
       handleSistemasChange,
       removerSistema,
       saveSistemas,
       hideSistemasDialog,
-      
+
       // Form submission
       handleSubmit,
-      
+
       // Filter options
       opcoesUnicas,
 
@@ -2106,7 +2353,22 @@ export default {
       undoAction,
       redoAction,
       undoHistory,  // Adicionar esta linha
-      redoHistory  // Adicionar esta linha
+      redoHistory,  // Adicionar esta linha
+
+      // Adicionar as novas propriedades para filtros
+      filtrarOpcoes,
+      toggleFiltroItem,
+      filtroModalidadeSearch,
+      opcoesModalidade,
+      opcoesFiltradasModalidade,
+
+      // Adicionar a nova função
+      limparFiltroColuna,
+
+      // Adicione esta função para filtrar as opções com base na pesquisa
+      filtrarOpcoesPorColuna
+
+
     }
   }
 }
