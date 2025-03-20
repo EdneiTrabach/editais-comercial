@@ -2050,3 +2050,45 @@ td[data-field="impugnacoes"] {
   padding: 12px 0;
 }
 
+.header-processos {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  align-content: center;
+  align-items: center;
+  height: 21px;
+  position: relative;
+  bottom: 15px;
+}
+
+/* Adicionar no arquivo ProcessosView.css */
+.responsavel-display {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 16px;
+  background-color: #f3f4f6;
+  color: #193155;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.responsavel-select {
+  height: 45px;
+  width: 100%;
+  padding: 6px 8px !important;
+  border: 1px solid #ccc !important;
+  border-radius: 4px !important;
+  font-size: 0.9rem !important;
+  background-color: #fff;
+  appearance: menulist !important;
+}
+
+.responsavel-select:focus {
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
+}

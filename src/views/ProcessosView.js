@@ -9,6 +9,7 @@ import BaseImage from '@/components/BaseImage.vue'
 import '../assets/styles/dark-mode.css'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
+import { useResponsaveis } from '@/composables/useResponsaveis'
 
 export default {
   name: 'ProcessosView',
@@ -94,6 +95,17 @@ export default {
       { titulo: 'Órgão', campo: 'orgao' },
       { titulo: 'Objeto Completo', campo: 'objeto_completo' },
       { titulo: 'Status', campo: 'status' },
+      
+      // Nova coluna Responsáveis
+      {
+        titulo: 'Responsáveis',
+        campo: 'responsavel_id',
+        tabelaRelacionada: 'responsaveis_processos',
+        campoExibicao: 'nome',
+        tipoEdicao: 'select'
+      },
+      
+      // Continuar com as outras colunas
       {
         titulo: 'Distâncias',
         campo: 'distancia_km',
@@ -807,6 +819,26 @@ export default {
         }
       }
 
+      // Dentro da função handleDblClick
+
+      // Verifique se o campo é responsavel_id
+      if (field === 'responsavel_id') {
+        console.log('Clicked on responsável field');
+        
+        // Verificar se os responsáveis foram carregados
+        if (responsaveisProcessos.value.length === 0) {
+          console.log('Loading responsáveis on demand...');
+          await loadResponsaveisProcessos();
+          
+          // Verificar novamente após carregar
+          if (responsaveisProcessos.value.length === 0) {
+            console.error('Could not load responsáveis.');
+            alert('Não foi possível carregar a lista de responsáveis.');
+            return;
+          }
+        }
+      }
+
       // Default behavior for other fields
       confirmDialog.value = {
         show: true,
@@ -913,6 +945,21 @@ export default {
               }
             }
             break;
+
+          case 'responsavel_id':
+            // Usar o helper para garantir ID válido
+            updateValue = ensureValidResponsavelId(updateValue)
+            
+            // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
+            if (!updateValue) {
+              console.error('Valor inválido para responsável:', editingCell.value.value)
+              alert('Responsável inválido. Por favor, selecione um responsável válido da lista.')
+              cancelEdit()
+              return
+            }
+            
+            console.log(`Atualizando responsável para: ${updateValue} (validado)`)
+            break
         }
 
         // Check if value actually changed to avoid unnecessary updates
@@ -1127,6 +1174,28 @@ export default {
       }
     };
 
+    // Adicione esta função dentro do setup(), antes do uso na função handleUpdate
+
+    // Helper para validar e garantir UUID válido para responsável
+    const ensureValidResponsavelId = (value) => {
+      // Se o valor for vazio ou null, retorna null (sem responsável)
+      if (!value) return null;
+      
+      // Se já for um UUID válido, retorna direto
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(value)) return value;
+      
+      // Se não for UUID, tenta encontrar por nome (improvável neste caso)
+      const responsavel = responsaveisProcessos.value.find(r => 
+        r.nome.toLowerCase() === value.toLowerCase());
+      
+      if (responsavel) return responsavel.id;
+      
+      // Se não encontrar, retorna null
+      console.warn(`Valor inválido para responsável: ${value}`);
+      return null;
+    };
+
     // Form submission
     const handleSubmit = async () => {
       try {
@@ -1224,6 +1293,7 @@ export default {
           loadEmpresas(),
           loadPlataformas(),
           loadSistemas(),
+          loadResponsaveisProcessos() // Adicionar carregamento de responsáveis
         ]);
 
         console.log('All other data loaded successfully!');
@@ -1438,8 +1508,105 @@ export default {
       loadProcessos();
     };
 
+    const { 
+      responsaveis: responsaveisProcessos, 
+      loadResponsaveis: loadResponsaveisProcessos,
+      getResponsavelNome: getResponsavelProcessoNome 
+    } = useResponsaveis()
+
+    // Adicionar esta função dentro do setup()
+
+    const getOpcoesParaCampo = (coluna) => {
+      if (coluna.campo === 'responsavel_id') {
+        return responsaveisProcessos.value;
+      } else if (coluna.campo === 'representante_id') {
+        return representantes.value;
+      } else if (coluna.campo === 'empresa_id') {
+        return empresas.value;
+      }
+      // Adicione outras relações conforme necessário
+      return [];
+    };
+
+    // Dialog para responsáveis
+    const responsaveisDialog = ref({
+      show: false,
+      position: {},
+      processo: null
+    });
+
+    // Função para lidar com o clique no responsável
+    const handleDblClickResponsavel = async (field, processo, event) => {
+      // Verifica se já carregou os responsáveis
+      if (responsaveisProcessos.value.length === 0) {
+        await loadResponsaveisProcessos();
+      }
+      
+      // Configura o diálogo
+      const cell = event.target.closest('td');
+      const rect = cell.getBoundingClientRect();
+      
+      // Prepara dados para edição
+      editingCell.value = {
+        id: processo.id,
+        field,
+        value: processo[field]
+      };
+      
+      responsaveisDialog.value = {
+        show: true,
+        position: {
+          top: `${rect.bottom + 10}px`,
+          left: `${rect.left}px`
+        },
+        processo
+      };
+    };
+
+    // Função para remover o responsável selecionado
+    const removerResponsavel = () => {
+      editingCell.value.value = null;
+    };
+
+    // Função para lidar com a mudança de responsável no select
+    const handleResponsavelChange = (event) => {
+      editingCell.value.value = event.target.value;
+    };
+
+    // Função para salvar o responsável
+    const saveResponsavel = async () => {
+      try {
+        if (!editingCell.value.id || !responsaveisDialog.value.processo) {
+          hideResponsaveisDialog();
+          return;
+        }
+
+        await handleUpdate(responsaveisDialog.value.processo);
+        hideResponsaveisDialog();
+      } catch (error) {
+        console.error('Erro ao salvar responsável:', error);
+        alert('Erro ao salvar responsável');
+      }
+    };
+
+    // Função para fechar o diálogo de responsáveis
+    const hideResponsaveisDialog = () => {
+      responsaveisDialog.value = {
+        show: false,
+        position: {},
+        processo: null
+      };
+    };
+
     // Return all reactive properties and methods for the template
     return {
+      // Estado, dados, etc...
+      
+      // Funções auxiliares
+      getOpcoesParaCampo,
+      
+      // Resto do return...
+
       // State
       processos,
       loading,
@@ -1536,7 +1703,19 @@ export default {
       salvarEdicaoDistancia,
       adicionarDistancia,
       cancelarEdicaoDistancia,
-      fecharDistanciaDialog
+      fecharDistanciaDialog,
+
+      // Adicionar as props relacionadas a responsáveis
+      responsaveisProcessos,
+      getResponsavelProcessoNome,
+
+      // Responsáveis dialog
+      responsaveisDialog,
+      handleDblClickResponsavel,
+      removerResponsavel,
+      handleResponsavelChange,
+      saveResponsavel,
+      hideResponsaveisDialog
     }
   }
 }

@@ -4,7 +4,7 @@
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <!-- Header Section -->
-      <div class="header">
+      <div class="header-processos">
         <h1>Processos Licitatórios</h1>
 
         <div class="actions">
@@ -33,25 +33,19 @@
           <thead>
             <tr>
               <th class="row-number-cell"></th>
-              <th 
-                v-for="(coluna, index) in colunas" 
-                :key="index" 
-                class="resizable-column" 
-                :data-field="coluna.campo"
+              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column" :data-field="coluna.campo"
                 :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
 
                   <!-- Sort buttons for date column -->
                   <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
-                    <button 
-                      class="btn-sort"
+                    <button class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
                       @click="handleSort('data_pregao', 'asc')">
                       ▲
                     </button>
-                    <button 
-                      class="btn-sort"
+                    <button class="btn-sort"
                       :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
                       @click="handleSort('data_pregao', 'desc')">
                       ▼
@@ -73,112 +67,60 @@
             </tr>
           </thead>
           <tbody>
-            <tr 
-              v-for="(processo, index) in processosFiltrados" 
-              :key="processo.id" 
-              class="resizable-row"
-              :class="{ 'selected-row': selectedRow === processo.id }" 
-              :data-status="processo.status"
-              @click="selectRow(processo.id)" 
-              :style="{ height: rowsHeight[processo.id] }">
+            <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
+              :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
+              @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td>
-              <td 
-                v-for="coluna in colunas" 
-                :key="coluna.campo" 
-                :data-field="coluna.campo"
+              <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Analysis Code field -->
-                  <input 
-                    v-if="coluna.campo === 'codigo_analise'" 
-                    type="text" 
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" 
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
+                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     placeholder="Digite o código">
 
                   <!-- Date field -->
-                  <input 
-                    v-if="coluna.campo === 'data_pregao'" 
-                    ref="editInput" 
-                    type="date" 
-                    v-model="editingCell.value"
-                    :min="new Date().toISOString().split('T')[0]" 
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()">
+                  <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
+                    :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
 
                   <!-- Time field -->
-                  <input 
-                    v-else-if="coluna.campo === 'hora_pregao'" 
-                    type="time" 
-                    v-model="editingCell.value" 
-                    min="08:00"
-                    max="18:00" 
-                    @blur="handleUpdate(processo)" 
-                    @keyup.enter="handleUpdate(processo)"
+                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value" min="08:00"
+                    max="18:00" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
                     @keyup.esc="cancelEdit()">
 
                   <!-- State field -->
-                  <select 
-                    v-else-if="coluna.campo === 'estado'" 
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)" 
-                    @blur="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()">
+                  <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o estado...</option>
-                    <option 
-                      v-for="estado in estados" 
-                      :key="estado.uf" 
-                      :value="estado.uf">
+                    <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                       {{ estado.nome }}
                     </option>
                   </select>
 
                   <!-- Impugnações field -->
-                  <textarea 
-                    v-else-if="coluna.campo === 'impugnacoes'" 
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" 
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
-                    rows="3" 
-                    placeholder="Digite as impugnações..."></textarea>
+                  <textarea v-else-if="coluna.campo === 'impugnacoes'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    rows="3" placeholder="Digite as impugnações..."></textarea>
 
                   <!-- Representative field -->
-                  <select 
-                    v-else-if="coluna.campo === 'representante'" 
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)" 
-                    @blur="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()">
+                  <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="">Selecione o representante...</option>
-                    <option 
-                      v-for="rep in representantes" 
-                      :key="rep.id" 
-                      :value="rep.id">
+                    <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                       {{ rep.nome }}
                     </option>
                   </select>
 
                   <!-- Full Object field -->
-                  <textarea 
-                    v-else-if="coluna.campo === 'objeto_completo'" 
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" 
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
+                  <textarea v-else-if="coluna.campo === 'objeto_completo'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     rows="3"></textarea>
 
                   <!-- Modality field -->
-                  <select 
-                    v-else-if="coluna.campo === 'modalidade'" 
-                    v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" 
-                    @change="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()">
+                  <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                     <option value="pregao_eletronico">Pregão Eletrônico</option>
                     <option value="pregao_presencial">Pregão Presencial</option>
                     <option value="credenciamento">Credenciamento</option>
@@ -196,12 +138,8 @@
                   </select>
 
                   <!-- Status field -->
-                  <select 
-                    v-else-if="coluna.campo === 'status'" 
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)" 
-                    @blur="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
+                  <select v-else-if="coluna.campo === 'status'" v-model="editingCell.value"
+                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     class="status-select">
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
@@ -228,10 +166,7 @@
                         </div>
                       </div>
                       <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-                        <option 
-                          v-for="sistema in sistemasAtivos" 
-                          :key="sistema.id" 
-                          :value="sistema.id"
+                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
                           :selected="editingCell.value && editingCell.value.includes(sistema.id)">
                           {{ sistema.nome }}
                         </option>
@@ -240,13 +175,8 @@
                   </template>
 
                   <!-- Default input for other fields -->
-                  <input 
-                    v-else 
-                    type="text" 
-                    v-model="editingCell.value" 
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()">
+                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
 
                 <!-- View Mode -->
@@ -269,8 +199,7 @@
                   </template>
 
                   <!-- Object fields -->
-                  <span 
-                    v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
+                  <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
                     class="objeto-cell">
                     {{ processo[coluna.campo] || '-' }}
                   </span>
@@ -288,12 +217,8 @@
                   <!-- Site field -->
                   <template v-else-if="coluna.campo === 'site_pregao'">
                     <div class="portal-link">
-                      <a 
-                        v-if="processo.site_pregao" 
-                        :href="processo.site_pregao" 
-                        target="_blank"
-                        rel="noopener noreferrer" 
-                        class="portal-button">
+                      <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
+                        rel="noopener noreferrer" class="portal-button">
                         {{ getPlataformaNome(processo.site_pregao) }}
                       </a>
                       <span v-else>-</span>
@@ -304,16 +229,12 @@
                   <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
                     {{ formatStatus(processo.status) }}
                   </span>
-                  
+
                   <!-- Company field -->
                   <template v-else-if="coluna.campo === 'empresa'">
                     <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                      <select 
-                        v-model="editingCell.value" 
-                        @change="handleUpdate(processo)"
-                        @blur="handleUpdate(processo)" 
-                        @keyup.esc="cancelEdit()" 
-                        class="empresa-select">
+                      <select v-model="editingCell.value" @change="handleUpdate(processo)"
+                        @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()" class="empresa-select">
                         <option value="">Selecione uma empresa</option>
                         <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
                           {{ empresa.nome }}
@@ -326,256 +247,261 @@
                   </template>
 
                   <!-- Distances field -->
-                  <td v-else-if="coluna.campo === 'distancias'">
-                    <div class="distancias-stack">
-                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
-                      </div>
-                    </div>
-                  </td>
-
-                  <!-- Systems field -->
-                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
-                    <div class="sistemas-chips">
-                      <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
-                        {{ getSistemasNomesString(processo.sistemas_ativos) }}
-                      </div>
-                      <div v-else class="sem-sistemas">-</div>
-                    </div>
-                  </template>
-                  
-                  <!-- Distance type display -->
-                  <template v-else-if="coluna.tipoExibicao === 'distancia'">
-                    <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
-                      <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
-                        {{ formatarDistancia(processo) }}
-                      </div>
-                      <div v-else class="distancia-multiple">
-                        <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
-                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                            {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
-                          </div>
-                        </span>
-                        <span v-else class="sem-distancia">Clique para adicionar</span>
-                      </div>
-                    </div>
-                  </template>
-                  
-                  <!-- Representative ID field -->
-                  <template v-else-if="coluna.campo === 'representante_id'">
-                    <!-- Edit mode -->
-                    <select 
-                      v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                      v-model="editingCell.value" 
-                      @blur="handleUpdate(processo)" 
-                      @change="handleUpdate(processo)" 
-                      @keyup.esc="cancelEdit()" 
-                      class="representante-select">
-                      <option value="">Sem representante</option>
-                      <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
-                        {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
-                      </option>
-                    </select>
-
-                    <!-- View mode -->
-                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
-                      {{ getRepresentanteNome(processo.representante_id) }}
-                    </span>
-                  </template>
-                  
-                  <!-- Default display for other fields -->
-                  <span v-else>
-                    {{ processo[coluna.campo] || '-' }}
-                  </span>
-                </template>
-              </td>
-              
-              <!-- Actions cell -->
-              <td class="actions-cell">
-                <div class="action-buttons">
-                  <button class="btn-icon delete" @click="handleDelete(processo)">
-                    <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
-                  </button>
+              <td v-else-if="coluna.campo === 'distancias'">
+                <div class="distancias-stack">
+                  <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                    {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                  </div>
                 </div>
               </td>
-              
-              <!-- Row resize handle -->
-              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <!-- Year tabs -->
-      <div class="anos-tabs">
-        <div class="tabs-header">
-          <button 
-            v-for="ano in anosDisponiveis" 
-            :key="ano" 
-            :class="['tab-button', { active: anoSelecionado === ano }]"
-            @click="selecionarAno(ano)">
-            {{ ano }}
-          </button>
-        </div>
-      </div>
+              <!-- Systems field -->
+              <template v-else-if="coluna.campo === 'sistemas_ativos'">
+                <div class="sistemas-chips">
+                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
+                    {{ getSistemasNomesString(processo.sistemas_ativos) }}
+                  </div>
+                  <div v-else class="sem-sistemas">-</div>
+                </div>
+              </template>
 
-      <!-- Confirm dialog -->
-      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
-        <div class="confirm-content">
-          <p>Deseja editar este campo?</p>
-          <div class="confirm-actions">
-            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
+              <!-- Distance type display -->
+              <template v-else-if="coluna.tipoExibicao === 'distancia'">
+                <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
+                  <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
+                    {{ formatarDistancia(processo) }}
+                  </div>
+                  <div v-else class="distancia-multiple">
+                    <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
+                      <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                        {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
+                          distancia.ponto_referencia_uf }})
+                      </div>
+                    </span>
+                    <span v-else class="sem-distancia">Clique para adicionar</span>
+                  </div>
+                </div>
+              </template>
 
-      <!-- Delete confirm dialog -->
-      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
-        <div class="confirm-dialog">
-          <div class="confirm-content">
-            <h3>Confirmar Exclusão</h3>
-            <p>Tem certeza que deseja excluir este processo?</p>
-            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
-            <div class="confirm-actions">
-              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-              <button class="btn-confirm delete" @click="confirmDelete">
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Systems dialog -->
-      <div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
-        <div class="sistemas-dialog-content">
-          <h3>Selecionar Sistemas</h3>
-          <div class="sistemas-selected">
-            <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
-              {{ getSistemaNome(id) }}
-              <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
-            </div>
-          </div>
-          <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-            <option 
-              v-for="sistema in sistemasAtivos" 
-              :key="sistema.id" 
-              :value="sistema.id"
-              :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-              {{ sistema.nome }}
-            </option>
-          </select>
-          <div class="sistemas-dialog-actions">
-            <button @click="saveSistemas" class="btn-confirm">Salvar</button>
-            <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dialog para gerenciar distâncias -->
-      <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
-        <div class="distancia-dialog-content">
-          <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
-          
-          <div class="distancias-list">
-            <table class="distancias-table">
-              <thead>
-                <tr>
-                  <th>Distância (km)</th>
-                  <th>Cidade</th>
-                  <th>UF</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
-                  <td>{{ distancia.distancia_km }}</td>
-                  <td>{{ distancia.ponto_referencia_cidade }}</td>
-                  <td>{{ distancia.ponto_referencia_uf }}</td>
-                  <td class="distancia-acoes">
-                    <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
-                    </button>
-                    <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="distanciaDialog.distancias.length === 0">
-                  <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="distancia-form">
-            <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Distância (km)</label>
-                <input 
-                  type="number" 
-                  min="0" 
-                  step="0.1" 
-                  v-model="distanciaDialog.novaDistancia.distancia_km" 
-                  placeholder="Digite a distância"
-                />
-              </div>
-              
-              <div class="form-group">
-                <label>Cidade</label>
-                <input 
-                  type="text" 
-                  v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade" 
-                  placeholder="Digite a cidade"
-                />
-              </div>
-              
-              <div class="form-group">
-                <label>UF</label>
-                <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
-                  <option value="">Selecione</option>
-                  <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-                    {{ estado.uf }}
+              <!-- Representative ID field -->
+              <template v-else-if="coluna.campo === 'representante_id'">
+                <!-- Edit mode -->
+                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
+                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
+                  @keyup.esc="cancelEdit()" class="representante-select">
+                  <option value="">Sem representante</option>
+                  <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                    {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
                   </option>
                 </select>
-              </div>
-            </div>
-            
-            <div class="form-actions">
-              <button 
-                v-if="distanciaDialog.editandoIndex >= 0" 
-                class="btn-save" 
-                @click="salvarEdicaoDistancia"
-              >
-                Salvar Alterações
-              </button>
-              <button 
-                v-else 
-                class="btn-add" 
-                @click="adicionarDistancia"
-              >
-                Adicionar
-              </button>
-              
-              <button 
-                v-if="distanciaDialog.editandoIndex >= 0" 
-                class="btn-cancel" 
-                @click="cancelarEdicaoDistancia"
-              >
-                Cancelar Edição
-              </button>
-            </div>
-          </div>
-          
-          <div class="dialog-footer">
-            <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
-          </div>
-        </div>
+
+                <!-- View mode -->
+                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
+                  {{ getRepresentanteNome(processo.representante_id) }}
+                </span>
+              </template>
+
+              <!-- Responsible ID field -->
+              <template v-else-if="coluna.campo === 'responsavel_id'">
+                <div class="responsavel-container" @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
+                  <span class="responsavel-display">
+                    {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
+                  </span>
+                </div>
+              </template>
+
+              <!-- Default display for other fields -->
+              <span v-else>
+                {{ processo[coluna.campo] || '-' }}
+              </span>
+            </template>
+          </td>
+
+<!-- Actions cell -->
+<td class="actions-cell">
+  <div class="action-buttons">
+    <button class="btn-icon delete" @click="handleDelete(processo)">
+      <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
+    </button>
+  </div>
+</td>
+
+<!-- Row resize handle -->
+<div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- Year tabs -->
+<div class="anos-tabs">
+  <div class="tabs-header">
+    <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+      @click="selecionarAno(ano)">
+      {{ ano }}
+    </button>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+  <div class="confirm-content">
+    <p>Deseja editar este campo?</p>
+    <div class="confirm-actions">
+      <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
+      <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm dialog -->
+<div v-if="deleteConfirmDialog.show" class="modal-overlay">
+  <div class="confirm-dialog">
+    <div class="confirm-content">
+      <h3>Confirmar Exclusão</h3>
+      <p>Tem certeza que deseja excluir este processo?</p>
+      <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+        <button class="btn-confirm delete" @click="confirmDelete">
+          Excluir
+        </button>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Systems dialog -->
+<div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Sistemas</h3>
+    <div class="sistemas-selected">
+      <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+        {{ getSistemaNome(id) }}
+        <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+      <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
+        :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+        {{ sistema.nome }}
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveSistemas" class="btn-confirm">Salvar</button>
+      <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog para gerenciar distâncias -->
+<div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
+  <div class="distancia-dialog-content">
+    <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
+
+    <div class="distancias-list">
+      <table class="distancias-table">
+        <thead>
+          <tr>
+            <th>Distância (km)</th>
+            <th>Cidade</th>
+            <th>UF</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
+            <td>{{ distancia.distancia_km }}</td>
+            <td>{{ distancia.ponto_referencia_cidade }}</td>
+            <td>{{ distancia.ponto_referencia_uf }}</td>
+            <td class="distancia-acoes">
+              <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
+                <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
+              </button>
+              <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
+                <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
+              </button>
+            </td>
+          </tr>
+          <tr v-if="distanciaDialog.distancias.length === 0">
+            <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="distancia-form">
+      <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Distância (km)</label>
+          <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
+            placeholder="Digite a distância" />
+        </div>
+
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
+            placeholder="Digite a cidade" />
+        </div>
+
+        <div class="form-group">
+          <label>UF</label>
+          <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
+            <option value="">Selecione</option>
+            <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+              {{ estado.uf }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
+          Salvar Alterações
+        </button>
+        <button v-else class="btn-add" @click="adicionarDistancia">
+          Adicionar
+        </button>
+
+        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
+          Cancelar Edição
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Responsáveis dialog -->
+<div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Responsável</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getResponsavelProcessoNome(editingCell.value) }}
+        <span @click.stop="removerResponsavel()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleResponsavelChange($event)">
+      <option value="">Sem responsável</option>
+      <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
+        :selected="editingCell.value === resp.id">
+        {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
+      <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
 </template>
 
 <script>
