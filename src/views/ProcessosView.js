@@ -125,7 +125,8 @@ export default {
         titulo: 'Empresa Participante',
         campo: 'empresa_id',
         tabelaRelacionada: 'empresas',
-        campoExibicao: 'nome'
+        campoExibicao: 'nome',
+        tipoEdicao: 'select'
       }
     ]
 
@@ -960,6 +961,21 @@ export default {
             
             console.log(`Atualizando responsável para: ${updateValue} (validado)`)
             break
+
+          case 'empresa_id':
+            // Usar o helper para garantir ID válido
+            updateValue = ensureValidEmpresaId(updateValue);
+            
+            // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
+            if (!updateValue) {
+              console.error('Valor inválido para empresa:', editingCell.value.value);
+              alert('Empresa inválida. Por favor, selecione uma empresa válida da lista.');
+              cancelEdit();
+              return;
+            }
+            
+            console.log(`Atualizando empresa para: ${updateValue} (validado)`);
+            break;
         }
 
         // Check if value actually changed to avoid unnecessary updates
@@ -1688,6 +1704,102 @@ export default {
       };
     };
 
+    // Dialog para empresas
+    const empresasDialog = ref({
+      show: false,
+      position: {},
+      processo: null
+    });
+
+    // Função para formatar CNPJ na exibição
+    const formatCNPJ = (cnpj) => {
+      if (!cnpj) return '';
+      return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+    };
+
+    // Função para validar ID de empresa
+    const ensureValidEmpresaId = (value) => {
+      // Se o valor for vazio ou null, retorna null (sem empresa)
+      if (!value) return null;
+      
+      // Se já for um UUID válido, retorna direto
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(value)) return value;
+      
+      // Se não for UUID, tenta encontrar por nome
+      const empresa = empresas.value.find(e => 
+        e.nome.toLowerCase() === value.toLowerCase());
+      
+      if (empresa) return empresa.id;
+      
+      // Se não encontrar, retorna null
+      console.warn(`Valor inválido para empresa: ${value}`);
+      return null;
+    };
+
+    // Função para lidar com o clique na empresa
+    const handleDblClickEmpresa = async (field, processo, event) => {
+      // Verifica se já carregou as empresas
+      if (empresas.value.length === 0) {
+        await loadEmpresas();
+      }
+      
+      // Configura o diálogo
+      const cell = event.target.closest('td');
+      const rect = cell.getBoundingClientRect();
+      
+      // Prepara dados para edição
+      editingCell.value = {
+        id: processo.id,
+        field,
+        value: processo[field]
+      };
+      
+      empresasDialog.value = {
+        show: true,
+        position: {
+          top: `${rect.bottom + 10}px`,
+          left: `${rect.left}px`
+        },
+        processo
+      };
+    };
+
+    // Função para remover a empresa selecionada
+    const removerEmpresa = () => {
+      editingCell.value.value = null;
+    };
+
+    // Função para lidar com a mudança de empresa no select
+    const handleEmpresaChange = (event) => {
+      editingCell.value.value = event.target.value;
+    };
+
+    // Função para salvar a empresa
+    const saveEmpresa = async () => {
+      try {
+        if (!editingCell.value.id || !empresasDialog.value.processo) {
+          hideEmpresasDialog();
+          return;
+        }
+
+        await handleUpdate(empresasDialog.value.processo);
+        hideEmpresasDialog();
+      } catch (error) {
+        console.error('Erro ao salvar empresa:', error);
+        alert('Erro ao salvar empresa');
+      }
+    };
+
+    // Função para fechar o diálogo de empresas
+    const hideEmpresasDialog = () => {
+      empresasDialog.value = {
+        show: false,
+        position: {},
+        processo: null
+      };
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // Estado, dados, etc...
@@ -1813,7 +1925,16 @@ export default {
       removerRepresentante,
       handleRepresentanteChange,
       saveRepresentante,
-      hideRepresentantesDialog
+      hideRepresentantesDialog,
+
+      // Empresas dialog
+      empresasDialog,
+      formatCNPJ,
+      handleDblClickEmpresa,
+      removerEmpresa,
+      handleEmpresaChange,
+      saveEmpresa,
+      hideEmpresasDialog
     }
   }
 }

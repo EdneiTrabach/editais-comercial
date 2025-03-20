@@ -232,18 +232,11 @@
 
                   <!-- Company field -->
                   <template v-else-if="coluna.campo === 'empresa_id'">
-                    <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                      <select v-model="editingCell.value" @change="handleUpdate(processo)"
-                        @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()" class="empresa-select">
-                        <option value="">Selecione uma empresa</option>
-                        <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
-                          {{ empresa.nome }}
-                        </option>
-                      </select>
-                    </template>
-                    <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="empresa-display">
-                      {{ getEmpresaNome(processo.empresa_id) }}
-                    </span>
+                    <div class="responsavel-container" @dblclick="handleDblClickEmpresa(coluna.campo, processo, $event)">
+                      <span class="responsavel-display">
+                        {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
+                      </span>
+                    </div>
                   </template>
 
                   <!-- Distances field -->
@@ -511,6 +504,30 @@
     <div class="sistemas-dialog-actions">
       <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
       <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Empresas dialog -->
+<div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Empresa</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getEmpresaNome(editingCell.value) }}
+        <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleEmpresaChange($event)">
+      <option value="">Sem empresa</option>
+      <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
+        :selected="editingCell.value === empresa.id">
+        {{ empresa.nome }} <span v-if="empresa.cnpj" class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
+      <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
     </div>
   </div>
 </div>

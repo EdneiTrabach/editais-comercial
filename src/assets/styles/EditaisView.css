@@ -604,13 +604,6 @@ input.input-orgao {
   max-width: 600px;
 }
 
-.distancia-container {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
 [data-theme="dark"] .distancia-container {
   background: #1e293b !important;
   color: white;
@@ -884,14 +877,6 @@ select.cidade-select {
 .nova-distancia {
   border-top: 1px solid #e9ecef;
   padding-top: 1rem;
-}
-
-/* Ajuste o CSS existente no EditaisView.vue */
-.distancia-container {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
 }
 
 .pontos-container {

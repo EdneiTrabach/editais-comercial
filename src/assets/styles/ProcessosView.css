@@ -1899,15 +1899,6 @@ td[data-field="impugnacoes"] {
 
 
 
-/* Estilos para o container de distâncias */
-.distancia-container {
-  cursor: pointer;
-  min-height: 20px;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
 .distancia-container:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
