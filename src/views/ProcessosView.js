@@ -79,6 +79,83 @@ export default {
     const colunasWidth = ref({})
     const rowsHeight = ref({})
 
+    // Adicionar após a definição de colunasWidth e rowsHeight
+    const colunasOrder = ref([])
+
+    // Função para carregar a ordem das colunas do localStorage
+    const loadColumnsOrder = () => {
+      try {
+        const savedOrder = localStorage.getItem('table-columns-order')
+        if (savedOrder) {
+          colunasOrder.value = JSON.parse(savedOrder)
+        } else {
+          // Inicializa com a ordem padrão das colunas
+          colunasOrder.value = colunas.map(coluna => coluna.campo)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar ordem das colunas:', error)
+        // Fallback para ordem padrão se ocorrer erro
+        colunasOrder.value = colunas.map(coluna => coluna.campo)
+      }
+    }
+
+    // Função para salvar a ordem das colunas no localStorage
+    const saveColumnsOrder = () => {
+      try {
+        localStorage.setItem('table-columns-order', JSON.stringify(colunasOrder.value))
+      } catch (error) {
+        console.error('Erro ao salvar ordem das colunas:', error)
+      }
+    }
+
+    // Função para iniciar o arrastar de colunas
+    const startColumnDrag = (event, index) => {
+      event.dataTransfer.setData('text/plain', index)
+      event.currentTarget.classList.add('dragging')
+    }
+
+    // Função para permitir o soltar
+    const allowColumnDrop = (event) => {
+      event.preventDefault()
+    }
+
+    // Função para processar o soltar da coluna
+    const handleColumnDrop = (event, targetIndex) => {
+      event.preventDefault()
+      const draggedIndex = parseInt(event.dataTransfer.getData('text/plain'))
+      
+      // Remove a classe de arrasto de todos os elementos
+      document.querySelectorAll('th').forEach(th => th.classList.remove('dragging'))
+      
+      // Evita reordenar se for o mesmo índice
+      if (draggedIndex === targetIndex) return
+      
+      // Reordena as colunas
+      const columnOrder = [...colunasOrder.value]
+      const draggedColumn = columnOrder[draggedIndex]
+      
+      // Remove a coluna arrastada
+      columnOrder.splice(draggedIndex, 1)
+      
+      // Insere no novo local
+      columnOrder.splice(targetIndex, 0, draggedColumn)
+      
+      // Atualiza a ordem
+      colunasOrder.value = columnOrder
+      
+      // Salva a nova ordem
+      saveColumnsOrder()
+    }
+
+    // Função para obter colunas na ordem correta
+    const ordenarColunas = computed(() => {
+      if (colunasOrder.value.length === 0) return colunas
+      
+      return colunasOrder.value.map(campo => 
+        colunas.find(coluna => coluna.campo === campo)
+      ).filter(Boolean) // Filtra valores undefined/null
+    })
+
     // Table columns definition
     const colunas = [
       { titulo: 'Data', campo: 'data_pregao' },
@@ -1547,6 +1624,9 @@ export default {
         // 5. Load interface settings
         loadColumnWidths()
 
+        // Adicionar este código no método onMounted após loadColumnWidths()
+        loadColumnsOrder()
+
         // 6. Set up Realtime channel for real-time updates
         const channel = supabase.channel('processos-updates')
           .on('postgres_changes',
@@ -2371,7 +2451,14 @@ export default {
       limparFiltroColuna,
 
       // Adicione esta função para filtrar as opções com base na pesquisa
-      filtrarOpcoesPorColuna
+      filtrarOpcoesPorColuna,
+
+      colunasOrder,
+      ordenarColunas,
+      startColumnDrag,
+      allowColumnDrop,
+      handleColumnDrop,
+      
 
 
     }

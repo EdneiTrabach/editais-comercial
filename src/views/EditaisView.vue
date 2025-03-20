@@ -264,11 +264,11 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <!-- <div class="form-group">
             <RequiredLabel text="Observações" :isRequired="false" />
             <input v-model="formData.campo_adicional1" type="text" placeholder="Obesevarções adicionais"
               class="input-orgao" />
-          </div>
+          </div> -->
 
           <div class="form-group">
             <RequiredLabel text="Campo Adicional 2" :isRequired="false" />
@@ -276,7 +276,7 @@
           </div>
 
           <!-- Substitua o campo de responsável existente por este -->
-          <div class="form-group">
+          <!-- <div class="form-group">
             <RequiredLabel text="Responsável" :isRequired="false" />
             <select v-model="formData.responsavel_id" class="responsavel-select">
               <option value="">Sem responsável definido</option>
@@ -284,7 +284,7 @@
                 {{ resp.nome }} ({{ resp.email }}){{ resp.departamento ? ` - ${resp.departamento}` : '' }}
               </option>
             </select>
-          </div>
+          </div> -->
 
           <div class="form-actions">
             <button type="button" class="btn-cancelar" @click="handleCancel">

@@ -41,11 +41,17 @@
           <thead>
             <tr>
               <th class="row-number-cell"></th>
-              <th v-for="(coluna, index) in colunas" :key="index" class="resizable-column" :data-field="coluna.campo"
-                :style="{ width: colunasWidth[coluna.campo] }">
+              <th v-for="(coluna, index) in ordenarColunas" 
+                  :key="coluna.campo" 
+                  :data-field="coluna.campo"
+                  draggable="true"
+                  @dragstart="startColumnDrag($event, index)"
+                  @dragover="allowColumnDrop($event)"
+                  @drop="handleColumnDrop($event, index)"
+                  :style="{ width: colunasWidth[coluna.campo] }">
                 <div class="th-content">
                   {{ coluna.titulo }}
-
+                  <div class="column-drag-handle" title="Arraste para reordenar">⋮⋮</div>
                   <!-- Sort buttons for date column -->
                   <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
                     <button class="btn-sort"
@@ -94,7 +100,7 @@
                 </div>
                 <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
-              <th class="actions-column">Ações</th>
+              <th class="actions-header">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -102,8 +108,11 @@
               :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
               @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td>
-              <td v-for="coluna in colunas" :key="coluna.campo" :data-field="coluna.campo"
-                @dblclick="handleDblClick(coluna.campo, processo, $event)">
+              <td v-for="coluna in ordenarColunas" 
+                  :key="coluna.campo" 
+                  :data-field="coluna.campo"
+                  :data-id="processo.id"
+                  @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Analysis Code field -->

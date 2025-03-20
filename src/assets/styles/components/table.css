@@ -19,6 +19,28 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  position: relative;
+  cursor: move;
+}
+
+.excel-table th.dragging {
+  opacity: 0.6;
+  background-color: #e5e7eb;
+}
+
+.excel-table th.drag-over {
+  border-left: 3px solid #193155;
+}
+
+.excel-table th .column-drag-handle {
+  margin-left: 5px;
+  cursor: move;
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.excel-table th:hover .column-drag-handle {
+  opacity: 1;
 }
 
 /* Tamanho padrão do scrollbar */
