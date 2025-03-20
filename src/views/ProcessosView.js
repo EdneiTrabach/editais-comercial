@@ -122,8 +122,8 @@ export default {
         campoExibicao: 'nome',
         tipoEdicao: 'select'
       },
-      { titulo: 'Impugnações', campo: 'impugnacoes' },
       { titulo: 'Observações', campo: 'campo_adicional1' },
+      { titulo: 'Impugnações', campo: 'impugnacoes' },
       {
         titulo: 'Empresa Participante',
         campo: 'empresa_id',
@@ -1113,15 +1113,19 @@ export default {
             // Usar o helper para garantir ID válido
             updateValue = ensureValidEmpresaId(updateValue);
 
-            // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
+            // Removendo a validação que impede valores nulos
+            // O código abaixo será substituído
+            /*
             if (!updateValue) {
               console.error('Valor inválido para empresa:', editingCell.value.value);
               alert('Empresa inválida. Por favor, selecione uma empresa válida da lista.');
               cancelEdit();
               return;
             }
-
-            console.log(`Atualizando empresa para: ${updateValue} (validado)`);
+            */
+            
+            // Permitimos explicitamente valores null (campo em branco)
+            console.log(`Atualizando empresa para: ${updateValue === null ? 'vazio' : updateValue} (validado)`);
             break;
         }
 
