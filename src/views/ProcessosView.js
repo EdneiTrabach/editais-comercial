@@ -892,7 +892,13 @@ export default {
 
     const handleUpdate = async (processo) => {
       try {
-        if (!editingCell.value.value && editingCell.value.field !== 'status' && editingCell.value.field !== 'responsavel_id') {
+        // Verifica se o campo está em edição
+        if (editingCell.value.id !== processo.id) return;
+        
+        // Importante: Permitir valores vazios (string vazia)
+        // O valor atual e anterior devem ser diferentes para prosseguir
+        if (editingCell.value.value === processo[editingCell.value.field]) {
+          console.log('Value did not change, canceling update')
           cancelEdit()
           return
         }
@@ -1005,6 +1011,22 @@ export default {
           valor: updateValue,
           tipo: typeof updateValue
         });
+
+        // Registrar no histórico de desfazer
+        undoHistory.value.push({
+          id: processo.id,
+          field: editingCell.value.field,
+          oldValue: processo[editingCell.value.field],
+          newValue: updateValue
+        });
+
+        // Limitar o tamanho do histórico
+        if (undoHistory.value.length > MAX_HISTORY_SIZE) {
+          undoHistory.value.shift(); // Remove o item mais antigo
+        }
+
+        // Limpar o histórico de refazer sempre que uma nova alteração é feita
+        redoHistory.value = [];
 
         // Update in database
         console.log('Update data:', updateData)
@@ -1337,6 +1359,9 @@ export default {
         // 8. Start auto-refresh
         startAutoRefresh()
 
+        // Adicionar dentro de onMounted()
+        document.addEventListener('keydown', handleKeyDown);
+
       } catch (error) {
         console.error('Error in component initialization:', error)
       }
@@ -1356,6 +1381,9 @@ export default {
         supabase.removeChannel(channel)
         SupabaseManager.removeSubscription('processos-updates')
       }
+
+      // Adicionar dentro de onUnmounted()
+      document.removeEventListener('keydown', handleKeyDown);
     })
 
     // Use connection manager
@@ -1800,6 +1828,144 @@ export default {
       };
     };
 
+    // Adicionar no setup(), próximo aos outros refs
+    const undoHistory = ref([]);  // Histórico de mudanças
+    const redoHistory = ref([]);  // Histórico de mudanças refeitas
+    const MAX_HISTORY_SIZE = 50; // Limite do histórico
+
+    // Adicionar esta função dentro do setup()
+    const handleKeyDown = (event) => {
+      // Ctrl+Z para desfazer
+      if (event.ctrlKey && event.key === 'z') {
+        event.preventDefault();
+        undoAction();
+      }
+      // Ctrl+Y para refazer
+      else if (event.ctrlKey && event.key === 'y') {
+        event.preventDefault();
+        redoAction();
+      }
+    };
+
+    // Adicionar dentro do setup()
+    const undoAction = async () => {
+      try {
+        if (undoHistory.value.length === 0) {
+          console.log('Nada para desfazer');
+          return;
+        }
+
+        const lastAction = undoHistory.value.pop();
+        console.log('Desfazendo ação:', lastAction);
+        
+        // Adicionar ao histórico de refazer
+        redoHistory.value.push({
+          id: lastAction.id,
+          field: lastAction.field,
+          oldValue: lastAction.newValue, // Inverte valores
+          newValue: lastAction.oldValue
+        });
+
+        // Atualizar no banco de dados
+        const updateData = {
+          [lastAction.field]: lastAction.oldValue,
+          updated_at: new Date().toISOString()
+        };
+
+        // Adicionar usuário que está fazendo a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        // Atualizar no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', lastAction.id);
+
+        if (error) throw error;
+
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'desfazer',
+          tabela: 'processos',
+          registro_id: lastAction.id,
+          campo_alterado: lastAction.field,
+          dados_anteriores: lastAction.newValue,
+          dados_novos: lastAction.oldValue
+        });
+
+        // Recarregar os dados
+        await loadProcessos();
+
+        // Mostrar mensagem de confirmação
+        alert(`Ação desfeita: ${lastAction.field}`);
+      } catch (error) {
+        console.error('Erro ao desfazer ação:', error);
+        alert('Erro ao desfazer: ' + (error.message || 'Verifique os dados e tente novamente'));
+      }
+    };
+
+    const redoAction = async () => {
+      try {
+        if (redoHistory.value.length === 0) {
+          console.log('Nada para refazer');
+          return;
+        }
+
+        const nextAction = redoHistory.value.pop();
+        console.log('Refazendo ação:', nextAction);
+        
+        // Adicionar de volta ao histórico de desfazer
+        undoHistory.value.push({
+          id: nextAction.id,
+          field: nextAction.field,
+          oldValue: nextAction.newValue, // Inverte valores
+          newValue: nextAction.oldValue
+        });
+
+        // Atualizar no banco de dados
+        const updateData = {
+          [nextAction.field]: nextAction.oldValue,
+          updated_at: new Date().toISOString()
+        };
+
+        // Adicionar usuário que está fazendo a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        // Atualizar no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', nextAction.id);
+
+        if (error) throw error;
+
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'refazer',
+          tabela: 'processos',
+          registro_id: nextAction.id,
+          campo_alterado: nextAction.field,
+          dados_anteriores: nextAction.newValue,
+          dados_novos: nextAction.oldValue
+        });
+
+        // Recarregar os dados
+        await loadProcessos();
+
+        // Mostrar mensagem de confirmação
+        alert(`Ação refeita: ${nextAction.field}`);
+      } catch (error) {
+        console.error('Erro ao refazer ação:', error);
+        alert('Erro ao refazer: ' + (error.message || 'Verifique os dados e tente novamente'));
+      }
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // Estado, dados, etc...
@@ -1934,7 +2100,13 @@ export default {
       removerEmpresa,
       handleEmpresaChange,
       saveEmpresa,
-      hideEmpresasDialog
+      hideEmpresasDialog,
+
+      // Adicionar histórico de ações
+      undoAction,
+      redoAction,
+      undoHistory,  // Adicionar esta linha
+      redoHistory  // Adicionar esta linha
     }
   }
 }

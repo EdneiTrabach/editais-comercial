@@ -96,7 +96,9 @@ export function useEditableCells(loadProcessosFunction) {
 
   const handleUpdate = async (processo) => {
     try {
-      if (!editingCell.value.value) {
+      // Modificar esta verificação para permitir strings vazias
+      // Verificar apenas se o valor foi alterado em relação ao original
+      if (editingCell.value.value === processo[editingCell.value.field]) {
         cancelEdit()
         return
       }

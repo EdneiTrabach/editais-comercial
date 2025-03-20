@@ -8,6 +8,12 @@
         <h1>Processos Licitatórios</h1>
 
         <div class="actions">
+          <button class="btn-action-actions" @click="undoAction" :disabled="!undoHistory || undoHistory.length === 0" title="Desfazer (Ctrl+Z)">
+            <img src="/icons/undo.svg" alt="Desfazer" class="icon" />
+          </button>
+          <button class="btn-action-actions" @click="redoAction" :disabled="!redoHistory || redoHistory.length === 0" title="Refazer (Ctrl+Y)">
+            <img src="/icons/redo.svg" alt="Refazer" class="icon" />
+          </button>
           <button class="btn-export" @click="exportToExcel">
             <img src="/icons/excel.svg" alt="Exportar" class="icon" />
             Exportar
