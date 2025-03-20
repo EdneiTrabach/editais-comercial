@@ -285,20 +285,11 @@
 
               <!-- Representative ID field -->
               <template v-else-if="coluna.campo === 'representante_id'">
-                <!-- Edit mode -->
-                <select v-if="editingCell.id === processo.id && editingCell.field === coluna.campo"
-                  v-model="editingCell.value" @blur="handleUpdate(processo)" @change="handleUpdate(processo)"
-                  @keyup.esc="cancelEdit()" class="representante-select">
-                  <option value="">Sem representante</option>
-                  <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
-                    {{ rep.nome }} {{ rep.documento ? `(${rep.documento})` : '' }}
-                  </option>
-                </select>
-
-                <!-- View mode -->
-                <span v-else @dblclick="handleDblClick(coluna.campo, processo, $event)" class="representante-display">
-                  {{ getRepresentanteNome(processo.representante_id) }}
-                </span>
+                <div class="responsavel-container" @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
+                  <span class="responsavel-display">
+                    {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
+                  </span>
+                </div>
               </template>
 
               <!-- Responsible ID field -->
@@ -496,6 +487,54 @@
     <div class="sistemas-dialog-actions">
       <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
       <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Representantes dialog -->
+<div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Representante</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getRepresentanteNome(editingCell.value) }}
+        <span @click.stop="removerRepresentante()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleRepresentanteChange($event)">
+      <option value="">Sem representante</option>
+      <option v-for="rep in representantes" :key="rep.id" :value="rep.id"
+        :selected="editingCell.value === rep.id">
+        {{ rep.nome }}
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
+      <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Empresas dialog -->
+<div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Empresa</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getEmpresaNome(editingCell.value) }}
+        <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleEmpresaChange($event)">
+      <option value="">Sem empresa</option>
+      <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
+        :selected="editingCell.value === empresa.id">
+        {{ empresa.nome }} <span class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
+      <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
     </div>
   </div>
 </div>
