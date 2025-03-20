@@ -1,0 +1,357 @@
+/* Estilos da tabela */
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e9ecef;
+  min-width: 1406px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  position: relative;
+}
+
+.excel-table th {
+  background: #f8f9fa;
+  text-align: left;
+  font-weight: 600;
+  color: #193155;
+  border: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Tamanho padrão do scrollbar */
+.table-container::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Aumenta o tamanho quando o mouse está sobre o container */
+.table-container:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Também ajuste a aparência do thumb para melhor visibilidade */
+.table-container:hover::-webkit-scrollbar-thumb {
+  background: #254677;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #193155;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #254677;
+}
+
+.excel-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.excel-table th,
+.excel-table td {
+  position: relative;
+  border: 1px solid #e9ecef;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resizing {
+  border-right: 2px solid #193155 !important;
+}
+
+.resizing-row {
+  border-bottom: 2px solid #193155 !important;
+}
+
+.th-content,
+.td-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  justify-content: center;
+}
+
+.th-content span {
+  flex: 1;
+}
+
+.row-number-cell {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+  white-space: nowrap !important;
+  background: #f8f9fa;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 2px solid #e9ecef !important;
+}
+
+thead .row-number-cell {
+  z-index: 3;
+  background: #f8f9fa;
+}
+
+tbody .row-number-cell {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #f8f9fa;
+}
+
+tbody tr:hover .row-number-cell {
+  background: #f0f0f0;
+}
+
+.row-number-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+}
+
+.excel-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 2;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.excel-table thead th.row-number-cell {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  background: #f8f9fa;
+}
+
+.excel-table thead th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+}
+
+.sort-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.resizable-column {
+  position: relative;
+  user-select: none;
+  min-width: 100px;
+  position: relative;
+  z-index: 1;
+}
+
+.column-resize-handle {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.column-resize-handle:hover,
+.resizing .column-resize-handle {
+  background: rgba(25, 49, 85, 0.2);
+}
+
+.resizing .column-resize-handle {
+  background: rgba(25, 49, 85, 0.3);
+}
+
+.table-container.resizing * {
+  cursor: col-resize;
+  user-select: text !important;
+}
+
+.resizable-row {
+  position: relative;
+  z-index: 1;
+  min-height: 40px;
+}
+
+.row-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 8px;
+  background: transparent;
+  cursor: row-resize;
+  z-index: 20;
+}
+
+.row-resize-handle:hover,
+.resizing-row .row-resize-handle {
+  background: rgba(25, 49, 85, 0.2);
+}
+
+/* Seleção de linhas */
+.selected-row {
+  background-color: #19315594 !important;
+  border-left: 4px solid #193155 !important;
+  border: 2px solid transparent !important;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+
+.selected-row:hover {
+  background-color: rgba(25, 49, 85, 0.08) !important;
+}
+
+.excel-table tr {
+  transition: background-color 0.2s ease, border-left 0.2s ease;
+}
+
+.selected-row .row-number-cell {
+  color: inherit;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Estilos específicos para linhas selecionadas com diferentes status */
+.selected-row[data-status="em_analise"] {
+  background-color: rgba(73, 80, 87, 0.15) !important;
+  border-color: #495057 !important;
+  box-shadow: inset 0 0 0 2px #495057;
+}
+
+.selected-row[data-status="em_andamento"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-color: #ef6c00 !important;
+  box-shadow: inset 0 0 0 2px #ef6c00;
+}
+
+.selected-row[data-status="ganhamos"] {
+  background-color: rgba(21, 87, 36, 0.15) !important;
+  border-color: #155724 !important;
+  box-shadow: inset 0 0 0 2px #155724;
+}
+
+.selected-row[data-status="perdemos"] {
+  background-color: rgba(198, 40, 40, 0.15) !important;
+  border-color: #c62828 !important;
+  box-shadow: inset 0 0 0 2px #c62828;
+}
+
+.selected-row[data-status="suspenso"] {
+  background-color: rgba(25, 118, 210, 0.15) !important;
+  border-color: #1976d2 !important;
+  box-shadow: inset 0 0 0 2px #1976d2;
+}
+
+.selected-row[data-status="revogado"] {
+  background-color: rgba(21, 101, 192, 0.15) !important;
+  border-color: #1565c0 !important;
+  box-shadow: inset 0 0 0 2px #1565c0;
+}
+
+.selected-row[data-status="adiado"] {
+  background-color: rgba(2, 136, 209, 0.15) !important;
+  border-color: #0288d1 !important;
+  box-shadow: inset 0 0 0 2px #0288d1;
+}
+
+.selected-row[data-status="demonstracao"] {
+  background-color: rgba(239, 108, 0, 0.15) !important;
+  border-color: #ef6c00 !important;
+  box-shadow: inset 0 0 0 2px #ef6c00;
+}
+
+.selected-row[data-status="cancelado"] {
+  background-color: rgba(26, 35, 126, 0.15) !important;
+  border-color: #1a237e !important;
+  box-shadow: inset 0 0 0 2px #1a237e;
+}
+
+.selected-row[data-status="nao_participar"] {
+  background-color: rgba(249, 168, 37, 0.15) !important;
+  border-color: #f9a825 !important;
+  box-shadow: inset 0 0 0 2px #f9a825;
+}
+
+/* Hover em linhas com diferentes status */
+.excel-table tbody tr[data-status="em_analise"]:hover {
+  background-color: rgba(173, 181, 189, 0.6) !important;
+  border-left: 4px solid #495057 !important;
+}
+
+.excel-table tbody tr[data-status="em_andamento"]:hover {
+  background-color: rgba(255, 224, 178, 0.6) !important;
+  border-left: 4px solid #ef6c00 !important;
+}
+
+.excel-table tbody tr[data-status="ganhamos"]:hover {
+  background-color: rgba(212, 237, 218, 0.6) !important;
+  border-left: 4px solid #155724 !important;
+}
+
+.excel-table tbody tr[data-status="perdemos"]:hover {
+  background-color: rgba(255, 213, 213, 0.6) !important;
+  border-left: 4px solid #c62828 !important;
+}
+
+.excel-table tbody tr[data-status="suspenso"]:hover {
+  background-color: rgba(227, 242, 253, 0.6) !important;
+  border-left: 4px solid #1976d2 !important;
+}
+
+.excel-table tbody tr[data-status="revogado"]:hover {
+  background-color: rgba(187, 222, 251, 0.6) !important;
+  border-left: 4px solid #1565c0 !important;
+}
+
+.excel-table tbody tr[data-status="adiado"]:hover {
+  background-color: rgba(225, 245, 254, 0.6) !important;
+  border-left: 4px solid #0288d1 !important;
+}
+
+.excel-table tbody tr[data-status="demonstracao"]:hover {
+  background-color: rgba(255, 152, 0, 0.6) !important;
+  border-left: 4px solid #ef6c00 !important;
+}
+
+.excel-table tbody tr[data-status="cancelado"]:hover {
+  background-color: rgba(26, 35, 126, 0.6) !important;
+  border-left: 4px solid #1a237e !important;
+}
+
+.excel-table tbody tr[data-status="nao_participar"]:hover {
+  background-color: rgba(255, 249, 196, 0.6) !important;
+  border-left: 4px solid #f9a825 !important;
+}

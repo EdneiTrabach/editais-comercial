@@ -1,0 +1,79 @@
+/* Indicadores de Status */
+.modalidade,
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  user-select: text;
+  cursor: text;
+}
+
+.modalidade.pregao {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.modalidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 500;
+  user-select: text;
+  cursor: text;
+}
+
+.status.em_analise {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.status.em_andamento {
+  background: #ffe0b2;
+  color: #ef6c00;
+}
+
+.status.ganhamos {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.perdemos {
+  background: #ffc2c2;
+  color: #e90b0b;
+}
+
+.status.suspenso {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status.revogado {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.status.adiado {
+  background: #e1f5fe;
+  color: #0288d1;
+}
+
+.status.demonstracao {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.status.cancelado {
+  background: #1a237e;
+  color: #ffffff;
+}
+
+.status.nao_participar {
+  background: #fff9c4;
+  color: #f9a825;
+}

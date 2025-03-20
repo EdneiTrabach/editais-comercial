@@ -1,0 +1,37 @@
+/* Layout principal */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 2rem;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  background: #f8f9fa;
+  /* height: 100vh; */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content.expanded {
+  margin-left: 0px;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.header-processos {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  align-content: center;
+  align-items: center;
+  height: 21px;
+  position: relative;
+  bottom: 15px;
+}

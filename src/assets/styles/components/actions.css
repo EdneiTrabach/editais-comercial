@@ -1,0 +1,25 @@
+/* Estilos para ações e botões de ação */
+.btn-action-actions {
+  background: black;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-actions:hover:not(:disabled) {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.btn-action-actions:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-action-actions img {
+  width: 16px;
+  height: 16px;
+}

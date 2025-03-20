@@ -1,0 +1,306 @@
+/* Estilos para células da tabela */
+.excel-table td {
+  white-space: normal;
+  word-wrap: break-word;
+  min-width: 100px;
+  max-width: 300px;
+  vertical-align: top;
+  height: auto;
+  user-select: text;
+  cursor: text;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.objeto-cell {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.4;
+  user-select: text;
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.4;
+  user-select: text;
+}
+
+.actions-column {
+  width: 60px;
+  min-width: 60px;
+  white-space: nowrap;
+}
+
+.excel-table td>*,
+.excel-table th>* {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  user-select: text;
+}
+
+td {
+  position: relative;
+}
+
+td input {
+  width: 90%;
+  height: 100%;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  background: white;
+}
+
+td input:focus {
+  outline: none;
+  border-color: #254677;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
+}
+
+td:hover {
+  position: relative;
+}
+
+td:hover::after {
+  content: '✎';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+td textarea {
+  width: 95%;
+  min-height: 60px;
+  resize: vertical;
+  padding: 0.5rem;
+  border: 2px solid #193155;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+td select {
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  border: 2px solid #193155;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+td select:focus {
+  outline: none;
+  border-color: #254677;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.2);
+}
+
+td select option {
+  padding: 0.5rem;
+  font-family: inherit;
+}
+
+.actions-cell {
+  width: 80px;
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Células especiais */
+td[data-field="objeto_completo"],
+th[data-field="objeto_completo"] {
+  min-width: 500px;
+  width: 500px;
+}
+
+.objeto-cell {
+  max-width: 500px;
+  min-width: 500px;
+  white-space: normal;
+  line-height: 1.4;
+  word-wrap: break-word;
+  user-select: text;
+}
+
+.impugnacoes-cell {
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.4;
+  word-wrap: break-word;
+  user-select: text;
+}
+
+td[data-field="impugnacoes"] {
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.portal-link a {
+  color: #007bff;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.portal-link a:hover {
+  background: #e3f2fd;
+  text-decoration: underline;
+}
+
+.portal-link {
+  display: inline-block;
+  width: 100%;
+}
+
+.portal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: #e3f2fd;
+  color: #193155;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.portal-button:hover {
+  background: #bbdefb;
+  transform: translateY(-1px);
+  border-color: #90caf9;
+}
+
+.portal-button::after {
+  content: '↗';
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.portal-button:hover::after {
+  opacity: 1;
+}
+
+/* Células em edição */
+.editing-cell {
+  background-color: rgba(25, 49, 85, 0.05);
+}
+
+.editing-cell input,
+.editing-cell textarea,
+.editing-cell select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid #193155;
+}
+
+.excel-table td.editing-cell {
+  background-color: rgba(25, 49, 85, 0.05) !important;
+  box-shadow: inset 0 0 0 2px #193155 !important;
+  position: relative;
+  z-index: 5;
+  animation: pulseEditingBorder 1.5s infinite;
+}
+
+.editing-cell::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  left: -1px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.editing-cell input,
+.editing-cell textarea,
+.editing-cell select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none !important;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 10px;
+  box-shadow: none !important;
+  color: #193155;
+}
+
+/* Ícone de edição na célula em foco */
+.editing-cell::after {
+  content: '✓';
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 14px;
+  color: #155724;
+  background: rgba(255, 255, 255, 0.7);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover estilo para indicar que a célula é editável */
+.excel-table td:hover:not(.editing-cell):not(.actions-cell):not(.row-number-cell) {
+  background-color: rgba(25, 49, 85, 0.03);
+  cursor: pointer;
+  position: relative;
+}
+
+.excel-table td:hover:not(.editing-cell):not(.actions-cell):not(.row-number-cell)::after {
+  content: '✎';
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  font-size: 12px;
+  color: #6c757d;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.8);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-select {
+  position: absolute;
+  z-index: 1000;
+  width: 90%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 0px;
+  top: 15%;
+  height: 60px;
+  left: 13px;
+}
+
+.saved-success {
+  animation: successPulse 1s forwards;
+}
+
+.save-success-transition {
+  animation: saveSuccess 1.5s ease-out;
+}

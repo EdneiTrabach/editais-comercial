@@ -1,0 +1,33 @@
+/* Estilos para abas */
+.anos-tabs {
+  margin-top: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+/* Adicione estilos para scrollbar horizontal nas abas se necessário */
+.tabs-header::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-header::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.tabs-header::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.tabs-header::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
