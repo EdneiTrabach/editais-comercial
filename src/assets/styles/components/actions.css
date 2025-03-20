@@ -1,17 +1,18 @@
 /* Estilos para ações e botões de ação */
 .btn-action-actions {
-  background: black;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  background: var(--primary-color);
+  border-radius: 48px;
   padding: 6px;
-  margin-right: 8px;
+  margin-right: 0px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.5s;
+  height: 30px;
 }
 
 .btn-action-actions:hover:not(:disabled) {
-  background: #f0f0f0;
-  transform: translateY(-2px);
+  background: var(--status-info);
+  transform: translateY(0px);
+  border: none;
 }
 
 .btn-action-actions:disabled {
