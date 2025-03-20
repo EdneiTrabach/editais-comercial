@@ -35,6 +35,7 @@
   overflow: visible;
   text-overflow: clip;
   user-select: text;
+  flex-wrap: wrap;
 }
 
 td {

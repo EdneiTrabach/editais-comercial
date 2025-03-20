@@ -123,6 +123,7 @@ export default {
         tipoEdicao: 'select'
       },
       { titulo: 'Impugnações', campo: 'impugnacoes' },
+      { titulo: 'Observações', campo: 'campo_adicional1' },
       {
         titulo: 'Empresa Participante',
         campo: 'empresa_id',
@@ -759,7 +760,7 @@ export default {
               } else {
                 dropdown.style.top = '100%';
                 dropdown.style.bottom = 'auto';
-                dropdown.style.marginTop = '5px';
+                dropdown.style.marginTop = '50px';
                 dropdown.style.marginBottom = '0';
               }
             }

@@ -8,10 +8,12 @@
         <h1>Processos Licitatórios</h1>
 
         <div class="actions">
-          <button class="btn-action-actions" @click="undoAction" :disabled="!undoHistory || undoHistory.length === 0" title="Desfazer (Ctrl+Z)">
+          <button class="btn-action-actions" @click="undoAction" :disabled="!undoHistory || undoHistory.length === 0"
+            title="Desfazer (Ctrl+Z)">
             <img src="/icons/undo.svg" alt="Desfazer" class="icon" />
           </button>
-          <button class="btn-action-actions" @click="redoAction" :disabled="!redoHistory || redoHistory.length === 0" title="Refazer (Ctrl+Y)">
+          <button class="btn-action-actions" @click="redoAction" :disabled="!redoHistory || redoHistory.length === 0"
+            title="Refazer (Ctrl+Y)">
             <img src="/icons/redo.svg" alt="Refazer" class="icon" />
           </button>
           <button class="btn-export" @click="exportToExcel">
@@ -62,22 +64,21 @@
                   <div
                     v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
                     class="filtro-container">
-                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro" 
+                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro"
                       :class="{ active: filtros[coluna.campo]?.length > 0 }">
                       <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
                     </button>
-                    
+
                     <!-- Dropdown de filtro para modalidade -->
                     <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown" :data-campo="coluna.campo">
                       <div class="dropdown-header">
-                        <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search" 
+                        <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search"
                           v-model="filtroModalidadeSearch" @input="filtrarOpcoes(coluna.campo)" />
                       </div>
                       <div class="dropdown-list">
                         <div v-for="opcao in opcoesFiltradasModalidade" :key="opcao.valor" class="filtro-opcao">
                           <label class="filtro-checkbox">
-                            <input type="checkbox" 
-                              :checked="filtros[coluna.campo]?.includes(opcao.valor)" 
+                            <input type="checkbox" :checked="filtros[coluna.campo]?.includes(opcao.valor)"
                               @change="toggleFiltroItem(coluna.campo, opcao.valor)" />
                             <span class="checkbox-label">{{ opcao.texto }}</span>
                           </label>
@@ -106,9 +107,9 @@
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Analysis Code field -->
-                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                  <!-- <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
                     @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    placeholder="Digite o código">
+                    placeholder="Digite o código"> -->
 
                   <!-- Date field -->
                   <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
@@ -204,9 +205,19 @@
                     </div>
                   </template>
 
+                  <!-- Additional field -->
+                  <template v-if="coluna.campo === 'campo_adicional1'">
+                    <textarea v-model="editingCell.value" rows="3" class="observacoes-edit"
+                      @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+                      @keyup.esc="cancelEdit()"></textarea>
+                  </template>
+
                   <!-- Default input for other fields -->
-                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <!-- <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"> -->
+                  <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                    placeholder="Digite o código">
                 </template>
 
                 <!-- View Mode -->
@@ -262,7 +273,8 @@
 
                   <!-- Company field -->
                   <template v-else-if="coluna.campo === 'empresa_id'">
-                    <div class="responsavel-container" @dblclick="handleDblClickEmpresa(coluna.campo, processo, $event)">
+                    <div class="responsavel-container"
+                      @dblclick="handleDblClickEmpresa(coluna.campo, processo, $event)">
                       <span class="responsavel-display">
                         {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
                       </span>
@@ -308,7 +320,8 @@
 
               <!-- Representative ID field -->
               <template v-else-if="coluna.campo === 'representante_id'">
-                <div class="responsavel-container" @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
+                <div class="responsavel-container"
+                  @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
                   <span class="responsavel-display">
                     {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
                   </span>
@@ -317,7 +330,8 @@
 
               <!-- Responsible ID field -->
               <template v-else-if="coluna.campo === 'responsavel_id'">
-                <div class="responsavel-container" @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
+                <div class="responsavel-container"
+                  @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
                   <span class="responsavel-display">
                     {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
                   </span>
@@ -328,8 +342,8 @@
               <span v-else>
                 {{ processo[coluna.campo] || '-' }}
               </span>
-            </template>
-          </td>
+</template>
+</td>
 
 <!-- Actions cell -->
 <td class="actions-cell">
@@ -526,8 +540,7 @@
     </div>
     <select class="sistemas-select" @change="handleRepresentanteChange($event)">
       <option value="">Sem representante</option>
-      <option v-for="rep in representantes" :key="rep.id" :value="rep.id"
-        :selected="editingCell.value === rep.id">
+      <option v-for="rep in representantes" :key="rep.id" :value="rep.id" :selected="editingCell.value === rep.id">
         {{ rep.nome }}
       </option>
     </select>

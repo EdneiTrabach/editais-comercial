@@ -127,6 +127,12 @@
               placeholder="Descrição completa do objeto conforme Art. 40"></textarea>
           </div>
 
+          <div class="form-group full-width">
+            <RequiredLabel text="Observações" :isRequired="false" />
+            <textarea v-model="formData.campo_adicional1" rows="1" placeholder="Observações adicionais"
+              class="observacoes-textarea"></textarea>
+          </div>
+
           <!-- Adicione após o campo de objeto_completo -->
           <div class="form-group full-width">
             <RequiredLabel text="Cálculo de Distância" :isRequired="false" />
@@ -231,7 +237,7 @@
           <div class="form-group">
             <RequiredLabel text="Representante" :isRequired="true" />
             <div class="representante-container">
-              <select v-model="formData.representante" required  class="responsavel-select">
+              <select v-model="formData.representante" required class="responsavel-select">
                 <option value="">Selecione o representante...</option>
                 <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
                   {{ rep.nome }}
@@ -271,14 +277,14 @@
 
           <!-- Substitua o campo de responsável existente por este -->
           <div class="form-group">
-  <RequiredLabel text="Responsável" :isRequired="false" />
-  <select v-model="formData.responsavel_id" class="responsavel-select">
-    <option value="">Sem responsável definido</option>
-    <option v-for="resp in responsaveis_usuario" :key="resp.id" :value="resp.id">
-      {{ resp.nome }} ({{ resp.email }}){{ resp.departamento ? ` - ${resp.departamento}` : '' }}
-    </option>
-  </select>
-</div>
+            <RequiredLabel text="Responsável" :isRequired="false" />
+            <select v-model="formData.responsavel_id" class="responsavel-select">
+              <option value="">Sem responsável definido</option>
+              <option v-for="resp in responsaveis_usuario" :key="resp.id" :value="resp.id">
+                {{ resp.nome }} ({{ resp.email }}){{ resp.departamento ? ` - ${resp.departamento}` : '' }}
+              </option>
+            </select>
+          </div>
 
           <div class="form-actions">
             <button type="button" class="btn-cancelar" @click="handleCancel">
