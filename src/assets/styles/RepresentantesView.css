@@ -56,10 +56,6 @@ th {
   font-weight: 500;
 }
 
-.actions-cell {
-  width: 100px;
-  text-align: center;
-}
 
 .actions-buttons {
   display: flex;

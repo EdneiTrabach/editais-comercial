@@ -85,17 +85,18 @@ export default {
     // Função para carregar a ordem das colunas do localStorage
     const loadColumnsOrder = () => {
       try {
-        const savedOrder = localStorage.getItem('table-columns-order')
+        const savedOrder = localStorage.getItem('table-columns-order');
         if (savedOrder) {
-          colunasOrder.value = JSON.parse(savedOrder)
+          // Carrega a ordem salva
+          colunasOrder.value = JSON.parse(savedOrder);
         } else {
-          // Inicializa com a ordem padrão das colunas
-          colunasOrder.value = colunas.map(coluna => coluna.campo)
+          // Define a ordem padrão (todas as colunas)
+          colunasOrder.value = colunas.map(coluna => coluna.campo);
         }
       } catch (error) {
-        console.error('Erro ao carregar ordem das colunas:', error)
+        console.error('Erro ao carregar ordem das colunas:', error);
         // Fallback para ordem padrão se ocorrer erro
-        colunasOrder.value = colunas.map(coluna => coluna.campo)
+        colunasOrder.value = colunas.map(coluna => coluna.campo);
       }
     }
 

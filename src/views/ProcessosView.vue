@@ -41,40 +41,104 @@
           <thead>
             <tr>
               <th class="row-number-cell"></th>
-              <!-- Colunas dinâmicas e reordenáveis -->
-              <th v-for="(coluna, index) in colunasOrdenadas" 
-                  :key="coluna.campo" 
-                  class="resizable-column" 
-                  :data-field="coluna.campo"
-                  :style="{ width: colunasWidth[coluna.campo] }"
-                  draggable="true"
-                  @dragstart="startColumnDrag($event, index)"
-                  @dragover="allowColumnDrop($event)"
-                  @drop="handleColumnDrop($event, index)">
+              <!-- Colunas ordenáveis -->
+              <th v-for="(coluna, index) in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo"
+                draggable="true" @dragstart="startColumnDrag($event, index)" @dragover="allowColumnDrop($event)"
+                @drop="handleColumnDrop($event, index)" :style="{ width: colunasWidth[coluna.campo] }"
+                :class="{ 'resizable-column': true }">
                 <div class="th-content">
                   {{ coluna.titulo }}
-                  
-                  <!-- Conteúdo do cabeçalho como estava antes -->
+                  <!-- <div class="column-drag-handle" title="Arraste para reordenar">⋮⋮</div> -->
+                  <!-- Sort buttons for date column -->
+                  <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
+                    <button class="btn-sort"
+                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
+                      @click="handleSort('data_pregao', 'asc')">
+                      ▲
+                    </button>
+                    <button class="btn-sort"
+                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
+                      @click="handleSort('data_pregao', 'desc')">
+                      ▼
+                    </button>
+                  </div>
+
+                  <!-- Filter button for filterable columns -->
+                  <div
+                    v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
+                    class="filtro-container">
+                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro"
+                      :class="{ active: filtros[coluna.campo]?.length > 0 }">
+                      <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
+                    </button>
+
+                    <!-- Dropdown de filtro para modalidade -->
+                    <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown" :data-campo="coluna.campo">
+                      <div class="dropdown-header">
+                        <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search"
+                          v-model="filtroModalidadeSearch" @input="filtrarOpcoes(coluna.campo)" />
+                      </div>
+                      <div class="dropdown-list">
+                        <div v-for="opcao in opcoesFiltradasModalidade" :key="opcao.valor" class="filtro-opcao">
+                          <label class="filtro-checkbox">
+                            <input type="checkbox" :checked="filtros[coluna.campo]?.includes(opcao.valor)"
+                              @change="toggleFiltroItem(coluna.campo, opcao.valor)" />
+                            <span class="checkbox-label">{{ opcao.texto }}</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div class="dropdown-footer">
+                        <button @click="limparFiltroColuna(coluna.campo)" class="btn-limpar-filtro">
+                          Limpar filtro
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
-              
-              <!-- Coluna de ações (sempre no final) -->
-              <th class="actions-column" style="position: sticky; right: 0; z-index: 10; background: #f8f9fa;">Ações</th>
+
+              <!-- Coluna de ações fixa e não reordenável -->
+              <th class="actions-header" style="position: sticky; right: 0; z-index: 15; background: #f8f9fa;">
+                Ações
+              </th>
             </tr>
           </thead>
           <tbody>
+            <tr v-for="plataforma in plataformasFiltradas" :key="plataforma.id">
+              <td>{{ plataforma.nome }}</td>
+              <td>
+                <a :href="plataforma.url" target="_blank" class="url-link">
+                  {{ truncateUrl(plataforma.url) }}
+                </a>
+              </td>
+              <!-- Outras colunas... -->
+
+              <!-- Substitua a célula de ações atual por esta: -->
+              <td class="actions-cell" style="position: sticky; right: 0; z-index: 20; background: white;">
+                <div class="action-buttons">
+                  <!-- Botão de edição -->
+                  <!-- <button class="btn-icon edit" @click.stop="editPlataforma(plataforma)" title="Editar">
+                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
+                  </button> -->
+
+                  <!-- Botão de exclusão -->
+                  <button class="btn-icon delete" @click.stop="confirmarExclusao(plataforma)" title="Excluir">
+                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
+                  </button>
+                </div>
+              </td>
+
+
+            </tr>
             <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
               :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
               @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
               <td class="row-number-cell">{{ index + 1 }}</td>
-              
-              <!-- Células de dados para colunas dinâmicas -->
-              <td v-for="coluna in colunasOrdenadas" 
-                  :key="coluna.campo" 
-                  :data-field="coluna.campo"
-                  @dblclick="handleDblClick(coluna.campo, processo, $event)">
-                <!-- Conteúdo das células como estava antes -->
+
+              <!-- Células de dados ordenáveis -->
+              <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
+                @dblclick="handleDblClick(coluna.campo, processo, $event)">
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Analysis Code field -->
@@ -176,7 +240,7 @@
                   </template>
 
                   <!-- Additional field (Observações) -->
-                  <textarea v-else-if="coluna.campo === 'campo_adicional1'" v-model="editingCell.value" rows="3" 
+                  <textarea v-else-if="coluna.campo === 'campo_adicional1'" v-model="editingCell.value" rows="3"
                     class="observacoes-edit" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
                     @keyup.esc="cancelEdit()"></textarea>
 
@@ -184,10 +248,10 @@
                   <input v-else-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
                     @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     placeholder="Digite o código">
-                    
+
                   <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
-                  <input v-else type="text" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                 </template>
 
                 <!-- View Mode -->
@@ -314,245 +378,246 @@
               </span>
 </template>
 </td>
-              
-              <!-- Célula de ações (sempre no final) -->
-              <td class="actions-cell" style="position: sticky; right: 0; z-index: 10; background: white;">
-                <div class="action-buttons">
-                  <button class="btn-icon delete" @click="handleDelete(processo)">
-                    <BaseImage src="icons/lixeira.svg" alt="Excluir" class="icon icon-delete" fallbackImage="icons/fallback.svg" />
-                  </button>
-                </div>
-              </td>
-              
-              <!-- Row resize handle -->
-              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <!-- Year tabs -->
-      <div class="anos-tabs">
-        <div class="tabs-header">
-          <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
-            @click="selecionarAno(ano)">
-            {{ ano }}
-          </button>
-        </div>
-      </div>
+<!-- Célula de ações (sempre no final) -->
+<td class="actions-cell" style="position: sticky; right: 0; z-index: 20; background: white;">
+  <div class="action-buttons">
+    <button class="btn-icon delete" @click.stop="handleDelete(processo)" title="Excluir">
+      <img src="/icons/lixeira.svg" alt="Excluir" class="icon icon-delete"/>
+    </button>
+  </div>
+</td>
 
-      <!-- Confirm dialog -->
-      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
-        <div class="confirm-content">
-          <p>Deseja editar este campo?</p>
-          <div class="confirm-actions">
-            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Delete confirm dialog -->
-      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
-        <div class="confirm-dialog">
-          <div class="confirm-content">
-            <h3>Confirmar Exclusão</h3>
-            <p>Tem certeza que deseja excluir este processo?</p>
-            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
-            <div class="confirm-actions">
-              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-              <button class="btn-confirm delete" @click="confirmDelete">
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- Row resize handle -->
+<div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+</tr>
+</tbody>
+</table>
+</div>
 
-      <!-- Systems dialog -->
-      <div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
-        <div class="sistemas-dialog-content">
-          <h3>Selecionar Sistemas</h3>
-          <div class="sistemas-selected">
-            <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
-              {{ getSistemaNome(id) }}
-              <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
-            </div>
-          </div>
-          <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-            <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
-              :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-              {{ sistema.nome }}
-            </option>
-          </select>
-          <div class="sistemas-dialog-actions">
-            <button @click="saveSistemas" class="btn-confirm">Salvar</button>
-            <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
+<!-- Year tabs -->
+<div class="anos-tabs">
+  <div class="tabs-header">
+    <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+      @click="selecionarAno(ano)">
+      {{ ano }}
+    </button>
+  </div>
+</div>
 
-      <!-- Dialog para gerenciar distâncias -->
-      <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
-        <div class="distancia-dialog-content">
-          <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
-
-          <div class="distancias-list">
-            <table class="distancias-table">
-              <thead>
-                <tr>
-                  <th>Distância (km)</th>
-                  <th>Cidade</th>
-                  <th>UF</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
-                  <td>{{ distancia.distancia_km }}</td>
-                  <td>{{ distancia.ponto_referencia_cidade }}</td>
-                  <td>{{ distancia.ponto_referencia_uf }}</td>
-                  <td class="distancia-acoes">
-                    <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
-                    </button>
-                    <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="distanciaDialog.distancias.length === 0">
-                  <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="distancia-form">
-            <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Distância (km)</label>
-                <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
-                  placeholder="Digite a distância" />
-              </div>
-
-              <div class="form-group">
-                <label>Cidade</label>
-                <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
-                  placeholder="Digite a cidade" />
-              </div>
-
-              <div class="form-group">
-                <label>UF</label>
-                <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
-                  <option value="">Selecione</option>
-                  <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-                    {{ estado.uf }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
-                Salvar Alterações
-              </button>
-              <button v-else class="btn-add" @click="adicionarDistancia">
-                Adicionar
-              </button>
-
-              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
-                Cancelar Edição
-              </button>
-            </div>
-          </div>
-
-          <div class="dialog-footer">
-            <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Responsáveis dialog -->
-      <div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
-        <div class="sistemas-dialog-content">
-          <h3>Selecionar Responsável</h3>
-          <div class="sistemas-selected">
-            <div v-if="editingCell.value" class="sistema-chip">
-              {{ getResponsavelProcessoNome(editingCell.value) }}
-              <span @click.stop="removerResponsavel()" class="sistema-remove">×</span>
-            </div>
-          </div>
-          <select class="sistemas-select" @change="handleResponsavelChange($event)">
-            <option value="">Sem responsável</option>
-            <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
-              :selected="editingCell.value === resp.id">
-              {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
-            </option>
-          </select>
-          <div class="sistemas-dialog-actions">
-            <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
-            <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Representantes dialog -->
-      <div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
-        <div class="sistemas-dialog-content">
-          <h3>Selecionar Representante</h3>
-          <div class="sistemas-selected">
-            <div v-if="editingCell.value" class="sistema-chip">
-              {{ getRepresentanteNome(editingCell.value) }}
-              <span @click.stop="removerRepresentante()" class="sistema-remove">×</span>
-            </div>
-          </div>
-          <select class="sistemas-select" @change="handleRepresentanteChange($event)">
-            <option value="">Sem representante</option>
-            <option v-for="rep in representantes" :key="rep.id" :value="rep.id" :selected="editingCell.value === rep.id">
-              {{ rep.nome }}
-            </option>
-          </select>
-          <div class="sistemas-dialog-actions">
-            <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
-            <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empresas dialog -->
-      <div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
-        <div class="sistemas-dialog-content">
-          <h3>Selecionar Empresa</h3>
-          <div class="sistemas-selected">
-            <div v-if="editingCell.value" class="sistema-chip">
-              {{ getEmpresaNome(editingCell.value) }}
-              <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
-            </div>
-          </div>
-          <select class="sistemas-select" @change="handleEmpresaChange($event)">
-            <option value="">Sem empresa</option>
-            <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
-              :selected="editingCell.value === empresa.id">
-              {{ empresa.nome }} <span v-if="empresa.cnpj" class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
-            </option>
-          </select>
-          <div class="sistemas-dialog-actions">
-            <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
-            <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="toast-container">
-        <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
-          {{ toast.message }}
-        </div>
-      </div>
-
+<!-- Confirm dialog -->
+<div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+  <div class="confirm-content">
+    <p>Deseja editar este campo?</p>
+    <div class="confirm-actions">
+      <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
+      <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
     </div>
   </div>
+</div>
+
+<!-- Delete confirm dialog -->
+<div v-if="deleteConfirmDialog.show" class="modal-overlay">
+  <div class="confirm-dialog">
+    <div class="confirm-content">
+      <h3>Confirmar Exclusão</h3>
+      <p>Tem certeza que deseja excluir este processo?</p>
+      <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+        <button class="btn-confirm delete" @click="confirmDelete">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Systems dialog -->
+<div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Sistemas</h3>
+    <div class="sistemas-selected">
+      <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+        {{ getSistemaNome(id) }}
+        <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+      <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
+        :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+        {{ sistema.nome }}
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveSistemas" class="btn-confirm">Salvar</button>
+      <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog para gerenciar distâncias -->
+<div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
+  <div class="distancia-dialog-content">
+    <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
+
+    <div class="distancias-list">
+      <table class="distancias-table">
+        <thead>
+          <tr>
+            <th>Distância (km)</th>
+            <th>Cidade</th>
+            <th>UF</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
+            <td>{{ distancia.distancia_km }}</td>
+            <td>{{ distancia.ponto_referencia_cidade }}</td>
+            <td>{{ distancia.ponto_referencia_uf }}</td>
+            <td class="distancia-acoes">
+              <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
+                <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
+              </button>
+              <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
+                <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
+              </button>
+            </td>
+          </tr>
+          <tr v-if="distanciaDialog.distancias.length === 0">
+            <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="distancia-form">
+      <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Distância (km)</label>
+          <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
+            placeholder="Digite a distância" />
+        </div>
+
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
+            placeholder="Digite a cidade" />
+        </div>
+
+        <div class="form-group">
+          <label>UF</label>
+          <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
+            <option value="">Selecione</option>
+            <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+              {{ estado.uf }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
+          Salvar Alterações
+        </button>
+        <button v-else class="btn-add" @click="adicionarDistancia">
+          Adicionar
+        </button>
+
+        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
+          Cancelar Edição
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Responsáveis dialog -->
+<div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Responsável</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getResponsavelProcessoNome(editingCell.value) }}
+        <span @click.stop="removerResponsavel()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleResponsavelChange($event)">
+      <option value="">Sem responsável</option>
+      <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
+        :selected="editingCell.value === resp.id">
+        {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
+      <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Representantes dialog -->
+<div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Representante</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getRepresentanteNome(editingCell.value) }}
+        <span @click.stop="removerRepresentante()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleRepresentanteChange($event)">
+      <option value="">Sem representante</option>
+      <option v-for="rep in representantes" :key="rep.id" :value="rep.id" :selected="editingCell.value === rep.id">
+        {{ rep.nome }}
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
+      <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Empresas dialog -->
+<div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
+  <div class="sistemas-dialog-content">
+    <h3>Selecionar Empresa</h3>
+    <div class="sistemas-selected">
+      <div v-if="editingCell.value" class="sistema-chip">
+        {{ getEmpresaNome(editingCell.value) }}
+        <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
+      </div>
+    </div>
+    <select class="sistemas-select" @change="handleEmpresaChange($event)">
+      <option value="">Sem empresa</option>
+      <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
+        :selected="editingCell.value === empresa.id">
+        {{ empresa.nome }} <span v-if="empresa.cnpj" class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
+      </option>
+    </select>
+    <div class="sistemas-dialog-actions">
+      <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
+      <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container">
+  <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
+    {{ toast.message }}
+  </div>
+</div>
+
+</div>
+</div>
 </template>
 
 <script>
@@ -566,3 +631,4 @@ export default ProcessosViewModel;
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
 <style src="/src/assets//styles/components/actions.css"></style>
+<style src="/src/assets/styles/components/filters.css"></style>

@@ -127,13 +127,6 @@
   color: #856404;
 }
 
-/* Botões de ação */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
 .btn-action-resp-admin {
   width: 32px;
   height: 32px;
@@ -470,10 +463,6 @@
   .confirm-dialog-resp-admin {
     width: 90%;
     max-width: none;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
   }
 }
 

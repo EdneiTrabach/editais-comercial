@@ -80,30 +80,8 @@ th {
   color: #991b1b;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
 .btn-icon.edit {
   background: #e9ecef;
-}
-
-.btn-icon.delete {
-  background: #fee2e2;
 }
 
 .btn-icon:hover {
@@ -218,40 +196,12 @@ th {
   color: #991b1b;
 }
 
-/* Botões de ação */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
 .btn-icon.edit {
   background: #e9ecef;
 }
 
 .btn-icon.edit:hover {
   background: #dee2e6;
-  transform: translateY(-2px);
-}
-
-.btn-icon.delete {
-  background: #f77777;
-}
-
-.btn-icon.delete:hover {
-  background: #fecaca;
   transform: translateY(-2px);
 }
 
@@ -740,16 +690,6 @@ textarea.input-cfg-usuarios {
   transform: translateY(-2px);
 }
 
-/* Ajuste o estilo existente do botão delete se necessário */
-.btn-icon.delete {
-  background: #fee2e2;
-}
-
-.btn-icon.delete:hover {
-  background: #fecaca;
-  transform: translateY(-2px);
-}
-
 /* Estilos base para todos os botões */
 .btn {
   display: inline-flex;
@@ -799,17 +739,7 @@ textarea.input-cfg-usuarios {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Botões de ação (ícones) */
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
+
 
 /* Botão editar */
 .btn-icon.edit {
@@ -821,18 +751,6 @@ textarea.input-cfg-usuarios {
   background: #dee2e6;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Botão excluir/inativar */
-.btn-icon.delete {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-}
-
-.btn-icon.delete:hover {
-  background: #fecaca;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.15);
 }
 
 /* Botão ativar */
@@ -890,10 +808,6 @@ textarea.input-cfg-usuarios {
   pointer-events: none;
 }
 
-/* Adicione ao seu <style> */
-.action-buttons {
-  position: relative;
-}
 
 .action-buttons:not(.is-admin) .btn-icon.delete,
 .action-buttons:not(.is-admin) .btn-icon.enable {
@@ -905,13 +819,6 @@ textarea.input-cfg-usuarios {
   display: block;
 }
 
-/* Remova os estilos anteriores de .action-buttons:not(.is-admin) e adicione estes: */
-
-/* Estilo para o botão de ativar/inativar */
-.btn-icon.enable,
-.btn-icon.delete {
-  position: relative;
-}
 
 /* Quando não for admin e passar o mouse sobre o botão */
 :not(.admin) .btn-icon.enable:hover::after,

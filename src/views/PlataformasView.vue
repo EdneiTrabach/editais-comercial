@@ -53,7 +53,7 @@
                 <th>Validade</th>
                 <th>Observações</th>
               </template>
-              <th>Ações</th>
+              <th class="actions-header" style="position: sticky; right: 0; z-index: 15; background: #f8f9fa;">Ações</th>
             </tr>
           </thead>
           <tbody>

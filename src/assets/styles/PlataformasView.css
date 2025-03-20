@@ -312,11 +312,6 @@ th {
   background: #d1d5db;
 }
 
-.actions-cell {
-  width: 100px;
-  text-align: center;
-}
-
 .actions-buttons {
   display: flex;
   gap: 0.5rem;

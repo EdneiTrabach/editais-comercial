@@ -104,17 +104,6 @@ td select option {
   font-family: inherit;
 }
 
-.actions-cell {
-  width: 80px;
-  text-align: center;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
 /* Células especiais */
 td[data-field="objeto_completo"],
 th[data-field="objeto_completo"] {

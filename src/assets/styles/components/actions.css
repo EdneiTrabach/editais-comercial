@@ -35,14 +35,17 @@
 }
 
 .actions-header {
-  z-index: 15;
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  background: white;
 }
 
 .action-buttons {
   display: flex;
   justify-content: center;
+  gap: 0.5rem;
 }
-
 
 /* Estilo para manter a coluna de ações fixa */
 .actions-column, .actions-cell {
@@ -56,21 +59,38 @@
 }
 
 .actions-cell {
+  position: sticky !important; 
+  right: 0;
+  z-index: 20 !important; /* Aumentado para garantir que fique acima de outros elementos */
   background-color: white;
 }
 
-/* Garantir que os botões de ação apareçam corretamente */
-.action-buttons {
+.btn-action {
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
+  align-items: center;
   justify-content: center;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 25 !important; /* Garantir que os botões fiquem acima */
 }
+
+.btn-action .icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 
 .btn-icon.delete {
   display: flex;
   align-items: center;
   justify-content: center;
   color: #e74c3c;
-  background: transparent;
+  background-color: #fee2e2;
   border: none;
   cursor: pointer;
   width: 32px;
@@ -80,4 +100,12 @@
 .btn-icon.delete:hover {
   background-color: rgba(231, 76, 60, 0.1);
   border-radius: 4px;
+}
+
+
+.icon-delete {
+  display: block !important;
+  visibility: visible !important;
+  width: 16px !important;
+  height: 16px !important;
 }
