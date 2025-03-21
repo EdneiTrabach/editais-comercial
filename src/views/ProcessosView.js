@@ -565,44 +565,55 @@ export default {
     }
 
     const loadProcessos = async () => {
-      if (isLoading.value) return
+      if (isLoading.value) return;
 
       try {
-        isLoading.value = true
-        console.log('Starting process loading...')
+        isLoading.value = true;
+        console.log('Starting process loading...');
+
+        // Guardar o ano selecionado atual
+        const anoAtual = anoSelecionado.value;
 
         // Query processes
         const { data, error } = await supabase
           .from('processos')
           .select(`*`)
-          .order('data_pregao', { ascending: true })
+          .order('data_pregao', { ascending: true });
 
-        if (error) throw error
+        if (error) throw error;
 
         // Additional data processing
-        const processosComNomes = []
+        const processosComNomes = [];
 
         for (const processo of data || []) {
           // Fetch system names for each process
-          let sistemasNomes = '-'
+          let sistemasNomes = '-';
           if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
-            sistemasNomes = await getSistemasNomes(processo.sistemas_ativos)
+            sistemasNomes = await getSistemasNomes(processo.sistemas_ativos);
           }
 
           // Add the process with sistemas_nomes field populated
           processosComNomes.push({
             ...processo,
             sistemas_nomes: sistemasNomes
-          })
+          });
         }
 
-        processos.value = processosComNomes
-        console.log('Processes loaded with system names:', processos.value.length)
+        processos.value = processosComNomes;
+        console.log('Processes loaded with system names:', processos.value.length);
+
+        // Verificar se o ano selecionado ainda existe nos processos carregados
+        const anos = new Set(processos.value.map(p => p.ano));
+        
+        // Se o ano atual não estiver mais disponível, selecione o primeiro ano disponível
+        if (!anos.has(anoAtual) && anos.size > 0) {
+          anoSelecionado.value = Math.max(...Array.from(anos));
+        }
 
       } catch (error) {
-        console.error('Error loading processes:', error)
+        console.error('Error loading processes:', error);
       } finally {
-        isLoading.value = false
+        isLoading.value = false;
       }
     }
 
@@ -1119,6 +1130,7 @@ export default {
       }
     }
 
+    // Modificação na função handleUpdate
     const handleUpdate = async (processo) => {
       try {
         // Verifica se o campo está em edição
@@ -1260,6 +1272,18 @@ export default {
 
         // Limpar o histórico de refazer sempre que uma nova alteração é feita
         redoHistory.value = [];
+
+        // Adicione esta verificação antes da atualização final:
+        // Verificar se é uma alteração de status para SUSPENSO, ADIADO ou DEMONSTRACAO
+        if (editingCell.value.field === 'status' && 
+            ['suspenso', 'adiado', 'demonstracao'].includes(updateValue) && 
+            processo.status !== updateValue) {
+          
+          // Cancelar a edição normal e abrir o diálogo de reagendamento
+          cancelEdit();
+          abrirReagendamentoDialog(processo, updateValue);
+          return; // Interromper o fluxo normal de atualização
+        }
 
         // Update in database
         console.log('Update data:', updateData)
@@ -2323,6 +2347,181 @@ export default {
       });
     };
 
+    // Dialog para reagendamento
+    const reagendamentoDialog = ref({
+      show: false,
+      processo: null,
+      status: null,
+      temNovaData: false,
+      novaData: '',
+      novaHora: ''
+    });
+
+    // Função para abrir o diálogo de reagendamento
+    const abrirReagendamentoDialog = (processo, status) => {
+      reagendamentoDialog.value = {
+        show: true,
+        processo: processo,
+        status: status,
+        temNovaData: status === 'demonstracao', // Mostrar campos de data automaticamente para demonstração
+        novaData: '',
+        novaHora: ''
+      };
+    };
+
+    // Função para fechar o diálogo de reagendamento
+    const hideReagendamentoDialog = () => {
+      reagendamentoDialog.value.show = false;
+    };
+
+    // Função para confirmar que há nova data
+    const confirmarTemNovaData = () => {
+      reagendamentoDialog.value.temNovaData = true;
+    };
+
+    // Função para confirmar que não há nova data
+    const confirmSemNovaData = async () => {
+      // Apenas atualiza o status e fecha o diálogo
+      await atualizarStatusProcesso(reagendamentoDialog.value.processo, reagendamentoDialog.value.status);
+      hideReagendamentoDialog();
+    };
+
+    // Função para atualizar status do processo
+    const atualizarStatusProcesso = async (processo, status) => {
+      try {
+        const updateData = {
+          status: status,
+          updated_at: new Date().toISOString()
+        };
+
+        // Adicionar usuário que está fazendo a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        // Atualizar no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', processo.id);
+
+        if (error) throw error;
+
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'atualizacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          campo_alterado: 'status',
+          dados_anteriores: processo.status,
+          dados_novos: status
+        });
+
+        // Recarregar processos
+        await loadProcessos();
+        
+        showToast(`Status atualizado para ${formatStatus(status)}`, 'success');
+      } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        showToast('Erro ao atualizar status do processo', 'error');
+      }
+    };
+
+    // Função para confirmar reagendamento
+    const confirmarReagendamento = async () => {
+      try {
+        // 1. Atualizar o processo original para o novo status
+        await atualizarStatusProcesso(
+          reagendamentoDialog.value.processo, 
+          reagendamentoDialog.value.status
+        );
+
+        // 2. Duplicar o processo com a nova data
+        const processoOriginal = reagendamentoDialog.value.processo;
+        
+        // Remover campos que não devem ser duplicados
+        const { 
+          id, 
+          created_at, 
+          updated_at, 
+          updated_by, 
+          sistemas_nomes, // Remover este campo calculado
+          _distancias, // Remover possíveis campos temporários
+          ...dadosProcesso 
+        } = processoOriginal;
+        
+        // Determinar o status para o novo processo
+        // Se for demonstração, mantém como demonstração, caso contrário usa em_analise
+        const novoStatus = reagendamentoDialog.value.status === 'demonstracao' 
+          ? 'demonstracao' 
+          : 'em_analise';
+        
+        // Extrair o ano da nova data
+        const novoAno = new Date(reagendamentoDialog.value.novaData).getFullYear();
+        
+        // Atualizar o número do processo para refletir o novo ano se for diferente
+        let numeroProcesso = dadosProcesso.numero_processo;
+        if (novoAno !== parseInt(dadosProcesso.ano)) {
+          // Manter apenas o número, substituindo o ano pelo novo
+          const partes = numeroProcesso.split('/');
+          if (partes.length > 1) {
+            numeroProcesso = `${partes[0]}/${novoAno}`;
+          }
+        }
+        
+        // Criar o novo processo com os dados atualizados
+        const novoProcesso = {
+          ...dadosProcesso,
+          numero_processo: numeroProcesso,
+          ano: novoAno, // Atualizar o ano para o novo ano
+          data_pregao: reagendamentoDialog.value.novaData,
+          hora_pregao: reagendamentoDialog.value.novaHora,
+          status: novoStatus, // Usar o status determinado acima
+          created_at: new Date().toISOString()
+        };
+
+        console.log('Dados do novo processo a ser inserido:', novoProcesso);
+
+        // Inserir o novo processo no banco
+        const { data: novoProcessoData, error } = await supabase
+          .from('processos')
+          .insert(novoProcesso)
+          .select();
+
+        if (error) throw error;
+
+        // Registrar log da duplicação
+        if (novoProcessoData && novoProcessoData[0]) {
+          await logSystemAction({
+            tipo: 'duplicacao',
+            tabela: 'processos',
+            registro_id: novoProcessoData[0].id,
+            campo_alterado: 'todos',
+            dados_anteriores: null,
+            dados_novos: novoProcesso
+          });
+        }
+
+        // Recarregar processos
+        await loadProcessos();
+        
+        // Atualizar o ano selecionado para o novo ano após recarregar
+        anoSelecionado.value = novoAno;
+        
+        // Mensagem personalizada baseada no tipo de operação
+        const mensagem = reagendamentoDialog.value.status === 'demonstracao' 
+          ? `Demonstração agendada com sucesso para ${novoAno}` 
+          : `Processo reagendado com sucesso para ${novoAno}`;
+        
+        showToast(mensagem, 'success');
+        hideReagendamentoDialog();
+      } catch (error) {
+        console.error('Erro ao reagendar processo:', error);
+        showToast('Erro ao reagendar processo', 'error');
+      }
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // Estado, dados, etc...
@@ -2487,6 +2686,14 @@ export default {
       toasts,
       showToast,
       colunasOrdenadas,
+
+      // Reagendamento
+      reagendamentoDialog,
+      abrirReagendamentoDialog,
+      hideReagendamentoDialog,
+      confirmarTemNovaData,
+      confirmSemNovaData,
+      confirmarReagendamento,
 
     }
   }

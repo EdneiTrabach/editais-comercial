@@ -100,15 +100,6 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="plataforma in plataformasFiltradas" :key="plataforma.id">
-              <td>{{ plataforma.nome }}</td>
-              <td>
-                <a :href="plataforma.url" target="_blank" class="url-link">
-                  {{ truncateUrl(plataforma.url) }}
-                </a>
-              </td>
-
-            </tr>
             <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
               :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
               @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
@@ -574,6 +565,48 @@
     <div class="sistemas-dialog-actions">
       <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
       <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog para reagendamento de processos -->
+<div v-if="reagendamentoDialog.show" class="modal-overlay">
+  <div class="confirm-dialog">
+    <div class="confirm-content">
+      <h3>{{ reagendamentoDialog.status === 'demonstracao' ? 'Agendamento de Demonstração' : 'Reagendamento do Processo' }}</h3>
+      <p>O processo "{{ reagendamentoDialog.processo?.numero_processo }}" foi marcado como 
+        {{ reagendamentoDialog.status === 'suspenso' ? 'SUSPENSO' : 
+           reagendamentoDialog.status === 'adiado' ? 'ADIADO' : 'DEMONSTRAÇÃO' }}.
+      </p>
+      <p>{{ reagendamentoDialog.status === 'demonstracao' ? 'Informe a data da demonstração:' : 'Já existe uma nova data para a reabertura deste processo?' }}</p>
+      
+      <div v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="form-row">
+        <div class="form-group">
+          <label>Nova Data</label>
+          <input type="date" v-model="reagendamentoDialog.novaData" :min="new Date().toISOString().split('T')[0]" />
+          <span v-if="reagendamentoDialog.novaData" class="ano-hint">
+            Ano: {{ new Date(reagendamentoDialog.novaData).getFullYear() }}
+          </span>
+        </div>
+        <div class="form-group">
+          <label>Nova Hora</label>
+          <input type="time" v-model="reagendamentoDialog.novaHora" />
+        </div>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn-cancel" @click="hideReagendamentoDialog">Cancelar</button>
+        <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-secondary" @click="confirmSemNovaData">
+          Não, apenas alterar o status
+        </button>
+        <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-confirm" @click="confirmarTemNovaData">
+          Sim, informar nova data
+        </button>
+        <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="btn-confirm" @click="confirmarReagendamento" 
+          :disabled="!reagendamentoDialog.novaData || !reagendamentoDialog.novaHora">
+          Confirmar {{ reagendamentoDialog.status === 'demonstracao' ? 'Demonstração' : 'Reagendamento' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
