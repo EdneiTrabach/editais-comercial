@@ -5,6 +5,9 @@
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
         <h1>Funcionalidades do Sistema</h1>
+        <div class="tour-icon" @click="startTour" title="Iniciar tour guiado">
+          <img src="/icons/question-circle.svg" alt="Tour" />
+        </div>
       </div>
 
       <div class="features-grid">
@@ -29,6 +32,14 @@
       </div>
     </div>
   </div>
+  
+  <Shepherd 
+    ref="tourGuide" 
+    :steps="tourSteps" 
+    :showButton="false"
+    @complete="onTourComplete"
+    @cancel="onTourCancel"
+  />
 </template>
 
 <script setup>
@@ -36,10 +47,12 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TheSidebar from '@/components/TheSidebar.vue'
 import FeatureCard from '@/components/FeatureCard.vue'
+import Shepherd from '@/components/Shepherd.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 
 const router = useRouter()
 const isSidebarExpanded = ref(true)
+const tourGuide = ref(null)
 
 const features = [
   {
@@ -147,6 +160,408 @@ const loadData = async () => {
 
 // Use o composable
 useConnectionManager(loadData)
+
+// Configuração dos passos do tour
+const tourSteps = [
+  {
+    id: 'welcome',
+    title: 'Bem-vindo ao Sistema',
+    text: 'Este tour vai mostrar as principais funcionalidades disponíveis.',
+    attachTo: {
+      element: '.header',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Pular',
+        action: function() { return this.cancel(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'features-overview',
+    title: 'Painel de Funcionalidades',
+    text: 'Aqui estão os cards de acesso às principais funcionalidades do sistema.',
+    attachTo: {
+      element: '.features-grid',
+      on: 'top'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'processos',
+    title: 'Processos',
+    text: 'Visualize e gerencie todos os processos licitatórios ativos.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(1)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'novo-processo',
+    title: 'Novo Processo',
+    text: 'Cadastre e gerencie processos licitatórios de forma simples e eficiente.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(2)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'planilha-lances',
+    title: 'Planilha de Lances',
+    text: 'Registre e gerencie lances de processos, facilitando o acompanhamento de licitações.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(3)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'declaracoes',
+    title: 'Declarações dos Processos',
+    text: 'Visualize e gerencie declarações necessárias para os processos licitatórios.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(4)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'sistemas',
+    title: 'Sistemas',
+    text: 'Conheça nossos sistemas e soluções disponíveis.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(5)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'dashboard',
+    title: 'Dashboard',
+    text: 'Visualize estatísticas e indicadores importantes para o acompanhamento de processos.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(6)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'representantes',
+    title: 'Representantes',
+    text: 'Cadastre e gerencie representantes que participam dos processos licitatórios.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(7)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'plataformas',
+    title: 'Plataformas',
+    text: 'Cadastre e gerencie plataformas utilizadas em processos licitatórios.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(8)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'empresas',
+    title: 'Empresas',
+    text: 'Cadastre e gerencie empresas participantes e/ou contratantes.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(9)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'relatorios',
+    title: 'Relatórios',
+    text: 'Visualize relatórios detalhados e estatísticas sobre processos e operações.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(10)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'admin-usuarios',
+    title: 'Administração de Usuários',
+    text: 'Gerencie usuários e suas permissões de acesso ao sistema.',
+    attachTo: {
+      element: '.features-grid > div:nth-child(11)',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'developer',
+    title: 'Desenvolvedor',
+    text: 'Conheça a equipe responsável pelo desenvolvimento deste sistema.',
+    attachTo: {
+      element: '.developer-feature-card',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'sidebar',
+    title: 'Menu Lateral',
+    text: 'Use o menu lateral para navegar entre as diferentes seções do sistema. Você pode minimizá-lo para ganhar mais espaço de trabalho.',
+    attachTo: {
+      element: '.sidebar',
+      on: 'right'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'help-icon',
+    title: 'Ajuda Rápida',
+    text: 'Sempre que precisar, clique neste ícone para iniciar o tour novamente.',
+    attachTo: {
+      element: '.tour-icon',
+      on: 'left'
+    },
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Próximo',
+        action: function() { return this.next(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  },
+  {
+    id: 'conclusion',
+    title: 'Pronto!',
+    text: 'Agora você conhece todas as funcionalidades do sistema e está pronto para utilizá-lo. Bom trabalho!',
+    buttons: [
+      {
+        text: 'Voltar',
+        action: function() { return this.back(); },
+        classes: 'shepherd-button-secondary'
+      },
+      {
+        text: 'Concluir',
+        action: function() { return this.complete(); },
+        classes: 'shepherd-button-primary'
+      }
+    ]
+  }
+]
+
+const startTour = () => {
+  if (tourGuide.value) {
+    tourGuide.value.startTour()
+  }
+}
+
+const onTourComplete = () => {
+  console.log('Tour concluído')
+}
+
+const onTourCancel = () => {
+  console.log('Tour cancelado')
+}
 </script>
 
 <style src="../assets/styles/FuncionalidadesView.css"></style>
+
+<style>
+/* Adicione isto ao final do seu arquivo CSS existente ou no componente acima se usar scoped */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.tour-icon {
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.tour-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tour-icon img {
+  width: 24px;
+  height: 24px;
+  filter: invert(45%) sepia(60%) saturate(1000%) hue-rotate(180deg) brightness(90%) contrast(95%);
+}
+</style>

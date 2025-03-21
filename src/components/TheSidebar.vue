@@ -5,8 +5,8 @@
       'dark': isDarkMode,
       'pinned': isPinned
     }">
-      <div class="sidebar-trigger" @click="toggleSidebar">
-        <span>{{ isActive ? '◀' : '▶' }}</span>
+      <div class="sidebar-trigger" @click="toggleSidebar" :title="sidebarTriggerTooltip">
+        <span>{{ !isActive ? '▶' : (isPinned ? '📌' : '◀') }}</span>
       </div>
 
       <div class="sidebar-header">
@@ -14,6 +14,9 @@
           <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo" />
         </div>
         <div class="sidebar-title">Editais</div>
+        <button class="tour-button" @click="startTour" title="Iniciar tour guiado">
+          <img src="/icons/question-circle.svg" alt="Tour" class="icon" onerror="this.src='/icons/question.svg'"/>
+        </button>
       </div>
 
       <div class="sidebar-menu">
@@ -126,6 +129,7 @@
         </div>
       </div>
     </nav>
+    <Shepherd :steps="tourSteps" ref="tourGuide" :showButton="false" />
   </div>
 </template>
 

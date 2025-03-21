@@ -16,6 +16,12 @@
             title="Refazer (Ctrl+Y)">
             <img src="/icons/redo.svg" alt="Refazer" class="icon" />
           </button>
+          
+          <!-- Novo botão de Tour -->
+          <button class="btn-tour" @click="startTour" title="Iniciar Tour">
+            <img src="/icons/question-circle.svg" alt="Tour" class="icon" />
+          </button>
+          
           <button class="btn-export" @click="exportToExcel">
             <img src="/icons/excel.svg" alt="Exportar" class="icon" />
             Exportar
@@ -624,6 +630,15 @@
   </div>
 </div>
 
+<!-- Tour component (movido para o final do template) -->
+<Shepherd 
+  :steps="tourSteps" 
+  ref="tourGuide" 
+  :showButton="false"
+  @complete="onTourComplete"
+  @cancel="onTourCancel"
+/>
+
 </div>
 </div>
 </template>
@@ -631,12 +646,196 @@
 <script>
 // Import the component logic from the separate JS file
 import ProcessosViewModel from './ProcessosView.js';
+import Shepherd from '@/components/Shepherd.vue';
 
 // Export the component with the imported logic
-export default ProcessosViewModel;
+export default {
+  ...ProcessosViewModel,
+  components: {
+    ...ProcessosViewModel.components || {},
+    Shepherd
+  },
+  data() {
+    const baseData = typeof ProcessosViewModel.data === 'function' 
+      ? ProcessosViewModel.data() 
+      : {};
+    
+    return {
+      ...baseData,
+      tourSteps: [
+        {
+          id: 'intro',
+          title: 'Bem-vindo ao Sistema de Processos Licitatórios',
+          text: 'Este tour irá guiá-lo pelos principais recursos e funcionalidades desta tela.',
+          attachTo: {
+            element: '.header-processos',
+            on: 'bottom'
+          },
+          buttons: [
+            {
+              text: 'Pular Tour',
+              action: function() { return this.cancel(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'actionButtons',
+          title: 'Ações Rápidas',
+          text: 'Aqui você encontra os botões para desfazer e refazer alterações, iniciar este tour, exportar dados para Excel e adicionar novos processos.',
+          attachTo: {
+            element: '.actions',
+            on: 'bottom'
+          },
+          buttons: [
+            {
+              text: 'Voltar',
+              action: function() { return this.back(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'tabela',
+          title: 'Tabela de Processos',
+          text: 'Todos os processos licitatórios são listados nesta tabela. Você pode clicar duas vezes em uma célula para editar seu conteúdo.',
+          attachTo: {
+            element: '.table-container',
+            on: 'top'
+          },
+          buttons: [
+            {
+              text: 'Voltar',
+              action: function() { return this.back(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'filtros',
+          title: 'Filtros',
+          text: 'Use os ícones de filtro nas colunas para filtrar os dados por valores específicos.',
+          attachTo: {
+            element: '.filtro-container',
+            on: 'right'
+          },
+          buttons: [
+            {
+              text: 'Voltar',
+              action: function() { return this.back(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'anosTabs',
+          title: 'Navegação por Anos',
+          text: 'Use estas abas para navegar entre processos de diferentes anos.',
+          attachTo: {
+            element: '.anos-tabs',
+            on: 'top'
+          },
+          buttons: [
+            {
+              text: 'Voltar',
+              action: function() { return this.back(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'concluir',
+          title: 'Tour Concluído!',
+          text: 'Agora você conhece os principais recursos desta tela. Explore e aproveite o sistema!',
+          buttons: [
+            {
+              text: 'Concluir',
+              action: function() { return this.complete(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        }
+      ]
+    };
+  },
+  methods: {
+    ...ProcessosViewModel.methods,
+    startTour() {
+      if (this.$refs.tourGuide) {
+        this.$refs.tourGuide.startTour();
+      } else {
+        console.error('Tour guide reference not found');
+      }
+    },
+    onTourComplete() {
+      if (typeof this.showToast === 'function') {
+        this.showToast('Tour concluído! Aproveite o sistema.', 'success');
+      }
+    },
+    onTourCancel() {
+      if (typeof this.showToast === 'function') {
+        this.showToast('Tour cancelado. Você pode iniciá-lo novamente a qualquer momento.', 'info');
+      }
+    }
+  }
+};
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
-<style src="/src/assets//styles/components/actions.css"></style>
+<style src="/src/assets/styles/components/actions.css"></style>
 <style src="/src/assets/styles/components/filters.css"></style>
+
+<style>
+/* Estilos para o botão de tour */
+.btn-tour {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.btn-tour:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-tour .icon {
+  width: 20px;
+  height: 20px;
+  color: #1976d2;
+}
+
+
+</style>

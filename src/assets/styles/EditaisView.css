@@ -20,3 +20,45 @@
 /* Importação de utilidades */
 @import './modules/animations.css';
 @import './modules/responsive.css';
+
+/* Ajustes no header para acomodar múltiplos botões */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Estilo para o botão de tour */
+.btn-tour {
+  background-color: transparent;
+  border: none;
+  color: #555;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-tour:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.tour-icon {
+  width: 24px;
+  height: 24px;
+  color: #555;
+}
+
+/* Garantir que o overlay do Shepherd seja completamente removido após o tour */
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  z-index: 9999;
+}
