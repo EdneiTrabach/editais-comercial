@@ -271,8 +271,8 @@
           </div> -->
 
           <div class="form-group">
-            <RequiredLabel text="Campo Adicional 2" :isRequired="false" />
-            <input v-model="formData.campo_adicional2" type="text" placeholder="Campo opcional 2" />
+            <RequiredLabel text="Campo Adicional" :isRequired="false" />
+            <input v-model="formData.campo_adicional2" type="text" placeholder="Campo opcional" />
           </div>
 
           <!-- Substitua o campo de responsável existente por este -->
@@ -387,7 +387,7 @@
       <div class="form-group-cfg-usuarios">
         <label class="label-cfg-usuarios">Cole aqui o texto da publicação:</label>
         <textarea v-model="publicacaoText" rows="10" placeholder="Cole aqui o texto completo da publicação..."
-          class="input-cfg-usuarios textarea-cfg-usuarios"></textarea>
+          class="input-import textarea-cfg-usuarios"></textarea>
       </div>
 
       <div class="modal-actions-cfg-usuarios">

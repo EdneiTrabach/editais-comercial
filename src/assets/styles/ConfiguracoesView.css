@@ -312,6 +312,7 @@ input {
   display: flex;
   flex-direction: column; /* Organiza o conteúdo em coluna */
   overflow: hidden; /* Esconde qualquer conteúdo que exceda os limites */
+  padding: 2rem;
 }
 
 .modal-title-cfg-usuarios {
@@ -319,7 +320,7 @@ input {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 0rem;
   border-bottom: 2px solid #e5e7eb;
   flex-shrink: 0; /* Impede que o título encolha */
 }
@@ -339,7 +340,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 /* Ações do modal fixas na parte inferior */
