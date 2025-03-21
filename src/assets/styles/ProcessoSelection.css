@@ -1,0 +1,70 @@
+.processo-selection {
+  margin-bottom: 30px;
+}
+
+.processo-selection h2 {
+  margin-bottom: 20px;
+  color: #2d3748;
+  font-size: 1.5rem;
+}
+
+.processos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.processo-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.processo-card:hover {
+  border-color: #4299e1;
+  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.1);
+  transform: translateY(-2px);
+}
+
+.processo-card.selected {
+  border-color: #4299e1;
+  background-color: #ebf8ff;
+  box-shadow: 0 4px 8px rgba(66, 153, 225, 0.2);
+}
+
+.processo-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2d3748;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.processo-info {
+  margin-bottom: 15px;
+}
+
+.processo-info p {
+  margin: 8px 0;
+  color: #4a5568;
+}
+
+.processo-info .objeto {
+  margin-top: 15px;
+  font-style: italic;
+  color: #718096;
+}
+
+.processo-status {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #4299e1;
+  color: white;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
