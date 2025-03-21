@@ -6,6 +6,7 @@ import { SupabaseManager } from '@/lib/supabaseManager'
 // Componentes
 import TheSidebar from '@/components/TheSidebar.vue'
 import RequiredLabel from '@/components/RequiredLabel.vue'
+import Shepherd from '../components/Shepherd.vue';
 
 // Gerenciamento de conexão e visibilidade
 import { useVisibilityHandler } from '@/composables/useVisibilityHandler'
@@ -45,7 +46,8 @@ export default {
   name: 'EditaisView',
   components: {
     TheSidebar,
-    RequiredLabel
+    RequiredLabel,
+    Shepherd
   },
   emits: ['sidebarToggle'],
   setup() {
@@ -514,6 +516,47 @@ export default {
       }
     };
 
+    // Referência ao componente Shepherd
+    const tourGuide = ref(null);
+    
+    // Funções para controlar o tour
+    const startTour = () => {
+      if (isLoading.value) {
+        showToast('Aguarde o carregamento completo antes de iniciar o tour.', 'warning');
+        return;
+      }
+      
+      // Certifique-se de que qualquer tour anterior seja finalizado
+      cleanupTourElements();
+      
+      // Usar a ref corretamente para acessar o componente
+      if (tourGuide.value) {
+        tourGuide.value.startTour();
+      } else {
+        console.error('Tour guide component not found');
+      }
+    };
+
+    const cleanupTourElements = () => {
+      const overlays = document.querySelectorAll('.shepherd-modal-overlay-container');
+      overlays.forEach(overlay => overlay.remove());
+      
+      const elements = document.querySelectorAll('.shepherd-element');
+      elements.forEach(element => element.remove());
+    };
+
+    const onTourComplete = () => {
+      // Garante que o overlay modal seja removido
+      cleanupTourElements();
+      
+      // Exibir a mensagem de conclusão
+      showToast('Tour concluído! Agora você conhece os principais recursos da página.', 'success');
+    };
+
+    const onTourCancel = () => {
+      cleanupTourElements();
+    };
+
     // === RETORNO DE VALORES E FUNÇÕES PARA O TEMPLATE ===
     
     return {
@@ -656,6 +699,137 @@ export default {
       formatarValorEstimadoLocal: formatarValorEstimadoLocalWrapper,
       handleCancel,
       responsaveis_usuario,
+      tourSteps: [
+        {
+          id: 'intro',
+          title: 'Bem-vindo ao Cadastro de Editais',
+          text: 'Este tour irá guiá-lo pelos principais recursos desta página.',
+          attachTo: {
+            element: '.header h1',
+            on: 'bottom'
+          },
+          buttons: [
+            {
+              text: 'Fechar',
+              action: function() { return this.cancel(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Próximo',
+              action: function() { return this.next(); },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        },
+        {
+          id: 'importacao',
+          title: 'Importação de Publicações',
+          text: 'Clique aqui para importar publicações e preencher automaticamente o formulário.',
+          attachTo: {
+            element: '.btn-import',
+            on: 'bottom'
+          }
+        },
+        {
+          id: 'processo',
+          title: 'Número do Processo',
+          text: 'Informe o número do processo licitatório e o ano correspondente.',
+          attachTo: {
+            element: '.processo-input',
+            on: 'bottom'
+          }
+        },
+        {
+          id: 'data-pregao',
+          title: 'Data e Hora',
+          text: 'Selecione a data e o horário em que o pregão será realizado.',
+          attachTo: {
+            element: 'input[type="date"]',
+            on: 'right'
+          }
+        },
+        {
+          id: 'estado-orgao',
+          title: 'Estado e Órgão',
+          text: 'Selecione o estado e informe o órgão responsável pela licitação.',
+          attachTo: {
+            element: '.form-group select[v-model="formData.estado"]',
+            on: 'left'
+          }
+        },
+        {
+          id: 'modalidade',
+          title: 'Modalidade',
+          text: 'Escolha a modalidade da licitação. Isso afetará outros campos do formulário.',
+          attachTo: {
+            element: 'select[v-model="formData.modalidade"]',
+            on: 'right'
+          }
+        },
+        {
+          id: 'objeto',
+          title: 'Objeto da Licitação',
+          text: 'Informe tanto o objeto resumido quanto o objeto completo da licitação.',
+          attachTo: {
+            element: '.objeto-container',
+            on: 'top'
+          }
+        },
+        {
+          id: 'distancia',
+          title: 'Cálculo de Distância',
+          text: 'Calcule a distância entre o órgão e os pontos de referência para avaliar a viabilidade.',
+          attachTo: {
+            element: '.distancia-container',
+            on: 'top'
+          }
+        },
+        {
+          id: 'representante',
+          title: 'Representante',
+          text: 'Selecione o representante que atuará no processo licitatório.',
+          attachTo: {
+            element: '.representante-container',
+            on: 'bottom'
+          }
+        },
+        {
+          id: 'finalizar',
+          title: 'Salvar ou Cancelar',
+          text: 'Após preencher todos os campos necessários, você pode salvar ou cancelar o cadastro.',
+          attachTo: {
+            element: '.form-actions',
+            on: 'top'
+          },
+          buttons: [
+            {
+              text: 'Voltar',
+              action: function() { return this.back(); },
+              classes: 'shepherd-button-secondary'
+            },
+            {
+              text: 'Concluir Tour',
+              action: function() { 
+                // Certifique-se de completar o tour apropriadamente
+                const result = this.complete();
+                
+                // Remova a linha abaixo para evitar duplicação de limpeza
+                // const shepherd = document.querySelector('.shepherd-modal-overlay-container');
+                // if (shepherd) {
+                //   shepherd.remove();
+                // }
+                
+                return result;
+              },
+              classes: 'shepherd-button-primary'
+            }
+          ]
+        }
+      ],
+      startTour,
+      onTourComplete,
+      onTourCancel,
+      tourGuide
     }
   }
 }

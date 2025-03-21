@@ -1,4 +1,3 @@
-
 /* Reset e container */
 .sidebar-container {
   position: relative;
@@ -117,8 +116,8 @@
   color: white;
   font-size: 1.2rem;
   font-weight: 600;
+  margin-right: 10px;
 }
-
 
 /* Ajuste do trigger */
 .sidebar-trigger {
@@ -143,8 +142,6 @@
   background: #1f2937;
   width: 40px;
 }
-
-
 
 /* Ajuste do menu para scroll */
 .sidebar-menu {
@@ -369,4 +366,39 @@
 
 .disabled:hover {
   background-color: transparent;
+}
+
+.tour-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-left: 5px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.tour-button:hover {
+  opacity: 1;
+}
+
+.tour-button img {
+  width: 18px;
+  height: 18px;
+}
+
+/* Estilo para sidebar quando o tour está ativo */
+.sidebar.tour-active {
+  left: 0 !important;
+  z-index: 1000;
+}
+
+/* Garante que a sidebar fique visível mesmo durante transições do tour */
+.shepherd-enabled .sidebar.active {
+  left: 0 !important;
 }

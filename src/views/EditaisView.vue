@@ -20,10 +20,14 @@
       <!-- Loading overlay -->
       <div class="header">
         <h1>Novo Processo Licitatório</h1>
-        <!-- Adicione após o header no template -->
-        <button class="btn-import" @click="showImportModal = true">
-          Importar Publicação
-        </button>
+        <div class="header-buttons">
+          <button class="btn-tour" @click="startTour" title="Iniciar Tour">
+            <img src="/icons/question-circle.svg" alt="Tour" class="tour-icon">
+          </button>
+          <button class="btn-import" @click="showImportModal = true">
+            Importar Publicação
+          </button>
+        </div>
       </div>
 
 
@@ -405,6 +409,15 @@
   <div v-if="toast.show" :class="['toast-cfg-usuarios', `toast-${toast.type}`]">
     {{ toast.message }}
   </div>
+
+  <!-- Componente Shepherd (não visível, apenas para controlar o tour) -->
+  <Shepherd
+    ref="tourGuide"
+    :steps="tourSteps"
+    :showButton="false"
+    @complete="onTourComplete"
+    @cancel="onTourCancel"
+  />
 </template>
 
 <script src="../views/EditaisView.js"></script>

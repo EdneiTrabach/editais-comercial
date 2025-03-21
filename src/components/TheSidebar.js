@@ -1,13 +1,19 @@
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { SupabaseManager } from '@/lib/supabaseManager'
+import Shepherd from '../components/Shepherd.vue';
 
 export default {
+  name: 'TheSidebar',
+  components: {
+    Shepherd
+  },
   emits: ['sidebarToggle'],
   
   setup(props, { emit }) {
     const router = useRouter()
+    const isTourActive = ref(false)
     
     // ===== ESTADO DO COMPONENTE =====
     const isAdmin = ref(false)
@@ -15,6 +21,163 @@ export default {
     const isPinned = ref(false)
     const isDarkMode = ref(false)
     const unreadNotifications = ref(0)
+    
+    // Texto do tooltip para o botão de toggle
+    const sidebarTriggerTooltip = computed(() => {
+      if (!isActive.value) return 'Abrir menu lateral'
+      if (isPinned.value) return 'Desafixar menu (manterá aberto até clicar fora)'
+      return 'Fixar menu lateral (impede fechamento automático)'
+    })
+    
+    const tourSteps = [
+      {
+        id: 'welcome',
+        title: 'Bem-vindo ao Editais',
+        text: 'Este é um tour guiado para ajudá-lo a navegar pelo sistema. Vamos começar!',
+        attachTo: {
+          element: '.sidebar-header',
+          on: 'bottom'
+        },
+        buttons: [
+          {
+            text: 'Pular tour',
+            action: function() { return this.cancel(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'processos',
+        title: 'Processos',
+        text: 'Acesse todos os processos de licitação aqui.',
+        attachTo: {
+          element: '.nav-links li:nth-child(1)',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'funcionalidades',
+        title: 'Funcionalidades',
+        text: 'Veja todas as funcionalidades do sistema nesta seção.',
+        attachTo: {
+          element: '.nav-links li:nth-child(2)',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'theme-toggle',
+        title: 'Modo Escuro',
+        text: 'Alterne entre o modo claro e escuro para melhor visualização.',
+        attachTo: {
+          element: '.theme-toggle',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'notifications',
+        title: 'Notificações',
+        text: 'Veja suas notificações do sistema aqui.',
+        attachTo: {
+          element: '.notifications-btn',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'sidebar-trigger',
+        title: 'Controle da Barra Lateral',
+        text: 'Clique aqui para expandir ou recolher a barra lateral.',
+        attachTo: {
+          element: '.sidebar-trigger',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Próximo',
+            action: function() { return this.next(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      },
+      {
+        id: 'sidebar-pin',
+        title: 'Fixar Barra Lateral',
+        text: 'Quando a barra lateral está aberta, você pode clicar novamente no botão (◀) para fixá-la. Isso a manterá sempre visível, mesmo quando clicar em outras áreas. Quando fixada, o ícone muda para 📌. Clique nele para desafixar.',
+        attachTo: {
+          element: '.sidebar-trigger',
+          on: 'right'
+        },
+        buttons: [
+          {
+            text: 'Voltar',
+            action: function() { return this.back(); },
+            classes: 'shepherd-button-secondary'
+          },
+          {
+            text: 'Finalizar',
+            action: function() { return this.complete(); },
+            classes: 'shepherd-button-primary'
+          }
+        ]
+      }
+    ]
     
     // ===== ROTAS DO MENU =====
     const routes = [
@@ -37,6 +200,15 @@ export default {
     
     // Toggle do sidebar (expandir/recolher)
     const toggleSidebar = () => {
+      // Não permitir fechar a sidebar durante o tour
+      if (isTourActive.value) {
+        isActive.value = true
+        isPinned.value = true
+        saveSidebarState()
+        adjustMainContent()
+        return
+      }
+      
       if (isActive.value) {
         isPinned.value = !isPinned.value
         if (!isPinned.value) {
@@ -169,6 +341,9 @@ export default {
         const sidebar = document.querySelector('.sidebar')
         const trigger = document.querySelector('.sidebar-trigger')
         
+        // Não fechar sidebar se tour estiver ativo
+        if (isTourActive.value) return;
+        
         if (sidebar && trigger && 
             !sidebar.contains(e.target) && 
             !trigger.contains(e.target)) {
@@ -180,6 +355,9 @@ export default {
       }
     
       const handleKeydown = (e) => {
+        // Não fechar sidebar com ESC se tour estiver ativo
+        if (isTourActive.value) return;
+        
         if (e.key === 'Escape' && !isPinned.value) {
           isActive.value = false
           adjustMainContent()
@@ -275,6 +453,34 @@ export default {
       adjustMainContent()
     })
 
+    // Método para iniciar o tour garantindo que a sidebar esteja aberta
+    const startTour = function() {
+      // Garantir que a sidebar esteja aberta para o tour
+      isActive.value = true
+      isPinned.value = true
+      saveSidebarState()
+      adjustMainContent()
+      
+      // Marcar que o tour está ativo para prevenir fechamento da sidebar
+      isTourActive.value = true
+      
+      // Iniciar o tour após pequeno delay para garantir que a sidebar esteja expandida
+      setTimeout(() => {
+        if (this.$refs.tourGuide) {
+          this.$refs.tourGuide.startTour();
+          
+          // Adicionar listeners para eventos do tour
+          this.$refs.tourGuide.tour.on('complete', () => {
+            isTourActive.value = false
+          });
+          
+          this.$refs.tourGuide.tour.on('cancel', () => {
+            isTourActive.value = false
+          });
+        }
+      }, 300);
+    }
+
     return {
       // Estado
       isAdmin,
@@ -283,6 +489,9 @@ export default {
       isDarkMode,
       unreadNotifications,
       routes,
+      tourSteps,
+      isTourActive,
+      sidebarTriggerTooltip,
       
       // Métodos
       toggleSidebar,
@@ -291,7 +500,8 @@ export default {
       handleLogout,
       toggleNotifications,
       checkNotifications,
-      handleAdminClick
+      handleAdminClick,
+      startTour
     }
   }
 }
