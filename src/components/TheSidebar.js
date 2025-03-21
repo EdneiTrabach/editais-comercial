@@ -3,11 +3,14 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { SupabaseManager } from '@/lib/supabaseManager'
 import Shepherd from '../components/Shepherd.vue';
+import NotificationsPanel from '../components/notifications/NotificationsPanel.vue';
+import { getUnreadNotificationsCount } from '@/api/notificationsApi';
 
 export default {
   name: 'TheSidebar',
   components: {
-    Shepherd
+    Shepherd,
+    NotificationsPanel
   },
   emits: ['sidebarToggle'],
   
@@ -294,31 +297,31 @@ export default {
 
     // ===== NOTIFICAÇÕES =====
     
+    // Variáveis para o painel de notificações
+    const showNotificationsPanel = ref(false);
+    const notificationPanelPosition = ref({ top: 0, right: 0 });
+
     // Toggle do painel de notificações
-    const toggleNotifications = () => {
-      console.log('Toggle notifications')
-    }
+    const toggleNotifications = (event) => {
+      // Não precisamos mais calcular posição, pois o painel ficará centralizado
+      showNotificationsPanel.value = !showNotificationsPanel.value;
+    };
     
     // Verificar notificações não lidas
     const checkNotifications = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data, error } = await supabase
-            .from('notifications')
-            .select('count')
-            .eq('user_id', user.id)
-            .eq('read', false)
-            .single()
-    
-          if (error) throw error
-          unreadNotifications.value = data?.count || 0
-        }
+        const count = await getUnreadNotificationsCount();
+        unreadNotifications.value = count;
       } catch (error) {
-        console.error('Erro ao buscar notificações:', error)
+        console.error('Erro ao buscar notificações:', error);
       }
-    }
+    };
     
+    // Atualizar a contagem de notificações
+    const updateNotificationsCount = (count) => {
+      unreadNotifications.value = count;
+    };
+
     // ===== NAVEGAÇÃO =====
     
     // Verificar acesso à área de administração
@@ -492,6 +495,8 @@ export default {
       tourSteps,
       isTourActive,
       sidebarTriggerTooltip,
+      showNotificationsPanel,
+      notificationPanelPosition,
       
       // Métodos
       toggleSidebar,
@@ -501,7 +506,8 @@ export default {
       toggleNotifications,
       checkNotifications,
       handleAdminClick,
-      startTour
+      startTour,
+      updateNotificationsCount
     }
   }
 }

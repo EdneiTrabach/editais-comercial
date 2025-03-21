@@ -1,0 +1,10 @@
+/* Arquivo principal que importa todos os estilos de notificação */
+
+/* Importações de componentes */
+@import './notifications/notifications-panel.css';
+@import './notifications/notification-item.css';
+@import './notifications/resolve-form.css';
+
+/* Importações de temas e responsividade */
+@import './notifications/notifications-theme.css';
+@import './notifications/notifications-responsive.css';

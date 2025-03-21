@@ -6,6 +6,10 @@
       <div class="header-cfg-usuarios">
         <h1 class="title-cfg-usuarios">Administração de Usuários</h1>
         <div class="actions-cfg-usuarios">
+          <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
+            <img src="/icons/bell.svg" alt="Notificar" class="icon-cfg-usuarios" />
+            Enviar Notificação
+          </button>
           <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
             <img src="/icons/adicao.svg" alt="Adicionar" class="icon-cfg-usuarios" />
             Novo Usuário
@@ -199,6 +203,99 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal Enviar Notificação -->
+    <div v-if="showSendNotificationModal" class="modal-cfg-usuarios">
+      <div class="modal-content-cfg-usuarios">
+        <h2 class="modal-title-cfg-usuarios">Enviar Notificação</h2>
+        <form @submit.prevent="sendNotification" class="form-cfg-usuarios">
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Título*</label>
+            <input 
+              v-model="notificationForm.title" 
+              type="text" 
+              required 
+              class="input-cfg-usuarios"
+              placeholder="Título da notificação"
+            />
+          </div>
+          
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Mensagem*</label>
+            <textarea 
+              v-model="notificationForm.message" 
+              required 
+              class="input-cfg-usuarios"
+              rows="4"
+              placeholder="Mensagem da notificação"
+            ></textarea>
+          </div>
+          
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Tipo</label>
+            <select v-model="notificationForm.tipo" class="select-cfg-usuarios">
+              <option value="usuario">Usuário</option>
+              <option value="sistema">Sistema</option>
+              <option value="alerta">Alerta</option>
+              <option value="prazo">Prazo</option>
+              <option value="impugnacao">Impugnação</option>
+            </select>
+          </div>
+          
+          <!-- Novo campo de nível de prioridade -->
+          <div class="form-group-cfg-usuarios">
+            <label class="label-cfg-usuarios">Nível de Prioridade</label>
+            <select v-model="notificationForm.nivel" class="select-cfg-usuarios">
+              <option value="muito_alto">Muito Alto</option>
+              <option value="alto">Alto</option>
+              <option value="medio" selected>Médio</option>
+              <option value="leve">Leve</option>
+            </select>
+          </div>
+          
+          <div class="notification-recipients">
+            <div class="recipients-header">
+              <h3>Destinatários</h3>
+              <label class="select-all-label">
+                <input 
+                  type="checkbox" 
+                  @change="toggleSelectAllUsers" 
+                  :checked="selectedUserIds.length === users.filter(u => u.status === 'ACTIVE').length"
+                />
+                Selecionar todos
+              </label>
+            </div>
+            
+            <div class="recipients-list">
+              <div 
+                v-for="user in users.filter(u => u.status === 'ACTIVE')" 
+                :key="user.id" 
+                class="recipient-item"
+              >
+                <label class="recipient-label">
+                  <input 
+                    type="checkbox" 
+                    :checked="selectedUserIds.includes(user.id)" 
+                    @change="toggleSelectUser(user.id)" 
+                  />
+                  <span class="recipient-name">{{ user.nome || user.email }}</span>
+                  <span class="recipient-email">{{ user.email }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-actions-cfg-usuarios">
+            <button type="button" @click="showSendNotificationModal = false" class="btn-cancel-cfg-usuarios">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-confirm-cfg-usuarios" :disabled="loading || selectedUserIds.length === 0">
+              {{ loading ? 'Enviando...' : 'Enviar Notificação' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 

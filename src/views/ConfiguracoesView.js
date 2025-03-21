@@ -4,6 +4,7 @@ import TheSidebar from '@/components/TheSidebar.vue'
 import { useRouter } from 'vue-router'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
+import { createNotification } from '@/api/notificationsApi';
 
 export default {
   components: {
@@ -32,6 +33,14 @@ export default {
       role: 'user'
     })
     const currentUserEmail = ref('');
+    const showSendNotificationModal = ref(false);
+    const selectedUserIds = ref([]);
+    const notificationForm = ref({
+      title: '',
+      message: '',
+      tipo: 'usuario',
+      processo_id: null
+    });
 
     // Todas as funções existentes...
     const handleNameUpdate = async (user, newName) => {
@@ -484,6 +493,70 @@ export default {
       showConfirmDialog.value = true;
     };
 
+    const openSendNotificationModal = () => {
+      selectedUserIds.value = [];
+      notificationForm.value = {
+        title: '',
+        message: '',
+        tipo: 'usuario',
+        nivel: 'medio', // Nível padrão
+        processo_id: null
+      };
+      showSendNotificationModal.value = true;
+    };
+
+    const toggleSelectAllUsers = (event) => {
+      if (event.target.checked) {
+        selectedUserIds.value = users.value
+          .filter(user => user.status === 'ACTIVE')
+          .map(user => user.id);
+      } else {
+        selectedUserIds.value = [];
+      }
+    };
+
+    const toggleSelectUser = (userId) => {
+      const index = selectedUserIds.value.indexOf(userId);
+      if (index === -1) {
+        selectedUserIds.value.push(userId);
+      } else {
+        selectedUserIds.value.splice(index, 1);
+      }
+    };
+
+    const sendNotification = async () => {
+      try {
+        loading.value = true;
+        
+        if (selectedUserIds.value.length === 0) {
+          showToastMessage('Selecione pelo menos um usuário', 'error');
+          return;
+        }
+        
+        if (!notificationForm.value.title || !notificationForm.value.message) {
+          showToastMessage('Preencha todos os campos obrigatórios', 'error');
+          return;
+        }
+        
+        const result = await createNotification(
+          notificationForm.value,
+          selectedUserIds.value
+        );
+        
+        if (result.success) {
+          showToastMessage('Notificação enviada com sucesso!');
+          showSendNotificationModal.value = false;
+        } else {
+          throw new Error(result.error?.message || 'Erro ao enviar notificação');
+        }
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        showToastMessage('Erro ao enviar notificação', 'error');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     onMounted(async () => {
       // Seu código existente...
       try {
@@ -609,6 +682,13 @@ export default {
       currentUserEmail,
       handleEmailUpdate,
       resetPassword,
+      showSendNotificationModal,
+      selectedUserIds,
+      notificationForm,
+      openSendNotificationModal,
+      toggleSelectAllUsers,
+      toggleSelectUser,
+      sendNotification,
     }
   }
 }

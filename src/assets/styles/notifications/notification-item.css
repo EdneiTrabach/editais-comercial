@@ -1,0 +1,214 @@
+/* Estilos para o item de notificação */
+
+/* Item de notificação */
+.notification-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  display: flex;
+  gap: 16px;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: var(--color-background-hover, #f9fafb);
+}
+
+.notification-item.unread {
+  background-color: var(--color-background-light, #f3f4f6);
+}
+
+/* Ícone de notificação */
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--color-primary-light, #e0f2fe);
+}
+
+.notification-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Cores de fundo por tipo de notificação */
+.notification-icon.processo {
+  background-color: rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
+}
+
+.notification-icon.sistema {
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.notification-icon.usuario {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.notification-icon.alerta {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.notification-icon.prazo {
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.notification-icon.impugnacao {
+  background-color: rgba(156, 39, 176, 0.1);
+}
+
+/* Conteúdo da notificação */
+.notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text, #333);
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--color-text-light, #6b7280);
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.notification-message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text, #333);
+  line-height: 1.4;
+}
+
+/* Informações de processo */
+.notification-processo {
+  font-size: 13px;
+  color: var(--color-text-light, #6b7280);
+  display: flex;
+  gap: 4px;
+}
+
+.processo-label {
+  font-weight: 500;
+}
+
+/* Bloco de resolução */
+.notification-resolution {
+  background-color: rgba(var(--color-success-rgb, 34, 197, 94), 0.05);
+  border-left: 3px solid var(--color-success, #22c55e);
+  padding: 8px 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+
+.resolution-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.resolution-label {
+  font-weight: 500;
+}
+
+.resolution-time {
+  color: var(--color-text-light, #6b7280);
+}
+
+.resolver-info {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.resolution-observation {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text, #333);
+}
+
+/* Ações de notificação */
+.notification-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text, #333);
+  transition: all 0.2s;
+}
+
+.btn-action:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-action.highlight {
+  color: var(--color-primary, #3b82f6);
+  font-weight: 500;
+}
+
+.btn-action.highlight:hover {
+  background-color: rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
+}
+
+/* Estilos para título e área de nível */
+.title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Níveis de prioridade */
+.notification-level {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.level-muito_alto {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.level-alto {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.level-medio {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.level-leve {
+  background-color: #dcfce7;
+  color: #166534;
+}

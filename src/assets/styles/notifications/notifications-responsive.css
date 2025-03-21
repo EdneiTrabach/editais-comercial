@@ -1,0 +1,66 @@
+/* Estilos responsivos para o sistema de notificações */
+
+@media (max-width: 768px) {
+  /* Ajustes do painel */
+  .notifications-panel {
+    width: 90%;
+    max-height: 90vh;
+  }
+  
+  /* Ajustes do item de notificação */
+  .notification-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .notification-time {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+  
+  .notification-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  /* Ajustes do formulário de resolução */
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-cancel, .btn-resolve {
+    width: 100%;
+  }
+}
+
+/* Para telas ainda menores */
+@media (max-width: 480px) {
+  .notifications-panel {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .resolve-form {
+    width: 95%;
+  }
+  
+  .notifications-tabs {
+    padding: 0 8px;
+  }
+  
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Ajuste para dispositivos em orientação paisagem com altura limitada */
+@media (max-height: 500px) {
+  .notifications-panel {
+    max-height: 95vh;
+  }
+  
+  .notifications-list {
+    max-height: 250px;
+  }
+}

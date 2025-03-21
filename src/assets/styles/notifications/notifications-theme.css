@@ -1,0 +1,97 @@
+/* Estilos para suporte ao tema escuro */
+
+/* Tema escuro para o painel principal */
+[data-theme="dark"] .notifications-panel {
+  background-color: var(--color-background-dark, #1e293b);
+  border-color: var(--color-border-dark, #334155);
+}
+
+[data-theme="dark"] .notifications-header {
+  border-bottom-color: var(--color-border-dark, #334155);
+}
+
+[data-theme="dark"] .drag-handle {
+  background-color: var(--color-background-dark, #1e293b);
+  border-color: var(--color-border-dark, #334155);
+}
+
+[data-theme="dark"] .notifications-tabs {
+  border-bottom-color: var(--color-border-dark, #334155);
+}
+
+[data-theme="dark"] .tab-btn {
+  color: var(--color-text-light-dark, #9ca3af);
+}
+
+/* Tema escuro para textos */
+[data-theme="dark"] .notifications-header h3,
+[data-theme="dark"] .notification-title,
+[data-theme="dark"] .notification-message,
+[data-theme="dark"] .resolve-form-header h3,
+[data-theme="dark"] .notification-details h4,
+[data-theme="dark"] .notification-details p {
+  color: var(--color-text-dark, #f3f4f6);
+}
+
+[data-theme="dark"] .btn-close .close-icon,
+[data-theme="dark"] .notification-time,
+[data-theme="dark"] .notification-processo,
+[data-theme="dark"] .notifications-loading,
+[data-theme="dark"] .notifications-empty {
+  color: var(--color-text-light-dark, #9ca3af);
+}
+
+/* Tema escuro para itens de notificação */
+[data-theme="dark"] .notification-item:hover {
+  background-color: var(--color-background-hover-dark, #334155);
+}
+
+[data-theme="dark"] .notification-item.unread {
+  background-color: var(--color-background-light-dark, #1e293b);
+}
+
+[data-theme="dark"] .btn-action {
+  color: var(--color-text-dark, #f3f4f6);
+}
+
+[data-theme="dark"] .btn-action:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .notification-resolution {
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+/* Tema escuro para o formulário de resolução */
+[data-theme="dark"] .resolve-form,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .btn-cancel {
+  background-color: var(--color-background-dark, #1e293b);
+  color: var(--color-text-dark, #f3f4f6);
+  border-color: var(--color-border-dark, #334155);
+}
+
+[data-theme="dark"] .form-group textarea:focus {
+  border-color: var(--color-primary, #3b82f6);
+}
+
+/* Níveis de prioridade em tema escuro */
+[data-theme="dark"] .level-muito_alto {
+  background-color: rgba(185, 28, 28, 0.2);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .level-alto {
+  background-color: rgba(194, 65, 12, 0.2);
+  color: #fdba74;
+}
+
+[data-theme="dark"] .level-medio {
+  background-color: rgba(146, 64, 14, 0.2);
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .level-leve {
+  background-color: rgba(22, 101, 52, 0.2);
+  color: #86efac;
+}

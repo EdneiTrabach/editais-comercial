@@ -5,8 +5,7 @@
 5 - data da analise tecnica para notificacao com o prazo final 
 6 - tela de analise =, com o modelo de planilha de analise que ja usam hoje, sistema/nao atende / total =% de analise
 3 - notificar sistemas que estao em analises e nao foram analisados ainda
-7 - incluir dispensa nas modalides de licitacao (eletronica ou enviar por e-mail, 
- eletronica e pelas plataformas)
+
 8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
 9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 
 10 - criar um sistema de envio automatico de e-mails de publicacoes, email generico para teste, podemo separar por estado e regioes. se nao der certo podemos criar um script de envio de email pre montado. 

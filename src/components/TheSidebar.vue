@@ -130,6 +130,12 @@
       </div>
     </nav>
     <Shepherd :steps="tourSteps" ref="tourGuide" :showButton="false" />
+    <NotificationsPanel 
+      v-if="showNotificationsPanel" 
+      :show="showNotificationsPanel" 
+      @close="showNotificationsPanel = false"
+      @count-updated="updateNotificationsCount"
+    />
   </div>
 </template>
 
