@@ -583,14 +583,21 @@
       <div v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="form-row">
         <div class="form-group">
           <label>Nova Data</label>
-          <input type="date" v-model="reagendamentoDialog.novaData" :min="new Date().toISOString().split('T')[0]" />
+          <input type="date" v-model="reagendamentoDialog.novaData" 
+                 :min="reagendamentoDialog.dataOriginal" />
           <span v-if="reagendamentoDialog.novaData" class="ano-hint">
             Ano: {{ new Date(reagendamentoDialog.novaData).getFullYear() }}
+          </span>
+          <span v-if="reagendamentoDialog.dataError" class="error-message">
+            {{ reagendamentoDialog.dataError }}
           </span>
         </div>
         <div class="form-group">
           <label>Nova Hora</label>
-          <input type="time" v-model="reagendamentoDialog.novaHora" />
+          <input type="time" v-model="reagendamentoDialog.novaHora" min="08:00" max="18:00" />
+          <span v-if="reagendamentoDialog.horaError" class="error-message">
+            {{ reagendamentoDialog.horaError }}
+          </span>
         </div>
       </div>
 

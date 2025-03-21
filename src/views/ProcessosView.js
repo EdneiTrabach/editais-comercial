@@ -2359,13 +2359,20 @@ export default {
 
     // Função para abrir o diálogo de reagendamento
     const abrirReagendamentoDialog = (processo, status) => {
+      // Formatar a data original do processo para o formato yyyy-MM-dd
+      const dataProcesso = processo.data_pregao ? new Date(processo.data_pregao) : new Date();
+      const dataOriginal = dataProcesso.toISOString().split('T')[0];
+      
       reagendamentoDialog.value = {
         show: true,
         processo: processo,
         status: status,
-        temNovaData: status === 'demonstracao', // Mostrar campos de data automaticamente para demonstração
+        temNovaData: status === 'demonstracao',
         novaData: '',
-        novaHora: ''
+        novaHora: '',
+        dataOriginal: dataOriginal, // Guarda a data original
+        dataError: '',
+        horaError: ''
       };
     };
 
@@ -2426,6 +2433,45 @@ export default {
         console.error('Erro ao atualizar status:', error);
         showToast('Erro ao atualizar status do processo', 'error');
       }
+    };
+
+    // Adicionar nova função para validação
+    const validarDataHora = () => {
+      let valido = true;
+      reagendamentoDialog.value.dataError = '';
+      reagendamentoDialog.value.horaError = '';
+      
+      // Validar data
+      if (!reagendamentoDialog.value.novaData) {
+        reagendamentoDialog.value.dataError = 'Data é obrigatória';
+        valido = false;
+      } else {
+        const novaData = new Date(reagendamentoDialog.value.novaData);
+        const dataOriginal = new Date(reagendamentoDialog.value.dataOriginal);
+        
+        // Comparar apenas as datas, sem considerar as horas
+        novaData.setHours(0, 0, 0, 0);
+        dataOriginal.setHours(0, 0, 0, 0);
+        
+        if (novaData < dataOriginal) {
+          reagendamentoDialog.value.dataError = 'A nova data deve ser posterior à data original do processo';
+          valido = false;
+        }
+      }
+      
+      // Validar hora
+      if (!reagendamentoDialog.value.novaHora) {
+        reagendamentoDialog.value.horaError = 'Hora é obrigatória';
+        valido = false;
+      } else {
+        const [horas, minutos] = reagendamentoDialog.value.novaHora.split(':').map(Number);
+        if (horas < 8 || horas > 18 || (horas === 18 && minutos > 0)) {
+          reagendamentoDialog.value.horaError = 'A hora deve estar entre 08:00 e 18:00';
+          valido = false;
+        }
+      }
+      
+      return valido;
     };
 
     // Função para confirmar reagendamento
@@ -2694,6 +2740,7 @@ export default {
       confirmarTemNovaData,
       confirmSemNovaData,
       confirmarReagendamento,
+      validarDataHora,
 
     }
   }
