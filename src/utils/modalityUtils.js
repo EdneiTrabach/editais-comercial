@@ -23,6 +23,9 @@ export const MODALIDADES = {
   'srp': 'Sistema de Registro de Preços',
   'srp_eletronico': 'Sistema de Registro de Preços Eletrônico',
   'srp_internacional': 'Sistema de Registro de Preços Internacional',
+  'dispensa': 'Dispensa de Licitação',
+  'dispensa_eletronica': 'Dispensa Eletrônica',
+  'dispensa_email': 'Dispensa por E-mail',
 }
 
 // Lista completa de modalidades que podem requerer plataforma digital
@@ -41,14 +44,13 @@ export const MODALIDADES_ELETRONICAS = [
   'srp_internacional',
   'srp_eletronico',
   'rdc',
-  'toma_precos',
+  'dispensa_eletronica',
 ]
 
 // Prazos mínimos em dias úteis para cada modalidade
 export const PRAZOS_MINIMOS = {
   'pregao_eletronico': 8,
   'pregao_presencial': 8,
-  'tomada_precos': 15,
   'concorrencia': 30,
   'leilao': 15,
   'rdc_eletronico': 10,
@@ -90,7 +92,11 @@ export function mapearModalidade(modalidadeTexto) {
     'tp': 'tomada_precos',
     'convite': 'convite',
     'chamada pública': 'chamada_publica',
-    'dispensa de licitação': 'dispensa'
+    'dispensa de licitação': 'dispensa',
+    'dispensa eletrônica': 'dispensa_eletronica',
+    'dispensa por e-mail': 'dispensa_email',
+    'dispensa por email': 'dispensa_email',
+    'cotação eletrônica': 'dispensa_eletronica',
   }
 
   const modalidadeLower = (modalidadeTexto || '').toLowerCase().trim()
@@ -108,4 +114,22 @@ export function mapearModalidade(modalidadeTexto) {
   }
   
   return ''
+}
+
+/**
+ * Verifica se a modalidade é do tipo dispensa eletrônica
+ * @param {string} modalidade - Código da modalidade
+ * @returns {boolean}
+ */
+export function isDispensaEletronica(modalidade) {
+  return modalidade === 'dispensa_eletronica';
+}
+
+/**
+ * Verifica se a modalidade é do tipo dispensa por e-mail
+ * @param {string} modalidade - Código da modalidade
+ * @returns {boolean}
+ */
+export function isDispensaEmail(modalidade) {
+  return modalidade === 'dispensa_email';
 }

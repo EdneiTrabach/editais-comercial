@@ -62,3 +62,17 @@
 .shepherd-modal-overlay-container.shepherd-modal-is-visible {
   z-index: 9999;
 }
+
+.email-container {
+  width: 100%;
+}
+
+.email-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+}

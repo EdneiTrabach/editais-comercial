@@ -75,15 +75,16 @@
             <RequiredLabel text="Modalidade" :isRequired="true" />
             <select v-model="formData.modalidade" required @change="handleModalidadeChange" class="responsavel-select">
               <option value="">Selecione...</option>
-              <option value="pregao_eletronico">Pregão Eletrônico</option>
-              <option value="pregao_presencial">Pregão Presencial</option>
-              <option value="credenciamento">Credenciamento</option>
+              <option value="chamamento_publico">Chamamento Público</option>
               <option value="concorrencia">Concorrência</option>
               <option value="concurso">Concurso</option>
-              <option value="leilao">Leilão</option>
+              <option value="credenciamento">Credenciamento</option>
               <option value="dialogo_competitivo">Diálogo Competitivo</option>
-              <option value="tomada_precos">Tomada de Preços</option>
-              <option value="chamamento_publico">Chamamento Público</option>
+              <option value="dispensa_eletronica">Dispensa Eletrônica</option>
+              <option value="dispensa_email">Dispensa por E-mail</option>
+              <option value="leilao">Leilão</option>
+              <option value="pregao_eletronico">Pregão Eletrônico</option>
+              <option value="pregao_presencial">Pregão Presencial</option>
               <option value="rdc">RDC</option>
               <option value="rdc_eletronico">RDC Eletrônico</option>
               <option value="srp">SRP</option>
@@ -93,7 +94,7 @@
           </div>
 
           <!-- Campo de Plataforma -->
-          <div class="form-group" v-if="showPlataformaField">
+          <div class="form-group" v-if="showPlataformaField && formData.modalidade !== 'dispensa_email'">
             <RequiredLabel text="Plataforma" :isRequired="true" />
             <div class="plataforma-container">
               <select v-model="formData.site_pregao" required>
@@ -102,6 +103,20 @@
                   {{ plataforma.nome }}
                 </option>
               </select>
+            </div>
+          </div>
+
+          <!-- Campo de E-mail para Dispensa por E-mail -->
+          <div class="form-group" v-if="formData.modalidade === 'dispensa_email'">
+            <RequiredLabel text="E-mail para Envio" :isRequired="true" />
+            <div class="email-container">
+              <textarea 
+                v-model="formData.site_pregao" 
+                placeholder="Insira o e-mail para envio da documentação" 
+                required 
+                rows="3"
+                class="email-textarea">
+              </textarea>
             </div>
           </div>
 
