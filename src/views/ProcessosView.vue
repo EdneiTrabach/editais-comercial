@@ -97,11 +97,6 @@
                 </div>
                 <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
-
-              <!-- Coluna de ações fixa e não reordenável -->
-              <th class="actions-header" style="position: sticky; right: 0; z-index: 15; background: #f8f9fa;">
-                Ações
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -112,23 +107,6 @@
                   {{ truncateUrl(plataforma.url) }}
                 </a>
               </td>
-              <!-- Outras colunas... -->
-
-              <!-- Substitua a célula de ações atual por esta: -->
-              <td class="actions-cell" style="position: sticky; right: 0; z-index: 20; background: white;">
-                <div class="action-buttons">
-                  <!-- Botão de edição -->
-                  <!-- <button class="btn-icon edit" @click.stop="editPlataforma(plataforma)" title="Editar">
-                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
-                  </button> -->
-
-                  <!-- Botão de exclusão -->
-                  <button class="btn-icon delete" @click.stop="confirmarExclusao(plataforma)" title="Excluir">
-                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
-                  </button>
-                </div>
-              </td>
-
 
             </tr>
             <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
@@ -378,16 +356,6 @@
               </span>
 </template>
 </td>
-
-<!-- Célula de ações (sempre no final) -->
-<td class="actions-cell" style="position: sticky; right: 0; z-index: 20; background: white;">
-  <div class="action-buttons">
-    <button class="btn-icon delete" @click.stop="handleDelete(processo)" title="Excluir">
-      <img src="/icons/lixeira.svg" alt="Excluir" class="icon icon-delete"/>
-    </button>
-  </div>
-</td>
-
 
 <!-- Row resize handle -->
 <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>

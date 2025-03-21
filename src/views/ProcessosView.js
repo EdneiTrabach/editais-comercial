@@ -721,13 +721,6 @@ export default {
       router.push('/editais')
     }
 
-    const handleDelete = (processo) => {
-      deleteConfirmDialog.value = {
-        show: true,
-        processo
-      }
-    }
-
     const hideDeleteDialog = () => {
       deleteConfirmDialog.value = {
         show: false,
@@ -2393,7 +2386,6 @@ export default {
       // Event handlers
       handleSidebarToggle,
       handleNewProcess,
-      handleDelete,
       hideDeleteDialog,
       confirmDelete,
       exportToExcel,
