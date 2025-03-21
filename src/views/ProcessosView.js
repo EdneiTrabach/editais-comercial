@@ -574,11 +574,12 @@ export default {
         // Guardar o ano selecionado atual
         const anoAtual = anoSelecionado.value;
 
-        // Query processes
+        // Query processes com ordenação composta
         const { data, error } = await supabase
           .from('processos')
           .select(`*`)
-          .order('data_pregao', { ascending: true });
+          .order('data_pregao', { ascending: true })
+          .order('created_at', { ascending: true }); // Segundo critério de ordenação
 
         if (error) throw error;
 
@@ -895,7 +896,19 @@ export default {
           if (field === 'data_pregao') {
             const dateA = new Date(a[field] || '1900-01-01');
             const dateB = new Date(b[field] || '1900-01-01');
-            comparison = dateA - dateB;
+            
+            // Primeiro comparamos as datas de pregão
+            const dateDiff = dateA - dateB;
+            
+            if (dateDiff === 0) {
+              // Se as datas forem iguais, use created_at como critério secundário
+              // Registros mais recentes primeiro
+              const createdAtA = new Date(a.created_at || '1900-01-01');
+              const createdAtB = new Date(b.created_at || '1900-01-01');
+              comparison = createdAtB - createdAtA; // Ordem decrescente por created_at
+            } else {
+              comparison = dateDiff;
+            }
           }
           // Ordenação para campos de texto
           else if (typeof a[field] === 'string' && typeof b[field] === 'string') {
@@ -2524,7 +2537,7 @@ export default {
           data_pregao: reagendamentoDialog.value.novaData,
           hora_pregao: reagendamentoDialog.value.novaHora,
           status: novoStatus, // Usar o status determinado acima
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString() // Garantir timestamp atual
         };
 
         console.log('Dados do novo processo a ser inserido:', novoProcesso);
