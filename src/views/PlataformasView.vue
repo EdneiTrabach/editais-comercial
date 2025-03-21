@@ -106,34 +106,34 @@
       <h2 class="modal-title-cfg-usuarios">{{ editingId ? 'Editar' : 'Nova' }} Plataforma</h2>
       <form @submit.prevent="handleSubmit" class="form-cfg-usuarios">
         <!-- Dados básicos sempre visíveis -->
-        <div class="form-group-cfg-usuarios">
+        <div class="form-group-cfg-usuarios-plataformas">
           <label class="label-cfg-usuarios">Nome da Plataforma*</label>
           <input v-model="formData.nome" required type="text" class="input-cfg-usuarios" />
         </div>
 
-        <div class="form-group-cfg-usuarios">
+        <div class="form-group-cfg-usuarios-plataformas">
           <label class="label-cfg-usuarios">URL*</label>
           <input v-model="formData.url" required type="url" class="input-cfg-usuarios" />
         </div>
 
         <!-- Campos específicos quando tem empresa selecionada -->
         <template v-if="selectedEmpresa">
-          <div class="form-group-cfg-usuarios">
+          <div class="form-group-cfg-usuarios-plataformas">
             <label class="label-cfg-usuarios">Login</label>
             <input v-model="formData.login" type="text" class="input-cfg-usuarios" placeholder="Digite o login para acesso" />
           </div>
 
-          <div class="form-group-cfg-usuarios">
+          <div class="form-group-cfg-usuarios-plataformas">
             <label class="label-cfg-usuarios">Senha</label>
             <input v-model="formData.senha" type="text" class="input-cfg-usuarios" placeholder="Digite a senha para consulta" />
           </div>
 
-          <div class="form-group-cfg-usuarios">
+          <div class="form-group-cfg-usuarios-plataformas">
             <label class="label-cfg-usuarios">Validade do Certificado</label>
             <input v-model="formData.data_validade" type="date" class="input-cfg-usuarios" />
           </div>
 
-          <div class="form-group-cfg-usuarios">
+          <div class="form-group-cfg-usuarios-plataformas">
             <label class="label-cfg-usuarios">Observações</label>
             <textarea v-model="formData.observacoes" rows="3" class="input-cfg-usuarios"></textarea>
           </div>
@@ -141,7 +141,7 @@
 
         <!-- Vincular empresas quando não tem empresa selecionada -->
         <template v-else>
-          <div class="form-group-cfg-usuarios">
+          <div class="form-group-cfg-usuarios-plataformas">
             <label class="label-cfg-usuarios">Vincular Empresas</label>
             <div class="empresas-grid">
               <div 

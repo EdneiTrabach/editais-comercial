@@ -220,29 +220,38 @@ export default {
         
         loading.value = true
         
-        // Verifica se email já existe
-        const { data: existingUser, error: checkError } = await supabase
+        // 1. Verifica se email já existe na tabela responsaveis_processos
+        const { data: existingUserResp, error: checkErrorResp } = await supabase
           .from('responsaveis_processos')
           .select('id')
           .eq('email', newResponsavel.value.email.trim())
         
-        if (checkError) throw checkError
+        if (checkErrorResp) throw checkErrorResp
         
-        if (existingUser && existingUser.length > 0) {
-          showToastMessage('Este email já está cadastrado', 'error')
+        if (existingUserResp && existingUserResp.length > 0) {
+          showToastMessage('Este email já está cadastrado como responsável', 'error')
           return
         }
         
-        // Insere novo responsável
+        // 2. Verifica também se o email existe na tabela profiles
+        const { data: existingUserProfile, error: checkErrorProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', newResponsavel.value.email.trim())
+        
+        if (checkErrorProfile) throw checkErrorProfile
+        
+        if (existingUserProfile && existingUserProfile.length > 0) {
+          showToastMessage('Este email já está em uso por outro usuário do sistema', 'error')
+          return
+        }
+        
+        // 3. Insere apenas na tabela de responsáveis, sem usar RLS ou triggers
         const { error } = await supabase
-          .from('responsaveis_processos')
-          .insert({
-            nome: newResponsavel.value.nome.trim(),
-            email: newResponsavel.value.email.trim(),
-            departamento: newResponsavel.value.departamento.trim() || null,
-            status: 'ACTIVE',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+          .rpc('adicionar_responsavel', {
+            p_nome: newResponsavel.value.nome.trim(),
+            p_email: newResponsavel.value.email.trim(),
+            p_departamento: newResponsavel.value.departamento.trim() || null
           })
         
         if (error) throw error

@@ -862,3 +862,11 @@ td.actions {
 .btn-confirm.delete:hover {
   background-color: #b91c1c;
 }
+
+.form-group-cfg-usuarios-plataformas{
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  /* margin: 1.5rem 0; */
+}
+
