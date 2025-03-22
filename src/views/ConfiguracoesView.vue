@@ -2,7 +2,7 @@
   <div class="layout-cfg-usuarios">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
     
-    <div class="main-content-cfg-usuarios" :class="{ 'expanded': !isSidebarExpanded }">
+    <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header-cfg-usuarios">
         <h1 class="title-cfg-usuarios">Administração de Usuários</h1>
         <div class="actions-cfg-usuarios">

@@ -2,7 +2,7 @@
   <div class="layout-resp-admin">
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
     
-    <div class="main-content-resp-admin" :class="{ 'expanded': !isSidebarExpanded }">
+    <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header-resp-admin">
         <h1 class="title-resp-admin">Administração de Responsáveis</h1>
         <div class="actions-resp-admin">

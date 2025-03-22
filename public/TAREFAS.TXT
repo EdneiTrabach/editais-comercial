@@ -1,12 +1,21 @@
 
 1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vaia analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
-2 - notificar processos suspenso adiado, para acompanhamento se republicou ou se reabriu
+
 4 - notificar impugnacao, colocar o prazo, na celula de impgunacao, e ao colocar o prazo, itens propicios a impugnar - botar uma lista de itens mais impugnados ultimamente ()checklist, 08 das manha no dia do prazo, tem que impugnar mesmo?
+
+
 5 - data da analise tecnica para notificacao com o prazo final 
+
+
 6 - tela de analise =, com o modelo de planilha de analise que ja usam hoje, sistema/nao atende / total =% de analise
+
+
 3 - notificar sistemas que estao em analises e nao foram analisados ainda
 
 8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
+
 9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 
+
 10 - criar um sistema de envio automatico de e-mails de publicacoes, email generico para teste, podemo separar por estado e regioes. se nao der certo podemos criar um script de envio de email pre montado. 
+
 11 - criar mais paletas de temas customizados 

@@ -350,17 +350,17 @@
 
                   <!-- Default display for other fields -->
                   <template v-else-if="coluna.campo === 'status'">
-  <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
-  <span 
-    class="status-display" 
-    :class="getStatusClass(processo)"
-    @mouseenter="showStatusInfo(processo, $event)" 
-    @mouseleave="hideStatusInfo"
-    :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"
-  >
-    {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
-  </span>
-</template>
+                    <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
+                    <span 
+                      class="status-display" 
+                      :class="getStatusClass(processo)"
+                      @mouseenter="showStatusInfo(processo, $event)" 
+                      @mouseleave="hideStatusInfo"
+                      :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"
+                    >
+                      {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
+                    </span>
+                  </template>
 
                   <!-- Default display for other fields -->
                   <span v-else>
