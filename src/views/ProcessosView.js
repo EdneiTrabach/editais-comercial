@@ -10,6 +10,8 @@ import '../assets/styles/dark-mode.css'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
 import { useResponsaveis } from '@/composables/useResponsaveis'
+import { useProcessoUpdate } from '@/composables/useProcessoUpdate';
+import { processScheduledNotifications } from '@/api/notificationsApi';
 
 export default {
   name: 'ProcessosView',
@@ -1698,6 +1700,16 @@ export default {
         // Adicionar dentro de onMounted()
         document.addEventListener('keydown', handleKeyDown);
 
+        // Verificar e processar notificações agendadas
+        try {
+          const result = await processScheduledNotifications();
+          if (result.success && result.count > 0) {
+            showToast(`${result.count} notificações enviadas automaticamente`, 'info');
+          }
+        } catch (error) {
+          console.error('Erro ao processar notificações agendadas:', error);
+        }
+
       } catch (error) {
         console.error('Error in component initialization:', error)
       }
@@ -2489,100 +2501,199 @@ export default {
 
     // Função para confirmar reagendamento
     const confirmarReagendamento = async () => {
+      if (!reagendamentoDialog.value.processo) return;
+      
       try {
-        // 1. Atualizar o processo original para o novo status
-        await atualizarStatusProcesso(
-          reagendamentoDialog.value.processo, 
-          reagendamentoDialog.value.status
+        // Validar data/hora
+        // ...existing validation code...
+        
+        // Preparar dados adicionais com a nova data
+        let additionalData = {};
+        if (reagendamentoDialog.value.novaData) {
+          additionalData.data_pregao = reagendamentoDialog.value.novaData;
+          additionalData.hora_pregao = reagendamentoDialog.value.novaHora || '10:00';
+        }
+        
+        // Alterar status do processo e agendar notificações
+        const result = await updateProcessoStatus(
+          reagendamentoDialog.value.processo.id,
+          reagendamentoDialog.value.status,
+          additionalData
         );
-
-        // 2. Duplicar o processo com a nova data
-        const processoOriginal = reagendamentoDialog.value.processo;
         
-        // Remover campos que não devem ser duplicados
-        const { 
-          id, 
-          created_at, 
-          updated_at, 
-          updated_by, 
-          sistemas_nomes, // Remover este campo calculado
-          _distancias, // Remover possíveis campos temporários
-          ...dadosProcesso 
-        } = processoOriginal;
-        
-        // Determinar o status para o novo processo
-        // Se for demonstração, mantém como demonstração, caso contrário usa em_analise
-        const novoStatus = reagendamentoDialog.value.status === 'demonstracao' 
-          ? 'demonstracao' 
-          : 'em_analise';
-        
-        // Extrair o ano da nova data
-        const novoAno = new Date(reagendamentoDialog.value.novaData).getFullYear();
-        
-        // Atualizar o número do processo para refletir o novo ano se for diferente
-        let numeroProcesso = dadosProcesso.numero_processo;
-        if (novoAno !== parseInt(dadosProcesso.ano)) {
-          // Manter apenas o número, substituindo o ano pelo novo
-          const partes = numeroProcesso.split('/');
-          if (partes.length > 1) {
-            numeroProcesso = `${partes[0]}/${novoAno}`;
-          }
+        if (result.success) {
+          showToast(`Processo ${reagendamentoDialog.value.status.toLowerCase()} com sucesso!`, 'success');
+          loadProcessosAno(anoSelecionado.value);
+          hideReagendamentoDialog();
+        } else {
+          showToast(result.message, 'error');
         }
-        
-        // Criar o novo processo com os dados atualizados
-        const novoProcesso = {
-          ...dadosProcesso,
-          numero_processo: numeroProcesso,
-          ano: novoAno, // Atualizar o ano para o novo ano
-          data_pregao: reagendamentoDialog.value.novaData,
-          hora_pregao: reagendamentoDialog.value.novaHora,
-          status: novoStatus, // Usar o status determinado acima
-          created_at: new Date().toISOString() // Garantir timestamp atual
-        };
-
-        console.log('Dados do novo processo a ser inserido:', novoProcesso);
-
-        // Inserir o novo processo no banco
-        const { data: novoProcessoData, error } = await supabase
-          .from('processos')
-          .insert(novoProcesso)
-          .select();
-
-        if (error) throw error;
-
-        // Registrar log da duplicação
-        if (novoProcessoData && novoProcessoData[0]) {
-          await logSystemAction({
-            tipo: 'duplicacao',
-            tabela: 'processos',
-            registro_id: novoProcessoData[0].id,
-            campo_alterado: 'todos',
-            dados_anteriores: null,
-            dados_novos: novoProcesso
-          });
-        }
-
-        // Recarregar processos
-        await loadProcessos();
-        
-        // Atualizar o ano selecionado para o novo ano após recarregar
-        anoSelecionado.value = novoAno;
-        
-        // Mensagem personalizada baseada no tipo de operação
-        const mensagem = reagendamentoDialog.value.status === 'demonstracao' 
-          ? `Demonstração agendada com sucesso para ${novoAno}` 
-          : `Processo reagendado com sucesso para ${novoAno}`;
-        
-        showToast(mensagem, 'success');
-        hideReagendamentoDialog();
       } catch (error) {
-        console.error('Erro ao reagendar processo:', error);
-        showToast('Erro ao reagendar processo', 'error');
+        console.error(`Erro ao ${reagendamentoDialog.value.status.toLowerCase()} processo:`, error);
+        showToast(`Erro ao ${reagendamentoDialog.value.status.toLowerCase()} processo`, 'error');
       }
+    };
+
+    // Função para tratar atualização de status
+    const handleStatusUpdate = async (statusData) => {
+      // Recarregar a lista de processos para refletir a mudança
+      await loadProcessosAno(anoSelecionado.value);
+      
+      // Mostrar feedback ao usuário
+      showToast(`Status do processo atualizado para ${statusData.newStatus}`, 'success');
+    };
+
+    // Adicionar essas variáveis e funções para o controle de status
+    const selectedStatusMap = ref({});
+    const nextNotificationDateMap = ref({});
+    const { updateProcessoStatus } = useProcessoUpdate();
+    
+    // Remover a definição de statusOptions e usar o statusMap existente
+    const statusOptions = computed(() => {
+      // Obter as chaves e valores do statusMap na função formatStatus
+      const statusMap = {
+        'vamos_participar': 'Vamos Participar',
+        'em_analise': 'Em Análise',
+        'em_andamento': 'Em Andamento',
+        'ganhamos': 'Ganhamos',
+        'perdemos': 'Perdemos',
+        'suspenso': 'Suspenso',
+        'revogado': 'Revogado',
+        'adiado': 'Adiado',
+        'demonstracao': 'Demonstração',
+        'cancelado': 'Cancelado',
+        'nao_participar': 'Decidido Não Participar'
+      };
+      
+      // Transformar em array no formato esperado
+      return Object.entries(statusMap).map(([value, label]) => ({
+        value,
+        label
+      }));
+    });
+    
+    const getStatusClass = (processo) => {
+      const status = selectedStatusMap.value[processo.id] || processo.status;
+      return `status-${status.toLowerCase()}`;
+    };
+    
+    const isRecurringStatus = (processo) => {
+      const status = selectedStatusMap.value[processo.id] || processo.status;
+      return ['suspenso', 'adiado', 'demonstracao'].includes(status);
+    };
+    
+    const handleStatusChange = async (processo, event) => {
+      const newStatus = event.target.value;
+      if (newStatus === processo.status) return;
+      
+      selectedStatusMap.value[processo.id] = newStatus;
+      
+      const result = await updateProcessoStatus(
+        processo.id, 
+        newStatus
+      );
+      
+      if (result.success) {
+        handleStatusUpdate({
+          id: processo.id,
+          newStatus,
+          oldStatus: processo.status
+        });
+        
+        if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(newStatus)) {
+          loadNextNotificationDate(processo.id, newStatus);
+        }
+      } else {
+        // Reverter para o status anterior em caso de erro
+        delete selectedStatusMap.value[processo.id];
+        event.target.value = processo.status;
+        alert(`Erro ao alterar status: ${result.message}`);
+      }
+    };
+    
+    const loadNextNotificationDate = async (processoId, status) => {
+      try {
+        nextNotificationDateMap.value[processoId] = 'calculando...';
+        
+        const { data, error } = await supabase
+          .from('notification_schedules')
+          .select('next_notification')
+          .eq('processo_id', processoId)
+          .eq('active', true)
+          .order('next_notification', { ascending: true })
+          .limit(1)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data) {
+          const date = new Date(data.next_notification);
+          nextNotificationDateMap.value[processoId] = date.toLocaleDateString('pt-BR');
+        } else {
+          nextNotificationDateMap.value[processoId] = 'Amanhã';
+        }
+      } catch (error) {
+        console.error('Erro ao carregar próxima data de notificação:', error);
+        nextNotificationDateMap.value[processoId] = 'Não disponível';
+      }
+    };
+    
+    // Atualizar função de carregamento de processos para inicializar o estado do status
+    const loadProcessosAno = async (ano) => {
+      // ...existing code...
+      
+      // Inicializar o status selecionado para todos os processos
+      processos.value.forEach(processo => {
+        if (!selectedStatusMap.value[processo.id]) {
+          selectedStatusMap.value[processo.id] = processo.status;
+        }
+        
+        // Verificar se precisa carregar a próxima data de notificação
+        if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(processo.status)) {
+          loadNextNotificationDate(processo.id, processo.status);
+        }
+      });
+    };
+
+    // Adicionar dentro do objeto setup() antes do return
+    const statusInfoBalloon = ref({
+      show: false,
+      processo: null,
+      nextNotification: '',
+      position: {
+        top: '0px',
+        left: '0px'
+      }
+    });
+
+    const showStatusInfo = (processo, event) => {
+      // Só mostrar o balão se o status requer notificações
+      if (!isRecurringStatus(processo)) return;
+      
+      // Calcular posição para o balão (abaixo do cursor)
+      const x = event.clientX;
+      const y = event.clientY;
+      
+      statusInfoBalloon.value = {
+        show: true,
+        processo: processo,
+        nextNotification: nextNotificationDateMap.value[processo.id] || 'calculando...',
+        position: {
+          top: `${y + 25}px`,
+          left: `${x - 150}px` // Centralizado em relação ao cursor
+        }
+      };
+    };
+
+    const hideStatusInfo = () => {
+      statusInfoBalloon.value.show = false;
     };
 
     // Return all reactive properties and methods for the template
     return {
+      // ...existing return variables...
+      handleStatusUpdate,
+
       // Estado, dados, etc...
 
       // Funções auxiliares
@@ -2755,6 +2866,19 @@ export default {
       confirmarReagendamento,
       validarDataHora,
 
+      // Adicionar variáveis e funções do controle de status
+      selectedStatusMap,
+      nextNotificationDateMap,
+      statusOptions,
+      getStatusClass,
+      isRecurringStatus,
+      handleStatusChange,
+      loadNextNotificationDate,
+
+      // Adicionar no return
+      statusInfoBalloon,
+      showStatusInfo,
+      hideStatusInfo,
     }
   }
 }

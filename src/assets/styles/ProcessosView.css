@@ -14,3 +14,12 @@
 @import 'components/distancias.css';
 @import 'components/actions.css';
 
+/* Adicione em algum arquivo CSS relevante */
+.status-display {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 120px;
+  text-align: center;
+}

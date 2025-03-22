@@ -114,6 +114,7 @@
               <!-- Células de dados ordenáveis -->
               <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
                 @dblclick="handleDblClick(coluna.campo, processo, $event)">
+                
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                   <!-- Analysis Code field -->
@@ -179,9 +180,14 @@
                   </select>
 
                   <!-- Status field -->
-                  <select v-else-if="coluna.campo === 'status'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    class="status-select">
+                  <select v-else-if="coluna.campo === 'status'" 
+                    v-model="editingCell.value"
+                    @change="handleUpdate(processo)" 
+                    @blur="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
+                    class="status-select"
+                    :class="getStatusClass(processo)"
+                    :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''">
                     <option value="">Selecione um status...</option>
                     <option value="em_analise">Em Análise</option>
                     <option value="em_andamento">Em Andamento</option>
@@ -232,21 +238,21 @@
                 <!-- View Mode -->
                 <template v-else>
                   <!-- Date field -->
-                  <template v-if="coluna.campo === 'data_pregao'">
+                  <span v-if="coluna.campo === 'data_pregao'">
                     {{ formatDate(processo.data_pregao) }}
-                  </template>
+                  </span>
 
                   <!-- Time field -->
-                  <template v-else-if="coluna.campo === 'hora_pregao'">
+                  <span v-else-if="coluna.campo === 'hora_pregao'">
                     {{ formatTime(processo.hora_pregao) }}
-                  </template>
+                  </span>
 
                   <!-- Modality field -->
-                  <template v-else-if="coluna.campo === 'modalidade'">
+                  <span v-else-if="coluna.campo === 'modalidade'">
                     <span :title="formatModalidadeCompleta(processo.modalidade)">
                       {{ getModalidadeSigla(processo.modalidade) }}
                     </span>
-                  </template>
+                  </span>
 
                   <!-- Object fields -->
                   <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
@@ -265,7 +271,7 @@
                   </span>
 
                   <!-- Site field -->
-                  <template v-else-if="coluna.campo === 'site_pregao'">
+                  <span v-else-if="coluna.campo === 'site_pregao'">
                     <div class="portal-link">
                       <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
                         rel="noopener noreferrer" class="portal-button">
@@ -273,374 +279,395 @@
                       </a>
                       <span v-else>-</span>
                     </div>
-                  </template>
-
-                  <!-- Status field -->
-                  <span v-else-if="coluna.campo === 'status'" :class="['status', processo.status]">
-                    {{ formatStatus(processo.status) }}
                   </span>
 
                   <!-- Company field -->
-                  <template v-else-if="coluna.campo === 'empresa_id'">
+                  <span v-else-if="coluna.campo === 'empresa_id'">
                     <div class="responsavel-container"
                       @dblclick="handleDblClickEmpresa(coluna.campo, processo, $event)">
                       <span class="responsavel-display">
                         {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
                       </span>
                     </div>
-                  </template>
+                  </span>
 
                   <!-- Distances field -->
-              <td v-else-if="coluna.campo === 'distancias'">
-                <div class="distancias-stack">
-                  <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                    {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
-                  </div>
-                </div>
+                  <span v-else-if="coluna.campo === 'distancias'">
+                    <div class="distancias-stack">
+                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                      </div>
+                    </div>
+                  </span>
+
+                  <!-- Systems field -->
+                  <span v-else-if="coluna.campo === 'sistemas_ativos'">
+                    <div class="sistemas-chips">
+                      <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
+                        {{ getSistemasNomesString(processo.sistemas_ativos) }}
+                      </div>
+                      <div v-else class="sem-sistemas">-</div>
+                    </div>
+                  </span>
+
+                  <!-- Distance type display -->
+                  <span v-else-if="coluna.tipoExibicao === 'distancia'">
+                    <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
+                      <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
+                        {{ formatarDistancia(processo) }}
+                      </div>
+                      <div v-else class="distancia-multiple">
+                        <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
+                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                            {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
+                              distancia.ponto_referencia_uf }})
+                          </div>
+                        </span>
+                        <span v-else class="sem-distancia">Clique para adicionar</span>
+                      </div>
+                    </div>
+                  </span>
+
+                  <!-- Representative ID field -->
+                  <span v-else-if="coluna.campo === 'representante_id'">
+                    <div class="responsavel-container"
+                      @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
+                      <span class="responsavel-display">
+                        {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
+                      </span>
+                    </div>
+                  </span>
+
+                  <!-- Responsible ID field -->
+                  <span v-else-if="coluna.campo === 'responsavel_id'">
+                    <div class="responsavel-container"
+                      @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
+                      <span class="responsavel-display">
+                        {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
+                      </span>
+                    </div>
+                  </span>
+
+                  <!-- Default display for other fields -->
+                  <template v-else-if="coluna.campo === 'status'">
+  <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
+  <span 
+    class="status-display" 
+    :class="getStatusClass(processo)"
+    @mouseenter="showStatusInfo(processo, $event)" 
+    @mouseleave="hideStatusInfo"
+    :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"
+  >
+    {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
+  </span>
+</template>
+
+                  <!-- Default display for other fields -->
+                  <span v-else>
+                    {{ processo[coluna.campo] || '-' }}
+                  </span>
+                </template>
               </td>
 
-              <!-- Systems field -->
-              <template v-else-if="coluna.campo === 'sistemas_ativos'">
-                <div class="sistemas-chips">
-                  <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
-                    {{ getSistemasNomesString(processo.sistemas_ativos) }}
-                  </div>
-                  <div v-else class="sem-sistemas">-</div>
-                </div>
-              </template>
-
-              <!-- Distance type display -->
-              <template v-else-if="coluna.tipoExibicao === 'distancia'">
-                <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
-                  <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
-                    {{ formatarDistancia(processo) }}
-                  </div>
-                  <div v-else class="distancia-multiple">
-                    <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
-                      <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                        {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
-                          distancia.ponto_referencia_uf }})
-                      </div>
-                    </span>
-                    <span v-else class="sem-distancia">Clique para adicionar</span>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Representative ID field -->
-              <template v-else-if="coluna.campo === 'representante_id'">
-                <div class="responsavel-container"
-                  @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
-                  <span class="responsavel-display">
-                    {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
-                  </span>
-                </div>
-              </template>
-
-              <!-- Responsible ID field -->
-              <template v-else-if="coluna.campo === 'responsavel_id'">
-                <div class="responsavel-container"
-                  @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
-                  <span class="responsavel-display">
-                    {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
-                  </span>
-                </div>
-              </template>
-
-              <!-- Default display for other fields -->
-              <span v-else>
-                {{ processo[coluna.campo] || '-' }}
-              </span>
-</template>
-</td>
-
-<!-- Row resize handle -->
-<div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-</tr>
-</tbody>
-</table>
-</div>
-
-<!-- Year tabs -->
-<div class="anos-tabs">
-  <div class="tabs-header">
-    <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
-      @click="selecionarAno(ano)">
-      {{ ano }}
-    </button>
-  </div>
-</div>
-
-<!-- Confirm dialog -->
-<div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
-  <div class="confirm-content">
-    <p>Deseja editar este campo?</p>
-    <div class="confirm-actions">
-      <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-      <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Delete confirm dialog -->
-<div v-if="deleteConfirmDialog.show" class="modal-overlay">
-  <div class="confirm-dialog">
-    <div class="confirm-content">
-      <h3>Confirmar Exclusão</h3>
-      <p>Tem certeza que deseja excluir este processo?</p>
-      <p class="warning-text">Esta ação não poderá ser desfeita!</p>
-      <div class="confirm-actions">
-        <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
-        <button class="btn-confirm delete" @click="confirmDelete">
-          Excluir
-        </button>
+              <!-- Row resize handle -->
+              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- Systems dialog -->
-<div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
-  <div class="sistemas-dialog-content">
-    <h3>Selecionar Sistemas</h3>
-    <div class="sistemas-selected">
-      <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
-        {{ getSistemaNome(id) }}
-        <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+      <!-- Year tabs -->
+      <div class="anos-tabs">
+        <div class="tabs-header">
+          <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+            @click="selecionarAno(ano)">
+            {{ ano }}
+          </button>
+        </div>
       </div>
-    </div>
-    <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-      <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
-        :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-        {{ sistema.nome }}
-      </option>
-    </select>
-    <div class="sistemas-dialog-actions">
-      <button @click="saveSistemas" class="btn-confirm">Salvar</button>
-      <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
 
-<!-- Dialog para gerenciar distâncias -->
-<div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
-  <div class="distancia-dialog-content">
-    <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
-
-    <div class="distancias-list">
-      <table class="distancias-table">
-        <thead>
-          <tr>
-            <th>Distância (km)</th>
-            <th>Cidade</th>
-            <th>UF</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
-            <td>{{ distancia.distancia_km }}</td>
-            <td>{{ distancia.ponto_referencia_cidade }}</td>
-            <td>{{ distancia.ponto_referencia_uf }}</td>
-            <td class="distancia-acoes">
-              <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
-                <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
-              </button>
-              <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
-                <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
-              </button>
-            </td>
-          </tr>
-          <tr v-if="distanciaDialog.distancias.length === 0">
-            <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="distancia-form">
-      <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Distância (km)</label>
-          <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
-            placeholder="Digite a distância" />
+      <!-- Confirm dialog -->
+      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+        <div class="confirm-content">
+          <p>Deseja editar este campo?</p>
+          <div class="confirm-actions">
+            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
+            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+          </div>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label>Cidade</label>
-          <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
-            placeholder="Digite a cidade" />
+      <!-- Delete confirm dialog -->
+      <div v-if="deleteConfirmDialog.show" class="modal-overlay">
+        <div class="confirm-dialog">
+          <div class="confirm-content">
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir este processo?</p>
+            <p class="warning-text">Esta ação não poderá ser desfeita!</p>
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideDeleteDialog">Cancelar</button>
+              <button class="btn-confirm delete" @click="confirmDelete">
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label>UF</label>
-          <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
-            <option value="">Selecione</option>
-            <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-              {{ estado.uf }}
+      <!-- Systems dialog -->
+      <div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+        <div class="sistemas-dialog-content">
+          <h3>Selecionar Sistemas</h3>
+          <div class="sistemas-selected">
+            <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+              {{ getSistemaNome(id) }}
+              <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+            </div>
+          </div>
+          <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+            <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
+              :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+              {{ sistema.nome }}
             </option>
           </select>
+          <div class="sistemas-dialog-actions">
+            <button @click="saveSistemas" class="btn-confirm">Salvar</button>
+            <button @click="hideSistemasDialog" class="btn-cancel">Cancelar</button>
+          </div>
         </div>
       </div>
 
-      <div class="form-actions">
-        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
-          Salvar Alterações
-        </button>
-        <button v-else class="btn-add" @click="adicionarDistancia">
-          Adicionar
-        </button>
+      <!-- Dialog para gerenciar distâncias -->
+      <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
+        <div class="distancia-dialog-content">
+          <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
 
-        <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
-          Cancelar Edição
-        </button>
-      </div>
-    </div>
+          <div class="distancias-list">
+            <table class="distancias-table">
+              <thead>
+                <tr>
+                  <th>Distância (km)</th>
+                  <th>Cidade</th>
+                  <th>UF</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
+                  <td>{{ distancia.distancia_km }}</td>
+                  <td>{{ distancia.ponto_referencia_cidade }}</td>
+                  <td>{{ distancia.ponto_referencia_uf }}</td>
+                  <td class="distancia-acoes">
+                    <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
+                      <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
+                    </button>
+                    <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
+                      <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="distanciaDialog.distancias.length === 0">
+                  <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    <div class="dialog-footer">
-      <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
-    </div>
-  </div>
-</div>
+          <div class="distancia-form">
+            <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Distância (km)</label>
+                <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
+                  placeholder="Digite a distância" />
+              </div>
 
-<!-- Responsáveis dialog -->
-<div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
-  <div class="sistemas-dialog-content">
-    <h3>Selecionar Responsável</h3>
-    <div class="sistemas-selected">
-      <div v-if="editingCell.value" class="sistema-chip">
-        {{ getResponsavelProcessoNome(editingCell.value) }}
-        <span @click.stop="removerResponsavel()" class="sistema-remove">×</span>
-      </div>
-    </div>
-    <select class="sistemas-select" @change="handleResponsavelChange($event)">
-      <option value="">Sem responsável</option>
-      <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
-        :selected="editingCell.value === resp.id">
-        {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
-      </option>
-    </select>
-    <div class="sistemas-dialog-actions">
-      <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
-      <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
+              <div class="form-group">
+                <label>Cidade</label>
+                <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
+                  placeholder="Digite a cidade" />
+              </div>
 
-<!-- Representantes dialog -->
-<div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
-  <div class="sistemas-dialog-content">
-    <h3>Selecionar Representante</h3>
-    <div class="sistemas-selected">
-      <div v-if="editingCell.value" class="sistema-chip">
-        {{ getRepresentanteNome(editingCell.value) }}
-        <span @click.stop="removerRepresentante()" class="sistema-remove">×</span>
-      </div>
-    </div>
-    <select class="sistemas-select" @change="handleRepresentanteChange($event)">
-      <option value="">Sem representante</option>
-      <option v-for="rep in representantes" :key="rep.id" :value="rep.id" :selected="editingCell.value === rep.id">
-        {{ rep.nome }}
-      </option>
-    </select>
-    <div class="sistemas-dialog-actions">
-      <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
-      <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
+              <div class="form-group">
+                <label>UF</label>
+                <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
+                  <option value="">Selecione</option>
+                  <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                    {{ estado.uf }}
+                  </option>
+                </select>
+              </div>
+            </div>
 
-<!-- Empresas dialog -->
-<div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
-  <div class="sistemas-dialog-content">
-    <h3>Selecionar Empresa</h3>
-    <div class="sistemas-selected">
-      <div v-if="editingCell.value" class="sistema-chip">
-        {{ getEmpresaNome(editingCell.value) }}
-        <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
-      </div>
-    </div>
-    <select class="sistemas-select" @change="handleEmpresaChange($event)">
-      <option value="">Sem empresa</option>
-      <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
-        :selected="editingCell.value === empresa.id">
-        {{ empresa.nome }} <span v-if="empresa.cnpj" class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
-      </option>
-    </select>
-    <div class="sistemas-dialog-actions">
-      <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
-      <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
-    </div>
-  </div>
-</div>
+            <div class="form-actions">
+              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
+                Salvar Alterações
+              </button>
+              <button v-else class="btn-add" @click="adicionarDistancia">
+                Adicionar
+              </button>
 
-<!-- Dialog para reagendamento de processos -->
-<div v-if="reagendamentoDialog.show" class="modal-overlay">
-  <div class="confirm-dialog">
-    <div class="confirm-content">
-      <h3>{{ reagendamentoDialog.status === 'demonstracao' ? 'Agendamento de Demonstração' : 'Reagendamento do Processo' }}</h3>
-      <p>O processo "{{ reagendamentoDialog.processo?.numero_processo }}" foi marcado como 
-        {{ reagendamentoDialog.status === 'suspenso' ? 'SUSPENSO' : 
-           reagendamentoDialog.status === 'adiado' ? 'ADIADO' : 'DEMONSTRAÇÃO' }}.
-      </p>
-      <p>{{ reagendamentoDialog.status === 'demonstracao' ? 'Informe a data da demonstração:' : 'Já existe uma nova data para a reabertura deste processo?' }}</p>
-      
-      <div v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="form-row">
-        <div class="form-group">
-          <label>Nova Data</label>
-          <input type="date" v-model="reagendamentoDialog.novaData" 
-                 :min="reagendamentoDialog.dataOriginal" />
-          <span v-if="reagendamentoDialog.novaData" class="ano-hint">
-            Ano: {{ new Date(reagendamentoDialog.novaData).getFullYear() }}
-          </span>
-          <span v-if="reagendamentoDialog.dataError" class="error-message">
-            {{ reagendamentoDialog.dataError }}
-          </span>
-        </div>
-        <div class="form-group">
-          <label>Nova Hora</label>
-          <input type="time" v-model="reagendamentoDialog.novaHora" min="08:00" max="18:00" />
-          <span v-if="reagendamentoDialog.horaError" class="error-message">
-            {{ reagendamentoDialog.horaError }}
-          </span>
+              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
+                Cancelar Edição
+              </button>
+            </div>
+          </div>
+
+          <div class="dialog-footer">
+            <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
+          </div>
         </div>
       </div>
 
-      <div class="confirm-actions">
-        <button class="btn-cancel" @click="hideReagendamentoDialog">Cancelar</button>
-        <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-secondary" @click="confirmSemNovaData">
-          Não, apenas alterar o status
-        </button>
-        <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-confirm" @click="confirmarTemNovaData">
-          Sim, informar nova data
-        </button>
-        <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="btn-confirm" @click="confirmarReagendamento" 
-          :disabled="!reagendamentoDialog.novaData || !reagendamentoDialog.novaHora">
-          Confirmar {{ reagendamentoDialog.status === 'demonstracao' ? 'Demonstração' : 'Reagendamento' }}
-        </button>
+      <!-- Responsáveis dialog -->
+      <div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
+        <div class="sistemas-dialog-content">
+          <h3>Selecionar Responsável</h3>
+          <div class="sistemas-selected">
+            <div v-if="editingCell.value" class="sistema-chip">
+              {{ getResponsavelProcessoNome(editingCell.value) }}
+              <span @click.stop="removerResponsavel()" class="sistema-remove">×</span>
+            </div>
+          </div>
+          <select class="sistemas-select" @change="handleResponsavelChange($event)">
+            <option value="">Sem responsável</option>
+            <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
+              :selected="editingCell.value === resp.id">
+              {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
+            </option>
+          </select>
+          <div class="sistemas-dialog-actions">
+            <button @click="saveResponsavel" class="btn-confirm">Salvar</button>
+            <button @click="hideResponsaveisDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Representantes dialog -->
+      <div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
+        <div class="sistemas-dialog-content">
+          <h3>Selecionar Representante</h3>
+          <div class="sistemas-selected">
+            <div v-if="editingCell.value" class="sistema-chip">
+              {{ getRepresentanteNome(editingCell.value) }}
+              <span @click.stop="removerRepresentante()" class="sistema-remove">×</span>
+            </div>
+          </div>
+          <select class="sistemas-select" @change="handleRepresentanteChange($event)">
+            <option value="">Sem representante</option>
+            <option v-for="rep in representantes" :key="rep.id" :value="rep.id" :selected="editingCell.value === rep.id">
+              {{ rep.nome }}
+            </option>
+          </select>
+          <div class="sistemas-dialog-actions">
+            <button @click="saveRepresentante" class="btn-confirm">Salvar</button>
+            <button @click="hideRepresentantesDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empresas dialog -->
+      <div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
+        <div class="sistemas-dialog-content">
+          <h3>Selecionar Empresa</h3>
+          <div class="sistemas-selected">
+            <div v-if="editingCell.value" class="sistema-chip">
+              {{ getEmpresaNome(editingCell.value) }}
+              <span @click.stop="removerEmpresa()" class="sistema-remove">×</span>
+            </div>
+          </div>
+          <select class="sistemas-select" @change="handleEmpresaChange($event)">
+            <option value="">Sem empresa</option>
+            <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
+              :selected="editingCell.value === empresa.id">
+              {{ empresa.nome }} <span v-if="empresa.cnpj" class="empresa-cnpj">({{ formatCNPJ(empresa.cnpj) }})</span>
+            </option>
+          </select>
+          <div class="sistemas-dialog-actions">
+            <button @click="saveEmpresa" class="btn-confirm">Salvar</button>
+            <button @click="hideEmpresasDialog" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialog para reagendamento de processos -->
+      <div v-if="reagendamentoDialog.show" class="modal-overlay">
+        <div class="confirm-dialog">
+          <div class="confirm-content">
+            <h3>{{ reagendamentoDialog.status === 'demonstracao' ? 'Agendamento de Demonstração' : 'Reagendamento do Processo' }}</h3>
+            <p>O processo "{{ reagendamentoDialog.processo?.numero_processo }}" foi marcado como 
+              {{ reagendamentoDialog.status === 'suspenso' ? 'SUSPENSO' : 
+                 reagendamentoDialog.status === 'adiado' ? 'ADIADO' : 'DEMONSTRAÇÃO' }}.
+            </p>
+            <p>{{ reagendamentoDialog.status === 'demonstracao' ? 'Informe a data da demonstração:' : 'Já existe uma nova data para a reabertura deste processo?' }}</p>
+            
+            <div v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="form-row">
+              <div class="form-group">
+                <label>Nova Data</label>
+                <input type="date" v-model="reagendamentoDialog.novaData" 
+                       :min="reagendamentoDialog.dataOriginal" />
+                <span v-if="reagendamentoDialog.novaData" class="ano-hint">
+                  Ano: {{ new Date(reagendamentoDialog.novaData).getFullYear() }}
+                </span>
+                <span v-if="reagendamentoDialog.dataError" class="error-message">
+                  {{ reagendamentoDialog.dataError }}
+                </span>
+              </div>
+              <div class="form-group">
+                <label>Nova Hora</label>
+                <input type="time" v-model="reagendamentoDialog.novaHora" min="08:00" max="18:00" />
+                <span v-if="reagendamentoDialog.horaError" class="error-message">
+                  {{ reagendamentoDialog.horaError }}
+                </span>
+              </div>
+            </div>
+
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideReagendamentoDialog">Cancelar</button>
+              <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-secondary" @click="confirmSemNovaData">
+                Não, apenas alterar o status
+              </button>
+              <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-confirm" @click="confirmarTemNovaData">
+                Sim, informar nova data
+              </button>
+              <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="btn-confirm" @click="confirmarReagendamento" 
+                :disabled="!reagendamentoDialog.novaData || !reagendamentoDialog.novaHora">
+                Confirmar {{ reagendamentoDialog.status === 'demonstracao' ? 'Demonstração' : 'Reagendamento' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast-container">
+        <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
+          {{ toast.message }}
+        </div>
+      </div>
+
+      <!-- Tour component (movido para o final do template) -->
+      <Shepherd 
+        :steps="tourSteps" 
+        ref="tourGuide" 
+        :showButton="false"
+        @complete="onTourComplete"
+        @cancel="onTourCancel"
+      />
+
+      <!-- Balão de informações de status (posicionado no final do template, antes do fechamento da div main-content) -->
+      <div v-if="statusInfoBalloon.show" class="status-info-balloon" :style="statusInfoBalloon.position">
+        <div class="balloon-arrow"></div>
+        <div class="balloon-content">
+          <span class="info-icon">ℹ️</span>
+          <span class="info-text">
+            Notificações automáticas ativadas. 
+            Próxima notificação: {{ statusInfoBalloon.nextNotification || 'calculando...' }}
+          </span>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
-
-<div class="toast-container">
-  <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
-    {{ toast.message }}
-  </div>
-</div>
-
-<!-- Tour component (movido para o final do template) -->
-<Shepherd 
-  :steps="tourSteps" 
-  ref="tourGuide" 
-  :showButton="false"
-  @complete="onTourComplete"
-  @cancel="onTourCancel"
-/>
-
-</div>
-</div>
 </template>
 
 <script>
@@ -810,32 +837,3 @@ export default {
 <style src="/src/assets/styles/modules/toast.css"></style>
 <style src="/src/assets/styles/components/actions.css"></style>
 <style src="/src/assets/styles/components/filters.css"></style>
-
-<style>
-/* Estilos para o botão de tour */
-.btn-tour {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 6px 8px;
-  margin-right: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #333;
-}
-
-.btn-tour:hover {
-  background-color: #e0e0e0;
-}
-
-.btn-tour .icon {
-  width: 20px;
-  height: 20px;
-  color: #1976d2;
-}
-
-
-</style>

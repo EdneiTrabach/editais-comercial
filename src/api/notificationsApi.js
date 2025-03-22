@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { checkAndSendScheduledNotifications } from '@/utils/notificationScheduler';
 
 /**
  * Níveis de prioridade para notificações
@@ -140,4 +141,48 @@ export async function resolveNotification(notificationId, observation = '') {
     console.error('Erro ao resolver notificação:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Verifica e envia notificações agendadas
+ * @returns {Promise<Object>} Resultado da operação
+ */
+export async function processScheduledNotifications() {
+  try {
+    // Verificar se é um dia para enviar notificações
+    const today = new Date();
+    const isNotificationDay = shouldSendNotificationsToday();
+    
+    if (!isNotificationDay) {
+      return { success: true, message: 'Hoje não é um dia de envio de notificações', count: 0 };
+    }
+    
+    // Processar os agendamentos
+    const result = await checkAndSendScheduledNotifications();
+    
+    return {
+      success: result.success,
+      message: result.success 
+        ? `${result.count} notificações agendadas enviadas com sucesso`
+        : 'Erro ao enviar notificações agendadas',
+      count: result.count
+    };
+  } catch (error) {
+    console.error('Erro ao processar notificações agendadas:', error);
+    return { success: false, error, message: 'Erro ao processar notificações agendadas' };
+  }
+}
+
+/**
+ * Verifica se hoje é um dia para enviar notificações
+ * @returns {boolean}
+ */
+function shouldSendNotificationsToday() {
+  // Obter o timestamp atual
+  const now = new Date();
+  
+  // Verificar se é um dia par ou ímpar (1, 3, 5... enviam; 2, 4, 6... não enviam)
+  const day = now.getDate();
+  
+  return day % 2 === 1; // Retorna true para dias ímpares
 }
