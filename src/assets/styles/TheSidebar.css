@@ -473,6 +473,13 @@
   border: 1px solid #e5e7eb;
 }
 
+.icon-pin {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1); /* Torna o ícone branco */
+  opacity: 0.9;
+}
+
 .light-preview {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }

@@ -6,7 +6,9 @@
       'pinned': isPinned
     }">
       <div class="sidebar-trigger" @click="toggleSidebar" :title="sidebarTriggerTooltip">
-        <span>{{ !isActive ? '▶' : (isPinned ? '📌' : '◀') }}</span>
+        <span v-if="!isActive">▶</span>
+        <img v-else-if="isPinned" src="/icons/pin.svg" alt="Fixado" class="icon-pin" />
+        <span v-else>◀</span>
       </div>
 
       <div class="sidebar-header">
@@ -15,7 +17,7 @@
         </div>
         <div class="sidebar-title">Editais</div>
         <button class="tour-button" @click="startTour" title="Iniciar tour guiado">
-          <img src="/icons/question-circle.svg" alt="Tour" class="icon" onerror="this.src='/icons/question.svg'"/>
+          <img src="/icons/question-circle.svg" alt="Tour" class="icon" onerror="this.src='/icons/question.svg'" />
         </button>
       </div>
 
@@ -53,7 +55,7 @@
               <span class="link-text">Declarações</span>
             </router-link>
           </li>
-          
+
           <li>
             <router-link to="/sistemas" class="sidebar-menu-link" v-slot="{ isActive }">
               <img src="/icons/app.svg" alt="Sistemas" class="icon" />
@@ -112,7 +114,7 @@
               <img src="/icons/palette.svg" alt="Temas" class="icon" />
               <span class="link-text">Temas</span>
             </button>
-            
+
             <!-- Dropdown de temas -->
             <div class="theme-dropdown" v-if="showThemeSelector">
               <button class="theme-option" @click="setTheme('light')" :class="{ active: currentTheme === 'light' }">
@@ -151,7 +153,8 @@
                 <div class="theme-preview orange-preview"></div>
                 <span>Laranja</span>
               </button>
-              <button class="theme-option" @click="setTheme('baby-blue')" :class="{ active: currentTheme === 'baby-blue' }">
+              <button class="theme-option" @click="setTheme('baby-blue')"
+                :class="{ active: currentTheme === 'baby-blue' }">
                 <div class="theme-preview baby-blue-preview"></div>
                 <span>Azul Bebê</span>
               </button>
@@ -175,12 +178,8 @@
       </div>
     </nav>
     <Shepherd :steps="tourSteps" ref="tourGuide" :showButton="false" />
-    <NotificationsPanel 
-      v-if="showNotificationsPanel" 
-      :show="showNotificationsPanel" 
-      @close="showNotificationsPanel = false"
-      @count-updated="updateNotificationsCount"
-    />
+    <NotificationsPanel v-if="showNotificationsPanel" :show="showNotificationsPanel"
+      @close="showNotificationsPanel = false" @count-updated="updateNotificationsCount" />
   </div>
 </template>
 
