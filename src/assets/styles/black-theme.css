@@ -1,0 +1,55 @@
+/* Variáveis do tema preto */
+:root[data-theme="black"] {
+  /* Cores de fundo */
+  --bg-primary: #18181b;
+  --bg-secondary: #27272a;
+  --bg-tertiary: #3f3f46;
+  
+  /* Cores de texto */
+  --text-primary: #f4f4f5;
+  --text-secondary: #e4e4e7;
+  --text-muted: #a1a1aa;
+  
+  /* Cores de borda */
+  --border-color: #52525b;
+  --border-color-hover: #71717a;
+  
+  /* Cores de ação */
+  --action-primary: #d4d4d8;
+  --action-primary-hover: #a1a1aa;
+  --action-secondary: #71717a;
+  --action-secondary-hover: #52525b;
+  
+  /* Cores de status */
+  --status-success: #4ade80;
+  --status-warning: #fb923c;
+  --status-error: #f87171;
+  --status-info: #60a5fa;
+}
+
+/* Estilos base para o tema preto */
+[data-theme="black"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Sidebar no tema preto */
+[data-theme="black"] .sidebar {
+  background: linear-gradient(180deg, #09090b 0%, #18181b 100%);
+  border-right: 1px solid #3f3f46;
+}
+
+[data-theme="black"] .sidebar-trigger {
+  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+}
+
+[data-theme="black"] .sidebar-menu-link:hover,
+[data-theme="black"] .sidebar-menu-link.router-link-active {
+  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
+  border-left: 3px solid #d4d4d8;
+}
+
+[data-theme="black"] .bottom-section {
+  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+  border-top: 1px solid rgba(82, 82, 91, 0.2);
+}

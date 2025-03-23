@@ -1,0 +1,91 @@
+/* Variáveis do tema vermelho */
+:root[data-theme="red"] {
+  /* Cores de fundo */
+  --bg-primary: #fff5f5;
+  --bg-secondary: #fef2f2;
+  --bg-tertiary: #fee2e2;
+  
+  /* Cores de texto */
+  --text-primary: #7f1d1d;
+  --text-secondary: #991b1b;
+  --text-muted: #b91c1c;
+  
+  /* Cores de borda */
+  --border-color: #fecaca;
+  --border-color-hover: #fca5a5;
+  
+  /* Cores de ação */
+  --action-primary: #dc2626;
+  --action-primary-hover: #b91c1c;
+  --action-secondary: #ef4444;
+  --action-secondary-hover: #dc2626;
+  
+  /* Cores de status */
+  --status-success: #15803d;
+  --status-warning: #ea580c;
+  --status-error: #be123c;
+  --status-info: #0369a1;
+}
+
+/* Estilos base para o tema vermelho */
+[data-theme="red"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Sidebar no tema vermelho */
+[data-theme="red"] .sidebar {
+  background: linear-gradient(180deg, #7f1d1d 0%, #991b1b 100%);
+  border-right: 1px solid #fecaca;
+}
+
+[data-theme="red"] .sidebar-trigger {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+}
+
+[data-theme="red"] .sidebar-menu-link:hover,
+[data-theme="red"] .sidebar-menu-link.router-link-active {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+  border-left: 3px solid #fca5a5;
+}
+
+[data-theme="red"] .bottom-section {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  border-top: 1px solid rgba(252, 165, 165, 0.2);
+}
+
+/* Botões no tema vermelho */
+[data-theme="red"] .btn-primary {
+  background-color: var(--action-primary);
+  color: white;
+}
+
+[data-theme="red"] .btn-primary:hover {
+  background-color: var(--action-primary-hover);
+}
+
+/* Tabela no tema vermelho */
+[data-theme="red"] .excel-table th {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+  border-bottom: 2px solid #fecaca;
+}
+
+[data-theme="red"] .excel-table td {
+  border-color: #fecaca;
+}
+
+[data-theme="red"] .excel-table tbody tr:hover td {
+  background-color: #fff1f1 !important;
+}
+
+/* Status no tema vermelho */
+[data-theme="red"] .status.ganhamos {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+[data-theme="red"] .status.perdemos {
+  background: #ffe4e6;
+  color: #be123c;
+}

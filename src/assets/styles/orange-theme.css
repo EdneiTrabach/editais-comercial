@@ -1,0 +1,55 @@
+/* Variáveis do tema laranja */
+:root[data-theme="orange"] {
+  /* Cores de fundo */
+  --bg-primary: #fff7ed;
+  --bg-secondary: #ffedd5;
+  --bg-tertiary: #fed7aa;
+  
+  /* Cores de texto */
+  --text-primary: #9a3412;
+  --text-secondary: #c2410c;
+  --text-muted: #ea580c;
+  
+  /* Cores de borda */
+  --border-color: #fdba74;
+  --border-color-hover: #fb923c;
+  
+  /* Cores de ação */
+  --action-primary: #f97316;
+  --action-primary-hover: #ea580c;
+  --action-secondary: #fb923c;
+  --action-secondary-hover: #f97316;
+  
+  /* Cores de status */
+  --status-success: #15803d;
+  --status-warning: #b45309;
+  --status-error: #dc2626;
+  --status-info: #0369a1;
+}
+
+/* Estilos base para o tema laranja */
+[data-theme="orange"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Sidebar no tema laranja */
+[data-theme="orange"] .sidebar {
+  background: linear-gradient(180deg, #c2410c 0%, #9a3412 100%);
+  border-right: 1px solid #fed7aa;
+}
+
+[data-theme="orange"] .sidebar-trigger {
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+}
+
+[data-theme="orange"] .sidebar-menu-link:hover,
+[data-theme="orange"] .sidebar-menu-link.router-link-active {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  border-left: 3px solid #fdba74;
+}
+
+[data-theme="orange"] .bottom-section {
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+  border-top: 1px solid rgba(253, 186, 116, 0.2);
+}

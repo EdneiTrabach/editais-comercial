@@ -107,11 +107,56 @@
         </ul>
 
         <div class="bottom-section">
-          <button class="theme-toggle sidebar-menu-link" @click="toggleDarkMode">
-            <img :src="isDarkMode ? '/icons/sun.svg' : '/icons/moon.svg'" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'"
-              class="icon" />
-            <span class="link-text">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-          </button>
+          <div class="theme-selector">
+            <button class="theme-toggle sidebar-menu-link" @click="toggleThemeSelector">
+              <img src="/icons/palette.svg" alt="Temas" class="icon" />
+              <span class="link-text">Temas</span>
+            </button>
+            
+            <!-- Dropdown de temas -->
+            <div class="theme-dropdown" v-if="showThemeSelector">
+              <button class="theme-option" @click="setTheme('light')" :class="{ active: currentTheme === 'light' }">
+                <div class="theme-preview light-preview"></div>
+                <span>Claro</span>
+              </button>
+              <button class="theme-option" @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }">
+                <div class="theme-preview dark-preview"></div>
+                <span>Escuro</span>
+              </button>
+              <button class="theme-option" @click="setTheme('red')" :class="{ active: currentTheme === 'red' }">
+                <div class="theme-preview red-preview"></div>
+                <span>Vermelho</span>
+              </button>
+              <button class="theme-option" @click="setTheme('yellow')" :class="{ active: currentTheme === 'yellow' }">
+                <div class="theme-preview yellow-preview"></div>
+                <span>Amarelo</span>
+              </button>
+              <button class="theme-option" @click="setTheme('purple')" :class="{ active: currentTheme === 'purple' }">
+                <div class="theme-preview purple-preview"></div>
+                <span>Roxo</span>
+              </button>
+              <button class="theme-option" @click="setTheme('green')" :class="{ active: currentTheme === 'green' }">
+                <div class="theme-preview green-preview"></div>
+                <span>Verde</span>
+              </button>
+              <button class="theme-option" @click="setTheme('black')" :class="{ active: currentTheme === 'black' }">
+                <div class="theme-preview black-preview"></div>
+                <span>Preto</span>
+              </button>
+              <button class="theme-option" @click="setTheme('pink')" :class="{ active: currentTheme === 'pink' }">
+                <div class="theme-preview pink-preview"></div>
+                <span>Rosa</span>
+              </button>
+              <button class="theme-option" @click="setTheme('orange')" :class="{ active: currentTheme === 'orange' }">
+                <div class="theme-preview orange-preview"></div>
+                <span>Laranja</span>
+              </button>
+              <button class="theme-option" @click="setTheme('baby-blue')" :class="{ active: currentTheme === 'baby-blue' }">
+                <div class="theme-preview baby-blue-preview"></div>
+                <span>Azul Bebê</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Novo botão de notificações -->
           <button class="notifications-btn sidebar-menu-link" @click="toggleNotifications">

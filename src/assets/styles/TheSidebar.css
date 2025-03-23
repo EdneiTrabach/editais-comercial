@@ -402,3 +402,113 @@
 .shepherd-enabled .sidebar.active {
   left: 0 !important;
 }
+
+/* Adicione estes estilos no final do arquivo */
+
+/* Seletor de temas */
+.theme-selector {
+  position: relative;
+  width: 100%;
+}
+
+.theme-dropdown {
+  position: initial;
+  left: 100%;
+  bottom: 0;
+  width: 160px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-theme="dark"] .theme-dropdown {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-align: left;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .theme-option {
+  color: #e5e7eb;
+}
+
+.theme-option:hover {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] .theme-option:hover {
+  background: #334155;
+}
+
+.theme-option.active {
+  background: #e5e7eb;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .theme-option.active {
+  background: #2d3748;
+}
+
+.theme-preview {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+}
+
+.light-preview {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dark-preview {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.red-preview {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
+}
+
+.yellow-preview {
+  background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+}
+
+.purple-preview {
+  background: linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%);
+}
+
+.green-preview {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+}
+
+.black-preview {
+  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+}
+
+.pink-preview {
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+}
+
+.orange-preview {
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+}
+
+.baby-blue-preview {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}

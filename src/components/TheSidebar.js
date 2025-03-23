@@ -5,6 +5,14 @@ import { SupabaseManager } from '@/lib/supabaseManager'
 import Shepherd from '../components/Shepherd.vue';
 import NotificationsPanel from '../components/notifications/NotificationsPanel.vue';
 import { getUnreadNotificationsCount } from '@/api/notificationsApi';
+import '../assets/styles/red-theme.css'
+import '../assets/styles/baby-blue-theme.css'
+import '../assets/styles/green-theme.css'
+import '../assets/styles/purple-theme.css'
+import '../assets/styles/yellow-theme.css'
+import '../assets/styles/orange-theme.css'
+import '../assets/styles/pink-theme.css'
+import '../assets/styles/black-theme.css'
 
 export default {
   name: 'TheSidebar',
@@ -24,6 +32,8 @@ export default {
     const isPinned = ref(false)
     const isDarkMode = ref(false)
     const unreadNotifications = ref(0)
+    const currentTheme = ref(localStorage.getItem('theme') || 'light')
+    const showThemeSelector = ref(false)
     
     // Texto do tooltip para o botão de toggle
     const sidebarTriggerTooltip = computed(() => {
@@ -276,10 +286,8 @@ export default {
     }
 
     // Alternar tema claro/escuro
-    const toggleDarkMode = () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark')
-      localStorage.setItem('theme', isDark ? 'light' : 'dark')
+    const toggleThemeSelector = () => {
+      showThemeSelector.value = !showThemeSelector.value
     }
 
     // Fazer logout do sistema
@@ -386,6 +394,8 @@ export default {
       // Carregar tema
       const savedTheme = localStorage.getItem('theme') || 'light'
       document.documentElement.setAttribute('data-theme', savedTheme)
+      currentTheme.value = savedTheme
+      isDarkMode.value = savedTheme === 'dark'
       
       try {
         // Verificar sessão e autenticação
@@ -484,6 +494,21 @@ export default {
       }, 300);
     }
 
+    const setTheme = (theme) => {
+      currentTheme.value = theme
+      document.documentElement.setAttribute('data-theme', theme)
+      localStorage.setItem('theme', theme)
+      showThemeSelector.value = false
+      // Atualize também a variável isDarkMode para compatibilidade
+      isDarkMode.value = theme === 'dark'
+    }
+
+    document.addEventListener('click', (e) => {
+      if (showThemeSelector.value && !e.target.closest('.theme-selector')) {
+        showThemeSelector.value = false
+      }
+    })
+
     return {
       // Estado
       isAdmin,
@@ -497,17 +522,20 @@ export default {
       sidebarTriggerTooltip,
       showNotificationsPanel,
       notificationPanelPosition,
+      currentTheme,
+      showThemeSelector,
       
       // Métodos
       toggleSidebar,
       adjustMainContent,
-      toggleDarkMode,
+      toggleThemeSelector,
       handleLogout,
       toggleNotifications,
       checkNotifications,
       handleAdminClick,
       startTour,
-      updateNotificationsCount
+      updateNotificationsCount,
+      setTheme
     }
   }
 }

@@ -1,0 +1,55 @@
+/* Variáveis do tema azul bebê */
+:root[data-theme="baby-blue"] {
+  /* Cores de fundo */
+  --bg-primary: #eff6ff;
+  --bg-secondary: #dbeafe;
+  --bg-tertiary: #bfdbfe;
+  
+  /* Cores de texto */
+  --text-primary: #1e40af;
+  --text-secondary: #1d4ed8;
+  --text-muted: #3b82f6;
+  
+  /* Cores de borda */
+  --border-color: #93c5fd;
+  --border-color-hover: #60a5fa;
+  
+  /* Cores de ação */
+  --action-primary: #3b82f6;
+  --action-primary-hover: #2563eb;
+  --action-secondary: #60a5fa;
+  --action-secondary-hover: #3b82f6;
+  
+  /* Cores de status */
+  --status-success: #15803d;
+  --status-warning: #ea580c;
+  --status-error: #dc2626;
+  --status-info: #0369a1;
+}
+
+/* Estilos base para o tema azul bebê */
+[data-theme="baby-blue"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Sidebar no tema azul bebê */
+[data-theme="baby-blue"] .sidebar {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  border-right: 1px solid #bfdbfe;
+}
+
+[data-theme="baby-blue"] .sidebar-trigger {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+[data-theme="baby-blue"] .sidebar-menu-link:hover,
+[data-theme="baby-blue"] .sidebar-menu-link.router-link-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-left: 3px solid #93c5fd;
+}
+
+[data-theme="baby-blue"] .bottom-section {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  border-top: 1px solid rgba(147, 197, 253, 0.2);
+}
