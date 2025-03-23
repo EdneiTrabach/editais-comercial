@@ -23,7 +23,6 @@
 @import 'badges.css';
 @import 'cards.css';
 @import 'ConfiguracoesView.css';
-@import 'dark-mode.css';
 @import 'EditaisView.css';
 @import 'EmpresasView.css';
 @import 'FuncionalidadeView.css';
@@ -38,18 +37,18 @@
 @import 'RepresentantesView.css';
 @import 'ResponsaveisAdminView.css'; /* Adicione esta linha */
 @import 'SistemasView.css';
-@import 'theme.css';
 @import 'UsuariosView.css';
 @import 'VagasView.css';
 @import 'VencedoresView.css';
 @import 'VinculosView.css';
 @import 'VotacoesView.css';
-@import 'dark-mode.css';
-@import 'red-theme.css';
-@import 'yellow-theme.css';
-@import 'purple-theme.css';
-@import 'green-theme.css';
-@import 'black-theme.css';
-@import 'pink-theme.css';
-@import 'orange-theme.css';
-@import 'baby-blue-theme.css';
+@import './themes/theme.css';
+@import './themes/dark-mode.css';
+@import './themes/red-theme.css';
+@import './themes/yellow-theme.css';
+@import './themes/purple-theme.css';
+@import './themes/green-theme.css';
+@import './themes/black-theme.css';
+@import './themes/pink-theme.css';
+@import './themes/orange-theme.css';
+@import './themes/baby-blue-theme.css';

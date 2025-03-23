@@ -5,14 +5,14 @@ import { SupabaseManager } from '@/lib/supabaseManager'
 import Shepherd from '../components/Shepherd.vue';
 import NotificationsPanel from '../components/notifications/NotificationsPanel.vue';
 import { getUnreadNotificationsCount } from '@/api/notificationsApi';
-import '../assets/styles/red-theme.css'
-import '../assets/styles/baby-blue-theme.css'
-import '../assets/styles/green-theme.css'
-import '../assets/styles/purple-theme.css'
-import '../assets/styles/yellow-theme.css'
-import '../assets/styles/orange-theme.css'
-import '../assets/styles/pink-theme.css'
-import '../assets/styles/black-theme.css'
+import '../assets/styles/themes/red-theme.css'
+import '../assets/styles/themes/baby-blue-theme.css'
+import '../assets/styles/themes/green-theme.css'
+import '../assets/styles/themes/purple-theme.css'
+import '../assets/styles/themes/yellow-theme.css'
+import '../assets/styles/themes/orange-theme.css'
+import '../assets/styles/themes/pink-theme.css'
+import '../assets/styles/themes/black-theme.css'
 
 export default {
   name: 'TheSidebar',

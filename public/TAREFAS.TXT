@@ -1,30 +1,22 @@
-
 1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vaia analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
+8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
 
 4 - notificar impugnacao, colocar o prazo, na celula de impgunacao, e ao colocar o prazo, itens propicios a impugnar - botar uma lista de itens mais impugnados ultimamente ()checklist, 08 das manha no dia do prazo, tem que impugnar mesmo?
+13 - COLOCAR ITENS MAIS IMPUGNADOS COMO CHECKLIST PARA OS USUARIOS QUANDO COLOCAR ALGUMA INFORMACAO NO CAMPOD DE IMPUGNACOES 
 
 
 5 - data da analise tecnica para notificacao com o prazo final 
-
-
 6 - tela de analise =, com o modelo de planilha de analise que ja usam hoje, sistema/nao atende / total =% de analise
-
-
 3 - notificar sistemas que estao em analises e nao foram analisados ainda
-
-8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
-
-9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 
-
-10 - criar um sistema de envio automatico de e-mails de publicacoes, email generico para teste, podemo separar por estado e regioes. se nao der certo podemos criar um script de envio de email pre montado. 
-
-11 - criar mais paletas de temas customizados 
 
 12 - COLOCAR NOTIFICACAO 2 DIAS ANTES PARA INICIAR CONFERENCIA DA DOCUMENTACAO 
 
-13 - COLOCAR ITENS MAIS IMPUGNADOS COMO CHECKLIST PARA OS USUARIOS QUANDO COLOCAR ALGUMA INFORMACAO NO CAMPOD DE IMPUGNACOES 
+10 - criar um sistema de envio automatico de e-mails de publicacoes, email generico para teste, podemo separar por estado e regioes. se nao der certo podemos criar um script de envio de email pre montado. 
 
 14 - DISTANCIAS POR ESTADO NAO ESTA CERTO, QUANDO SELECIONA O ESTADO LA EM CIMA, AS CIDADES DOS CAMPOS DE BAIXO NAO ESTAO PUXANDO CORRETAMENTE, PRA ISSO PRECISO VERIFICAR SE ESTA COM ALGUMA INCONSISTENCIA NOS ESTADOS SELECIONADOS, E EU PRECISO QUE OS CALCULOS POSSAM SER ENTRE VARIOS ESTADOS E CIDADES DIFERENTES, MAS O PRIMEIRO PARAMETRO QUE CARREGA PARA O USUARIO TEM QUE SER O QUE ELE ESCOLHEU NO CAMPO DE ESTADO DO CADASTRO DA PUBLICACAO 
 
+16 - CORRIGIR FILTROS DAS COLUNAS 
+
 15 - MELHORAR DASHBOARD COM FILTROS DIVERSOS E VARIAS FORMAS DE EXIBIÇAO 
 
+9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 

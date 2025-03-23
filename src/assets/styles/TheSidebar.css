@@ -12,7 +12,7 @@
   top: 0;
   height: 96%;
   width: 260px;
-  background: linear-gradient(135deg,#193155,#254677);
+  background: linear-gradient(135deg, #193155, #254677);
   /* Bordô elegante */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -37,7 +37,8 @@
 }
 
 .sidebar.pinned .sidebar-trigger {
-  background: linear-gradient(135deg,#193155,#254677);;
+  background: linear-gradient(135deg, #193155, #254677);
+  ;
   /* Tom mais escuro quando fixado */
 }
 
@@ -71,7 +72,8 @@
   right: -32px;
   top: 50%;
   transform: translateY(-50%);
-  background: linear-gradient(135deg,#193155,#254677);;
+  background: linear-gradient(135deg, #193155, #254677);
+  ;
   /* Mesma cor do topo do sidebar */
   width: 35px;
   height: 75px;
@@ -224,7 +226,7 @@
 
 .sidebar-menu-link:hover,
 .sidebar-menu-link.router-link-active {
-  background: linear-gradient(135deg,#193155,#254677);
+  background: linear-gradient(135deg, #193155, #254677);
   /* Bordô transparente para hover */
   border-left: 3px solid #77b2d9;
   /* Detalhe em cobre */
@@ -245,7 +247,8 @@
   border-radius: 10px;
   border-top: 1px solid rgba(217, 142, 119, 0.2);
   /* Separador em cobre sutil */
-  background: linear-gradient(135deg,#193155,#254677);;
+  background: linear-gradient(135deg, #193155, #254677);
+  ;
   overflow-x: hidden;
   /* Previne scroll horizontal */
   width: 100%;
@@ -415,15 +418,20 @@
   position: initial;
   left: 100%;
   bottom: 0;
-  width: 160px;
+  width: 245px;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
   padding: 8px;
-  display: flex;
+  display: grid;
   flex-direction: column;
   gap: 8px;
+  justify-content: space-around;
+  align-items: center;
+  align-content: center;
+  justify-items: stretch;
+  grid-template-columns: 1fr 1fr;
 }
 
 [data-theme="dark"] .theme-dropdown {
@@ -476,7 +484,8 @@
 .icon-pin {
   width: 20px;
   height: 20px;
-  filter: brightness(0) invert(1); /* Torna o ícone branco */
+  filter: brightness(0) invert(1);
+  /* Torna o ícone branco */
   opacity: 0.9;
 }
 

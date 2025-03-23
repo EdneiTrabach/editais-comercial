@@ -119,7 +119,7 @@
             <div class="theme-dropdown" v-if="showThemeSelector">
               <button class="theme-option" @click="setTheme('light')" :class="{ active: currentTheme === 'light' }">
                 <div class="theme-preview light-preview"></div>
-                <span>Claro</span>
+                <span>Padrão</span>
               </button>
               <button class="theme-option" @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }">
                 <div class="theme-preview dark-preview"></div>

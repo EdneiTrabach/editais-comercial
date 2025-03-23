@@ -2,8 +2,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createAppService } from './services/appService'
-import './assets/styles/theme.css'
-import './assets/styles/dark-mode.css'
+import './assets/styles/themes/theme.css'
+import './assets/styles/themes/dark-mode.css'
 
 // Função para reconectar quando a aplicação voltar a ser visível
 const setupVisibilityHandling = () => {
