@@ -75,6 +75,67 @@
   padding: 16px;
 }
 
+.form-group .ano-hint {
+  display: block;
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 4px;
+}
+
+.analise-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.analise-data small {
+  color: #666;
+  font-size: 0.8em;
+  margin-top: 2px;
+}
+
+.analise-data .prazo {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.analise-cell {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.analise-cell small {
+  color: #666;
+  font-size: 0.8em;
+  margin-top: 2px;
+}
+
+.analise-cell .prazo {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.btn-small {
+  padding: 2px 5px;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+.btn-add-analise {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  position: absolute;
+  right: 5px;
+  top: 0;
+}
+
+.btn-add-analise:hover {
+  background-color: #2980b9;
+}
+
 .form-group label {
   display: block;
   margin-bottom: 8px;

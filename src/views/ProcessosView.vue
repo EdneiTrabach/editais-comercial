@@ -113,7 +113,8 @@
 
               <!-- Células de dados ordenáveis -->
               <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
-                @dblclick="handleDblClick(coluna.campo, processo, $event)">
+                :class="{ 'selecionada': selectedRow === processo.id }"
+                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : handleCellDblClick($event, coluna.campo, processo)">
                 
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
@@ -366,6 +367,24 @@
                   <span v-else>
                     {{ processo[coluna.campo] || '-' }}
                   </span>
+
+                  <!-- Tratamento especial para coluna codigo_analise -->
+                  <div v-if="coluna.campo === 'codigo_analise'" class="analise-cell">
+                    <template v-if="processo.codigo_analise">
+                      <!-- Se já tem código de análise, mostra só o GPI e prazo -->
+                      <span class="codigo-gpi">
+                        <!-- GPI: {{ processo.codigo_gpi }} -->
+                        <span v-if="processo.prazo_analise" class="prazo">
+                          (Prazo: {{ formatDate(processo.prazo_analise) }})
+                        </span>
+                      </span>
+                    </template>
+                    <template v-else>
+                      <!-- Se não tem código, mostra o botão de adicionar -->
+                      <span>Definir análise</span>
+                      <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button>
+                    </template>
+                  </div>
                 </template>
               </td>
 
@@ -639,6 +658,62 @@
         </div>
       </div>
 
+      <!-- Diálogo para detalhes de análise -->
+      <div v-if="analiseDialog.show" class="modal-overlay">
+        <div class="confirm-dialog analise-dialog">
+          <div class="confirm-content">
+            <h3>Detalhes da Análise</h3>
+            <p>Processo: {{ analiseDialog.processo?.numero_processo }}</p>
+            
+            <!-- <div class="form-row">
+              <div class="form-group">
+                <label>Código de análise</label>
+                <input 
+                  type="text" 
+                  v-model="analiseDialog.codigoAnalise" 
+                  placeholder="Código de análise"
+                />
+              </div>
+            </div> -->
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Código de análise no GPI</label>
+                <input 
+                  type="text" 
+                  v-model="analiseDialog.codigoGPI" 
+                  placeholder="Digite o código GPI" 
+                  required 
+                />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Prazo final para resposta da análise</label>
+                <input 
+                  type="date" 
+                  v-model="analiseDialog.prazoResposta" 
+                  :min="new Date().toISOString().split('T')[0]" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideAnaliseDialog">Cancelar</button>
+              <button 
+                class="btn-confirm" 
+                @click="salvarAnalise" 
+                :disabled="!this.analiseDialog.codigoGPI || !this.analiseDialog.prazoResposta"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="toast-container">
         <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
           {{ toast.message }}
@@ -674,6 +749,21 @@
 // Import the component logic from the separate JS file
 import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
+import { supabase } from '@/lib/supabase'; // Adicione esta importação
+
+// Para uso no Vue DevTools ou em um componente temporário
+async function checkTableStructure() {
+  const { data, error } = await supabase
+    .from('notification_schedules')
+    .select('*')
+    .limit(1);
+  
+  if (data && data.length > 0) {
+    console.log("Estrutura da tabela:", Object.keys(data[0]));
+  } else {
+    console.log("Não foi possível obter a estrutura da tabela");
+  }
+}
 
 // Export the component with the imported logic
 export default {
@@ -827,6 +917,140 @@ export default {
     onTourCancel() {
       if (typeof this.showToast === 'function') {
         this.showToast('Tour cancelado. Você pode iniciá-lo novamente a qualquer momento.', 'info');
+      }
+    },
+    // Função para salvar os detalhes da análise
+    async salvarAnalise() {
+      try {
+        if (!this.analiseDialog.processo || !this.analiseDialog.codigoGPI || !this.analiseDialog.prazoResposta) {
+          this.showToast('Preencha todos os campos obrigatórios', 'error');
+          return;
+        }
+
+        // Formatar a data corretamente para o banco
+        const prazoFormatado = this.analiseDialog.prazoResposta instanceof Date 
+          ? this.analiseDialog.prazoResposta.toISOString().split('T')[0] 
+          : this.analiseDialog.prazoResposta;
+
+        // 1. Atualizar o registro do processo com o código de análise
+        const updateData = {
+          codigo_analise: this.analiseDialog.codigoGPI,
+          codigo_gpi: this.analiseDialog.codigoGPI,
+          prazo_analise: prazoFormatado,
+          updated_at: new Date().toISOString()
+        };
+
+        // Adicionar usuário que está fazendo a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        // Atualizar no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', this.analiseDialog.processo.id);
+
+        if (error) throw error;
+
+        // 2. Programar notificação para o prazo final - CORREÇÃO AQUI
+        const notificationData = {
+          processo_id: this.analiseDialog.processo.id,
+          status: 'analise',
+          // Usar o campo message como mostrado nos dados de exemplo
+          message: `Prazo final para análise do processo ${this.analiseDialog.processo.numero_processo} (Código GPI: ${this.analiseDialog.codigoGPI})`,
+          next_notification: new Date(prazoFormatado).toISOString(),
+          last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          active: true
+        };
+
+        // Inserir no sistema de notificações
+        const { error: notificationError } = await supabase
+          .from('notification_schedules')
+          .insert(notificationData);
+
+        if (notificationError) throw notificationError;
+
+        // Recarregar os dados - IMPORTANTE: Use a função do seu ViewModel
+        try {
+          if (ProcessosViewModel.methods && ProcessosViewModel.methods.loadProcessos) {
+            await ProcessosViewModel.methods.loadProcessos();
+          } else {
+            // Fallback: carregar de outra forma
+            const { data } = await supabase
+              .from('processos')
+              .select('*')
+              .order('data_pregao', { ascending: true })
+              .order('created_at', { ascending: true });
+              
+            if (data) {
+              // Atualizar os dados no componente
+              this.$root.$emit('processos-updated', data);
+            }
+          }
+        } catch (loadError) {
+          console.error('Erro ao recarregar processos:', loadError);
+        }
+        
+        // Fechar o diálogo
+        this.hideAnaliseDialog();
+        
+        // Mostrar mensagem de sucesso
+        this.showToast(`Análise registrada com sucesso! Código GPI: ${this.analiseDialog.codigoGPI}. Notificação agendada para ${this.formatDate(prazoFormatado)}`, 'success', 5000);
+      } catch (error) {
+        console.error('Erro ao salvar análise:', error);
+        this.showToast('Erro ao salvar os detalhes da análise: ' + error.message, 'error');
+      }
+    },
+    // Adicione esta função aos methods
+    async logSystemAction(dados) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const logData = {
+          usuario_id: user.id,
+          usuario_email: user.email,
+          tipo: dados.tipo,
+          tabela: dados.tabela,
+          registro_id: dados.registro_id,
+          dados_anteriores: dados.dados_anteriores,
+          dados_novos: dados.dados_novos,
+          data_hora: new Date().toISOString()
+        };
+    
+        const { error } = await supabase
+          .from('system_logs')
+          .insert(logData);
+    
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error logging action:', error);
+      }
+    },
+    loadProcessos: async function() {
+      try {
+        console.log('Recarregando processos...');
+        const { data, error } = await supabase
+          .from('processos')
+          .select('*')
+          .order('data_pregao', { ascending: true })
+          .order('created_at', { ascending: true });
+          
+        if (error) throw error;
+        
+        // Se você tem isso no seu ProcessosViewModel
+        if (ProcessosViewModel.methods && typeof ProcessosViewModel.methods.processarProcessos === 'function') {
+          await ProcessosViewModel.methods.processarProcessos(data);
+        } else {
+          // Caso contrário, atualize diretamente
+          this.processos = data;
+        }
+        
+        console.log('Processos recarregados com sucesso!');
+      } catch (err) {
+        console.error('Erro ao recarregar processos:', err);
       }
     }
   }

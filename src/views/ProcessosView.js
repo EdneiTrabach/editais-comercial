@@ -13,6 +13,7 @@ import { useResponsaveis } from '@/composables/useResponsaveis'
 import { useProcessoUpdate } from '@/composables/useProcessoUpdate';
 import { processScheduledNotifications } from '@/api/notificationsApi';
 
+
 export default {
   name: 'ProcessosView',
 
@@ -1300,6 +1301,14 @@ export default {
           return; // Interromper o fluxo normal de atualização
         }
 
+        // Dentro da função handleUpdate, antes das outras verificações específicas
+        if (editingCell.value.field === 'codigo_analise' && editingCell.value.value) {
+          // Cancelar a edição normal e abrir o diálogo de análise
+          cancelEdit();
+          showAnaliseDialog(processo, editingCell.value.value);
+          return; // Interromper o fluxo normal de atualização
+        }
+
         // Update in database
         console.log('Update data:', updateData)
 
@@ -1709,6 +1718,12 @@ export default {
         } catch (error) {
           console.error('Erro ao processar notificações agendadas:', error);
         }
+
+        // Verificar notificações pendentes
+        await checkPendingNotifications();
+        
+        // Verificar notificações a cada 1 hora
+        setInterval(checkPendingNotifications, 3600000);
 
       } catch (error) {
         console.error('Error in component initialization:', error)
@@ -2180,14 +2195,13 @@ export default {
     const toasts = ref([])
 
     // Adicionar esta função dentro do setup()
-    const showToast = (message, type = 'success') => {
-      const id = Date.now()
-      toasts.value = [{ id, message, type }] // Usar apenas um toast por vez, substituindo o anterior
+    const showToast = (message, type = 'success', duration = 3000) => {
+      const id = Date.now();
+      toasts.value.push({ id, message, type });
       
-      // Auto-remove após 3 segundos
       setTimeout(() => {
-        toasts.value = toasts.value.filter(t => t.id !== id)
-      }, 3000)
+        toasts.value = toasts.value.filter(t => t.id !== id);
+      }, duration);
     }
 
     // Adicionar no setup(), próximo aos outros refs
@@ -2689,6 +2703,142 @@ export default {
       statusInfoBalloon.value.show = false;
     };
 
+    // Dialog para detalhes de análise
+    const analiseDialog = ref({
+      show: false,
+      processo: null,
+      codigoGPI: '',
+      prazoResposta: '',
+      codigoAnalise: ''
+    });
+
+    // Função para abrir o diálogo de análise
+    const showAnaliseDialog = (processo, codigoAnalise) => {
+      analiseDialog.value = {
+        show: true,
+        processo: processo,
+        codigoAnalise: processo.codigo_gpi || codigoAnalise, // Use o código GPI existente ou o fornecido
+        codigoGPI: processo.codigo_gpi || '',
+        prazoResposta: processo.prazo_analise || ''
+      };
+    };
+
+    // Função para fechar o diálogo de análise
+    const hideAnaliseDialog = () => {
+      analiseDialog.value.show = false;
+    };
+
+    // Função para salvar os detalhes da análise
+    const salvarAnalise = async () => {
+      try {
+        if (!analiseDialog.value.processo || !analiseDialog.value.codigoGPI || !analiseDialog.value.prazoResposta) {
+          showToast('Preencha todos os campos obrigatórios', 'error');
+          return;
+        }
+
+        // Formatar a data corretamente para o banco
+        const prazoFormatado = analiseDialog.value.prazoResposta instanceof Date 
+          ? analiseDialog.value.prazoResposta.toISOString().split('T')[0] 
+          : analiseDialog.value.prazoResposta;
+
+        // 1. Atualizar o registro do processo com o código de análise
+        const updateData = {
+          codigo_analise: analiseDialog.value.codigoAnalise,
+          codigo_gpi: analiseDialog.value.codigoGPI,
+          prazo_analise: prazoFormatado,
+          updated_at: new Date().toISOString()
+        };
+
+        // Adicionar usuário que está fazendo a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        // Atualizar no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', analiseDialog.value.processo.id);
+
+        if (error) throw error;
+
+        // 2. Programar notificação para o prazo final
+        const notificationData = {
+          processo_id: analiseDialog.value.processo.id,
+          tipo: 'analise',
+          mensagem: `Prazo final para análise do processo ${analiseDialog.value.processo.numero_processo} (Código GPI: ${analiseDialog.value.codigoGPI})`,
+          data_notificacao: new Date(prazoFormatado).toISOString(),
+          created_at: new Date().toISOString(),
+          active: true
+        };
+
+        // Inserir no sistema de notificações
+        const { error: notificationError } = await supabase
+          .from('notification_schedules')
+          .insert(notificationData);
+
+        if (notificationError) throw notificationError;
+
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'analise',
+          tabela: 'processos',
+          registro_id: analiseDialog.value.processo.id,
+          campo_alterado: 'codigo_analise,codigo_gpi,prazo_analise',
+          dados_anteriores: JSON.stringify({
+            codigo_analise: analiseDialog.value.processo.codigo_analise,
+            codigo_gpi: analiseDialog.value.processo.codigo_gpi,
+            prazo_analise: analiseDialog.value.processo.prazo_analise
+          }),
+          dados_novos: JSON.stringify(updateData)
+        });
+
+        // Recarregar os dados
+        await loadProcessos();
+        
+        // Fechar o diálogo
+        hideAnaliseDialog();
+        
+        // Mostrar mensagem de sucesso
+        showToast(`Análise registrada com sucesso! Código GPI: ${analiseDialog.value.codigoGPI}. Notificação agendada para ${formatDate(prazoFormatado)}`, 'success', 5000);
+      } catch (error) {
+        console.error('Erro ao salvar análise:', error);
+        showToast('Erro ao salvar os detalhes da análise: ' + error.message, 'error');
+      }
+    };
+
+    // Adicionar dentro do setup, após as outras funções
+    const checkPendingNotifications = async () => {
+      try {
+        // Buscar notificações para hoje
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('notification_schedules')
+          .select('*, processos(*)')
+          .eq('active', true)
+          .gte('next_notification', today + 'T00:00:00')
+          .lte('next_notification', today + 'T23:59:59');
+    
+        if (error) throw error;
+    
+        // Exibir notificações pendentes
+        if (data && data.length > 0) {
+          data.forEach(notification => {
+            showToast(notification.mensagem, 'warning', 10000); // Mostrar por 10 segundos
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar notificações:', error);
+      }
+    };
+
+    // Adicione esta função dentro do setup()
+    const handleAnaliseClick = (processo) => {
+      // Abrir o modal diretamente sem passar pela edição
+      showAnaliseDialog(processo, processo.codigo_analise || '');
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -2879,6 +3029,15 @@ export default {
       statusInfoBalloon,
       showStatusInfo,
       hideStatusInfo,
+
+      // Análise
+      analiseDialog,
+      showAnaliseDialog,
+      hideAnaliseDialog,
+      salvarAnalise,
+
+      // Adicionar handleAnaliseClick ao objeto retornado pelo setup
+      handleAnaliseClick,
     }
   }
 }
