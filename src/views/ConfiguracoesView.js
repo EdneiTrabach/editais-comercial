@@ -257,26 +257,6 @@ export default {
       showConfirmDialog.value = true;
     };
 
-    // Modifique a função handleSidebarToggle no ConfiguracoesView.js
-    const handleSidebarToggle = (expanded) => {
-      console.log("Sidebar toggle:", expanded);
-      
-      // Definir o valor sem depender do evento
-      isSidebarExpanded.value = expanded;
-      
-      // Aplicar a classe diretamente
-      nextTick(() => {
-        const mainContent = document.querySelector(".main-content");
-        if (mainContent) {
-          if (expanded) {
-            mainContent.classList.remove("expanded");
-          } else {
-            mainContent.classList.add("expanded");
-          }
-        }
-      });
-    };
-
     const formatDate = (date) => {
       return new Date(date).toLocaleDateString("pt-BR");
     };
@@ -686,6 +666,88 @@ export default {
       previewingUpdate.value = update;
     };
 
+    // Primeiro, definimos handleStorage FORA dos hooks lifecycle para estar acessível em todo o setup()
+    const handleStorage = (event) => {
+      if (event.key === "sidebarState") {
+        const newValue = event.newValue === "true";
+        if (isSidebarExpanded.value !== newValue) {
+          console.log("Sincronizando estado do sidebar do localStorage:", newValue);
+          isSidebarExpanded.value = newValue;
+          
+          // Aplicar classe CSS correspondente
+          nextTick(() => {
+            const mainContent = document.querySelector(".main-content");
+            if (mainContent) {
+              if (newValue) {
+                mainContent.classList.remove("expanded");
+              } else {
+                mainContent.classList.add("expanded");
+              }
+            }
+          });
+        }
+      }
+    };
+
+    // Modifique a função handleSidebarToggle para ser mais robusta
+    const handleSidebarToggle = (expanded) => {
+      console.log("Sidebar toggle:", expanded);
+      
+      // Definir o valor de forma consistente
+      isSidebarExpanded.value = expanded;
+      
+      // Aplicar a classe diretamente sem depender de watchers
+      nextTick(() => {
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+          if (expanded) {
+            mainContent.classList.remove("expanded");
+          } else {
+            mainContent.classList.add("expanded");
+          }
+        }
+      });
+    };
+
+    onMounted(() => {
+      try {
+        // Verificar o estado inicial do sidebar
+        const savedState = localStorage.getItem("sidebarState");
+        if (savedState !== null) {
+          isSidebarExpanded.value = savedState === "true";
+        }
+
+        // Adicionar listener para eventos de armazenamento
+        window.addEventListener("storage", handleStorage);
+
+        // NÃO adicione o script do Font Awesome aqui
+        // Em vez disso, usaremos SVG diretos ou ícones locais
+      } catch (error) {
+        console.error("Erro ao montar componente:", error);
+      }
+    });
+
+    onUnmounted(() => {
+      try {
+        // Remove os event listeners de forma segura
+        window.removeEventListener("storage", handleStorage);
+        
+        // Limpeza do canal Supabase, se existir
+        const channel = SupabaseManager.getSubscription("lances-updates");
+        if (channel) {
+          supabase.removeChannel(channel);
+          SupabaseManager.removeSubscription("lances-updates");
+        }
+      } catch (error) {
+        console.error("Erro ao desmontar componente:", error);
+      }
+    });
+
+    // Simplifique o watcher para apenas registrar, sem modificar o DOM
+    watch(isSidebarExpanded, (newValue) => {
+      console.log("isSidebarExpanded mudou para:", newValue);
+    });
+
     onMounted(async () => {
       // Seu código existente...
       try {
@@ -727,61 +789,6 @@ export default {
       SupabaseManager.addSubscription("lances-updates", channel);
 
       await loadSystemUpdates();
-
-      // Adicionar importação do Font Awesome
-      const script = document.createElement('script');
-      script.setAttribute('src', 'https://kit.fontawesome.com/a076d05399.js');
-      script.setAttribute('crossorigin', 'anonymous');
-      document.head.appendChild(script);
-    });
-
-    onMounted(() => {
-      // Verificar o estado inicial do sidebar
-      const savedState = localStorage.getItem("sidebarState");
-      if (savedState !== null) {
-        isSidebarExpanded.value = savedState === "true";
-      }
-
-      // Adicionar listener para eventos de armazenamento
-      const handleStorage = (event) => {
-        if (event.key === "sidebarState") {
-          const newValue = event.newValue === "true";
-          if (isSidebarExpanded.value !== newValue) {
-            console.log("Sincronizando estado do sidebar do localStorage:", newValue);
-            isSidebarExpanded.value = newValue;
-            
-            // Aplicar classe CSS correspondente
-            nextTick(() => {
-              const mainContent = document.querySelector(".main-content");
-              if (mainContent) {
-                if (newValue) {
-                  mainContent.classList.remove("expanded");
-                } else {
-                  mainContent.classList.add("expanded");
-                }
-              }
-            });
-          }
-        }
-      };
-      
-      window.addEventListener("storage", handleStorage);
-    });
-
-    onUnmounted(() => {
-      const channel = SupabaseManager.getSubscription("lances-updates");
-      if (channel) {
-        supabase.removeChannel(channel);
-        SupabaseManager.removeSubscription("lances-updates");
-      }
-
-      window.removeEventListener("storage", handleStorage);
-    });
-
-    // Adicione este código dentro do setup()
-    watch(isSidebarExpanded, (newValue) => {
-      console.log("isSidebarExpanded mudou para:", newValue);
-      // Não fazer manipulação de DOM aqui
     });
 
     // Retornar variáveis e funções que serão usadas no template

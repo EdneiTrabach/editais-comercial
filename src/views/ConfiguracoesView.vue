@@ -12,7 +12,10 @@
         <div class="nav-card-row">
           <div class="nav-card" @click="activeTab = 'users'">
             <div class="nav-card-icon">
-              <i class="fas fa-users"></i>
+              <!-- SVG de usuários em vez do Font Awesome -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
             </div>
             <h3 class="nav-card-title">Administração de Usuários</h3>
             <p class="nav-card-description">
@@ -23,7 +26,10 @@
           
           <div class="nav-card" @click="activeTab = 'updates'">
             <div class="nav-card-icon">
-              <i class="fas fa-sync-alt"></i>
+              <!-- SVG de atualização em vez do Font Awesome -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+              </svg>
             </div>
             <h3 class="nav-card-title">Atualizações do Sistema</h3>
             <p class="nav-card-description">
@@ -40,16 +46,26 @@
           <h2 class="section-title">Administração de Usuários</h2>
           <div class="section-actions">
             <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
-              <i class="fas fa-bell"></i>
+              <!-- SVG de sino -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+              </svg>
               Enviar Notificação
             </button>
             <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
-              <i class="fas fa-plus"></i>
+              <!-- SVG de adição -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              </svg>
               Novo Usuário
             </button>
           </div>
           <button @click="activeTab = 'home'" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Voltar
+            <!-- SVG de seta para esquerda -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+            Voltar
           </button>
         </div>
         
@@ -148,11 +164,18 @@
         <div class="section-header">
           <h2 class="section-title">Atualizações do Sistema</h2>
           <button @click="showNewUpdateForm = true" class="btn-add-cfg-usuarios">
-            <i class="fas fa-plus"></i>
+            <!-- SVG de adição -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
             Nova Atualização
           </button>
           <button @click="activeTab = 'home'" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Voltar
+            <!-- SVG de seta para esquerda -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+            Voltar
           </button>
         </div>
         
