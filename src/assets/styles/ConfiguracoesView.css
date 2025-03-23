@@ -20,6 +20,24 @@
   margin-left: 0; /* Quando o sidebar está recolhido */
 }
 
+/* Remova qualquer regra existente para .main-content e .main-content.expanded e substitua por estas */
+.main-content {
+  flex: 1;
+  margin-left: 330px; /* Quando o sidebar está expandido */
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 2rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+  background: white;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.main-content.expanded {
+  margin-left: 0; /* Quando o sidebar está recolhido */
+}
+
 /* Cabeçalho */
 .header-cfg-usuarios {
   display: flex;
@@ -1178,4 +1196,185 @@ input {
 .recipient-email {
   font-size: 13px;
   color: var(--color-text-light);
+}
+
+/* Estilos para os cards de navegação */
+.cards-navigation {
+  padding: 2rem 0;
+}
+
+.nav-card-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.nav-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  flex: 1;
+  min-width: 300px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.nav-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+}
+
+.nav-card-icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  background: var(--color-primary-light);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-card-icon i {
+  color: var(--color-primary);
+}
+
+.nav-card:first-child .nav-card-icon {
+  background: rgba(25, 49, 85, 0.1);
+}
+
+.nav-card:first-child .nav-card-icon i {
+  color: #193155;
+}
+
+.nav-card:nth-child(2) .nav-card-icon {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.nav-card:nth-child(2) .nav-card-icon i {
+  color: #3b82f6;
+}
+
+.nav-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.nav-card-description {
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.nav-card-button {
+  background: linear-gradient(135deg, #193155 0%, #254677 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-card-button:hover {
+  background: linear-gradient(135deg, #254677 0%, #193155 100%);
+  transform: translateY(-2px);
+}
+
+/* Estilos para o cabeçalho da seção */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #193155;
+  margin: 0;
+}
+
+.section-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background: #f8fafc;
+  color: #193155;
+}
+
+/* Tema escuro para os cards */
+[data-theme="dark"] .nav-card {
+  background: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .nav-card-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .nav-card-description {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-back {
+  border-color: #2d3748;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-back:hover {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .nav-card-row {
+    flex-direction: column;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .section-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .btn-back {
+    margin-top: 1rem;
+  }
 }

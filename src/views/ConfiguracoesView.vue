@@ -4,124 +4,157 @@
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header-cfg-usuarios">
-        <h1 class="title-cfg-usuarios">{{ activeTab === 'users' ? 'Administração de Usuários' : 'Atualizações do Sistema' }}</h1>
-        
-        <!-- Abas de navegação -->
-        <div class="tabs-navigation">
-          <button @click="activeTab = 'users'" :class="['tab-button', { active: activeTab === 'users' }]">Usuários</button>
-          <button @click="activeTab = 'updates'" :class="['tab-button', { active: activeTab === 'updates' }]">Atualizações do Sistema</button>
-        </div>
-        
-        <!-- Botões específicos da aba de usuários -->
-        <div v-if="activeTab === 'users'" class="actions-cfg-usuarios">
-          <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
-            <img src="/icons/bell.svg" alt="Notificar" class="icon-cfg-usuarios" />
-            Enviar Notificação
-          </button>
-          <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
-            <img src="/icons/adicao.svg" alt="Adicionar" class="icon-cfg-usuarios" />
-            Novo Usuário
-          </button>
+        <h1 class="title-cfg-usuarios">Configurações do Sistema</h1>
+      </div>
+
+      <!-- Tela inicial com cards de navegação -->
+      <div v-if="activeTab === 'home'" class="cards-navigation">
+        <div class="nav-card-row">
+          <div class="nav-card" @click="activeTab = 'users'">
+            <div class="nav-card-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <h3 class="nav-card-title">Administração de Usuários</h3>
+            <p class="nav-card-description">
+              Gerencie usuários do sistema, defina permissões, ative ou desative contas e envie notificações.
+            </p>
+            <button class="nav-card-button">Acessar</button>
+          </div>
+          
+          <div class="nav-card" @click="activeTab = 'updates'">
+            <div class="nav-card-icon">
+              <i class="fas fa-sync-alt"></i>
+            </div>
+            <h3 class="nav-card-title">Atualizações do Sistema</h3>
+            <p class="nav-card-description">
+              Registre e acompanhe atualizações do sistema, novas funcionalidades e correções de problemas.
+            </p>
+            <button class="nav-card-button">Acessar</button>
+          </div>
         </div>
       </div>
 
       <!-- Conteúdo da aba de usuários -->
-      <div v-if="activeTab === 'users'" class="table-container-cfg-usuarios">
-        <div v-if="loading" class="loading-cfg-usuarios">Carregando usuários...</div>
+      <div v-if="activeTab === 'users'">
+        <div class="section-header">
+          <h2 class="section-title">Administração de Usuários</h2>
+          <div class="section-actions">
+            <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
+              <i class="fas fa-bell"></i>
+              Enviar Notificação
+            </button>
+            <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
+              <i class="fas fa-plus"></i>
+              Novo Usuário
+            </button>
+          </div>
+          <button @click="activeTab = 'home'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+        </div>
         
-        <table v-else class="excel-table-cfg-usuarios">
-          <thead class="thead-cfg-usuarios">
-            <tr class="tr-head-cfg-usuarios">
-              <th class="th-cfg-usuarios">Nome</th>
-              <th class="th-cfg-usuarios">Email</th>
-              <th class="th-cfg-usuarios">Função</th>
-              <th class="th-cfg-usuarios">Status</th>
-              <th class="th-cfg-usuarios">Criado em</th>
-              <th class="th-cfg-usuarios">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="tbody-cfg-usuarios">
-            <tr v-for="user in users" :key="user.id" class="tr-body-cfg-usuarios">
-              <td class="td-cfg-usuarios">
-                <input 
-                  :value="user.nome || ''"
-                  @blur="handleNameUpdate(user, $event.target.value)"
-                  type="text"
-                  placeholder="Digite o nome"
-                  class="name-input-cfg-usuarios"
-                />
-              </td>
-              <td class="td-cfg-usuarios">
-                <input 
-                  :value="user.email || ''"
-                  @blur="handleEmailUpdate(user, $event.target.value)"
-                  type="email"
-                  placeholder="Digite o email"
-                  class="email-input-cfg-usuarios"
-                  :disabled="user.id === currentUser?.id"
-                />
-              </td>
-              <td class="td-cfg-usuarios">
-                <select 
-                  :value="user.role"
-                  @change="handleRoleChange(user, $event.target.value)"
-                  :disabled="user.id === currentUser?.id"
-                  class="role-select-cfg-usuarios"
-                >
-                  <option value="user" class="option-cfg-usuarios">Usuário</option>
-                  <option value="admin" class="option-cfg-usuarios">Administrador</option>
-                </select>
-              </td>
-              <td class="td-cfg-usuarios status-cell-cfg-usuarios">
-                <div class="status-controls-cfg-usuarios">
-                  <span :class="['status-badge-cfg-usuarios', user.status?.toLowerCase()]">
-                    {{ formatStatus(user.status) }}
-                  </span>
-                  <button 
-                    @click="toggleUserStatus(user)"
-                    class="btn-toggle-cfg-usuarios"
+        <div class="table-container-cfg-usuarios">
+          <div v-if="loading" class="loading-cfg-usuarios">Carregando usuários...</div>
+          
+          <table v-else class="excel-table-cfg-usuarios">
+            <thead class="thead-cfg-usuarios">
+              <tr class="tr-head-cfg-usuarios">
+                <th class="th-cfg-usuarios">Nome</th>
+                <th class="th-cfg-usuarios">Email</th>
+                <th class="th-cfg-usuarios">Função</th>
+                <th class="th-cfg-usuarios">Status</th>
+                <th class="th-cfg-usuarios">Criado em</th>
+                <th class="th-cfg-usuarios">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="tbody-cfg-usuarios">
+              <tr v-for="user in users" :key="user.id" class="tr-body-cfg-usuarios">
+                <td class="td-cfg-usuarios">
+                  <input 
+                    :value="user.nome || ''"
+                    @blur="handleNameUpdate(user, $event.target.value)"
+                    type="text"
+                    placeholder="Digite o nome"
+                    class="name-input-cfg-usuarios"
+                  />
+                </td>
+                <td class="td-cfg-usuarios">
+                  <input 
+                    :value="user.email || ''"
+                    @blur="handleEmailUpdate(user, $event.target.value)"
+                    type="email"
+                    placeholder="Digite o email"
+                    class="email-input-cfg-usuarios"
                     :disabled="user.id === currentUser?.id"
-                    :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
-                  >
-                    <img 
-                      :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
-                      :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
-                      class="icon-status-cfg-usuarios"
-                    />
-                  </button>
-                </div>
-              </td>
-              <td class="td-cfg-usuarios">{{ formatDate(user.created_at) }}</td>
-              <td class="td-actions-cfg-usuarios">
-                <div class="actions-container-cfg-usuarios">
-                  <button 
-                    @click="resetPassword(user)" 
-                    class="btn-action-cfg-usuarios btn-reset-cfg-usuarios"
-                    :title="'Redefinir senha'"
-                  >
-                    <img src="../../public/icons/senha.svg" alt="Redefinir senha" class="icon-action-cfg-usuarios" />
-                  </button>
-                  <button 
-                    @click="deleteUser(user)" 
-                    class="btn-action-cfg-usuarios btn-delete-cfg-usuarios"
+                  />
+                </td>
+                <td class="td-cfg-usuarios">
+                  <select 
+                    :value="user.role"
+                    @change="handleRoleChange(user, $event.target.value)"
                     :disabled="user.id === currentUser?.id"
+                    class="role-select-cfg-usuarios"
                   >
-                    <img src="../../public/icons/lixeira.svg" alt="Excluir" class="icon-delete-cfg-usuarios" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                    <option value="user" class="option-cfg-usuarios">Usuário</option>
+                    <option value="admin" class="option-cfg-usuarios">Administrador</option>
+                  </select>
+                </td>
+                <td class="td-cfg-usuarios status-cell-cfg-usuarios">
+                  <div class="status-controls-cfg-usuarios">
+                    <span :class="['status-badge-cfg-usuarios', user.status?.toLowerCase()]">
+                      {{ formatStatus(user.status) }}
+                    </span>
+                    <button 
+                      @click="toggleUserStatus(user)"
+                      class="btn-toggle-cfg-usuarios"
+                      :disabled="user.id === currentUser?.id"
+                      :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
+                    >
+                      <img 
+                        :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
+                        :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
+                        class="icon-status-cfg-usuarios"
+                      />
+                    </button>
+                  </div>
+                </td>
+                <td class="td-cfg-usuarios">{{ formatDate(user.created_at) }}</td>
+                <td class="td-actions-cfg-usuarios">
+                  <div class="actions-container-cfg-usuarios">
+                    <button 
+                      @click="resetPassword(user)" 
+                      class="btn-action-cfg-usuarios btn-reset-cfg-usuarios"
+                      :title="'Redefinir senha'"
+                    >
+                      <img src="../../public/icons/senha.svg" alt="Redefinir senha" class="icon-action-cfg-usuarios" />
+                    </button>
+                    <button 
+                      @click="deleteUser(user)" 
+                      class="btn-action-cfg-usuarios btn-delete-cfg-usuarios"
+                      :disabled="user.id === currentUser?.id"
+                    >
+                      <img src="../../public/icons/lixeira.svg" alt="Excluir" class="icon-delete-cfg-usuarios" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Conteúdo da aba de atualizações do sistema -->
-      <div v-if="activeTab === 'updates'" class="updates-section">
-        <h2>Gerenciar Atualizações do Sistema</h2>
-        
-        <button @click="showNewUpdateForm = true" class="btn-primary">
-          Nova Atualização
-        </button>
+      <div v-if="activeTab === 'updates'">
+        <div class="section-header">
+          <h2 class="section-title">Atualizações do Sistema</h2>
+          <button @click="showNewUpdateForm = true" class="btn-add-cfg-usuarios">
+            <i class="fas fa-plus"></i>
+            Nova Atualização
+          </button>
+          <button @click="activeTab = 'home'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+        </div>
         
         <div v-if="systemUpdates.length > 0" class="updates-table">
           <table>

@@ -219,21 +219,33 @@ export default {
         isPinned.value = true
         saveSidebarState()
         adjustMainContent()
+        emit('sidebarToggle', true) // Emite o evento com o estado atual
         return
       }
       
+      // Lógica simplificada para evitar comportamento inconsistente
       if (isActive.value) {
+        // Se já estiver ativo, alternar entre fixo/não-fixo
         isPinned.value = !isPinned.value
-        if (!isPinned.value) {
-          isActive.value = false
-        }
+        
+        // Se desafixar, não feche imediatamente o sidebar
+        // Deixe isso para o click outside handler
+        
+        // Emitir o evento apenas se o estado realmente mudar
+        emit('sidebarToggle', true) // Sidebar continua ativa
       } else {
+        // Se estiver inativo, ative-o
         isActive.value = true
+        emit('sidebarToggle', true) // Sidebar agora está ativa
       }
     
-      emit('sidebarToggle', isActive.value)
+      // Salvar estado e ajustar conteúdo
       saveSidebarState()
-      adjustMainContent()
+      
+      // Ajustar conteúdo após pequeno delay para garantir que o DOM foi atualizado
+      setTimeout(() => {
+        adjustMainContent()
+      }, 10)
     }
     
     // Salvar estado do sidebar no localStorage
@@ -252,7 +264,24 @@ export default {
     const adjustMainContent = () => {
       const mainContents = document.querySelectorAll('.main-content')
       mainContents.forEach(content => {
-        content.style.marginLeft = (isActive.value || isPinned.value) ? '330px' : '0'
+        // Verifique se o elemento já possui a classe 'expanded'
+        const hasExpandedClass = content.classList.contains('expanded');
+        
+        // Ajuste as margens com base no estado do sidebar
+        if (isActive.value || isPinned.value) {
+          content.style.marginLeft = '330px';
+          // Se estiver expandido, remova a classe expanded
+          if (hasExpandedClass) {
+            content.classList.remove('expanded');
+          }
+        } else {
+          content.style.marginLeft = '0';
+          // Se não estiver expandido, adicione a classe expanded
+          if (!hasExpandedClass) {
+            content.classList.add('expanded');
+          }
+        }
+        
         content.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       })
     }
@@ -361,6 +390,12 @@ export default {
           if (!isPinned.value) {
             isActive.value = false
             adjustMainContent()
+            
+            // Emitir evento quando o sidebar for fechado por click outside
+            emit('sidebarToggle', false)
+            
+            // Salvar o estado
+            saveSidebarState()
           }
         }
       }

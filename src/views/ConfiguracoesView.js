@@ -43,7 +43,7 @@ export default {
       tipo: "usuario",
       processo_id: null,
     });
-    const activeTab = ref("general"); // ou o tab que já existe
+    const activeTab = ref("home"); // Começa na tela inicial com os cards
     const systemUpdates = ref([]);
     const showNewUpdateForm = ref(false);
     const previewingUpdate = ref(null);
@@ -260,7 +260,21 @@ export default {
     // Modifique a função handleSidebarToggle no ConfiguracoesView.js
     const handleSidebarToggle = (expanded) => {
       console.log("Sidebar toggle:", expanded);
+      
+      // Definir o valor sem depender do evento
       isSidebarExpanded.value = expanded;
+      
+      // Aplicar a classe diretamente
+      nextTick(() => {
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+          if (expanded) {
+            mainContent.classList.remove("expanded");
+          } else {
+            mainContent.classList.add("expanded");
+          }
+        }
+      });
     };
 
     const formatDate = (date) => {
@@ -713,6 +727,12 @@ export default {
       SupabaseManager.addSubscription("lances-updates", channel);
 
       await loadSystemUpdates();
+
+      // Adicionar importação do Font Awesome
+      const script = document.createElement('script');
+      script.setAttribute('src', 'https://kit.fontawesome.com/a076d05399.js');
+      script.setAttribute('crossorigin', 'anonymous');
+      document.head.appendChild(script);
     });
 
     onMounted(() => {
@@ -723,30 +743,29 @@ export default {
       }
 
       // Adicionar listener para eventos de armazenamento
-      window.addEventListener("storage", (event) => {
+      const handleStorage = (event) => {
         if (event.key === "sidebarState") {
-          isSidebarExpanded.value = event.newValue === "true";
-        }
-      });
-
-      // Adicionar um listener para eventos de click globais
-      document.addEventListener("click", (e) => {
-        const sidebar = document.querySelector(".sidebar");
-        const trigger = document.querySelector(".sidebar-trigger");
-
-        if (
-          sidebar &&
-          trigger &&
-          !sidebar.contains(e.target) &&
-          !trigger.contains(e.target)
-        ) {
-          // Se clicar fora do sidebar e ele não estiver fixado
-          const isPinned = localStorage.getItem("sidebarPinned") === "true";
-          if (!isPinned) {
-            isSidebarExpanded.value = false;
+          const newValue = event.newValue === "true";
+          if (isSidebarExpanded.value !== newValue) {
+            console.log("Sincronizando estado do sidebar do localStorage:", newValue);
+            isSidebarExpanded.value = newValue;
+            
+            // Aplicar classe CSS correspondente
+            nextTick(() => {
+              const mainContent = document.querySelector(".main-content");
+              if (mainContent) {
+                if (newValue) {
+                  mainContent.classList.remove("expanded");
+                } else {
+                  mainContent.classList.add("expanded");
+                }
+              }
+            });
           }
         }
-      });
+      };
+      
+      window.addEventListener("storage", handleStorage);
     });
 
     onUnmounted(() => {
@@ -756,29 +775,13 @@ export default {
         SupabaseManager.removeSubscription("lances-updates");
       }
 
-      window.removeEventListener("storage", (event) => {
-        if (event.key === "sidebarState") {
-          isSidebarExpanded.value = event.newValue === "true";
-        }
-      });
+      window.removeEventListener("storage", handleStorage);
     });
 
     // Adicione este código dentro do setup()
     watch(isSidebarExpanded, (newValue) => {
       console.log("isSidebarExpanded mudou para:", newValue);
-      // Certifique-se de que o DOM seja atualizado
-      nextTick(() => {
-        const mainContent = document.querySelector(
-          ".main-content-cfg-usuarios"
-        );
-        if (mainContent) {
-          if (newValue) {
-            mainContent.classList.remove("expanded");
-          } else {
-            mainContent.classList.add("expanded");
-          }
-        }
-      });
+      // Não fazer manipulação de DOM aqui
     });
 
     // Retornar variáveis e funções que serão usadas no template
