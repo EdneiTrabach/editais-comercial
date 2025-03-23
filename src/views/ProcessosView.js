@@ -12,6 +12,8 @@ import { SupabaseManager } from '@/lib/supabaseManager'
 import { useResponsaveis } from '@/composables/useResponsaveis'
 import { useProcessoUpdate } from '@/composables/useProcessoUpdate';
 import { processScheduledNotifications } from '@/api/notificationsApi';
+import { createUpdate } from '@/services/systemUpdatesService';
+import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
 
 
 export default {
@@ -19,7 +21,8 @@ export default {
 
   components: {
     TheSidebar,
-    BaseImage
+    BaseImage,
+    SystemUpdateModal
   },
 
   setup() {
@@ -1725,6 +1728,7 @@ export default {
         // Verificar notificações a cada 1 hora
         setInterval(checkPendingNotifications, 3600000);
 
+        await loadSystemUpdates();
       } catch (error) {
         console.error('Error in component initialization:', error)
       }
@@ -2839,6 +2843,77 @@ export default {
       showAnaliseDialog(processo, processo.codigo_analise || '');
     };
 
+    const activeTab = ref('users'); // ou o que já existir
+    const systemUpdates = ref([]);
+    const showNewUpdateForm = ref(false);
+    const previewingUpdate = ref(null);
+    const newUpdate = ref({
+      title: '',
+      description: '',
+      version: '',
+      importance: 'media',
+      release_date: new Date().toISOString().split('T')[0]
+    });
+
+    const loadSystemUpdates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('system_updates')
+          .select('*')
+          .order('release_date', { ascending: false });
+        
+        if (error) throw error;
+        
+        systemUpdates.value = data;
+      } catch (error) {
+        console.error('Erro ao carregar atualizações:', error);
+        showToastMessage('Erro ao carregar atualizações', 'error');
+      }
+    };
+
+    const createNewUpdate = async () => {
+      try {
+        loading.value = true;
+        
+        const result = await createUpdate(newUpdate.value);
+        
+        if (result.success) {
+          showToastMessage('Atualização criada com sucesso!');
+          showNewUpdateForm.value = false;
+          await loadSystemUpdates();
+          
+          // Limpar form
+          newUpdate.value = {
+            title: '',
+            description: '',
+            version: '',
+            importance: 'media',
+            release_date: new Date().toISOString().split('T')[0]
+          };
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error('Erro ao criar atualização:', error);
+        showToastMessage('Erro ao criar atualização: ' + error.message, 'error');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const previewUpdate = (update) => {
+      previewingUpdate.value = update;
+    };
+
+    const formatImportance = (importance) => {
+      const map = {
+        'baixa': 'Baixa',
+        'media': 'Média',
+        'alta': 'Alta'
+      };
+      return map[importance] || importance;
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -3038,6 +3113,16 @@ export default {
 
       // Adicionar handleAnaliseClick ao objeto retornado pelo setup
       handleAnaliseClick,
+
+      activeTab,
+      systemUpdates,
+      showNewUpdateForm,
+      previewingUpdate,
+      newUpdate,
+      loadSystemUpdates,
+      createNewUpdate,
+      previewUpdate,
+      formatImportance
     }
   }
 }

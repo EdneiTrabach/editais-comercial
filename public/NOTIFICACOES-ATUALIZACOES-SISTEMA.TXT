@@ -1,0 +1,559 @@
+Estrutura de Dados
+O sistema de atualizações utiliza duas tabelas no Supabase:
+
+system_updates - Armazena as informações das atualizações
+
+id: Identificador único
+title: Título da atualização
+description: Descrição detalhada (suporta formatação básica)
+version: Versão do sistema (opcional)
+importance: Nível de importância (baixa, media, alta)
+release_date: Data de lançamento
+created_at: Data de criação do registro
+created_by: ID do usuário que criou
+system_update_reads - Registra quais usuários já leram quais atualizações
+
+id: Identificador único
+user_id: ID do usuário
+update_id: ID da atualização lida
+read_at: Data/hora da leitura
+Fluxo do Sistema
+Área Administrativa (ConfiguracoesView)
+
+Administradores podem criar, editar e visualizar atualizações
+Cada atualização possui título, descrição, versão e nível de importância
+A descrição suporta formatação básica como negrito, itálico e links
+Exibição para Usuários (App.vue)
+
+Após o login, o sistema verifica se existem atualizações não lidas
+Se houver, exibe um modal com as atualizações pendentes
+Usuários podem navegar entre múltiplas atualizações
+Ao clicar em "Confirmar Leitura", a atualização é marcada como lida
+Formatação da Descrição (SystemUpdateModal)
+
+O sistema suporta formatação básica na descrição:
+**texto** para negrito
+*texto* para itálico
+texto para links
+Benefícios do Sistema
+Comunicação Eficiente:
+
+Mantém os usuários informados sobre novidades e melhorias
+Garante que informações importantes sejam vistas por todos
+Rastreabilidade:
+
+Administradores podem verificar quais atualizações foram criadas
+O sistema registra quem leu cada atualização e quando
+Flexibilidade:
+
+Diferentes níveis de importância para categorizar atualizações
+Suporte a formatação para criar mensagens mais ricas e informativas
+Experiência do Usuário:
+
+Modal intuitivo e não-intrusivo
+Usuários veem cada atualização apenas uma vez
+Interface de navegação entre múltiplas atualizações
+Este sistema mantém todos os usuários atualizados sobre novas funcionalidades, correções e mudanças importantes no sistema, melhorando a comunicação e garantindo que informações críticas sejam devidamente comunicadas.
+
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { supabase } from '@/lib/supabase'
+import TheSidebar from '@/components/TheSidebar.vue'
+import { useRouter } from 'vue-router'
+import { useConnectionManager } from '@/composables/useConnectionManager'
+import { SupabaseManager } from '@/lib/supabaseManager'
+import { createNotification } from '@/api/notificationsApi';
+import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
+
+export default {
+  components: {
+    TheSidebar,
+    SystemUpdateModal
+  },
+  setup() {
+    const router = useRouter()
+    const loading = ref(false)
+    const users = ref([])
+    const currentUser = ref(null)
+    const isSidebarExpanded = ref(true)
+    const showAddUserModal = ref(false)
+    const showConfirmDialog = ref(false)
+    const showAccessDeniedModal = ref(false)  // Novo estado para o modal de acesso negado
+    const dialogConfig = ref({})
+    const previousRole = ref(null)
+    const showToast = ref(false)
+    const toastConfig = ref({
+      message: '',
+      type: 'success'
+    })
+    const newUser = ref({
+      email: '',
+      password: '',
+      nome: '',
+      role: 'user'
+    })
+    const currentUserEmail = ref('');
+    const showSendNotificationModal = ref(false);
+    const selectedUserIds = ref([]);
+    const notificationForm = ref({
+      title: '',
+      message: '',
+      tipo: 'usuario',
+      processo_id: null
+    });
+    const activeTab = ref('general'); // ou o tab que já existe
+    const systemUpdates = ref([]);
+    const showNewUpdateForm = ref(false);
+    const previewingUpdate = ref(null);
+    const editingUpdate = ref(null);
+    const updateForm = ref({
+      title: '',
+      description: '',
+      version: '',
+      importance: 'media',
+      release_date: new Date().toISOString().split('T')[0]
+    });
+
+    // Todas as funções existentes...
+    const handleNameUpdate = async (user, newName) => {
+      // Seu código existente
+      if (user.nome === newName) return
+
+      try {
+        // Atualiza apenas na tabela profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            nome: newName,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+
+        if (profileError) throw profileError
+
+        // Atualiza localmente
+        user.nome = newName
+        showToastMessage('Nome atualizado com sucesso!')
+      } catch (error) {
+        console.error('Erro ao atualizar nome:', error)
+        showToastMessage('Erro ao atualizar nome', 'error')
+      }
+    }
+
+    // Adicionar todas as funções existentes aqui...
+    // handleAddUser, loadUsers, updateUserRole, deleteUser, etc.
+
+    // Função para criar novo usuário
+    const handleAddUser = async () => {
+      try {
+        loading.value = true
+    
+        // 1. Criar usuário no Auth
+        const { data, error } = await supabase.auth.signUp({
+          email: newUser.value.email,
+          password: newUser.value.password,
+          options: {
+            data: {
+              nome: newUser.value.nome
+            }
+          }
+        })
+    
+        if (error) throw error
+    
+        // 2. Criar perfil do usuário
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              nome: newUser.value.nome,
+              role: newUser.value.role,
+              status: 'ACTIVE',
+              created_at: new Date().toISOString()
+            })
+    
+          if (profileError) throw profileError
+        }
+    
+        // 3. Feedback e limpeza
+        showToastMessage('Usuário criado com sucesso!')
+        showAddUserModal.value = false
+        await loadUsers()
+    
+        // 4. Resetar form
+        newUser.value = {
+          email: '',
+          password: '',
+          nome: '',
+          role: 'user'
+        }
+    
+      } catch (error) {
+        console.error('Erro ao criar usuário:', error)
+        showToastMessage(error.message || 'Erro ao criar usuário', 'error')
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const loadUsers = async () => {
+      try {
+        console.log('Iniciando carregamento de usuários...')
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('status', { ascending: true })
+          .order('created_at', { ascending: false })
+        
+        console.log('Resposta do servidor:', { profilesData, profilesError })
+    
+        if (profilesError) throw profilesError
+    
+        users.value = profilesData.map(profile => ({
+          ...profile,
+          nome: profile.nome || '',
+          email: profile.email || ''
+        }))
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error)
+        showToastMessage('Erro ao carregar usuários', 'error')
+      }
+    }
+
+    const updateUserRole = async (user) => {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: user.role })
+          .eq('id', user.id)
+        
+        if (error) throw error
+      } catch (error) {
+        console.error('Erro ao atualizar função:', error)
+      }
+    }
+
+    const deleteUser = async (user) => {
+      if (user.id === currentUser.value?.id) {
+        showToastMessage('Não é possível excluir seu próprio usuário', 'error')
+        return
+      }
+    
+      dialogConfig.value = {
+        title: 'Confirmar Exclusão',
+        message: `Deseja realmente excluir o usuário ${user.email}?`,
+        warning: 'Esta ação é irreversível!',
+        confirmText: 'Excluir',
+        onConfirm: async () => {
+          try {
+            // Primeiro, desativa o usuário atualizando o status
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({
+                status: 'DELETED',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+    
+            if (profileError) throw profileError
+    
+            // Agora podemos atualizar a UI e fechar o diálogo
+            await loadUsers() // Recarregar usuários
+            showConfirmDialog.value = false
+            showToastMessage('Usuário excluído com sucesso!')
+          } catch (error) {
+            console.error('Erro ao excluir usuário:', error)
+            showToastMessage('Erro ao excluir usuário', 'error')
+          }
+        }
+      }
+      showConfirmDialog.value = true
+    }
+
+    // Substitua a função toggleUserStatus existente por esta versão melhorada:
+    const toggleUserStatus = async (user) => {
+      const newStatus = user.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+      const message = newStatus === 'ACTIVE' 
+        ? `Deseja ativar o usuário ${user.email}?` 
+        : `Deseja desativar o usuário ${user.email}?`;
+      
+      dialogConfig.value = {
+        title: `${newStatus === 'ACTIVE' ? 'Ativar' : 'Desativar'} usuário`,
+        message: message,
+        confirmText: newStatus === 'ACTIVE' ? 'Ativar' : 'Desativar',
+        onConfirm: async () => {
+          try {
+            // Atualizar status na tabela profiles
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ 
+                status: newStatus,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            // Atualizar UI
+            user.status = newStatus;
+            showConfirmDialog.value = false;
+            showToastMessage(`Usuário ${newStatus === 'ACTIVE' ? 'ativado' : 'desativado'} com sucesso!`);
+          } catch (error) {
+            console.error('Erro ao alterar status:', error);
+            showToastMessage('Erro ao alterar status do usuário', 'error');
+          }
+        }
+      };
+      
+      showConfirmDialog.value = true;
+    };
+
+    // Modifique a função handleSidebarToggle no ConfiguracoesView.js
+    const handleSidebarToggle = (expanded) => {
+      console.log('Sidebar toggle:', expanded);
+      isSidebarExpanded.value = expanded;
+    }
+
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString('pt-BR')
+    }
+
+    const formatStatus = (status) => {
+      const statusMap = {
+        ACTIVE: 'Ativo',
+        DISABLED: 'Desativado',
+        PENDING: 'Pendente'
+      }
+      return statusMap[status] || status
+    }
+
+    const formatUserDisplay = (user) => {
+      return user.status === 'DISABLED' 
+        ? `${user.email} - DESATIVADO` 
+        : user.email
+    }
+
+    const showToastMessage = (message, type = 'success') => {
+      toastConfig.value = { message, type }
+      showToast.value = true
+      setTimeout(() => {
+        showToast.value = false
+      }, 3000)
+    }
+
+    const handleRoleChange = (user, newRole) => {
+      previousRole.value = user.role // Guarda o valor anterior
+      
+      dialogConfig.value = {
+        title: 'Confirmar Alteração',
+        message: `Deseja realmente alterar a função do usuário ${user.email} para ${newRole === 'admin' ? 'Administrador' : 'Usuário'}?`,
+        warning: 'Esta ação afetará as permissões do usuário no sistema.',
+        confirmText: 'Confirmar',
+        onConfirm: async () => {
+          try {
+            // Atualizar o role no banco
+            const { error } = await supabase
+              .from('profiles')
+              .update({ 
+                role: newRole,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+            
+            if (error) throw error
+            
+            // Atualiza o usuário local
+            user.role = newRole
+            
+            // Atualiza a lista de usuários
+            await loadUsers()
+            showConfirmDialog.value = false
+            showToastMessage('Função alterada com sucesso!')
+          } catch (error) {
+            console.error('Erro ao atualizar função:', error)
+            user.role = previousRole.value // Reverte a mudança em caso de erro
+            showToastMessage('Erro ao alterar função do usuário', 'error')
+          }
+        },
+        onCancel: () => {
+          user.role = previousRole.value // Reverte a mudança se cancelar
+          showConfirmDialog.value = false
+        }
+      }
+      showConfirmDialog.value = true
+    }
+
+    const syncUserData = async (userId, userData) => {
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            ...userData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId)
+    
+        if (profileError) throw profileError
+        
+        return true
+      } catch (error) {
+        console.error('Erro ao sincronizar dados:', error)
+        return false
+      }
+    }
+
+    // Função para redirecionar após fechar o modal
+    const redirectToHome = () => {
+      showAccessDeniedModal.value = false
+      router.push('/')
+    }
+
+    // Modificar a verificação de acesso para exibir o modal em vez de redirecionar imediatamente
+    const checkAdminAccess = async () => {
+      try {
+        console.log('Verificando acesso admin...');
+        
+        // 1. Obter usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          router.push('/login');
+          return false;
+        }
+
+        // Salvar o email do usuário atual
+        currentUserEmail.value = user.email;
+        
+        // 2. Buscar perfil do usuário
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role, nome')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Erro ao buscar perfil:', error);
+          showAccessDeniedModal.value = true;
+          return false;
+        }
+        
+        // 3. Verificar se é admin
+        const isAdmin = profile?.role === 'admin';
+        
+        if (!isAdmin) {
+          // IMPORTANTE: Mostrar modal em vez de alert ou console.log
+          showAccessDeniedModal.value = true;
+          return false;
+        }
+        
+        // 4. Usuário é admin, continuar
+        currentUser.value = user;
+        return true;
+      } catch (error) {
+        console.error('Erro ao verificar acesso:', error);
+        showAccessDeniedModal.value = true;
+        return false;
+      }
+    };
+
+    const debugAccess = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        console.log('Usuário autenticado:', user)
+    
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+    
+        console.log('Perfil do usuário:', profile)
+        console.log('Role do usuário:', profile?.role)
+        console.log('Role no localStorage:', localStorage.getItem('userRole'))
+    
+        return profile?.role === 'admin'
+      } catch (error) {
+        console.error('Erro ao verificar acesso:', error)
+        return false
+      }
+    }
+
+    const loadData = async () => {
+      try {
+        await loadUsers() // Substitua loadProcessos por loadUsers
+      } catch (error) {
+        console.error("Erro carregando dados:", error)
+      }
+    }
+
+    // Use o composable
+    useConnectionManager(loadData)
+
+    // Função para atualizar o email do usuário
+    const handleEmailUpdate = async (user, newEmail) => {
+      if (user.email === newEmail || !newEmail) return;
+      
+      // Validação básica de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        showToastMessage('Formato de email inválido', 'error');
+        // Recarrega para reverter a alteração inválida
+        await loadUsers();
+        return;
+      }
+    
+      try {
+        // Verifica se o email já existe (exceto para o usuário atual)
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', newEmail)
+          .neq('id', user.id)
+          .single();
+    
+        if (existingUser) {
+          showToastMessage('Este email já está em uso', 'error');
+          await loadUsers(); // Reverte alteração
+          return;
+        }
+    
+        // Atualiza o email na tabela profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            email: newEmail,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+    
+        if (profileError) throw profileError;
+    
+        // Atualiza localmente
+        user.email = newEmail;
+        showToastMessage('Email atualizado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao atualizar email:', error);
+        showToastMessage('Erro ao atualizar email', 'error');
+        await loadUsers(); // Reverte alteração em caso de erro
+      }
+    };
+    
+    // Função para solicitar redefinição de senha
+    const resetPassword = async (user) => {
+      dialogConfig.value = {
+        title: 'Confirmar redefinição de senha',
+        message: `Deseja enviar um email de redefinição de senha para ${user.email}?`,
+        confirmText: 'Enviar',
+        onConfirm: async () => {
+          try {
+            const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+              redirectTo: `${window.location.origin}/reset-password`
+            });
+    
+            if (error) throw error;
+    
+            showConfirmDialog.value = false;
+            showToastMessage('Email de redefinição enviado com sucesso!');
+
+const checkAdminAccess = async () => {

@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import HomeView from '../views/HomeView.vue'
 import RepresentantesView from '@/views/RepresentantesView.vue'
 import PlataformasView from '@/views/PlataformasView.vue'
-import ProcessosView from '../views/ProcessosView.vue' // Importe diretamente
+import ProcessosView from '@/views/ProcessosView.vue' // Importe diretamente
 import RelatoriosView from '@/views/RelatoriosView.vue'
 import EmpresasView from '../views/EmpresasView.vue'
 import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
@@ -156,6 +156,35 @@ const router = createRouter({
     }
   ]
 })
+
+// Middleware de navegação para verificar atualizações
+router.beforeEach(async (to, from, next) => {
+  // Se a rota for de login ou registro, prosseguir normalmente
+  if (to.path === '/login' || to.path === '/register') {
+    return next();
+  }
+  
+  // Verificar se existe usuário logado
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) {
+    return next('/login');
+  }
+  
+  // Verificar atualizações não lidas
+  const app = document.querySelector('#app')?.__vue_app__;
+  const systemUpdates = app?.provides?.systemUpdates;
+  
+  if (systemUpdates) {
+    await systemUpdates.checkForUpdates();
+    
+    // Se houver atualizações e o modal não estiver aberto, abri-lo
+    if (systemUpdates.unreadUpdates.value.length > 0 && !systemUpdates.showUpdateModal.value) {
+      systemUpdates.showUpdateModal.value = true;
+    }
+  }
+  
+  next();
+});
 
 router.beforeEach(async (to, from, next) => {
   const { data: { session } } = await supabase.auth.getSession()

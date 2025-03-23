@@ -4,8 +4,16 @@
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header-cfg-usuarios">
-        <h1 class="title-cfg-usuarios">Administração de Usuários</h1>
-        <div class="actions-cfg-usuarios">
+        <h1 class="title-cfg-usuarios">{{ activeTab === 'users' ? 'Administração de Usuários' : 'Atualizações do Sistema' }}</h1>
+        
+        <!-- Abas de navegação -->
+        <div class="tabs-navigation">
+          <button @click="activeTab = 'users'" :class="['tab-button', { active: activeTab === 'users' }]">Usuários</button>
+          <button @click="activeTab = 'updates'" :class="['tab-button', { active: activeTab === 'updates' }]">Atualizações do Sistema</button>
+        </div>
+        
+        <!-- Botões específicos da aba de usuários -->
+        <div v-if="activeTab === 'users'" class="actions-cfg-usuarios">
           <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
             <img src="/icons/bell.svg" alt="Notificar" class="icon-cfg-usuarios" />
             Enviar Notificação
@@ -17,7 +25,8 @@
         </div>
       </div>
 
-      <div class="table-container-cfg-usuarios">
+      <!-- Conteúdo da aba de usuários -->
+      <div v-if="activeTab === 'users'" class="table-container-cfg-usuarios">
         <div v-if="loading" class="loading-cfg-usuarios">Carregando usuários...</div>
         
         <table v-else class="excel-table-cfg-usuarios">
@@ -104,6 +113,106 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Conteúdo da aba de atualizações do sistema -->
+      <div v-if="activeTab === 'updates'" class="updates-section">
+        <h2>Gerenciar Atualizações do Sistema</h2>
+        
+        <button @click="showNewUpdateForm = true" class="btn-primary">
+          Nova Atualização
+        </button>
+        
+        <div v-if="systemUpdates.length > 0" class="updates-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Versão</th>
+                <th>Data</th>
+                <th>Importância</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="update in systemUpdates" :key="update.id">
+                <td>{{ update.title }}</td>
+                <td>{{ update.version || '-' }}</td>
+                <td>{{ formatDate(update.release_date) }}</td>
+                <td>{{ update.importance === 'alta' ? 'Alta' : 
+                       update.importance === 'media' ? 'Média' : 'Baixa' }}</td>
+                <td>
+                  <button @click="previewUpdate(update)" class="btn-small">
+                    Visualizar
+                  </button>
+                  <button @click="editUpdate(update)" class="btn-small">
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div v-else class="no-updates">
+          <p>Nenhuma atualização cadastrada.</p>
+        </div>
+        
+        <!-- Modal para adicionar/editar atualização -->
+        <div v-if="showNewUpdateForm" class="modal-backdrop">
+          <div class="modal">
+            <h3>{{ editingUpdate ? 'Editar' : 'Nova' }} Atualização</h3>
+            
+            <form @submit.prevent="saveUpdate">
+              <div class="form-group">
+                <label>Título</label>
+                <input v-model="updateForm.title" required />
+              </div>
+              
+              <div class="form-group">
+                <label>Versão</label>
+                <input v-model="updateForm.version" placeholder="Ex: 1.0.0" />
+              </div>
+              
+              <div class="form-group">
+                <label>Importância</label>
+                <select v-model="updateForm.importance">
+                  <option value="baixa">Baixa</option>
+                  <option value="media">Média</option>
+                  <option value="alta">Alta</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Descrição (suporta formatação básica)</label>
+                <textarea 
+                  v-model="updateForm.description" 
+                  rows="10" 
+                  required
+                  placeholder="Descreva as novidades. Use ** para negrito, * para itálico e [texto](url) para links."
+                ></textarea>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" @click="showNewUpdateForm = false">
+                  Cancelar
+                </button>
+                <button type="submit" :disabled="loading">
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Modal de preview -->
+        <SystemUpdateModal 
+          v-if="previewingUpdate"
+          :show="!!previewingUpdate"
+          :updates="[previewingUpdate]"
+          @close="previewingUpdate = null"
+          @mark-read="() => previewingUpdate = null"
+        />
       </div>
     </div>
 

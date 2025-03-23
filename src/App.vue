@@ -1,7 +1,10 @@
 <script setup>
 import { RouterView } from 'vue-router'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, provide } from 'vue'
 import NavigationButtons from './components/NavigationButtons.vue'
+import { useSystemUpdates } from './composables/useSystemUpdates';
+import SystemUpdateModal from './components/SystemUpdateModal.vue';
+import { supabase } from './lib/supabase';
 
 // Definir a variável isSidebarExpanded
 const isSidebarExpanded = ref(true) // Valor padrão: expandido
@@ -25,12 +28,100 @@ window.addEventListener('storage', (event) => {
     isSidebarExpanded.value = event.newValue === 'true'
   }
 })
+
+const { 
+  unreadUpdates, 
+  showUpdateModal, 
+  checkForUpdates, 
+  handleMarkAsRead, 
+  closeUpdateModal 
+} = useSystemUpdates();
+
+// Sobrescrever função de fechar para verificar se é permitido
+const handleUpdateModalClose = () => {
+  // Se existem notificações, exigir que o usuário as leia
+  if (unreadUpdates.value.length > 0) {
+    alert('Por favor, leia as atualizações importantes do sistema antes de continuar.');
+    return;
+  }
+  
+  // Se não existem ou já foram lidas, fechar normalmente
+  closeUpdateModal();
+};
+
+// Tornar funções disponíveis globalmente para o app
+provide('systemUpdates', {
+  checkForUpdates,
+  unreadUpdates,
+  showUpdateModal,
+  handleMarkAsRead
+});
+
+const user = ref(null);
+
+// Monitorar mudanças na autenticação
+onMounted(async () => {
+  // Verificar usuário atual
+  const { data } = await supabase.auth.getUser();
+  user.value = data.user;
+  
+  // Configurar listener de autenticação
+  supabase.auth.onAuthStateChange((event, session) => {
+    user.value = session?.user || null;
+    
+    // Verificar atualizações imediatamente após login bem-sucedido
+    if (event === 'SIGNED_IN') {
+      setTimeout(() => {
+        checkForUpdates();
+      }, 500); // Reduzido para aparecer mais rápido
+    }
+  });
+  
+  // Verificar atualizações ao montar se o usuário já estiver autenticado
+  if (user.value) {
+    setTimeout(() => {
+      checkForUpdates();
+    }, 500);
+  }
+});
+
+// Observar mudanças no usuário para verificar atualizações após login
+watch(user, async (newUser) => {
+  if (newUser) {
+    // Aguardar um curto intervalo para garantir que a navegação foi concluída
+    setTimeout(() => {
+      checkForUpdates();
+    }, 1500);
+  }
+});
+
+onMounted(async () => {
+  // Verificar atualizações após o login
+  setTimeout(() => {
+    checkForUpdates();
+  }, 2000); // Atraso de 2 segundos após carregar
+});
 </script>
 
 <template>
   <div class="app-container">
+    <!-- Overlay que bloqueia interações com o app enquanto o modal estiver aberto -->
+    <div 
+      v-if="showUpdateModal" 
+      class="system-update-overlay"
+    ></div>
+    
     <RouterView @sidebarToggle="handleSidebarToggle" />
     <NavigationButtons :isSidebarExpanded="isSidebarExpanded" />
+    
+    <!-- Sistema de atualizações com configuração de modal obrigatório -->
+    <SystemUpdateModal 
+      :show="showUpdateModal"
+      :updates="unreadUpdates"
+      :isForced="true"
+      @close="handleUpdateModalClose"
+      @mark-read="handleMarkAsRead"
+    />
   </div>
 </template>
 
@@ -117,5 +208,16 @@ html, body {
   height: 100%;
   font-family: 'Roboto', sans-serif;
   position: relative;
+}
+
+/* Adicione ao final do CSS existente */
+.system-update-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999; /* Um pouco abaixo do modal (z-index: 1000) */
 }
 </style>
