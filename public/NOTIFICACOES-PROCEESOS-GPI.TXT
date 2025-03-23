@@ -1,0 +1,51 @@
+Explicação do Sistema de Notificações de Análise
+Onde as notificações são exibidas
+Quando o usuário configura um prazo final para análise de um processo, as notificações serão exibidas nos seguintes locais:
+
+Painel de Notificações do Sistema:
+
+As notificações aparecem no painel de notificações do sistema que fica geralmente no cabeçalho da aplicação
+Este componente é implementado pelo arquivo NotificationItem.js mencionado no código
+O usuário verá um ícone com contador de notificações não lidas
+Listagem de Processos:
+
+Na tabela de processos, a coluna com código de análise mostrará:
+GPI: [código] (Prazo: [data])
+Isso serve como lembrete visual na própria listagem
+Agenda de Notificações:
+
+O sistema também exibe notificações pendentes para o dia na tela inicial
+Isso é gerenciado pela função checkPendingNotifications() no código
+Quando as notificações são enviadas
+O timing das notificações funciona assim:
+
+Horário da Notificação:
+
+A notificação é agendada para as 00:00 do dia especificado como prazo final (próximo dia útil)
+Isso é configurado na linha next_notification: new Date(prazoFormatado).toISOString()
+O sistema usa a data completa do prazo (sem especificar hora = meia-noite)
+Processamento periódico:
+
+O sistema possui um serviço que verifica notificações agendadas regularmente
+A função checkAndSendScheduledNotifications() em notificationScheduler.js realiza esta tarefa
+Notificações para o dia atual são processadas e enviadas ao usuário
+Lógica de dias alternados:
+
+O sistema usa uma lógica de dias alternados para envio (dias ímpares do mês)
+Esta função shouldSendNotificationsToday() controla isso, verificando se o dia atual é ímpar
+Visualização das mensagens
+As mensagens de notificação possuem:
+
+Texto personalizado:
+
+Conteúdo: Prazo final para análise do processo [número] (Código GPI: [código])
+Este texto é armazenado no campo message da tabela notification_schedules
+Níveis de prioridade:
+
+As notificações têm níveis de prioridade diferentes (muito_alto, alto, medio, leve)
+Para análise, geralmente é usada prioridade média ou alta
+Data e tempo relativo:
+
+O sistema mostra a data das notificações em formato relativo (há 2 horas, há 1 dia)
+Para datas mais antigas, mostra o formato completo
+Para acompanhar processos com prazos próximos, recomendo verificar diariamente o painel de notificações do sistema.
