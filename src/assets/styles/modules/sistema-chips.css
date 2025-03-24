@@ -42,7 +42,7 @@
   border-color: #193155;
 }
 
-[data-theme="dark"] .sistema-chip.selected.custom-cursor-on-hover {
+[data-theme="dark"] .sistema-chip.selected {
   background: green;
 }
 
