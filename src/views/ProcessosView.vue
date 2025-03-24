@@ -114,7 +114,7 @@
               <!-- Células de dados ordenáveis -->
               <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
                 :class="{ 'selecionada': selectedRow === processo.id }"
-                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : handleCellDblClick($event, coluna.campo, processo)">
+                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : handleDblClick(coluna.campo, processo, $event)">
                 
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
