@@ -251,15 +251,25 @@ export default {
     
     // Watcher para sincronizar estado e carregar municípios
     watch(() => formData.value.estado, (novoEstado) => {
-      filtroEstadoReferencia.value = novoEstado
-
+      // Atualizar os dois campos de estado simultaneamente
+      filtroEstadoReferencia.value = novoEstado;
+      estadoDestino.value = novoEstado;
+    
       if (novoEstado) {
-        carregarMunicipios()
+        carregarMunicipios();
       } else {
-        municipios.value = []
-        municipiosCarregados.value = false
+        municipios.value = [];
+        municipiosCarregados.value = false;
       }
-    })
+    }, { immediate: true });
+    
+    // Adicione também um watcher para estadoDestino para garantir que 
+    // municípios sejam carregados quando este campo mudar diretamente
+    watch(() => estadoDestino.value, (novoEstado) => {
+      if (novoEstado && novoEstado !== filtroEstadoReferencia.value) {
+        carregarMunicipios();
+      }
+    });
 
     // Watcher para mudanças de visibilidade
     watch(isVisible, async (newValue) => {
@@ -300,6 +310,26 @@ export default {
     watch(() => formData.value.hora_pregao, (newTime) => {
       if (newTime) validateTimeFn(newTime)
     })
+
+    // No setup() do componente, certifique-se de que este watcher esteja presente:
+    watch(() => estadoDestino.value, (novoEstado) => {
+      if (novoEstado) {
+        console.log(`Estado mudou para: ${novoEstado}, carregando municípios...`);
+        carregarMunicipios();
+      } else {
+        municipios.value = [];
+        municipiosCarregados.value = false;
+      }
+    }, { immediate: true });
+
+    // E também ao carregar o formulário
+    watch(() => formData.value.estado, (novoEstado) => {
+      if (novoEstado && estadoDestino.value !== novoEstado) {
+        console.log(`Estado principal mudou para: ${novoEstado}, atualizando estadoDestino`);
+        estadoDestino.value = novoEstado;
+        // carregarMunicipios será chamado pelo watcher acima
+      }
+    }, { immediate: true });
 
     // === CICLO DE VIDA DO COMPONENTE ===
     

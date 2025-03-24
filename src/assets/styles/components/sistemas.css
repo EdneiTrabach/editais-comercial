@@ -23,16 +23,6 @@
   grid-template-columns: 2fr auto;
 }
 
-.sistema-chip {
-  background-color: #e9ecef;
-  border-radius: 16px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .sistema-remove {
   cursor: pointer;
   font-weight: bold;
@@ -109,15 +99,6 @@
   border: 1px solid #e9ecef;
 }
 
-.sistemas-dialog .sistema-chip {
-  background-color: #e9ecef;
-  border-radius: 16px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
 .sistemas-dialog .sistema-remove {
   cursor: pointer;

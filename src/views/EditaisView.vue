@@ -161,7 +161,7 @@
                 <div class="ponto-destino">
                   <label>Cidade do Órgão</label>
                   <div class="cidade-input">
-                    <select v-model="filtroEstadoReferencia" @change="carregarMunicipios" class="estado-select">
+                    <select v-model="estadoDestino" @change="carregarMunicipios" class="estado-select">
                       <option value="">Estado...</option>
                       <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
                         {{ estado.nome }}
@@ -169,7 +169,9 @@
                     </select>
                     <select v-model="cidadeOrgao" :disabled="!estadoDestino || !municipiosCarregados"
                       class="cidade-select">
-                      <option value="">Cidade...</option>
+                      <option value="">{{ !estadoDestino ? 'Selecione um estado primeiro' : 
+                                         !municipiosCarregados ? 'Carregando cidades...' : 
+                                         municipios.length === 0 ? 'Nenhuma cidade encontrada' : 'Selecione a cidade...' }}</option>
                       <option v-for="municipio in municipios" :key="municipio.id" :value="municipio">
                         {{ municipio.nome }}
                       </option>

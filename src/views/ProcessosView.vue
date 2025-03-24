@@ -391,8 +391,8 @@
                     </template>
                     <template v-else>
                       <!-- Se não tem código, mostra o botão de adicionar -->
-                      <span>Definir análise</span>
-                      <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button>
+                      <!-- <span>Definir análise</span> -->
+                      <!-- <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button> -->
                     </template>
                   </div>
                 </template>

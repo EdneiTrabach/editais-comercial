@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue'
+import { supabase } from '@/lib/supabase' // Adicionar esta importação
 import { calcularDistanciaHaversine } from '@/utils/distance.js'
 import { calcularDistanciaRota } from '@/utils/googleMapsService'
 import { coordenadasMunicipais } from '@/data/coordenadasMunicipios'
@@ -72,15 +73,28 @@ export function useDistanceCalculator() {
 
   // Função para carregar municípios quando o estado for selecionado
   const carregarMunicipios = async () => {
-    if (!estadoDestino.value) return
-
+    if (!estadoDestino.value) {
+      municipios.value = [];
+      municipiosCarregados.value = false;
+      return;
+    }
+  
     try {
-      municipiosCarregados.value = false
-      municipios.value = await ibgeService.getMunicipios(estadoDestino.value)
-      municipiosCarregados.value = true
+      // Indicar que está carregando para feedback visual
+      municipiosCarregados.value = false;
+      
+      console.log(`Carregando municípios para o estado: ${estadoDestino.value}`);
+      
+      // Em vez de usar Supabase, usar a API do IBGE
+      const data = await ibgeService.getMunicipios(estadoDestino.value);
+      
+      console.log(`Municípios carregados: ${data.length}`);
+      municipios.value = data;
+      municipiosCarregados.value = true;
     } catch (error) {
-      console.error('Erro ao carregar municípios:', error)
-      throw error
+      console.error('Erro ao carregar municípios:', error);
+      municipios.value = [];
+      municipiosCarregados.value = false;
     }
   }
 
