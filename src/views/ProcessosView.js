@@ -2638,8 +2638,8 @@ export default {
         if (newStatus === processo.status) return;
         
         // Verificar se está mudando para "vamos_participar" e se a plataforma é válida
-        if (newStatus === 'vamos_participar') {
-          // Verificar se tem plataforma e se não é a plataforma genérica
+        if (newStatus.toLowerCase() === 'vamos_participar') {
+          // Verificar se tem plataforma válida
           if (!processo.site_pregao || 
               processo.site_pregao === 'https://semurl.com.br' || 
               processo.site_pregao.includes('A Confirmar')) {
@@ -2656,7 +2656,7 @@ export default {
         // Atualiza o estado local imediatamente para feedback visual
         selectedStatusMap.value[processo.id] = newStatus;
         
-        // Executa a atualização no banco de dados
+        // Executa a atualização no banco de dados com tratamento de erro
         const result = await updateProcessoStatus(
           processo.id, 
           newStatus
@@ -2667,17 +2667,17 @@ export default {
         
         if (result.success) {
           try {
-            // Notifica componentes sobre a atualização bem-sucedida
+            // Tenta executar operações secundárias, mas não bloqueia em caso de erro
             handleStatusUpdate({
               id: processo.id,
               newStatus,
               oldStatus: processo.status
             });
             
-            // Verifica se precisa configurar notificações para determinados status
-            if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(newStatus)) {
+            // Configurar notificações para determinados status
+            if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(newStatus.toUpperCase())) {
               loadNextNotificationDate(processo.id, newStatus)
-                .catch(error => console.warn('Erro ao carregar próxima notificação (não crítico):', error));
+                .catch(error => console.warn('Erro ao carregar notificação (não crítico):', error));
             }
             
             showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
@@ -2692,9 +2692,10 @@ export default {
           showToast(`Erro ao alterar status: ${result.message}`, 'error');
         }
       } catch (error) {
-        // Captura erros globais para evitar que a aplicação trave
+        // Tratamento de erro global
         console.error('Erro fatal durante alteração de status:', error);
         showToast('Ocorreu um erro inesperado. Tente novamente.', 'error');
+        
         // Tentar reverter o estado visual
         if (processo) {
           event.target.value = processo.status;

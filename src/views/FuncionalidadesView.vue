@@ -5,7 +5,7 @@
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
         <h1>Funcionalidades do Sistema</h1>
-        <div class="tour-icon" @click="startTour" title="Iniciar tour guiado">
+        <div class="icon" @click="startTour" title="Iniciar tour guiado">
           <img src="/icons/question-circle.svg" alt="Tour" />
         </div>
       </div>

@@ -22,7 +22,7 @@
         <h1>Novo Processo Licitatório</h1>
         <div class="header-buttons">
           <button class="btn-tour" @click="startTour" title="Iniciar Tour">
-            <img src="/icons/question-circle.svg" alt="Tour" class="tour-icon">
+            <img src="/icons/question-circle.svg" alt="Tour" class="icon">
           </button>
           <button class="btn-import" @click="showImportModal = true">
             Importar Publicação

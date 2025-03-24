@@ -23,3 +23,12 @@
   min-width: 120px;
   text-align: center;
 }
+
+button.btn-tour {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background: var(--primary-color);
+  border-radius: 8px;
+  font-weight: 500;
+}

@@ -48,8 +48,9 @@
 }
 
 .btn-tour:hover {
-  background-color: #f0f0f0;
-  color: #333;
+  background: var(--status-info);
+  transform: translateY(0px);
+  border: none;
 }
 
 .tour-icon {
