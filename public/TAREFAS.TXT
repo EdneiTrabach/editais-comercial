@@ -19,3 +19,13 @@
 15 - MELHORAR DASHBOARD COM FILTROS DIVERSOS E VARIAS FORMAS DE EXIBIÇAO 
 
 9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 
+
+17 - COLOCAR UMA CONDICIONAL PARA QUANDO FOR COLOCADO QUE VAMOS PARTICIPAR, PARA VERIFICAR SE O CAMPO DA PLATAFORMA FOI PREENCHIDO, SE SIM, PASSE, SE NAO, PEÇA PARA QUE PREENCHA SE NAO NAO VAI LIBERAR A TELA DE LANCES 
+
+18 - 
+
+19 - 
+
+20 -
+
+21 - 

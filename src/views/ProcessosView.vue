@@ -114,7 +114,11 @@
               <!-- Células de dados ordenáveis -->
               <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
                 :class="{ 'selecionada': selectedRow === processo.id }"
-                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : handleDblClick(coluna.campo, processo, $event)">
+                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : 
+          coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
+          coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
+          coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) : 
+          handleDblClick(coluna.campo, processo, $event)">
                 
                 <!-- Editing Mode -->
                 <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
@@ -284,8 +288,7 @@
 
                   <!-- Company field -->
                   <span v-else-if="coluna.campo === 'empresa_id'">
-                    <div class="responsavel-container"
-                      @dblclick="handleDblClickEmpresa(coluna.campo, processo, $event)">
+                    <div class="responsavel-container">
                       <span class="responsavel-display">
                         {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
                       </span>
@@ -331,8 +334,7 @@
 
                   <!-- Representative ID field -->
                   <span v-else-if="coluna.campo === 'representante_id'">
-                    <div class="responsavel-container"
-                      @dblclick="handleDblClickRepresentante(coluna.campo, processo, $event)">
+                    <div class="responsavel-container">
                       <span class="responsavel-display">
                         {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
                       </span>
@@ -341,8 +343,7 @@
 
                   <!-- Responsible ID field -->
                   <span v-else-if="coluna.campo === 'responsavel_id'">
-                    <div class="responsavel-container"
-                      @dblclick="handleDblClickResponsavel(coluna.campo, processo, $event)">
+                    <div class="responsavel-container">
                       <span class="responsavel-display">
                         {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
                       </span>
@@ -1016,7 +1017,7 @@ export default {
           tabela: dados.tabela,
           registro_id: dados.registro_id,
           dados_anteriores: dados.dados_anteriores,
-          dados_novos: dados.dados_novos,
+          dados_novos: dados_novos,
           data_hora: new Date().toISOString()
         };
     
