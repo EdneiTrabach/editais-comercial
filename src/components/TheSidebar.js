@@ -357,6 +357,10 @@ export default {
     // Atualizar a contagem de notificações
     const updateNotificationsCount = (count) => {
       unreadNotifications.value = count;
+      localStorage.setItem('unreadNotificationsCount', count);
+      window.dispatchEvent(new CustomEvent('notifications-count-updated', { 
+        detail: { count } 
+      }));
     };
 
     // ===== NAVEGAÇÃO =====
@@ -464,6 +468,19 @@ export default {
       } catch (error) {
         console.error('Erro na inicialização do sidebar:', error)
       }
+      
+      // Escutar evento para abrir painel de notificações
+      window.addEventListener('open-notifications-panel', () => {
+        showNotificationsPanel.value = true;
+      });
+      
+      // Quando a contagem de notificações mudar, armazenar no localStorage e disparar evento
+      watch(unreadNotifications, (newCount) => {
+        localStorage.setItem('unreadNotificationsCount', newCount);
+        window.dispatchEvent(new CustomEvent('notifications-count-updated', { 
+          detail: { count: newCount } 
+        }));
+      });
     })
     
     // Configurar listeners de eventos e gerenciar limpeza
@@ -492,6 +509,8 @@ export default {
           SupabaseManager.removeSubscription(name)
         }
       })
+      
+      window.removeEventListener('open-notifications-panel', () => {});
     })
 
     // Observer para mudanças no estado do sidebar

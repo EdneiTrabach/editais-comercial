@@ -1,10 +1,11 @@
 <script setup>
 import { RouterView } from 'vue-router'
-import { ref, watch, onMounted, provide } from 'vue'
+import { ref, watch, onMounted, provide, onUnmounted } from 'vue'
 import NavigationButtons from './components/NavigationButtons.vue'
 import { useSystemUpdates } from './composables/useSystemUpdates';
 import SystemUpdateModal from './components/SystemUpdateModal.vue';
 import { supabase } from './lib/supabase';
+import FloatingNotificationButton from './components/notifications/FloatingNotificationButton.vue';
 
 // Definir a variável isSidebarExpanded
 const isSidebarExpanded = ref(true) // Valor padrão: expandido
@@ -101,6 +102,39 @@ onMounted(async () => {
     checkForUpdates();
   }, 2000); // Atraso de 2 segundos após carregar
 });
+
+const notificationsCount = ref(0);
+
+// Função para abrir o painel de notificações
+const openNotificationsPanel = () => {
+  // Emitir um evento global que TheSidebar.js pode escutar
+  window.dispatchEvent(new CustomEvent('open-notifications-panel'));
+};
+
+// Monitorar contagem de notificações (pode ser feito via localStorage)
+watch(() => localStorage.getItem('unreadNotificationsCount'), (newCount) => {
+  if (newCount) {
+    notificationsCount.value = parseInt(newCount);
+  }
+});
+
+// Verificar notificações ao iniciar
+onMounted(() => {
+  // Inicializar contagem de notificações
+  const count = localStorage.getItem('unreadNotificationsCount');
+  if (count) {
+    notificationsCount.value = parseInt(count);
+  }
+  
+  // Adicionar listener para atualizar contagem
+  window.addEventListener('notifications-count-updated', (e) => {
+    notificationsCount.value = e.detail.count;
+  });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('notifications-count-updated', () => {});
+});
 </script>
 
 <template>
@@ -121,6 +155,12 @@ onMounted(async () => {
       :isForced="true"
       @close="handleUpdateModalClose"
       @mark-read="handleMarkAsRead"
+    />
+
+    <!-- Botão flutuante de notificações -->
+    <FloatingNotificationButton 
+      :unreadCount="notificationsCount" 
+      @click="openNotificationsPanel" 
     />
   </div>
 </template>

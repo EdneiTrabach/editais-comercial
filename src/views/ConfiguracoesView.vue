@@ -23,7 +23,21 @@
             </p>
             <button class="nav-card-button">Acessar</button>
           </div>
-          
+
+          <div class="nav-card" @click="openSendNotificationModal">
+            <div class="nav-card-icon">
+              <!-- SVG de usuários em vez do Font Awesome -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+              </svg>
+            </div>
+            <h3 class="nav-card-title">Enviar Notificação </h3>
+            <p class="nav-card-description">
+              Envie notificações para usuários do sistema, alertas e informações importantes.
+            </p>
+            <button class="nav-card-button">Acessar</button>
+          </div>
+
           <div class="nav-card" @click="activeTab = 'updates'">
             <div class="nav-card-icon">
               <!-- SVG de atualização em vez do Font Awesome -->
@@ -45,13 +59,6 @@
         <div class="section-header">
           <h2 class="section-title">Administração de Usuários</h2>
           <div class="section-actions">
-            <button @click="openSendNotificationModal" class="btn-notification-cfg-usuarios">
-              <!-- SVG de sino -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-              </svg>
-              Enviar Notificação
-            </button>
             <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
               <!-- SVG de adição -->
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
