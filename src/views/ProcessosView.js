@@ -773,30 +773,59 @@ export default {
       }
     }
 
+    // Versão melhorada da função logSystemAction
     const logSystemAction = async (dados) => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-
+        // Verificar se dados essenciais foram fornecidos
+        if (!dados || !dados.registro_id) {
+          console.warn('Dados de log incompletos');
+          return; // Encerra suavemente sem lançar erro
+        }
+    
+        // Obter usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.warn('Usuário não autenticado para logging');
+          return; // Encerra sem afetar o fluxo principal
+        }
+    
+        // Preparar dados com valores padrão para evitar undefined
         const logData = {
           usuario_id: user.id,
           usuario_email: user.email,
-          tipo: dados.tipo,
-          tabela: dados.tabela,
+          tipo: dados.tipo || 'atualizacao',
+          tabela: dados.tabela || 'processos',
           registro_id: dados.registro_id,
-          dados_anteriores: dados.dados_anteriores,
-          dados_novos: dados.dados_novos,
+          campo_alterado: dados.campo_alterado || 'status',
+          dados_anteriores: dados.dados_anteriores || null,
+          dados_novos: dados.dados_novos || null,
           data_hora: new Date().toISOString()
+        };
+    
+        // Verificar se a tabela system_logs existe antes de tentar inserir
+        const { error: checkError } = await supabase
+          .from('system_logs')
+          .select('id')
+          .limit(1);
+        
+        if (checkError) {
+          console.warn('Tabela system_logs não encontrada. Logging desativado:', checkError.message);
+          return; // Sai da função sem lançar erro
         }
-
+    
+        // Se chegou aqui, tabela existe - tenta inserir o log
         const { error } = await supabase
           .from('system_logs')
-          .insert(logData)
-
-        if (error) throw error
+          .insert(logData);
+    
+        if (error) {
+          console.warn('Erro ao inserir log (não crítico):', error.message);
+        }
       } catch (error) {
-        console.error('Error logging action:', error)
+        // Não propaga o erro, apenas registra
+        console.warn('Erro no processo de logging (não crítico):', error.message || error);
       }
-    }
+    };
 
     const exportToExcel = () => {
       const dataToExport = processos.value.map(processo => ({
@@ -2600,32 +2629,77 @@ export default {
       return ['suspenso', 'adiado', 'demonstracao'].includes(status);
     };
     
+    // Modificação na função handleStatusChange para torná-la mais resiliente
     const handleStatusChange = async (processo, event) => {
-      const newStatus = event.target.value;
-      if (newStatus === processo.status) return;
-      
-      selectedStatusMap.value[processo.id] = newStatus;
-      
-      const result = await updateProcessoStatus(
-        processo.id, 
-        newStatus
-      );
-      
-      if (result.success) {
-        handleStatusUpdate({
-          id: processo.id,
-          newStatus,
-          oldStatus: processo.status
+      try {
+        const newStatus = event.target.value;
+        
+        // Se o status não mudou, não faz nada
+        if (newStatus === processo.status) return;
+        
+        // Verificar se está mudando para "vamos_participar" e se a plataforma é válida
+        if (newStatus === 'vamos_participar') {
+          // Verificar se tem plataforma e se não é a plataforma genérica
+          if (!processo.site_pregao || 
+              processo.site_pregao === 'https://semurl.com.br' || 
+              processo.site_pregao.includes('A Confirmar')) {
+            
+            // Reverte a seleção para o status anterior
+            event.target.value = processo.status;
+            
+            // Exibe mensagem de erro
+            showToast('Antes de selecionar "Vamos Participar", atualize a plataforma para um valor válido.', 'error');
+            return;
+          }
+        }
+        
+        // Atualiza o estado local imediatamente para feedback visual
+        selectedStatusMap.value[processo.id] = newStatus;
+        
+        // Executa a atualização no banco de dados
+        const result = await updateProcessoStatus(
+          processo.id, 
+          newStatus
+        ).catch(error => {
+          console.error('Erro na atualização de status:', error);
+          return { success: false, message: error.message || 'Erro ao comunicar com o servidor' };
         });
         
-        if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(newStatus)) {
-          loadNextNotificationDate(processo.id, newStatus);
+        if (result.success) {
+          try {
+            // Notifica componentes sobre a atualização bem-sucedida
+            handleStatusUpdate({
+              id: processo.id,
+              newStatus,
+              oldStatus: processo.status
+            });
+            
+            // Verifica se precisa configurar notificações para determinados status
+            if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(newStatus)) {
+              loadNextNotificationDate(processo.id, newStatus)
+                .catch(error => console.warn('Erro ao carregar próxima notificação (não crítico):', error));
+            }
+            
+            showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
+          } catch (error) {
+            // Continua mesmo se houver erro nas operações secundárias
+            console.warn('Erro não crítico durante a atualização de status:', error);
+          }
+        } else {
+          // Reverter para o status anterior em caso de erro
+          delete selectedStatusMap.value[processo.id];
+          event.target.value = processo.status;
+          showToast(`Erro ao alterar status: ${result.message}`, 'error');
         }
-      } else {
-        // Reverter para o status anterior em caso de erro
-        delete selectedStatusMap.value[processo.id];
-        event.target.value = processo.status;
-        alert(`Erro ao alterar status: ${result.message}`);
+      } catch (error) {
+        // Captura erros globais para evitar que a aplicação trave
+        console.error('Erro fatal durante alteração de status:', error);
+        showToast('Ocorreu um erro inesperado. Tente novamente.', 'error');
+        // Tentar reverter o estado visual
+        if (processo) {
+          event.target.value = processo.status;
+          delete selectedStatusMap.value[processo.id];
+        }
       }
     };
     

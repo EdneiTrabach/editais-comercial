@@ -235,6 +235,15 @@
                     @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
                     placeholder="Digite o código">
 
+                  <!-- Portal/Plataforma field -->
+                  <select v-else-if="coluna.campo === 'site_pregao'" v-model="editingCell.value"
+                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                    <option value="">Selecione uma plataforma...</option>
+                    <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
+                      {{ plataforma.nome }}
+                    </option>
+                  </select>
+
                   <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
                   <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
                     @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
@@ -765,6 +774,16 @@ async function checkTableStructure() {
     console.log("Não foi possível obter a estrutura da tabela");
   }
 }
+
+// Certifique-se de que a função showToast está disponível no escopo
+const showToast = (message, type = 'success', duration = 3000) => {
+  const id = Date.now();
+  toasts.value.push({ id, message, type });
+  
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id);
+  }, duration);
+};
 
 // Export the component with the imported logic
 export default {

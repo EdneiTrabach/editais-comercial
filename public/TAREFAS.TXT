@@ -1,14 +1,14 @@
-1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vaia analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
+1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vai analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
 8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
 
 4 - notificar impugnacao, colocar o prazo, na celula de impgunacao, e ao colocar o prazo, itens propicios a impugnar - botar uma lista de itens mais impugnados ultimamente ()checklist, 08 das manha no dia do prazo, tem que impugnar mesmo?
 13 - COLOCAR ITENS MAIS IMPUGNADOS COMO CHECKLIST PARA OS USUARIOS QUANDO COLOCAR ALGUMA INFORMACAO NO CAMPOD DE IMPUGNACOES 
-
+* ITENS 
+* DATA FINAL 
+* METODO DE ENVIO
 
 6 - tela de analise = com o modelo de planilha de analise que ja usam hoje, sistema/nao atende / total =% de analise
 3 - notificar sistemas que estao em analises e nao foram analisados ainda
-
-12 - COLOCAR NOTIFICACAO 2 DIAS ANTES PARA INICIAR CONFERENCIA DA DOCUMENTACAO 
 
 10 - criar um sistema de envio automatico de e-mails de publicacoes, email generico para teste, podemo separar por estado e regioes. se nao der certo podemos criar um script de envio de email pre montado. 
 
@@ -20,6 +20,7 @@
 
 9 - inteligencia onde vai exportar as publicacoes de um diario oficial. e vai automaticamente preencher e publicar os processos na planilha de processos 
 
+12 - COLOCAR NOTIFICACAO 2 DIAS ANTES PARA INICIAR CONFERENCIA DA DOCUMENTACAO 
 17 - COLOCAR UMA CONDICIONAL PARA QUANDO FOR COLOCADO QUE VAMOS PARTICIPAR, PARA VERIFICAR SE O CAMPO DA PLATAFORMA FOI PREENCHIDO, SE SIM, PASSE, SE NAO, PEÇA PARA QUE PREENCHA SE NAO NAO VAI LIBERAR A TELA DE LANCES 
 
 18 - 
