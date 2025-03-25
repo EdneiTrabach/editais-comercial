@@ -210,6 +210,7 @@ export default {
       { titulo: 'Código Análise', campo: 'codigo_analise' },
       { titulo: 'Órgão', campo: 'orgao' },
       { titulo: 'Objeto Completo', campo: 'objeto_completo' },
+      { titulo: 'Valor Estimado', campo: 'valor_estimado' }, // Nova coluna
       { titulo: 'Status', campo: 'status' },
 
       // Nova coluna Responsáveis
@@ -3118,6 +3119,34 @@ export default {
       }
     };
 
+    // Substitua a função formatarMoeda atual por esta versão:
+
+    const formatarMoeda = (valor) => {
+      // Se valor for falsy (null, undefined, 0, ''), retorne apenas um traço
+      if (!valor) return '-';
+      
+      // Verificar se é um número ou string
+      let valorNumerico;
+      
+      if (typeof valor === 'string') {
+        // Remove qualquer texto ou R$ que possa estar presente
+        // Remove todos os pontos de milhar e substitui vírgula por ponto
+        const valorLimpo = valor.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+        valorNumerico = parseFloat(valorLimpo);
+      } else {
+        valorNumerico = parseFloat(valor);
+      }
+      
+      // Verificar se é um número válido e diferente de zero
+      if (isNaN(valorNumerico) || valorNumerico === 0) return '-';
+      
+      // Formatar como moeda brasileira
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorNumerico);
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -3334,7 +3363,10 @@ export default {
       showSistemasImplantacaoDialog,
       hideSistemasImplantacaoDialog,
       formatarSistemasImplantacao,
-      atualizarSistemasImplantacao
+      atualizarSistemasImplantacao,
+
+      // Adicionar formatarMoeda ao return do setup
+      formatarMoeda
     }
   }
 }

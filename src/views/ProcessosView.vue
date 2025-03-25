@@ -416,6 +416,10 @@
                       <span v-else class="empty-cell">-</span>
                     </div>
                   </template>
+
+                  <!-- Na seção onde são renderizadas as células de visualização -->
+                  <template v-else-if="coluna.campo === 'valor_estimado'">
+                  </template>
                 </template>
               </td>
 

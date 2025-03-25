@@ -85,3 +85,9 @@ td[data-field="empresa_vencedora"] {
 .empty-cell {
   color: #a0aec0;
 }
+
+.valor-estimado {
+  font-weight: 500;
+  color: #193155;
+}
+
