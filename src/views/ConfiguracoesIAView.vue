@@ -32,22 +32,75 @@
           </div>
           
           <div class="form-group" v-if="configuracoes.ia_avancada_ativa">
-            <label for="api-key">Chave API OpenAI</label>
-            <div class="input-with-buttons">
+            <label for="modelo-ia">Modelo de IA</label>
+            <select 
+              id="modelo-ia" 
+              v-model="configuracoes.modelo_ia" 
+              class="full-width"
+            >
+              <option value="openai">OpenAI (GPT-4/GPT-3.5)</option>
+              <option value="local">Modelo Local (Ollama)</option>
+              <option value="mistral">Mistral AI</option>
+              <option value="together">Together.ai</option>
+            </select>
+            <p class="form-help">
+              Selecione o modelo de IA a ser utilizado. Modelos locais não têm custo por token.
+            </p>
+          </div>
+
+          <div v-if="configuracoes.ia_avancada_ativa && configuracoes.modelo_ia === 'openai'">
+            <div class="form-group">
+              <label for="api-key">Chave API OpenAI</label>
+              <div class="input-with-buttons">
+                <input 
+                  :type="mostrarChave ? 'text' : 'password'" 
+                  id="api-key" 
+                  v-model="configuracoes.openai_api_key"
+                  placeholder="sk-..." 
+                  class="full-width"
+                >
+                <button class="btn-icon-only" @click="mostrarChave = !mostrarChave">
+                  <img :src="mostrarChave ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+                </button>
+              </div>
+              <p class="form-help">
+                Obtenha uma chave API em <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>
+              </p>
+            </div>
+          </div>
+
+          <div v-if="configuracoes.ia_avancada_ativa && configuracoes.modelo_ia === 'local'">
+            <div class="form-group">
+              <label>URL do Servidor Ollama</label>
               <input 
-                :type="mostrarChave ? 'text' : 'password'" 
-                id="api-key" 
-                v-model="configuracoes.openai_api_key"
-                placeholder="sk-..." 
+                type="text" 
+                v-model="configuracoes.ollama_url" 
                 class="full-width"
+                placeholder="http://localhost:11434"
               >
-              <button class="btn-icon-only" @click="mostrarChave = !mostrarChave">
-                <img :src="mostrarChave ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+              <p class="form-help">
+                Endereço do servidor Ollama local ou remoto (padrão: http://localhost:11434)
+              </p>
+            </div>
+            
+            <div class="form-group">
+              <label>Modelo</label>
+              <select v-model="configuracoes.ollama_modelo" class="full-width">
+                <option value="mistral">Mistral (recomendado)</option>
+                <option value="llama2">Llama 2</option>
+                <option value="orca-mini">Orca Mini</option>
+              </select>
+              <p class="form-help">
+                Modelo a ser usado no Ollama. Certifique-se de tê-lo baixado usando o comando: ollama pull [modelo]
+              </p>
+            </div>
+            
+            <div class="form-group">
+              <button @click="testarConexaoLocal" class="btn-secondary">
+                <span v-if="testando" class="spinner"></span>
+                {{ testando ? 'Testando...' : 'Verificar Disponibilidade' }}
               </button>
             </div>
-            <p class="form-help">
-              Obtenha uma chave API em <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>
-            </p>
           </div>
           
           <div class="form-group" v-if="configuracoes.ia_avancada_ativa">
@@ -223,7 +276,7 @@
                   :disabled="removendoPadrao === padrao.id"
                 >
                   <span v-if="removendoPadrao === padrao.id" class="spinner"></span>
-                  <img v-else src="/icons/trash.svg" alt="Remover" />
+                  <img v-else src="/icons/lixeira.svg" alt="Remover" />
                 </button>
               </div>
             </div>
@@ -257,7 +310,10 @@ export default {
     const isSidebarExpanded = ref(true);
     const configuracoes = ref({
       ia_avancada_ativa: false,
+      modelo_ia: 'openai',  // Modelo padrão
       openai_api_key: '',
+      ollama_url: 'http://localhost:11434',
+      ollama_modelo: 'mistral',
       limite_historico_analises: 5
     });
     const mostrarChave = ref(false);
@@ -294,8 +350,14 @@ export default {
           data.forEach(config => {
             if (config.chave === 'ia_avancada_ativa') {
               configuracoes.value.ia_avancada_ativa = config.valor === 'true';
+            } else if (config.chave === 'modelo_ia') {
+              configuracoes.value.modelo_ia = config.valor;
             } else if (config.chave === 'openai_api_key') {
               configuracoes.value.openai_api_key = config.valor;
+            } else if (config.chave === 'ollama_url') {
+              configuracoes.value.ollama_url = config.valor;
+            } else if (config.chave === 'ollama_modelo') {
+              configuracoes.value.ollama_modelo = config.valor;
             } else if (config.chave === 'limite_historico_analises') {
               configuracoes.value.limite_historico_analises = parseInt(config.valor, 10) || 5;
             }
@@ -312,17 +374,27 @@ export default {
       try {
         salvando.value = true;
         
-        // Preparar atualizações
+        // Atualizar o array de updates para incluir os novos campos
         const updates = [
           { 
             chave: 'ia_avancada_ativa', 
-            valor: configuracoes.value.ia_avancada_ativa.toString(),
-            ultima_atualizacao: new Date().toISOString()
+            valor: configuracoes.value.ia_avancada_ativa.toString()
+          },
+          {
+            chave: 'modelo_ia',
+            valor: configuracoes.value.modelo_ia
           },
           {
             chave: 'limite_historico_analises',
-            valor: configuracoes.value.limite_historico_analises.toString(),
-            ultima_atualizacao: new Date().toISOString()
+            valor: configuracoes.value.limite_historico_analises.toString()
+          },
+          {
+            chave: 'ollama_url',
+            valor: configuracoes.value.ollama_url
+          },
+          {
+            chave: 'ollama_modelo',
+            valor: configuracoes.value.ollama_modelo
           }
         ];
         
@@ -354,7 +426,7 @@ export default {
       }
     };
     
-    // Testar conexão com a API
+    // Função modificada para chamar diretamente a API OpenAI
     const testarConexao = async () => {
       if (!configuracoes.value.openai_api_key) {
         exibirMensagem('Informe uma chave API para testar a conexão.', 'warning');
@@ -364,16 +436,16 @@ export default {
       try {
         testando.value = true;
         
-        // Fazer uma chamada simples para testar a chave
+        // Chamar diretamente a API da OpenAI
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
           {
-            model: 'gpt-3.5-turbo', // Modelo mais básico para o teste
+            model: 'gpt-3.5-turbo', // Um modelo mais barato para simples teste
             messages: [
               { role: 'system', content: 'Você é um assistente útil.' },
-              { role: 'user', content: 'Faça um teste simples respondendo "Conexão bem-sucedida".' }
+              { role: 'user', content: 'Olá, este é um teste de conexão.' }
             ],
-            max_tokens: 20
+            max_tokens: 5 // Limitar tokens para economizar créditos
           },
           {
             headers: {
@@ -383,19 +455,54 @@ export default {
           }
         );
         
-        if (response.data && response.data.choices && response.data.choices.length > 0) {
-          exibirMensagem('Conexão com a API estabelecida com sucesso!', 'success');
-        } else {
-          exibirMensagem('Resposta inesperada da API. Verifique a chave.', 'warning');
-        }
+        // Se chegou aqui, a conexão funcionou
+        exibirMensagem('Conexão com a API OpenAI estabelecida com sucesso!', 'success');
       } catch (error) {
         console.error('Erro ao testar conexão:', error);
         
-        if (error.response && error.response.status === 401) {
-          exibirMensagem('Chave API inválida. Verifique e tente novamente.', 'error');
+        if (error.response) {
+          if (error.response.status === 401) {
+            exibirMensagem('Chave API inválida. Verifique e tente novamente.', 'error');
+          } else if (error.response.data && error.response.data.error) {
+            exibirMensagem(`Erro da API: ${error.response.data.error.message}`, 'error');
+          } else {
+            exibirMensagem(`Erro ${error.response.status}: ${error.response.statusText}`, 'error');
+          }
+        } else if (error.request) {
+          exibirMensagem('Sem resposta do servidor OpenAI. Verifique sua conexão.', 'error');
         } else {
-          exibirMensagem('Erro ao testar conexão com a API.', 'error');
+          exibirMensagem('Erro na requisição: ' + error.message, 'error');
         }
+      } finally {
+        testando.value = false;
+      }
+    };
+
+    const testarConexaoLocal = async () => {
+      try {
+        testando.value = true;
+        
+        const url = configuracoes.value.ollama_url || 'http://localhost:11434';
+        const response = await axios.get(`${url}/api/tags`);
+        
+        if (response.status === 200) {
+          // Verificar se o modelo selecionado está disponível
+          const modelos = response.data.models || [];
+          const modeloSelecionado = configuracoes.value.ollama_modelo || 'mistral';
+          
+          const modeloDisponivel = modelos.some(m => m.name === modeloSelecionado);
+          
+          if (modeloDisponivel) {
+            exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
+          } else {
+            exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
+          }
+        } else {
+          exibirMensagem('Servidor Ollama está respondendo, mas com status inesperado.', 'warning');
+        }
+      } catch (error) {
+        console.error('Erro ao testar conexão com Ollama:', error);
+        exibirMensagem('Não foi possível conectar ao servidor Ollama. Verifique se ele está instalado e rodando.', 'error');
       } finally {
         testando.value = false;
       }
@@ -585,6 +692,7 @@ export default {
       tipoMensagem,
       salvarConfiguracoes,
       testarConexao,
+      testarConexaoLocal,
       carregarEstatisticas,
       adicionarNovoPadrao,
       removerPadrao,

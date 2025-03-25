@@ -113,18 +113,15 @@
               <span class="link-text">Publicações Contratuais</span>
             </router-link>
           </li>
+          
+          <!-- Adicione este item ao menu do TheSidebar.vue -->
+          <li class="sidebar-menu-item" v-if="isAdmin">
+            <router-link to="/configuracoes-ia" class="sidebar-menu-link">
+              <img src="/icons/settings-ia.svg" alt="Configurações IA" class="icon" />
+              <span class="link-text">Configurações IA</span>
+            </router-link>
+          </li>
         </ul>
-
-        <!-- Adicione este item ao menu do TheSidebar.vue -->
-        <div 
-          class="sidebar-item" 
-          :class="{ active: $route.name === 'configuracoes-ia' }"
-          @click="navigateTo('/configuracoes-ia')"
-          v-if="isAdmin"
-        >
-          <img src="/icons/settings-ia.svg" alt="Configurações IA" class="sidebar-icon" />
-          <span class="sidebar-text" v-if="expanded">Configurações IA</span>
-        </div>
 
         <div class="bottom-section">
           <div class="theme-selector">

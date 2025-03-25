@@ -1,35 +1,59 @@
 import { ref } from 'vue';
 import { supabase } from '@/lib/supabase';
 import axios from 'axios';
+import { useIALocal } from './useIALocal';
 
 export function useIAAdvanced() {
   const processando = ref(false);
   const erro = ref(null);
   const modeloDisponivel = ref(false);
+  const iaLocal = useIALocal();
   
   /**
-   * Verifica se a integração com modelo avançado está disponível
+   * Verifica se algum modelo avançado está disponível
    */
   const verificarDisponibilidade = async () => {
     try {
-      // Verificar configurações do modelo
+      // Primeiro verificar configurações
       const { data: configData } = await supabase
         .from('configuracoes')
         .select('valor')
         .eq('chave', 'ia_avancada_ativa')
         .single();
       
-      if (configData?.valor === 'true') {
-        // Verificar se temos chave API configurada
-        const { data: apiKeyData } = await supabase
-          .from('configuracoes')
-          .select('valor')
-          .eq('chave', 'openai_api_key')
-          .single();
+      if (configData?.valor !== 'true') {
+        modeloDisponivel.value = false;
+        return false;
+      }
+      
+      // Verificar se temos chave API configurada para OpenAI
+      const { data: apiKeyData } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'openai_api_key')
+        .single();
         
+      // Verificar modelo selecionado
+      const { data: modeloData } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'modelo_ia')
+        .single();
+        
+      const modeloSelecionado = modeloData?.valor || 'openai';
+      
+      // Se for OpenAI, verificar chave
+      if (modeloSelecionado === 'openai') {
         modeloDisponivel.value = !!apiKeyData?.valor;
         return modeloDisponivel.value;
       }
+      
+      // Se for modelo local, verificar disponibilidade
+      if (modeloSelecionado === 'local') {
+        return await iaLocal.verificarDisponibilidade();
+      }
+      
+      // Outros provedores podem ser adicionados aqui
       
       modeloDisponivel.value = false;
       return false;
@@ -41,116 +65,92 @@ export function useIAAdvanced() {
   };
 
   /**
-   * Extrai informações usando o modelo avançado de IA
+   * Analisa texto usando o modelo adequado
    */
   const analisarComModeloAvancado = async (texto, dadosHistoricos = null) => {
     if (!await verificarDisponibilidade()) {
-      throw new Error('Modelo avançado não está disponível');
+      throw new Error('Nenhum modelo de IA avançado está disponível');
     }
     
     try {
       processando.value = true;
       
-      // Obter a chave API
-      const { data: apiKeyData } = await supabase
+      // Verificar qual modelo usar
+      const { data: modeloData } = await supabase
         .from('configuracoes')
         .select('valor')
-        .eq('chave', 'openai_api_key')
+        .eq('chave', 'modelo_ia')
         .single();
+        
+      const modeloSelecionado = modeloData?.valor || 'openai';
       
-      if (!apiKeyData?.valor) {
-        throw new Error('Chave API não encontrada');
+      let resultado;
+      
+      // Usar modelo apropriado
+      if (modeloSelecionado === 'local') {
+        resultado = await iaLocal.analisarComModeloLocal(texto, dadosHistoricos);
+      } else {
+        // Por padrão usa OpenAI
+        resultado = await analisarComOpenAI(texto, dadosHistoricos);
       }
       
-      // Preparar o contexto com dados históricos
-      let contextoDados = '';
-      if (dadosHistoricos && dadosHistoricos.length > 0) {
-        contextoDados = 'Exemplos de publicações anteriores e informações extraídas:\n';
-        dadosHistoricos.forEach((item, index) => {
-          contextoDados += `Exemplo ${index + 1}:\n`;
-          contextoDados += `Texto: ${item.texto.substring(0, 300)}...\n`;
-          contextoDados += `Número do Processo: ${item.numero_processo || 'Não identificado'}\n`;
-          contextoDados += `Órgão: ${item.orgao || 'Não identificado'}\n`;
-          contextoDados += `Município: ${item.municipio || 'Não identificado'}\n`;
-          contextoDados += `Estado: ${item.estado || 'Não identificado'}\n`;
-          contextoDados += `Data da Licitação: ${item.data_licitacao || 'Não identificada'}\n`;
-          contextoDados += `Empresa Vencedora: ${item.empresa_vencedora || 'Não identificada'}\n`;
-          contextoDados += `Número do Contrato: ${item.numero_contrato || 'Não identificado'}\n\n`;
-        });
-      }
+      // Registrar análise para aprendizado futuro
+      await registrarAnaliseRealizada(texto, resultado, modeloSelecionado);
       
-      // Construir o prompt para o modelo
-      const prompt = `
-        Você é um assistente especializado em análise de publicações contratuais e licitações. 
-        Extraia as seguintes informações do texto abaixo:
-        
-        1. Número do Processo
-        2. Órgão Licitante
-        3. Município
-        4. Estado/UF (apenas a sigla)
-        5. Data da Licitação (em formato ISO YYYY-MM-DD)
-        6. Empresa Vencedora (nome completo)
-        7. Número do Contrato
-        
-        ${contextoDados}
-        
-        TEXTO DA PUBLICAÇÃO:
-        ${texto}
-        
-        Responda APENAS com um objeto JSON válido no seguinte formato, sem explicações adicionais:
-        {
-          "numero_processo": "string ou null se não encontrado",
-          "orgao": "string ou null se não encontrado",
-          "municipio": "string ou null se não encontrado",
-          "estado": "string ou null se não encontrado",
-          "data_licitacao": "YYYY-MM-DD ou null se não encontrada",
-          "empresa_vencedora": "string ou null se não encontrada",
-          "numero_contrato": "string ou null se não encontrado",
-          "confianca": "número de 0 a 100 representando a confiança na extração"
-        }
-      `;
-      
-      // Fazer a chamada à API
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4-turbo-preview', // ou outro modelo adequado
-          messages: [
-            { role: 'system', content: 'Você é um assistente especializado em extrair informações de publicações contratuais.' },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.1, // baixa temperatura para respostas mais determinísticas
-          max_tokens: 1000
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKeyData.valor}`
-          }
-        }
-      );
-      
-      // Extrair a resposta
-      const resposta = response.data.choices[0].message.content;
-      
-      // Tentar fazer parse do JSON
-      try {
-        const resultado = JSON.parse(resposta);
-        
-        // Registrar análise para aprendizado futuro
-        await registrarAnaliseRealizada(texto, resultado);
-        
-        return resultado;
-      } catch (parseError) {
-        console.error('Erro ao fazer parse da resposta da IA:', parseError);
-        throw new Error('Erro ao processar resposta do modelo');
-      }
+      return resultado;
     } catch (error) {
-      console.error('Erro na análise com modelo avançado:', error);
+      console.error('Erro na análise:', error);
       erro.value = error;
+      
+      // Tentar fallback para outro modelo se o principal falhar
+      try {
+        if (await iaLocal.verificarDisponibilidade()) {
+          console.log('Tentando fallback para modelo local...');
+          return await iaLocal.analisarComModeloLocal(texto, dadosHistoricos);
+        }
+      } catch (fallbackError) {
+        console.error('Erro no fallback:', fallbackError);
+      }
+      
       throw error;
     } finally {
       processando.value = false;
+    }
+  };
+  
+  /**
+   * Analisa com OpenAI (código original, mantido como função separada)
+   */
+  const analisarComOpenAI = async (texto, dadosHistoricos = null) => {
+    // Obter a chave API
+    const { data: apiKeyData } = await supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'openai_api_key')
+      .single();
+    
+    if (!apiKeyData?.valor) {
+      throw new Error('Chave API não encontrada');
+    }
+    
+    // Preparar o contexto com dados históricos
+    let contextoDados = '';
+    if (dadosHistoricos && dadosHistoricos.length > 0) {
+      contextoDados = 'Exemplos de publicações anteriores e informações extraídas:\n';
+      dadosHistoricos.forEach((item, index) => {
+        contextoDados += `Exemplo ${index + 1}:\n`;
+        contextoDados += `Texto: ${item.texto.substring(0, 300)}...\n`;
+        contextoDados += `Número do Processo: ${item.numero_processo || 'Não identificado'}\n`;
+        contextoDados += `Órgão: ${item.orgao || 'Não identificado'}\n`;
+        contextoDados += `Município: ${item.municipio || 'Não identificado'}\n`;
+        contextoDados += `Estado: ${item.estado || 'Não identificado'}\n`;
+        contextoDados += `Data da Licitação: ${item.data_licitacao || 'Não identificada'}\n`;
+        contextoDados += `Empresa Vencedora: ${item.empresa_vencedora || 'Não identificada'}\n`;
+        contextoDados += `Número do Contrato: ${item.numero_contrato || 'Não identificado'}\n\n`;
+      });
+    }
+    
+    // Construir o prompt para o modelo
     }
   };
   
