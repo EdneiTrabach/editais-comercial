@@ -2,17 +2,35 @@
   <div class="empresa-vencedora-coluna">
     <!-- Modo de edição -->
     <div v-if="isEditing" class="editing-mode">
-      <select v-model="selectedEmpresa" class="empresa-select" @blur="saveChanges" @keyup.enter="saveChanges" @keyup.esc="cancelEdit">
-        <option value="">Selecione a empresa vencedora...</option>
-        <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
-          {{ empresa.nome }}
-        </option>
-      </select>
+      <div class="edit-container">
+        <select v-model="selectedEmpresa" class="empresa-select">
+          <option value="">Selecione a empresa vencedora...</option>
+          <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
+            {{ empresa.nome }}
+          </option>
+        </select>
+        
+        <input 
+          v-model="numeroContrato" 
+          class="contrato-input" 
+          placeholder="Nº do Contrato" 
+          type="text"
+        />
+        
+        <div class="edit-actions">
+          <button @click="saveChanges" class="btn-save">Salvar</button>
+          <button @click="cancelEdit" class="btn-cancel">Cancelar</button>
+        </div>
+      </div>
     </div>
     
     <!-- Modo de visualização -->
     <div v-else class="display-mode" @dblclick="startEdit">
-      <span v-if="empresaNome">{{ empresaNome }}</span>
+      <div v-if="empresaNome || numeroContrato" class="info-container">
+        <div v-if="empresaNome" class="empresa-nome">{{ empresaNome }}</div>
+        <div v-if="numeroContrato" class="contrato-numero">Contrato: {{ numeroContrato }}</div>
+        <div v-if="dadosAnalise" class="dados-analise">{{ dadosAnalise }}</div>
+      </div>
       <span v-else class="sem-empresa">Não definida</span>
     </div>
   </div>
@@ -38,16 +56,39 @@ export default {
     const empresas = ref([]);
     const isEditing = ref(false);
     const selectedEmpresa = ref(props.processo.empresa_vencedora || '');
+    const numeroContrato = ref(props.processo.numero_contrato || '');
+    const dadosAnalise = ref('');
     
     // Carregar empresas ao montar o componente
     onMounted(async () => {
       await loadEmpresas();
+      // Carregar os dados iniciais do contrato
+      if (props.processo.numero_contrato) {
+        numeroContrato.value = props.processo.numero_contrato;
+      }
+      
+      // Verificar se há dados de análise automática
+      checkDadosAnaliseAutomatica();
     });
     
     // Atualizar seleção quando o processo mudar
     watch(() => props.processo, (newProcesso) => {
       selectedEmpresa.value = newProcesso.empresa_vencedora || '';
+      numeroContrato.value = newProcesso.numero_contrato || '';
+      checkDadosAnaliseAutomatica();
     });
+    
+    // Função para verificar dados de análise automática
+    const checkDadosAnaliseAutomatica = () => {
+      // No futuro, aqui será implementada a lógica para
+      // analisar publicações e extrair dados automaticamente
+      // Por enquanto, apenas verificamos se já temos dados processados
+      if (props.processo.dados_analise_automatica) {
+        dadosAnalise.value = props.processo.dados_analise_automatica;
+      } else {
+        dadosAnalise.value = '';
+      }
+    };
     
     // Buscar nome da empresa pelo ID
     const empresaNome = computed(() => {
@@ -80,11 +121,15 @@ export default {
     const cancelEdit = () => {
       isEditing.value = false;
       selectedEmpresa.value = props.processo.empresa_vencedora || '';
+      numeroContrato.value = props.processo.numero_contrato || '';
     };
     
     // Salvar alterações
     const saveChanges = async () => {
-      if (selectedEmpresa.value === props.processo.empresa_vencedora) {
+      const empresaChanged = selectedEmpresa.value !== props.processo.empresa_vencedora;
+      const contratoChanged = numeroContrato.value !== props.processo.numero_contrato;
+      
+      if (!empresaChanged && !contratoChanged) {
         isEditing.value = false;
         return;
       }
@@ -92,6 +137,7 @@ export default {
       try {
         const updateData = {
           empresa_vencedora: selectedEmpresa.value,
+          numero_contrato: numeroContrato.value,
           updated_at: new Date().toISOString()
         };
         
@@ -113,21 +159,33 @@ export default {
           tipo: 'atualizacao',
           tabela: 'processos',
           registro_id: props.processo.id,
-          campo_alterado: 'empresa_vencedora',
-          dados_anteriores: props.processo.empresa_vencedora,
-          dados_novos: selectedEmpresa.value
+          campo_alterado: empresaChanged && contratoChanged 
+            ? 'empresa_vencedora e numero_contrato' 
+            : empresaChanged 
+              ? 'empresa_vencedora' 
+              : 'numero_contrato',
+          dados_anteriores: JSON.stringify({
+            empresa_vencedora: props.processo.empresa_vencedora,
+            numero_contrato: props.processo.numero_contrato
+          }),
+          dados_novos: JSON.stringify({
+            empresa_vencedora: selectedEmpresa.value,
+            numero_contrato: numeroContrato.value
+          })
         });
         
         // Emitir evento de atualização para o componente pai
         emit('update', {
           id: props.processo.id,
-          field: 'empresa_vencedora',
-          value: selectedEmpresa.value
+          fields: {
+            empresa_vencedora: selectedEmpresa.value,
+            numero_contrato: numeroContrato.value
+          }
         });
         
       } catch (error) {
-        console.error('Erro ao atualizar empresa vencedora:', error);
-        alert('Erro ao salvar empresa vencedora');
+        console.error('Erro ao atualizar empresa vencedora e contrato:', error);
+        alert('Erro ao salvar empresa vencedora e número de contrato');
       } finally {
         isEditing.value = false;
       }
@@ -157,10 +215,23 @@ export default {
       }
     };
     
+    // Função para análise automática (a ser implementada futuramente)
+    const analisarPublicacoesAutomaticamente = async () => {
+      // Esta função será implementada no futuro para:
+      // 1. Analisar publicações de adjudicação, homologação e contratação
+      // 2. Extrair automaticamente dados relevantes
+      // 3. Preencher o campo de empresa vencedora e número de contrato
+      
+      // Por enquanto, apenas um placeholder
+      console.log('Análise automática de publicações será implementada em versão futura');
+    };
+    
     return {
       empresas,
       isEditing,
       selectedEmpresa,
+      numeroContrato,
+      dadosAnalise,
       empresaNome,
       startEdit,
       cancelEdit,
@@ -186,7 +257,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: center; /* Centralizar como as outras células */
+  text-align: center;
 }
 
 .sem-empresa {
@@ -198,13 +269,67 @@ export default {
   width: 100%;
 }
 
-.empresa-select {
+.edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.empresa-select, .contrato-input {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
   background-color: white;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.btn-save, .btn-cancel {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-save {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #43a047;
+}
+
+.btn-cancel {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.empresa-nome {
+  font-weight: bold;
+}
+
+.contrato-numero {
+  font-size: 0.85em;
+  color: #555;
+}
+
+.dados-analise {
+  font-size: 0.8em;
+  color: #4caf50;
+  font-style: italic;
 }
 
 /* Adicionar estilos para integração com a tabela */
