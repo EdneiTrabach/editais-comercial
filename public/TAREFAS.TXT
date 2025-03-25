@@ -1,5 +1,5 @@
 1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vai analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
-8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes ja cadastradas 
+8 - criar uma coluna da empresa que venceu, colocar um dropdown com as empresas concorrentes
 
 4 - notificar impugnacao, colocar o prazo, na celula de impgunacao, e ao colocar o prazo, itens propicios a impugnar - botar uma lista de itens mais impugnados ultimamente ()checklist, 08 das manha no dia do prazo, tem que impugnar mesmo?
 13 - COLOCAR ITENS MAIS IMPUGNADOS COMO CHECKLIST PARA OS USUARIOS QUANDO COLOCAR ALGUMA INFORMACAO NO CAMPOD DE IMPUGNACOES 

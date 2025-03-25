@@ -403,6 +403,19 @@
                       @update="handleComponentUpdate"
                     />
                   </template>
+
+                  <!-- Em ProcessosView.vue, na seção onde são renderizadas as colunas -->
+                  <template v-else-if="coluna.campo === 'sistemas_implantacao'">
+                    <div 
+                      class="sistemas-implantacao-cell" 
+                      @dblclick="showSistemasImplantacaoDialog(processo)"
+                    >
+                      <span v-if="processo.sistemas_implantacao && processo.sistemas_implantacao.sistemas_ids">
+                        {{ formatarSistemasImplantacao(processo.sistemas_implantacao) }}
+                      </span>
+                      <span v-else class="empty-cell">-</span>
+                    </div>
+                  </template>
                 </template>
               </td>
 
@@ -756,6 +769,26 @@
             Notificações automáticas ativadas. 
             Próxima notificação: {{ statusInfoBalloon.nextNotification || 'calculando...' }}
           </span>
+        </div>
+      </div>
+
+      <!-- Adicione esta parte no final do template, junto aos outros diálogos -->
+      <div 
+        v-if="sistemasImplantacaoDialog.show" 
+        class="sistemas-implantacao-dialog"
+        :style="sistemasImplantacaoDialog.position"
+      >
+        <div class="sistemas-implantacao-dialog-content">
+          <h3>Sistemas a serem Implantados</h3>
+          <SistemasImplantacaoSelector
+            :processo-id="sistemasImplantacaoDialog.processo.id"
+            :sistemas-ativos="sistemasImplantacaoDialog.processo.sistemas_ativos || []"
+            :value="sistemasImplantacaoDialog.processo.sistemas_implantacao"
+            @save="hideSistemasImplantacaoDialog"
+          />
+          <div class="sistemas-implantacao-dialog-actions">
+            <button class="btn-cancel" @click="hideSistemasImplantacaoDialog">Fechar</button>
+          </div>
         </div>
       </div>
 

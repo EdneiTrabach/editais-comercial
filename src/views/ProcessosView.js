@@ -251,6 +251,12 @@ export default {
         tipoExibicao: 'componente',
         componente: 'EmpresaVencedoraColuna'
       },
+      {
+        titulo: 'Sistemas a Implantar',
+        campo: 'sistemas_implantacao',
+        tabela: 'processo',
+        tipo: 'objeto'
+      },
     ]
 
     // Brazilian states
@@ -3027,6 +3033,91 @@ export default {
       showToast(`Campo atualizado com sucesso`, 'success');
     };
 
+    // Adicione estas funções dentro do método setup()
+
+    // Referência para o diálogo de sistemas a implantar
+    const sistemasImplantacaoDialog = ref({
+      show: false,
+      position: {},
+      processo: null
+    });
+
+    // Função para mostrar o diálogo de sistemas a implantar
+    const showSistemasImplantacaoDialog = (processo, event) => {
+      const cell = event.target.closest('td');
+      const rect = cell.getBoundingClientRect();
+      
+      sistemasImplantacaoDialog.value = {
+        show: true,
+        position: {
+          top: `${rect.bottom + 10}px`,
+          left: `${rect.left}px`
+        },
+        processo
+      };
+    };
+
+    // Função para fechar o diálogo
+    const hideSistemasImplantacaoDialog = () => {
+      sistemasImplantacaoDialog.value = {
+        show: false,
+        position: {},
+        processo: null
+      };
+    };
+
+    // Função para formatar os sistemas a implantar para exibição
+    const formatarSistemasImplantacao = (dados) => {
+      if (!dados || !dados.sistemas_ids || dados.sistemas_ids.length === 0) {
+        return dados?.informacoes_adicionais || '-';
+      }
+      
+      const nomesSistemas = dados.sistemas_ids.map(id => getSistemaNome(id)).join(', ');
+      
+      if (dados.informacoes_adicionais) {
+        return `${nomesSistemas} (${dados.informacoes_adicionais})`;
+      }
+      
+      return nomesSistemas;
+    };
+
+    // Função para atualizar os sistemas a implantar
+    const atualizarSistemasImplantacao = async (processo, dados) => {
+      try {
+        const { error } = await supabase
+          .from('processos')
+          .update({
+            sistemas_implantacao: dados,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', processo.id);
+          
+        if (error) throw error;
+        
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'atualizacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          campo_alterado: 'sistemas_implantacao',
+          dados_anteriores: JSON.stringify(processo.sistemas_implantacao || {}),
+          dados_novos: JSON.stringify(dados)
+        });
+        
+        // Recarregar processos
+        await loadProcessos();
+        
+        // Fechar diálogo
+        hideSistemasImplantacaoDialog();
+        
+        // Mostrar mensagem de sucesso
+        showToast('Sistemas a implantar atualizados com sucesso', 'success');
+      } catch (error) {
+        console.error('Erro ao atualizar sistemas a implantar:', error);
+        showToast('Erro ao atualizar sistemas a implantar', 'error');
+      }
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -3236,7 +3327,14 @@ export default {
       createNewUpdate,
       previewUpdate,
       formatImportance,
-      handleComponentUpdate
+      handleComponentUpdate,
+
+      // Adicionar ao objeto de retorno do setup()
+      sistemasImplantacaoDialog,
+      showSistemasImplantacaoDialog,
+      hideSistemasImplantacaoDialog,
+      formatarSistemasImplantacao,
+      atualizarSistemasImplantacao
     }
   }
 }

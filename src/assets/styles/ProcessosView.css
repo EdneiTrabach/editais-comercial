@@ -48,3 +48,40 @@ td[data-field="empresa_vencedora"] {
   background-color: #1e293b;
   color: #e2e8f0;
 }
+/* Adicione estes estilos ao seu CSS */
+.sistemas-implantacao-dialog {
+  position: absolute;
+  z-index: 1000;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  width: 580px;
+  max-width: 90vw;
+}
+
+.sistemas-implantacao-dialog-content {
+  padding: 20px;
+}
+
+.sistemas-implantacao-dialog h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2d3748;
+  font-size: 1.2rem;
+}
+
+.sistemas-implantacao-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 20px;
+}
+
+.sistemas-implantacao-cell {
+  cursor: pointer;
+}
+
+.empty-cell {
+  color: #a0aec0;
+}
