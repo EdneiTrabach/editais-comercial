@@ -173,7 +173,7 @@
 /* Estilos para a exibição dos sistemas na célula da tabela */
 .sistemas-lista {
   white-space: normal;
-  max-width: 200px;
+  max-width: 100%;
   font-size: 0.9rem;
 }
 
