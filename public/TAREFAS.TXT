@@ -1,5 +1,21 @@
 1 - Na planilha colocar tambem Contrato e sistemas a serem implantados depois de marcar como ganhamos, numero de contrato. (criar uma forma de inteligencia onde vai analisar a publicao de adjudicacao, homologacao e contratacao, ja preenchendo automaticamente os campos na planilha de processos)
 
+                Implementar aprendizado de máquina: Use um modelo de NLP mais avançado que possa ser treinado com seus dados específicos para melhorar a precisão ao longo do tempo.
+
+                Adicionar feedback do usuário: Permita que os usuários indiquem quando a detecção automática está correta ou incorreta, e use esses dados para melhorar algoritmos futuros.
+
+                Expandir a base de conhecimento: Criar uma tabela no banco de dados com padrões comuns de números de processos, órgãos, etc., que possa ser consultada durante a análise.
+
+                Integração com APIs externas: Conecte-se a serviços públicos que fornecem dados sobre licitações para verificar e complementar informações extraídas.
+
+                Análise contextual: Implemente uma lógica que considere a relação entre os diferentes campos extraídos (por exemplo, se um órgão específico tem um formato particular de número de processo).
+
+
+
+
+
+
+
 4 - notificar impugnacao, colocar o prazo, na celula de impgunacao, e ao colocar o prazo, itens propicios a impugnar - botar uma lista de itens mais impugnados ultimamente ()checklist, 08 das manha no dia do prazo, tem que impugnar mesmo?
 13 - COLOCAR ITENS MAIS IMPUGNADOS COMO CHECKLIST PARA OS USUARIOS QUANDO COLOCAR ALGUMA INFORMACAO NO CAMPOD DE IMPUGNACOES 
 * ITENS 

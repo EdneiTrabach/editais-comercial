@@ -157,6 +157,13 @@ const router = createRouter({
         requiresAuth: true
       }
     },
+    // Adicione esta rota
+    {
+      path: '/configuracoes-ia',
+      name: 'configuracoes-ia',
+      component: () => import('../views/ConfiguracoesIAView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
     // Adicione um catch-all route
     {
       path: '/:pathMatch(.*)*',

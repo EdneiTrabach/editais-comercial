@@ -115,6 +115,17 @@
           </li>
         </ul>
 
+        <!-- Adicione este item ao menu do TheSidebar.vue -->
+        <div 
+          class="sidebar-item" 
+          :class="{ active: $route.name === 'configuracoes-ia' }"
+          @click="navigateTo('/configuracoes-ia')"
+          v-if="isAdmin"
+        >
+          <img src="/icons/settings-ia.svg" alt="Configurações IA" class="sidebar-icon" />
+          <span class="sidebar-text" v-if="expanded">Configurações IA</span>
+        </div>
+
         <div class="bottom-section">
           <div class="theme-selector">
             <button class="theme-toggle sidebar-menu-link" @click="toggleThemeSelector">
