@@ -106,6 +106,13 @@
               <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
+          <!-- Novo item de menu para Publicações Contratuais -->
+          <li class="sidebar-menu-item">
+            <router-link to="/publicacoes-contratuais" class="sidebar-menu-link">
+              <img src="/icons/lixeira.svg" alt="Publicações Contratuais" class="icon" />
+              <span class="link-text">Publicações Contratuais</span>
+            </router-link>
+          </li>
         </ul>
 
         <div class="bottom-section">

@@ -148,6 +148,15 @@ const router = createRouter({
         requiresAdmin: true // Para proteger a rota apenas para admins
       }
     },
+    // Adicione esta rota ao seu array de rotas
+    {
+      path: '/publicacoes-contratuais',
+      name: 'publicacoes-contratuais',
+      component: () => import('@/views/PublicacoesContratuaisView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
     // Adicione um catch-all route
     {
       path: '/:pathMatch(.*)*',
