@@ -29,6 +29,22 @@ export function useIALocal() {
     try {
       processando.value = true;
       
+      // Obter a URL e modelo configurados
+      const { data: urlData } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'ollama_url')
+        .single();
+      
+      const { data: modeloData } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'ollama_modelo')
+        .single();
+      
+      const url = urlData?.valor || 'http://localhost:11434';
+      const modelo = modeloData?.valor || 'mistral';
+      
       // Construir o prompt com contexto
       let contextoDados = '';
       if (dadosHistoricos && dadosHistoricos.length > 0) {
@@ -59,9 +75,9 @@ export function useIALocal() {
         }
       `;
       
-      // Chamar API Ollama (geralmente em localhost:11434)
-      const response = await axios.post('http://localhost:11434/api/generate', {
-        model: 'mistral', // ou 'llama2', 'nous-hermes' dependendo do que você baixou
+      // Chamar API Ollama com a URL configurada
+      const response = await axios.post(`${url}/api/generate`, {
+        model: modelo,
         prompt: prompt,
         stream: false
       });

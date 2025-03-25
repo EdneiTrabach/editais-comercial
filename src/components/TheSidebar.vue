@@ -99,17 +99,10 @@
               <span class="link-text">Responsáveis</span>
             </router-link>
           </li>
-          <li class="sidebar-menu-item">
-            <router-link to="/configuracoes" class="sidebar-menu-link" v-slot="{ isActive }"
-              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
-              <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
-              <span class="link-text">Admin. de Usuários</span>
-            </router-link>
-          </li>
           <!-- Novo item de menu para Publicações Contratuais -->
           <li class="sidebar-menu-item">
             <router-link to="/publicacoes-contratuais" class="sidebar-menu-link">
-              <img src="/icons/lixeira.svg" alt="Publicações Contratuais" class="icon" />
+              <img src="/icons/contract.svg" alt="Publicações Contratuais" class="icon" />
               <span class="link-text">Publicações Contratuais</span>
             </router-link>
           </li>
@@ -119,6 +112,13 @@
             <router-link to="/configuracoes-ia" class="sidebar-menu-link">
               <img src="/icons/settings-ia.svg" alt="Configurações IA" class="icon" />
               <span class="link-text">Configurações IA</span>
+            </router-link>
+          </li>
+          <li class="sidebar-menu-item">
+            <router-link to="/configuracoes" class="sidebar-menu-link" v-slot="{ isActive }"
+              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
+              <img src="/icons/config-usuario.svg" alt="Administração" class="icon" />
+              <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
         </ul>

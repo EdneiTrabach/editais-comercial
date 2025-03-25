@@ -136,6 +136,11 @@
               <span v-if="testando" class="spinner"></span>
               {{ testando ? 'Testando...' : 'Testar Conexão' }}
             </button>
+
+            <button @click="testarConexaoOllama" class="btn-secondary">
+              <span v-if="testando" class="spinner"></span>
+              {{ testando ? 'Testando...' : 'Verificar Disponibilidade do Ollama' }}
+            </button>
           </div>
         </div>
         
@@ -507,6 +512,33 @@ export default {
         testando.value = false;
       }
     };
+
+    const testarConexaoOllama = async () => {
+      try {
+        testando.value = true;
+        
+        const url = configuracoes.value.ollama_url || 'http://localhost:11434';
+        const response = await axios.get(`${url}/api/tags`);
+        
+        if (response.status === 200) {
+          const modelos = response.data.models || [];
+          const modeloSelecionado = configuracoes.value.ollama_modelo || 'mistral';
+          
+          if (modelos.some(m => m.name === modeloSelecionado)) {
+            exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
+          } else {
+            exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
+          }
+        } else {
+          exibirMensagem('Servidor Ollama está respondendo, mas com status inesperado.', 'warning');
+        }
+      } catch (error) {
+        console.error('Erro ao testar conexão com Ollama:', error);
+        exibirMensagem('Não foi possível conectar ao servidor Ollama. Verifique se está rodando com o comando "ollama serve".', 'error');
+      } finally {
+        testando.value = false;
+      }
+    };
     
     // Carregar estatísticas de precisão
     const carregarEstatisticas = async () => {
@@ -693,6 +725,7 @@ export default {
       salvarConfiguracoes,
       testarConexao,
       testarConexaoLocal,
+      testarConexaoOllama,
       carregarEstatisticas,
       adicionarNovoPadrao,
       removerPadrao,
