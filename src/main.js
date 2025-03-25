@@ -4,6 +4,7 @@ import router from './router'
 import { createAppService } from './services/appService'
 import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
+import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
 
 // Função para reconectar quando a aplicação voltar a ser visível
 const setupVisibilityHandling = () => {
@@ -26,6 +27,7 @@ const app = createApp(App)
 // app.provide('appService', appService)
 
 app.use(router)
+app.component('EmpresaVencedoraColuna', EmpresaVencedoraColuna)
 
 // Configurar tratamento de visibilidade
 setupVisibilityHandling()

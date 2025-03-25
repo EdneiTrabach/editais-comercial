@@ -395,6 +395,14 @@
                       <!-- <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button> -->
                     </template>
                   </div>
+
+                  <!-- Componente EmpresaVencedoraColuna -->
+                  <template v-else-if="coluna.tipoExibicao === 'componente' && coluna.componente === 'EmpresaVencedoraColuna'">
+                    <EmpresaVencedoraColuna 
+                      :processo="processo" 
+                      @update="handleComponentUpdate"
+                    />
+                  </template>
                 </template>
               </td>
 
@@ -760,6 +768,7 @@
 import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
+import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue'
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -790,7 +799,8 @@ export default {
   ...ProcessosViewModel,
   components: {
     ...ProcessosViewModel.components || {},
-    Shepherd
+    Shepherd,
+    EmpresaVencedoraColuna
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 

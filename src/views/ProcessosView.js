@@ -94,7 +94,20 @@ export default {
         const savedOrder = localStorage.getItem('table-columns-order');
         if (savedOrder) {
           // Carrega a ordem salva
-          colunasOrder.value = JSON.parse(savedOrder);
+          const savedColumns = JSON.parse(savedOrder);
+          
+          // Verifica se todas as colunas atuais estão na ordem salva
+          const currentColumns = colunas.map(coluna => coluna.campo);
+          const missingColumns = currentColumns.filter(campo => !savedColumns.includes(campo));
+          
+          // Se existem novas colunas, adiciona ao final da ordem
+          if (missingColumns.length > 0) {
+            colunasOrder.value = [...savedColumns, ...missingColumns];
+            // Salva a nova ordem atualizada
+            saveColumnsOrder();
+          } else {
+            colunasOrder.value = savedColumns;
+          }
         } else {
           // Define a ordem padrão (todas as colunas)
           colunasOrder.value = colunas.map(coluna => coluna.campo);
@@ -231,7 +244,13 @@ export default {
         tabelaRelacionada: 'empresas',
         campoExibicao: 'nome',
         tipoEdicao: 'select'
-      }
+      },
+      {
+        titulo: 'Empresa Vencedora',
+        campo: 'empresa_vencedora',
+        tipoExibicao: 'componente',
+        componente: 'EmpresaVencedoraColuna'
+      },
     ]
 
     // Brazilian states
@@ -2999,6 +3018,15 @@ export default {
       return map[importance] || importance;
     };
 
+    // Adicionar dentro do setup()
+    const handleComponentUpdate = async (data) => {
+      // Recarregar os processos para refletir a mudança
+      await loadProcessos();
+      
+      // Mostrar mensagem de sucesso
+      showToast(`Campo atualizado com sucesso`, 'success');
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -3207,7 +3235,8 @@ export default {
       loadSystemUpdates,
       createNewUpdate,
       previewUpdate,
-      formatImportance
+      formatImportance,
+      handleComponentUpdate
     }
   }
 }

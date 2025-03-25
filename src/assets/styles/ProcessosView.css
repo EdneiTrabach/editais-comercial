@@ -32,3 +32,19 @@ button.btn-tour {
   border-radius: 8px;
   font-weight: 500;
 }
+
+/* Adicionar ao arquivo src/assets/styles/components/table-cells.css */
+td[data-field="empresa_vencedora"] {
+  padding: 0;
+  vertical-align: middle;
+  text-align: center;
+  border: 1px solid #e9ecef;
+  background-color: inherit;
+}
+
+/* Estilos específicos para o modo dark */
+[data-theme="dark"] td[data-field="empresa_vencedora"] {
+  border-color: #2d3748;
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
