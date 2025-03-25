@@ -27,6 +27,16 @@
       </div>
     </div>
     
+    <!-- Mostrar os sistemas disponíveis -->
+    <div class="sistemas-disponivel" v-if="sistemas && sistemas.length > 0">
+      <h3>Sistemas Disponíveis:</h3>
+      <div class="sistemas-list">
+        <div v-for="sistema in sistemas" :key="sistema.id" class="sistema-chip">
+          {{ sistema.nome }}
+        </div>
+      </div>
+    </div>
+    
     <!-- Mostrar os itens por categoria, independente de haver sistemas -->
     <div class="itens-container">
       <div class="categoria-wrapper" v-for="categoria in categoriasFiltradas" :key="categoria">
@@ -50,7 +60,7 @@
       </div>
     </div>
     
-    <!-- Mostrar mensagem informativa sobre sistemas, mas não bloquear a seleção -->
+    <!-- Mensagem informativa sobre sistemas, mas não bloquear a seleção -->
     <div v-if="sistemas.length === 0" class="info-sistemas">
       <p>Este processo não possui sistemas cadastrados, mas você pode continuar selecionando itens para a proposta.</p>
     </div>
@@ -67,7 +77,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, computed, ref, watch, onMounted } from 'vue'
+import { defineProps, defineEmits, computed, ref } from 'vue'
 
 const props = defineProps({
   sistemas: {
@@ -90,27 +100,10 @@ const props = defineProps({
 const emit = defineEmits(['update:itensSelecionados'])
 
 // Valor inicial false para mostrar as categorias por padrão
-const mostrarTodasCategorias = ref(false)
-const categoriasSelecionadas = ref([])
+const mostrarTodasCategorias = ref(true) // Mudado para true para mostrar todas as categorias por padrão
+const categoriasSelecionadas = ref([]) // Já está inicializada como vazia, o que é correto
 
-// Quando o componente é montado ou quando os itens disponíveis mudam
-onMounted(() => {
-  initializeCategorias()
-})
-
-watch(() => props.itensDisponiveis, () => {
-  initializeCategorias()
-}, { immediate: true })
-
-// Inicializa a primeira categoria quando o componente é montado
-function initializeCategorias() {
-  if (props.itensDisponiveis && props.itensDisponiveis.length > 0 && categoriasSelecionadas.value.length === 0) {
-    const categoriasDisponiveis = [...new Set(props.itensDisponiveis.map(item => item.categoria))]
-    if (categoriasDisponiveis.length > 0) {
-      categoriasSelecionadas.value = [categoriasDisponiveis[0]]
-    }
-  }
-}
+// Não é mais necessário inicializar categorias
 
 const modelValue = computed({
   get: () => props.itensSelecionados,

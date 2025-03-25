@@ -50,7 +50,6 @@
 }
 
 .input-descricao, .input-marca {
-  width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -69,18 +68,11 @@
 }
 
 .input-valor {
+  padding: 0.5rem 2rem;
   padding: 8px 8px 8px 30px;
   width: 100%;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
-
-.input-quantidade {
-  width: 80px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  text-align: center;
 }
 
 .total-label {
@@ -171,7 +163,7 @@
 
 .resumo-categorias {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 15px;
   margin-top: 15px;
 }

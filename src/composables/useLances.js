@@ -1,6 +1,8 @@
 import { ref, computed, watch } from 'vue'
 import { useProcessos } from './useProcessos'
 import { usePlanilha } from './usePlanilha'
+import { supabase } from '@/lib/supabase'
+import { useSistemasItens } from './useSistemasItens'
 
 export function useLances() {
   const step = ref(1)
@@ -27,6 +29,9 @@ export function useLances() {
     formatarMoeda
   } = usePlanilha()
 
+  // Adicione o novo composable
+  const { processarItensPlanilha } = useSistemasItens()
+
   // Lista ampliada de itens disponíveis para seleção
   const itensDisponiveis = [
     { id: 1, nome: 'Licença de Uso', categoria: 'Licenciamento' },
@@ -45,28 +50,115 @@ export function useLances() {
     { id: 14, nome: 'Outros', categoria: 'Diversos' }
   ]
 
+  // Função para obter o nome do sistema a partir do ID
+  const sistemasNomesCache = ref({});
+  
+  // Carrega nomes dos sistemas se necessário
+  const carregarNomesSistemas = async () => {
+    try {
+      console.log("Carregando nomes de todos os sistemas...")
+      const { data, error } = await supabase
+        .from('sistemas')
+        .select('id, nome')
+      
+      if (error) throw error
+      
+      if (data && data.length > 0) {
+        data.forEach(sistema => {
+          sistemasNomesCache.value[sistema.id] = sistema.nome
+        })
+        console.log("Cache de nomes de sistemas atualizado:", sistemasNomesCache.value)
+      } else {
+        console.warn("Nenhum sistema encontrado no banco")
+      }
+    } catch (error) {
+      console.error("Erro ao carregar nomes dos sistemas:", error)
+    }
+  }
+  
+  const getSistemaNome = (id) => {
+    return sistemasNomesCache.value[id] || `Sistema ${id}`;
+  };
+
   const handleSidebarToggle = () => {
     isSidebarExpanded.value = !isSidebarExpanded.value
   }
 
   const selectProcesso = async (processo) => {
-    selectedProcesso.value = processo.id
-    // Limpa a seleção de itens quando muda de processo
-    itensSelecionados.value = []
-    
-    // Carrega os sistemas do processo selecionado
     try {
-      await loadSistemas(processo.id)
+      selectedProcesso.value = processo.id
+      // Limpa a seleção de itens quando muda de processo
+      itensSelecionados.value = []
+      
+      console.log("Processo selecionado completo:", processo)
+      
+      // Verificar se sistemas_ativos existe e transformá-lo em array se necessário
+      if (processo.sistemas_ativos) {
+        let sistemasIds = processo.sistemas_ativos;
+        
+        // Verificar se sistemas_ativos é uma string JSON e tentar fazer parse
+        if (typeof sistemasIds === 'string') {
+          try {
+            sistemasIds = JSON.parse(sistemasIds);
+          } catch (e) {
+            console.warn("Erro ao fazer parse dos sistemas:", e);
+            sistemasIds = [];
+          }
+        }
+        
+        // Garantir que é um array
+        if (!Array.isArray(sistemasIds)) {
+          sistemasIds = sistemasIds ? [sistemasIds] : [];
+        }
+        
+        console.log("Sistemas IDs processados:", sistemasIds);
+        
+        if (sistemasIds.length > 0) {
+          // Carregar os sistemas usando os IDs
+          try {
+            const { data, error } = await supabase
+              .from('sistemas')
+              .select('id, nome')
+              .in('id', sistemasIds);
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+              sistemas.value = data;
+              console.log("Sistemas carregados do banco:", sistemas.value);
+            } else {
+              // Fallback: usar IDs com nomes do cache
+              sistemas.value = sistemasIds.map(id => ({
+                id: id,
+                nome: getSistemaNome(id) || `Sistema ${id}`
+              }));
+              console.log("Usando nomes do cache para sistemas:", sistemas.value);
+            }
+          } catch (error) {
+            console.error("Erro ao carregar detalhes dos sistemas:", error);
+            
+            // Mesmo com erro, tenta usar os nomes do cache
+            sistemas.value = sistemasIds.map(id => ({
+              id: id,
+              nome: getSistemaNome(id) || `Sistema ${id}`
+            }));
+          }
+        } else {
+          console.log("O processo não tem sistemas_ativos (array vazio)");
+          sistemas.value = [];
+        }
+      } else {
+        console.log("O processo não tem a propriedade sistemas_ativos");
+        sistemas.value = [];
+      }
+      
+      // Avança para a etapa de seleção de itens
+      step.value = 2;
     } catch (error) {
-      console.error("Erro ao carregar sistemas:", error)
-      // Mesmo com erro, continua para a próxima etapa
+      console.error("Erro ao selecionar processo:", error);
+      sistemas.value = []; // Garantir que sistemas está vazio se falhar
+      step.value = 2; // Avança mesmo com erro para não travar o fluxo
     }
-    
-    // Avança para a etapa de seleção de itens
-    step.value = 2
-    
-    console.log("Processo selecionado:", processo.id)
-    console.log("Sistemas carregados:", sistemas.value)
   }
 
   // Resetar seleção quando voltar para a etapa 1
@@ -98,18 +190,16 @@ export function useLances() {
     if (step.value < 3 && podeAvancar.value) {
       step.value++
       if (step.value === 3) {
-        // Prepara os itens selecionados para a planilha com mais campos
-        itensPlanilha.value = itensSelecionados.value.map(itemId => {
-          const item = itensDisponiveis.find(i => i.id === itemId)
-          return {
-            nome: item.nome,
-            categoria: item.categoria,
-            descricao: '',
-            marca: '',
-            valorUnitario: 0,
-            quantidade: 1,
-            total: 0
-          }
+        // Usar a nova função para processar os itens com os sistemas
+        itensPlanilha.value = processarItensPlanilha(
+          itensSelecionados.value,
+          sistemas.value,
+          itensDisponiveis
+        )
+        
+        // Calcular totais iniciais
+        itensPlanilha.value.forEach(item => {
+          calcularTotal(item)
         })
       }
     }
@@ -136,6 +226,8 @@ export function useLances() {
     formatarMoeda,
     voltarEtapa,
     avancarEtapa,
-    loadProcessos
+    loadProcessos,
+    getSistemaNome,
+    carregarNomesSistemas
   }
 }

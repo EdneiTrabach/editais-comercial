@@ -147,8 +147,7 @@ h1 {
 .input-descricao,
 .input-valor,
 .input-quantidade {
-  width: 100%;
-  padding: 0.5rem;
+  /* padding: 0.5rem; */
   border: 1px solid #e9ecef;
   border-radius: 4px;
 }
@@ -222,3 +221,24 @@ h1 {
   border: 2px solid #193155;
   border-radius: 4px;
 }
+
+/* Após o estilo existente .planilha-valores td, .planilha-valores th */
+
+/* Largura fixa para coluna de quantidade */
+.planilha-valores th:nth-child(5), 
+.planilha-valores td:nth-child(5) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.input-quantidade {
+  width: 60px;
+  min-width: 60px;
+  max-width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  text-align: center;
+}
+

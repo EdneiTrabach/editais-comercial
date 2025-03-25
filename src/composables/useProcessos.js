@@ -34,14 +34,36 @@ export function useProcessos() {
     try {
       const { data, error } = await supabase
         .from('processos')
-        .select('*')
+        .select('*, sistemas_ativos') // Garantir que sistemas_ativos seja incluído explicitamente
         .eq('status', 'vamos_participar')
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      processos.value = data
+      
+      // Processar cada processo para garantir que sistemas_ativos seja um array
+      if (data) {
+        data.forEach(processo => {
+          if (typeof processo.sistemas_ativos === 'string') {
+            try {
+              processo.sistemas_ativos = JSON.parse(processo.sistemas_ativos);
+            } catch (e) {
+              console.warn(`Erro ao fazer parse dos sistemas para o processo ${processo.id}:`, e);
+              processo.sistemas_ativos = [];
+            }
+          }
+          
+          // Garantir que é um array
+          if (!Array.isArray(processo.sistemas_ativos)) {
+            processo.sistemas_ativos = processo.sistemas_ativos ? [processo.sistemas_ativos] : [];
+          }
+        });
+      }
+      
+      processos.value = data;
+      console.log('Processos carregados com sistemas:', processos.value);
     } catch (error) {
-      console.error('Erro ao carregar processos:', error)
+      console.error('Erro ao carregar processos:', error);
+      processos.value = [];
     }
   }
 

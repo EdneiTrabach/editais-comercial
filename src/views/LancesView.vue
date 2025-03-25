@@ -27,6 +27,7 @@
         v-if="step === 3" 
         :itensPlanilha="itensPlanilha" 
         :totalGeral="totalGeral"
+        :valorEstimado="processoAtual?.valor_estimado"
         @calcular-total="calcularTotal"
         @adicionar-item="adicionarItem"
         @remover-item="removerItem"
@@ -37,19 +38,19 @@
       <!-- Navegação entre etapas -->
       <div class="navigation-buttons-lances">
         <button 
-          v-if="step > 1" 
-          @click="voltarEtapa" 
-          class="btn-voltar"
+        v-if="step < 3 && podeAvancar" 
+        @click="avancarEtapa" 
+        class="btn-avancar"
         >
-          Voltar
-        </button>
-        <button 
-          v-if="step < 3 && podeAvancar" 
-          @click="avancarEtapa" 
-          class="btn-avancar"
-        >
-          Avançar
-        </button>
+        Avançar
+      </button>
+      <button 
+        v-if="step > 1" 
+        @click="voltarEtapa" 
+        class="btn-voltar"
+      >
+      Voltar
+      </button>
       </div>
     </div>
   </div>
@@ -87,7 +88,8 @@ const {
   exportarExcel,
   voltarEtapa,
   avancarEtapa,
-  loadProcessos
+  loadProcessos,
+  carregarNomesSistemas // Adicionar esta linha
 } = useLances()
 
 // Use o composable de conexão
@@ -95,6 +97,7 @@ useConnectionManager(loadProcessos)
 
 onMounted(() => {
   loadProcessos()
+  carregarNomesSistemas() // Adicionar esta linha
 })
 
 // Quando criar um canal

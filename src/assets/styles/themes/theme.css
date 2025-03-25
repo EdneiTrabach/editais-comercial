@@ -279,11 +279,9 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: auto;
-  max-height: calc(100vh - 180px);
   margin-bottom: 1rem;
   position: relative;
   user-select: text;
-  height: 100%;
 }
 
 table {
