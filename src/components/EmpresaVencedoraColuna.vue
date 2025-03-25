@@ -217,13 +217,27 @@ export default {
     
     // Função para análise automática (a ser implementada futuramente)
     const analisarPublicacoesAutomaticamente = async () => {
-      // Esta função será implementada no futuro para:
-      // 1. Analisar publicações de adjudicação, homologação e contratação
-      // 2. Extrair automaticamente dados relevantes
-      // 3. Preencher o campo de empresa vencedora e número de contrato
-      
-      // Por enquanto, apenas um placeholder
-      console.log('Análise automática de publicações será implementada em versão futura');
+      try {
+        if (!props.processo.publicacao_original) return;
+        
+        // Extrair sistemas mencionados no texto
+        const sistemasMencionados = await extrairSistemasDoTexto(props.processo.publicacao_original);
+        
+        if (sistemasMencionados.length > 0) {
+          // Atualizar o processo com os sistemas identificados
+          await supabase
+            .from('processos')
+            .update({
+              sistemas_implantacao: {
+                sistemas_ids: sistemasMencionados,
+                informacoes_adicionais: 'Extraído automaticamente'
+              }
+            })
+            .eq('id', props.processo.id);
+        }
+      } catch (error) {
+        console.error('Erro na análise automática:', error);
+      }
     };
     
     return {
