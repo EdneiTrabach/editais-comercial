@@ -19,7 +19,6 @@
             <div class="ufo" :class="{ 'active': showEasterEgg }">🛸</div>
             <h3>Desenvolvido por</h3>
             <h2 :class="{ 'hidden': showEasterEgg }">{{ feature.title }}</h2>
-            <!-- <h2 v-if="showEasterEgg" class="hello-world">Hello World! 👽</h2> -->
             <p>{{ feature.description }}</p>
             <div class="social-links">
               <a v-for="link in feature.socialLinks" :key="link.url" :href="link.url" target="_blank" rel="noopener">
@@ -114,6 +113,24 @@ const features = [
     title: 'Relatórios',
     description: 'Visualize relatórios e estatísticas',
     route: '/relatorios'
+  },
+  {
+    icon: '/icons/responsavel.svg',
+    title: 'Administração de Responsáveis',
+    description: 'Gerencie responsáveis e permissões',
+    route: '/responsaveis'
+  },
+  {
+    icon: '/icons/contract.svg',
+    title: 'Publicações Contratuais',
+    description: 'Envie publicações contratuais com auxilio das IA',
+    route: '/publicacoes-contratuais'
+  },
+  {
+    icon: '/icons/settings-ia.svg',
+    title: 'Configurações de IA',
+    description: 'Gerencie configurações de Inteligência Artificial',
+    route: '/configuracoes-ia'
   },
   {
     icon: '/icons/config-usuario.svg',
