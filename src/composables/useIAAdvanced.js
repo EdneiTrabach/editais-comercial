@@ -151,20 +151,54 @@ export function useIAAdvanced() {
     }
     
     // Construir o prompt para o modelo
+    const prompt = `
+      Você é um assistente especializado em análise de publicações contratuais e licitações.
+      // ... resto do prompt original
+    `;
+    
+    // Fazer a chamada à API
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4-turbo-preview',
+        messages: [
+          { role: 'system', content: 'Você é um assistente especializado em extrair informações de publicações contratuais.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.1,
+        max_tokens: 1000
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKeyData.valor}`
+        }
+      }
+    );
+    
+    // Extrair a resposta
+    const resposta = response.data.choices[0].message.content;
+    
+    // Tentar fazer parse do JSON
+    try {
+      return JSON.parse(resposta);
+    } catch (parseError) {
+      console.error('Erro ao fazer parse da resposta da IA:', parseError);
+      throw new Error('Erro ao processar resposta do modelo');
     }
   };
   
   /**
    * Registra análise realizada para uso futuro no aprendizado
    */
-  const registrarAnaliseRealizada = async (texto, resultado) => {
+  const registrarAnaliseRealizada = async (texto, resultado, modelo) => {
     try {
       await supabase.from('analises_ia').insert({
         texto_publicacao: texto,
         dados_extraidos: resultado,
-        modelo: 'gpt-4-turbo-preview',
+        modelo: modelo || 'desconhecido',
         timestamp: new Date().toISOString(),
-        validado: false // será atualizado com feedback do usuário
+        validado: false
       });
     } catch (error) {
       console.warn('Erro ao registrar análise (não crítico):', error);
