@@ -129,6 +129,34 @@
   color: #dc2626; /* vermelho para descontos */
 }
 
+.valor-diferenca {
+  font-weight: 600 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.valor-diferenca.reducao {
+  color: #dc2626 !important; /* vermelho para redução */
+}
+
+.valor-diferenca.aumento {
+  color: #059669 !important; /* verde para aumento */
+}
+
+.diferenca-percentual {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.diferenca {
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
 /* Esconder coluna de categoria */
 .hidden {
   display: none;
@@ -220,4 +248,51 @@ tfoot tr {
 .btn-exportar:hover {
   background: #059669;
   transform: translateY(-1px);
+}
+
+/* Layout principal */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  transition: margin-left 0.3s ease;
+  margin-left: 330px; /* Largura padrão do sidebar expandido */
+}
+
+.main-content.expanded {
+  margin-left: 70px; /* Largura do sidebar recolhido */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+    padding: 1rem;
+  }
+
+  .main-content.expanded {
+    margin-left: 0;
+  }
+
+  .planilha-container {
+    padding: 1rem;
+  }
+
+  .ajuste-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .info-valores {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
 }
