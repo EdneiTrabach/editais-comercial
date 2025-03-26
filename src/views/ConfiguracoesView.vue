@@ -51,6 +51,19 @@
             </p>
             <button class="nav-card-button">Acessar</button>
           </div>
+
+          <div class="nav-card" @click="router.push('/backups')">
+            <div class="nav-card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+              </svg>
+            </div>
+            <h3 class="nav-card-title">Backup do Sistema</h3>
+            <p class="nav-card-description">
+              Gerencie backups do sistema, realize download dos dados e restaure backups anteriores.
+            </p>
+            <button class="nav-card-button">Acessar</button>
+          </div>
         </div>
       </div>
 

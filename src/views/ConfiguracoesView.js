@@ -838,6 +838,7 @@ export default {
       saveUpdate,
       editUpdate,
       previewUpdate,
+      router, // Adicione isso aos valores retornados
     };
   },
 };

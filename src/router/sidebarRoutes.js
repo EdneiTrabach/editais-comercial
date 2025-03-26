@@ -38,5 +38,9 @@ export const sidebarRoutes = [
   {
     path: '/configuracoes',
     name: 'Admin. de Usuários'
+  },
+  {
+    path: '/backups',
+    name: 'Backup do Sistema'
   }
 ]

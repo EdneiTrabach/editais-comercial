@@ -10,6 +10,7 @@ import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
 import ResponsaveisAdminView from '../views/ResponsaveisAdminView.vue'
 import LancesView from '../views/LancesView.vue'
 import PlanilhaValoresReadequada from '@/components/lances/PlanilhaValoresReadequada.vue'
+import BackupsView from '../views/BackupsView.vue'
 
 const requireAdmin = async (to, from, next) => {
   try {
@@ -170,6 +171,17 @@ const router = createRouter({
       name: 'configuracoes-ia',
       component: () => import('../views/ConfiguracoesIAView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    // Adicione a nova rota dentro do array routes
+    {
+      path: '/backups',
+      name: 'backups',
+      component: BackupsView,
+      meta: { 
+        requiresAuth: true,
+        requiresAdmin: true 
+      },
+      beforeEnter: requireAdmin
     },
     // Adicione um catch-all route
     {
