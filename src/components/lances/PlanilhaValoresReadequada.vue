@@ -10,16 +10,17 @@
 
     <div class="ajuste-container">
       <div class="campo-ajuste">
-        <label>Percentual de Desconto (%)</label>
-        <input 
-          type="number" 
-          v-model="percentualDesconto"
-          step="0.01"
-          min="0"
-          max="100"
-          class="input-percentual"
-          @input="calcularReadequacao"
-        >
+        <label>Percentual de Ajuste (%)</label>
+        <div class="input-percentual-container">
+          <input 
+            type="text" 
+            v-model="percentualAjuste"
+            placeholder="Ex: -9,8 ou +7,6"
+            class="input-percentual"
+            @input="handlePercentualChange"
+          >
+          <span class="percentual-hint">Use - para desconto ou + para aumento</span>
+        </div>
       </div>
 
       <div class="info-valores">

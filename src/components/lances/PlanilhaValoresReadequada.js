@@ -8,14 +8,22 @@ export default {
     const { formatarMoeda } = usePlanilha()
 
     // Estados
-    const percentualDesconto = ref(0)
+    const percentualAjuste = ref('') // Mudamos para string para aceitar o sinal
     const itensReadequados = ref([])
     const totalOriginal = ref(0)
     const valorEstimado = ref(0)
 
-    // Computed
+    // Computed para percentual formatado
+    const percentualFormatado = computed(() => {
+      const valor = percentualAjuste.value.replace(/[^0-9,\-+]/g, '')
+      return valor ? parseFloat(valor.replace(',', '.')) : 0
+    })
+
+    // Computed para total readequado
     const totalReadequado = computed(() => {
-      return totalOriginal.value * (1 - (percentualDesconto.value / 100))
+      const percentual = percentualFormatado.value
+      // Se positivo, aumenta; se negativo, diminui
+      return totalOriginal.value * (1 + (percentual / 100))
     })
 
     // Carregar dados iniciais
@@ -33,8 +41,29 @@ export default {
       }
     })
 
+    // Handler para mudança no percentual
+    const handlePercentualChange = (event) => {
+      let valor = event.target.value
+      
+      // Limpa tudo exceto números, vírgula e sinais
+      valor = valor.replace(/[^0-9,\-+]/g, '')
+      
+      // Garante apenas um sinal no início
+      if (valor.length > 0) {
+        const temSinal = valor[0] === '+' || valor[0] === '-'
+        const numeroLimpo = valor.replace(/[\-+]/g, '')
+        valor = (temSinal ? valor[0] : '') + numeroLimpo
+      }
+      
+      percentualAjuste.value = valor
+      calcularReadequacao()
+    }
+
     const calcularReadequacao = () => {
-      const fator = 1 - (percentualDesconto.value / 100)
+      const percentual = percentualFormatado.value
+      // Fator será maior que 1 para aumento e menor que 1 para desconto
+      const fator = 1 + (percentual / 100)
+
       itensReadequados.value = itensReadequados.value.map(item => ({
         ...item,
         valorUnitarioOriginal: item.valorUnitarioOriginal || item.valorUnitario,
@@ -57,12 +86,14 @@ export default {
     }
 
     return {
-      percentualDesconto,
+      percentualAjuste,
+      percentualFormatado,
       itensReadequados,
       totalOriginal,
       valorEstimado,
       totalReadequado,
       formatarMoeda,
+      handlePercentualChange,
       calcularReadequacao,
       aplicarReadequacao,
       voltarPlanilha
