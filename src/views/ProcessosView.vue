@@ -161,9 +161,15 @@
                   </select>
 
                   <!-- Full Object field -->
-                  <textarea v-else-if="coluna.campo === 'objeto_completo'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    rows="3"></textarea>
+                  <textarea 
+                    v-else-if="coluna.campo === 'objeto_completo'" 
+                    v-model="editingCell.value"
+                    :rows="calculateRows(editingCell.value)"
+                    @blur="handleUpdate(processo)" 
+                    @keyup.enter="handleUpdate(processo)" 
+                    @keyup.esc="cancelEdit()"
+                    class="auto-resize-textarea">
+                  </textarea>
 
                   <!-- Modality field -->
                   <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
@@ -245,8 +251,16 @@
                   </select>
 
                   <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
-                  <input v-else type="text" v-model="editingCell.value" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                  <textarea 
+                    v-else 
+                    v-model="editingCell.value" 
+                    :rows="calculateRows(editingCell.value)"
+                    @blur="handleUpdate(processo)"
+                    @keyup.enter="handleUpdate(processo)"
+                    @keyup.esc="cancelEdit()"
+                    class="auto-resize-textarea"
+                  ></textarea>
+                    
                 </template>
 
                 <!-- View Mode -->

@@ -21,6 +21,7 @@
   white-space: normal;
   line-height: 1.4;
   user-select: text;
+  vertical-align: middle;
 }
 
 .actions-column {
@@ -282,7 +283,7 @@ td[data-field="impugnacoes"] {
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 0px;
-  top: 15%;
+  top: 50%;
   height: 60px;
   left: 13px;
 }

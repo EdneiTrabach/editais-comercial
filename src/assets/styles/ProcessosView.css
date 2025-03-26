@@ -91,3 +91,23 @@ td[data-field="empresa_vencedora"] {
   color: #193155;
 }
 
+.auto-resize-textarea {
+  width: 100%;
+  min-height: 24px;
+  padding: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.4;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.auto-resize-textarea:focus {
+  border-color: #193155;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
+}

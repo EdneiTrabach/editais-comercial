@@ -3536,7 +3536,21 @@ export default {
       atualizarSistemasImplantacao,
 
       // Adicionar formatarMoeda ao return do setup
-      formatarMoeda
+      formatarMoeda,
+
+      calculateRows(text) {
+        if (!text) return 1;
+        
+        // Calcula baseado no comprimento do texto
+        const charCount = text.length;
+        const lineBreaks = (text.match(/\n/g) || []).length;
+        
+        // Base: ~50 caracteres por linha
+        const estimatedLines = Math.ceil(charCount / 100) + lineBreaks;
+        
+        // Limita entre 1 e 6 linhas
+        return Math.min(Math.max(estimatedLines, 1), 100);
+      }
     }
   }
 }
