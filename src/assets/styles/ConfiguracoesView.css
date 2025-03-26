@@ -421,6 +421,7 @@ input {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   transition: all 0.3s ease;
+  font-family: 'Roboto';
 }
 
 .input-cfg-usuarios:focus {

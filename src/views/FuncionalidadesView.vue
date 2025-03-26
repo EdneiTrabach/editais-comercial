@@ -68,13 +68,19 @@ const features = [
   },
   {
     icon: '/icons/calculadora.svg',
-    title: 'Planilha de Lances',
+    title: 'Lances',
     description: 'Registre e gerencie lances de processos',
     route: '/lances'
   },
   {
+    icon: '/icons/analises.svg',
+    title: 'Análises',
+    description: 'Visualize e gerencie análises de processos',
+    route: '/analises'
+  },
+  {
     icon: '/icons/edicao.svg',
-    title: 'Declarações dos Processos',
+    title: 'Declarações',
     description: 'Visualize e gerencie declarações de processos',
     route: '/declaracoes'
   },
@@ -116,7 +122,7 @@ const features = [
   },
   {
     icon: '/icons/responsavel.svg',
-    title: 'Administração de Responsáveis',
+    title: 'Responsáveis',
     description: 'Gerencie responsáveis e permissões',
     route: '/responsaveis'
   },
@@ -134,7 +140,7 @@ const features = [
   },
   {
     icon: '/icons/config-usuario.svg',
-    title: 'Administração de Usuários',
+    title: 'Admin. de Usuários',
     description: 'Gerencie usuários e permissões',
     route: '/configuracoes'
   },

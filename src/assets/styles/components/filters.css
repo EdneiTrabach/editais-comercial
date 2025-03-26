@@ -259,7 +259,6 @@
 
 /* Estilo para manter a coluna de ações fixa */
 .actions-column, .actions-cell {
-  position: sticky !important;
   right: 0;
   z-index: 10;
 }

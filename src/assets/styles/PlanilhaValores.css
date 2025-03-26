@@ -120,15 +120,6 @@
   background-color: #38a169;
 }
 
-.categoria-badge {
-  display: inline-block;
-  background-color: #e2e8f0;
-  color: #4a5568;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.85em;
-}
-
 .sem-itens {
   padding: 20px;
   text-align: center;
