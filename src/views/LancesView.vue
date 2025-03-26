@@ -70,6 +70,16 @@
         <PlanilhaValores v-if="step === 3" :itensPlanilha="itensPlanilha" :totalGeral="totalGeral"
           :valorEstimado="processoAtual?.valor_estimado" @calcular-total="calcularTotal" @adicionar-item="adicionarItem"
           @remover-item="removerItem" />
+
+        <PlanilhaValoresReadequada 
+          v-if="step === 3"
+          :itens-planilha="itensPlanilha"
+          :total-geral="totalGeral"
+          :valor-estimado="processoAtual?.valor_estimado"
+          @adicionar-item="handleAdicionarItem"
+          @exportar-pdf="exportarPDF"
+          @exportar-excel="exportarExcel"
+        />
       </div>
     </div>
   </div>
@@ -140,6 +150,47 @@ const abrirReadequacao = () => {
   } catch (error) {
     console.error('Erro ao abrir readequação:', error)
   }
+}
+
+// Função para lidar com adição de item na readequação
+const handleAdicionarItem = () => {
+  // Recuperar estado da readequação
+  const estadoSalvo = localStorage.getItem('estadoReadequacao')
+  
+  // Abrir modal de seleção de itens
+  const modalConfig = {
+    title: 'Adicionar Item',
+    callback: (novoItem) => {
+      // Recuperar estado anterior
+      if (estadoSalvo) {
+        const estado = JSON.parse(estadoSalvo)
+        
+        // Adicionar novo item com valores já readequados
+        const percentual = estado.percentual
+        const fator = 1 + (parseFloat(percentual) / 100)
+        
+        const itemReadequado = {
+          ...novoItem,
+          valorUnitarioOriginal: novoItem.valorUnitario,
+          valorUnitario: Number((novoItem.valorUnitario * fator).toFixed(2)),
+          total: Number((novoItem.valorUnitario * fator * novoItem.quantidade).toFixed(2))
+        }
+        
+        // Atualizar lista de itens
+        itensReadequados.value.push(itemReadequado)
+        
+        // Recalcular totais
+        recalcularTotal()
+      }
+      
+      // Limpar estado salvo
+      localStorage.removeItem('estadoReadequacao')
+    }
+  }
+  
+  // Abrir modal de seleção de itens
+  showItemSelectionModal.value = true
+  itemSelectionConfig.value = modalConfig
 }
 
 // Use o composable de conexão

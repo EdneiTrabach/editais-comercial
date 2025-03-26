@@ -130,11 +130,6 @@
         </div>
 
         <div class="acoes-planilha">
-
-          <button @click="$emit('adicionar-item')" class="btn-adicionar">
-            <i class="fas fa-plus"></i> Adicionar Item
-          </button>
-
           <button @click="aplicarReadequacao" class="btn-aplicar" :disabled="!percentualDesconto">
             <i class="fas fa-check"></i> 
             Aplicar Readequação
@@ -203,6 +198,23 @@ const diferenca = computed(() => {
 // Adicionar computed para controle do botão
 const percentualDesconto = computed(() => {
   return !!percentualAjuste.value && percentualFormatado.value !== 0
+})
+
+// Computed para extrair categorias únicas
+const categorias = computed(() => {
+  return [...new Set(itensReadequados.value.map(item => item.categoria))]
+})
+
+// Função para calcular total por categoria
+const totalPorCategoria = (categoria) => {
+  return itensReadequados.value
+    .filter(item => item.categoria === categoria)
+    .reduce((acc, item) => acc + (item.total || 0), 0)
+}
+
+// Computed para total geral
+const totalGeral = computed(() => {
+  return itensReadequados.value.reduce((acc, item) => acc + (item.total || 0), 0)
 })
 
 // Handler para o toggle da sidebar
@@ -326,6 +338,34 @@ watch(percentualFormatado, (novoValor) => {
     calcularReadequacao()
   }
 }, { immediate: true })
+
+// Definir os emits que o componente pode disparar
+const emit = defineEmits([
+  'adicionar-item',
+  'exportar-pdf',
+  'exportar-excel'
+])
+
+// Função para adicionar item
+const adicionarItem = () => {
+  if (alteracoesPendentes.value) {
+    if (confirm('Existem alterações não salvas. Deseja continuar mesmo assim?')) {
+      // Continua com a adição
+      procederComAdicao()
+    }
+  } else {
+    procederComAdicao()
+  }
+}
+
+const procederComAdicao = () => {
+  const estadoAtual = {
+    percentual: percentualAjuste.value,
+    itens: itensReadequados.value
+  }
+  localStorage.setItem('estadoReadequacao', JSON.stringify(estadoAtual))
+  emit('adicionar-item')
+}
 
 </script>
 
