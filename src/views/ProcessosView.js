@@ -3539,16 +3539,16 @@ export default {
       formatarMoeda,
 
       calculateRows(text) {
-        if (!text) return 1;
+        if (!text) return 10;
         
         // Calcula baseado no comprimento do texto
         const charCount = text.length;
         const lineBreaks = (text.match(/\n/g) || []).length;
         
         // Base: ~50 caracteres por linha
-        const estimatedLines = Math.ceil(charCount / 100) + lineBreaks;
+        const estimatedLines = Math.ceil(charCount / 900) + lineBreaks;
         
-        // Limita entre 1 e 6 linhas
+        // Limita entre 1 e 100 linhas
         return Math.min(Math.max(estimatedLines, 1), 100);
       }
     }
