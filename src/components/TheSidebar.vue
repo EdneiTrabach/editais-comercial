@@ -48,6 +48,13 @@
               <span class="link-text">Lances</span>
             </router-link>
           </li>
+        
+          <li class="sidebar-menu-item">
+            <router-link to="/analises" class="sidebar-menu-link">
+              <img src="/icons/edicao.svg" alt="Análises" class="icon" />
+              <span class="link-text">Análises</span>
+            </router-link>
+          </li>
 
           <li class="sidebar-menu-item">
             <router-link to="/declaracoes" class="sidebar-menu-link">

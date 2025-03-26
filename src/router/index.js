@@ -175,6 +175,11 @@ const router = createRouter({
       name: 'PlanilhaReadequada',
       component: () => import('@/components/lances/PlanilhaValoresReadequada.vue')
     },
+    {
+      path: '/analises',
+      name: 'Analises',
+      component: () => import('@/views/AnalisesView.vue')
+    },
     
   ]
 })
