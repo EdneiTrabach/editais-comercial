@@ -1,6 +1,12 @@
 <template>
   <div class="planilha-container">
-    <h2>Preencha os Valores da Proposta</h2>
+    <div class="header-planilha">
+      <h2>Preencha os Valores da Proposta</h2>
+      <button @click="abrirReadequacao" class="btn-readequar">
+        <i class="fas fa-calculator"></i> 
+        Readequar Proposta
+      </button>
+    </div>
     
     <div class="controles-planilha">
       <div class="filtros">
@@ -152,6 +158,7 @@
 <script setup>
 import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
 import { usePlanilha } from '@/composables/usePlanilha'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   itensPlanilha: Array,
@@ -167,6 +174,20 @@ defineEmits([
 ])
 
 const { formatarMoeda } = usePlanilha()
+
+const router = useRouter()
+
+// Função para abrir tela de readequação
+const abrirReadequacao = () => {
+  router.push({
+    name: 'PlanilhaReadequada',
+    query: {
+      itens: encodeURIComponent(JSON.stringify(props.itensPlanilha)),
+      totalGeral: props.totalGeral,
+      valorEstimado: props.valorEstimado
+    }
+  })
+}
 
 // Filtros
 const filtroCategoria = ref('')
@@ -351,5 +372,33 @@ const totalPorCategoria = (categoria) => {
   font-weight: 600;
 }
 
+.header-planilha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
 
+.btn-readequar {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-readequar:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-readequar i {
+  font-size: 1.1em;
+}
 </style>

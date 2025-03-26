@@ -169,7 +169,13 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue')
-    }
+    },
+    {
+      path: '/planilha-readequada',
+      name: 'PlanilhaReadequada',
+      component: () => import('@/components/lances/PlanilhaValoresReadequada.vue')
+    },
+    
   ]
 })
 
