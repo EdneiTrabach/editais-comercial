@@ -622,27 +622,24 @@ export default {
       try {
         isLoading.value = true;
 
-        // Buscar todos os processos sem filtrar por ano
         const { data, error } = await supabase
           .from('processos')
           .select('*')
-          .order('data_pregao', { ascending: false });
+          .order('data_pregao', { ascending: true }) // Ordem crescente por padrão
 
         if (error) throw error;
 
-        // Atualiza processos
         processos.value = data;
 
         // Se o ano atual não existe nas abas, selecionar o ano mais recente
         const anos = anosDisponiveis.value;
         if (!anos.includes(anoSelecionado.value) && anos.length > 0) {
-          anoSelecionado.value = anos[0]; // Primeiro ano (mais recente)
+          anoSelecionado.value = anos[0];
           showToast(`Visualização alterada para o ano ${anos[0]}`, 'info');
         }
 
       } catch (error) {
-        console.error('Erro ao carregar processos:', error);
-        showToast('Erro ao carregar processos', 'error');
+        console.error('Error:', error);
       } finally {
         isLoading.value = false;
       }
@@ -941,44 +938,20 @@ export default {
 
     const handleSort = async (field, direction) => {
       try {
-        sortConfig.value = {
-          field,
-          direction
-        };
+        sortConfig.value = { field, direction };
 
-        // Para ordenação local (sem fazer nova consulta ao servidor)
+        // Ordenação local 
         processos.value.sort((a, b) => {
-          let comparison = 0;
-
-          // Ordenação específica para datas
           if (field === 'data_pregao') {
             const dateA = new Date(a[field] || '1900-01-01');
             const dateB = new Date(b[field] || '1900-01-01');
             
-            // Primeiro comparamos as datas de pregão
-            const dateDiff = dateA - dateB;
+            const comparison = dateA - dateB; // Ordem crescente por padrão
             
-            if (dateDiff === 0) {
-              // Se as datas forem iguais, use created_at como critério secundário
-              // Registros mais recentes primeiro
-              const createdAtA = new Date(a.created_at || '1900-01-01');
-              const createdAtB = new Date(b.created_at || '1900-01-01');
-              comparison = createdAtB - createdAtA; // Ordem decrescente por created_at
-            } else {
-              comparison = dateDiff;
-            }
+            // Se for descendente, inverte a ordem
+            return direction === 'desc' ? -comparison : comparison;
           }
-          // Ordenação para campos de texto
-          else if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-            comparison = a[field].localeCompare(b[field], 'pt-BR');
-          }
-          // Ordenação para campos numéricos
-          else {
-            comparison = (a[field] || 0) - (b[field] || 0);
-          }
-
-          // Aplicar direção da ordenação
-          return direction === 'asc' ? comparison : -comparison;
+          return 0;
         });
 
         // Indica visualmente a coluna ordenada

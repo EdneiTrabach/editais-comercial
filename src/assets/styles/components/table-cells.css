@@ -283,9 +283,9 @@ td[data-field="impugnacoes"] {
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 0px;
-  top: 50%;
+  /* top: 50%; */
   height: 60px;
-  left: 13px;
+  left: 10px;
 }
 
 .saved-success {
