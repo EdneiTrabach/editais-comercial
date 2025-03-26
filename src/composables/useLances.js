@@ -10,6 +10,7 @@ export function useLances() {
   const isSidebarExpanded = ref(true)
   const itensSelecionados = ref([])
   const anoSelecionado = ref(null)
+  const alteracoesPendentes = ref(false)
   
   // Importar funcionalidades de outros composables
   const {
@@ -246,6 +247,14 @@ export function useLances() {
     }
   }
 
+  const marcarAlteracoes = () => {
+    alteracoesPendentes.value = true
+  }
+  
+  const limparAlteracoes = () => {
+    alteracoesPendentes.value = false
+  }
+
   return {
     step,
     isSidebarExpanded,
@@ -271,6 +280,9 @@ export function useLances() {
     carregarNomesSistemas,
     anoSelecionado,
     anosDisponiveis,
-    selecionarAno
+    selecionarAno,
+    alteracoesPendentes,
+    marcarAlteracoes,
+    limparAlteracoes
   }
 }

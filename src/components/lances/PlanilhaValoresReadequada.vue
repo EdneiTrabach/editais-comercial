@@ -6,10 +6,20 @@
       <div class="planilha-container">
         <div class="header-planilha">
           <h2>Readequação da Proposta</h2>
-          <button @click="voltarPlanilha" class="btn-voltar">
-            <i class="fas fa-arrow-left"></i> 
-            Voltar
-          </button>
+          <div class="header-actions">
+            <button 
+              @click="salvarReadequacao" 
+              class="btn-salvar"
+              :disabled="!alteracoesPendentes"
+            >
+              <i class="fas fa-save"></i>
+              Salvar Readequação
+            </button>
+            <button @click="voltarPlanilha" class="btn-voltar">
+              <i class="fas fa-arrow-left"></i> 
+              Voltar
+            </button>
+          </div>
         </div>
 
         <div class="ajuste-container">
@@ -88,14 +98,24 @@
         </div>
 
         <div class="acoes-planilha">
+
+          <button @click="$emit('adicionar-item')" class="btn-adicionar">
+            <i class="fas fa-plus"></i> Adicionar Item
+          </button>
+
           <button @click="aplicarReadequacao" class="btn-aplicar" :disabled="!percentualDesconto">
             <i class="fas fa-check"></i> 
             Aplicar Readequação
           </button>
-          <button @click="exportarReadequacao" class="btn-exportar">
-            <i class="fas fa-file-excel"></i> 
-            Exportar Readequação
+
+          <button @click="$emit('exportar-pdf')" class="btn-exportar">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
           </button>
+          
+          <button @click="$emit('exportar-excel')" class="btn-exportar">
+            <i class="fas fa-file-excel"></i> Exportar Excel
+          </button>
+
         </div>
       </div>
     </div>
@@ -144,6 +164,11 @@ const diferenca = computed(() => {
   }
 })
 
+// Adicionar computed para controle do botão
+const percentualDesconto = computed(() => {
+  return !!percentualAjuste.value && percentualFormatado.value !== 0
+})
+
 // Handler para o toggle da sidebar
 const handleSidebarToggle = (expanded) => {
   isSidebarExpanded.value = expanded
@@ -176,13 +201,24 @@ const calcularReadequacao = () => {
   }))
 }
 
+// Modificar função de aplicar readequação
 const aplicarReadequacao = () => {
-  router.push({
-    name: 'PlanilhaValores',
-    params: {
-      itensAtualizados: itensReadequados.value
-    }
-  })
+  try {
+    router.push({
+      name: 'LancesView',
+      query: {
+        itensAtualizados: JSON.stringify(itensReadequados.value)
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao navegar:', error)
+  }
+}
+
+// Função para exportar readequação (que estava faltando)
+const exportarReadequacao = () => {
+  // Implementar lógica de exportação aqui
+  console.log('Exportar readequação')
 }
 
 const voltarPlanilha = () => {

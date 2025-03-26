@@ -2,10 +2,8 @@
   <div class="planilha-container">
     <div class="header-planilha">
       <h2>Preencha os Valores da Proposta</h2>
-      <button @click="abrirReadequacao" class="btn-readequar">
-        <i class="fas fa-calculator"></i> 
-        Readequar Proposta
-      </button>
+      <div class="header-actions">
+      </div>
     </div>
     
     <div class="controles-planilha">
@@ -131,12 +129,6 @@
       <button @click="$emit('adicionar-item')" class="btn-adicionar">
         <i class="fas fa-plus"></i> Adicionar Item
       </button>
-      <button @click="$emit('exportar-pdf')" class="btn-exportar">
-        <i class="fas fa-file-pdf"></i> Exportar PDF
-      </button>
-      <button @click="$emit('exportar-excel')" class="btn-exportar">
-        <i class="fas fa-file-excel"></i> Exportar Excel
-      </button>
     </div>
 
     <div class="resumo-proposta">
@@ -156,9 +148,9 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
+import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue'
 import { usePlanilha } from '@/composables/usePlanilha'
-import { useRouter } from 'vue-router'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 
 const props = defineProps({
   itensPlanilha: Array,
@@ -170,7 +162,8 @@ defineEmits([
   'adicionar-item',
   'remover-item',
   'exportar-pdf',
-  'exportar-excel'
+  'exportar-excel',
+  'salvar-planilha'
 ])
 
 const { formatarMoeda } = usePlanilha()
@@ -179,14 +172,18 @@ const router = useRouter()
 
 // Função para abrir tela de readequação
 const abrirReadequacao = () => {
-  router.push({
-    name: 'PlanilhaReadequada',
-    query: {
-      itens: encodeURIComponent(JSON.stringify(props.itensPlanilha)),
-      totalGeral: props.totalGeral,
-      valorEstimado: props.valorEstimado
-    }
-  })
+  try {
+    router.push({
+      name: 'PlanilhaReadequada',
+      query: {
+        itens: encodeURIComponent(JSON.stringify(props.itensPlanilha)),
+        totalGeral: props.totalGeral,
+        valorEstimado: props.valorEstimado
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao abrir readequação:', error)
+  }
 }
 
 // Filtros
@@ -268,6 +265,40 @@ const totalPorCategoria = (categoria) => {
     .filter(item => item.categoria === categoria)
     .reduce((acc, item) => acc + (item.total || 0), 0)
 }
+
+// Adicionar ao script de PlanilhaValores.vue
+const alteracoesPendentes = ref(false)
+const showConfirmDialog = ref(false)
+
+// Monitorar mudanças nos itens
+watch(() => props.itensPlanilha, () => {
+  alteracoesPendentes.value = true
+}, { deep: true })
+
+const salvarPlanilha = async () => {
+  try {
+    // Emitir evento para componente pai salvar
+    await emit('salvar-planilha', props.itensPlanilha)
+    alteracoesPendentes.value = false
+    alert('Planilha salva com sucesso!')
+  } catch (error) {
+    console.error('Erro ao salvar planilha:', error)
+    alert('Erro ao salvar planilha. Tente novamente.')
+  }
+}
+
+// Adicionar verificação antes de sair
+onBeforeRouteLeave((to, from, next) => {
+  if (alteracoesPendentes.value) {
+    if (confirm('Existem alterações não salvas. Deseja sair mesmo assim?')) {
+      next()
+    } else {
+      next(false)
+    }
+  } else {
+    next()
+  }
+})
 </script>
 
 <style src="@/assets/styles/PlanilhaValores.css"></style>

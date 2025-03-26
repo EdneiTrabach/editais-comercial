@@ -8,6 +8,8 @@ import RelatoriosView from '@/views/RelatoriosView.vue'
 import EmpresasView from '../views/EmpresasView.vue'
 import ConfiguracoesView from '@/views/ConfiguracoesView.vue'
 import ResponsaveisAdminView from '../views/ResponsaveisAdminView.vue'
+import LancesView from '../views/LancesView.vue'
+import PlanilhaValoresReadequada from '@/components/lances/PlanilhaValoresReadequada.vue'
 
 const requireAdmin = async (to, from, next) => {
   try {
@@ -68,8 +70,13 @@ const router = createRouter({
     },
     {
       path: '/lances',
-      name: 'Lances',
-      component: () => import('@/views/LancesView.vue')
+      name: 'LancesView',
+      component: LancesView
+    },
+    {
+      path: '/lances/readequacao',
+      name: 'PlanilhaReadequada',
+      component: PlanilhaValoresReadequada
     },
     {
       path: '/reset-password',
