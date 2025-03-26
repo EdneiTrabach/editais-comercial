@@ -12,16 +12,38 @@
         v-for="processo in processos" 
         :key="processo.id"
         class="processo-card"
-        :class="{ 'selected': selectedProcesso === processo.id }"
+        :class="{ 
+          'selected': selectedProcesso === processo.id,
+          'has-analysis': processo.codigo_gpi
+        }"
         @click="$emit('select-processo', processo)"
       >
-        <h3>{{ processo.numero_processo }}</h3>
+        <div class="card-header">
+          <h3>{{ processo.numero_processo }}</h3>
+          <div v-if="processo.codigo_gpi" class="analise-badge">
+            <span class="codigo-gpi">GPI: {{ processo.codigo_gpi }}</span>
+          </div>
+        </div>
+
         <div class="processo-info">
           <p><strong>Órgão:</strong> {{ processo.orgao }}</p>
           <p><strong>Data:</strong> {{ formatDate(processo.data_pregao) }}</p>
           <p><strong>Hora:</strong> {{ processo.hora_pregao }}</p>
+          
+          <!-- Novo bloco para prazo de análise -->
+          <div v-if="processo.prazo_analise" class="analise-info">
+            <p class="prazo-analise">
+              <i class="fas fa-clock"></i>
+              <strong>Prazo Análise:</strong> 
+              <span :class="getPrazoClass(processo.prazo_analise)">
+                {{ formatDate(processo.prazo_analise) }}
+              </span>
+            </p>
+          </div>
+
           <p class="objeto">{{ processo.objeto_resumido }}</p>
         </div>
+        
         <div class="processo-status">
           {{ formatStatus(processo.status) }}
         </div>
@@ -85,7 +107,7 @@ const props = defineProps({
 
 const emit = defineEmits(['select-processo'])
 const router = useRouter()
-const { formatStatus, formatDate } = useProcessos()
+const { formatStatus } = useProcessos()
 
 // Estado do modal
 const showNovoProcessoModal = ref(false)
@@ -127,6 +149,47 @@ const criarNovoProcesso = async () => {
     alert('Erro ao criar processo. Por favor, tente novamente.')
   } finally {
     loading.value = false
+  }
+}
+
+// Função para formatar data no padrão brasileiro
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  
+  try {
+    // Garantir que estamos usando a data sem alteração de fuso
+    const [date] = dateString.split('T')
+    const [year, month, day] = date.split('-')
+    
+    // Retornar no formato brasileiro sem manipulação de timezone
+    return `${day}/${month}/${year}`
+  } catch (error) {
+    console.error('Erro ao formatar data:', error)
+    return '-'
+  }
+}
+
+// Função para calcular classe do prazo
+const getPrazoClass = (prazo) => {
+  if (!prazo) return 'prazo-normal'
+  
+  try {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0) // Zerar as horas para comparar apenas as datas
+    
+    // Criar data do prazo sem alteração de fuso
+    const [year, month, day] = prazo.split('-')
+    const dataPrazo = new Date(year, month - 1, day)
+    dataPrazo.setHours(0, 0, 0, 0)
+    
+    const diffDias = Math.ceil((dataPrazo - hoje) / (1000 * 60 * 60 * 24))
+
+    if (diffDias < 0) return 'prazo-vencido'
+    if (diffDias <= 3) return 'prazo-proximo'
+    return 'prazo-normal'
+  } catch (error) {
+    console.error('Erro ao calcular prazo:', error)
+    return 'prazo-normal'
   }
 }
 </script>

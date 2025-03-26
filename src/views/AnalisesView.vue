@@ -6,30 +6,9 @@
       <div class="analises-container">
         <div class="header-section">
           <h1>Análise de Sistemas</h1>
-        </div>
-
-        <!-- Seleção de Processo similar ao LancesView -->
-        <div class="selection-steps" v-if="step === 0">
-          <AnoSelection 
-            :anos="anosDisponiveis" 
-            :processos="processos"
-            :selectedAno="anoSelecionado"
-            @select-ano="selecionarAno"
-          />
-        </div>
-
-        <div v-else-if="step === 1">
-          <ProcessoSelection
-            :processos="processosFiltrados"
-            :selectedProcesso="selectedProcesso"
-            @select-processo="selectProcesso"
-          />
-        </div>
-
-        <!-- Tabela de Análise -->
-        <div v-else-if="step === 2" class="analise-table-container">
+          <!-- Move os botões para o header-section -->
           <div class="header-actions">
-            <div class="acoes-principais">
+            <div class="acoes-principais" v-if="step === 2">
               <button 
                 @click="salvarAnalises" 
                 class="btn-salvar"
@@ -57,8 +36,47 @@
                 </div>
               </div>
             </div>
+            <!-- Botões de navegação -->
+            <div class="navigation-actions">
+              <button 
+                v-if="step > 0" 
+                @click="voltarEtapa" 
+                class="btn-voltar"
+              >
+                Voltar
+              </button>
+              <button 
+                v-if="step < 2" 
+                @click="avancarEtapa" 
+                class="btn-avancar"
+                :disabled="!podeAvancar"
+              >
+                Avançar
+              </button>
+            </div>
           </div>
+        </div>
 
+        <!-- Seleção de Processo similar ao LancesView -->
+        <div class="selection-steps" v-if="step === 0">
+          <AnoSelection 
+            :anos="anosDisponiveis" 
+            :processos="processos"
+            :selectedAno="anoSelecionado"
+            @select-ano="selecionarAno"
+          />
+        </div>
+
+        <div v-else-if="step === 1">
+          <ProcessoSelection
+            :processos="processosFiltrados"
+            :selectedProcesso="selectedProcesso"
+            @select-processo="selectProcesso"
+          />
+        </div>
+
+        <!-- Tabela de Análise -->
+        <div v-else-if="step === 2" class="analise-table-container">
           <div class="table-header">
             <h2>Análise de Atendimento - {{ processoAtual?.numero_processo }}</h2>
             <div class="analise-config">
@@ -213,25 +231,6 @@
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Botões de navegação -->
-        <div class="navigation-buttons">
-          <button 
-            v-if="step > 0" 
-            @click="voltarEtapa" 
-            class="btn-voltar"
-          >
-            Voltar
-          </button>
-          <button 
-            v-if="step < 2" 
-            @click="avancarEtapa" 
-            class="btn-avancar"
-            :disabled="!podeAvancar"
-          >
-            Avançar
-          </button>
         </div>
       </div>
     </div>

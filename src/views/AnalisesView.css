@@ -3,7 +3,14 @@
 }
 
 .header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .header-section h1 {
@@ -13,9 +20,8 @@
 
 .header-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .acoes-principais {
@@ -23,6 +29,18 @@
   gap: 1rem;
 }
 
+.navigation-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Remove os estilos antigos de navigation-buttons já que não é mais necessário */
+.navigation-buttons {
+  display: none;
+}
+
+.btn-voltar,
+.btn-avancar,
 .btn-salvar,
 .btn-exportar {
   display: flex;
@@ -35,26 +53,53 @@
   transition: all 0.2s ease;
 }
 
+.btn-voltar {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+}
+
+.btn-avancar {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+
 .btn-salvar {
   background: #2563eb;
   color: white;
   border: none;
 }
 
-.btn-salvar:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
+.btn-exportar {
+  background: #059669;
+  color: white;
+  border: none;
 }
 
+/* Hover states */
+.btn-voltar:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.btn-avancar:hover:not(:disabled),
 .btn-salvar:hover:not(:disabled) {
   background: #1d4ed8;
   transform: translateY(-1px);
 }
 
-.btn-exportar {
-  background: #059669;
-  color: white;
-  border: none;
+.btn-exportar:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+/* Estado desabilitado */
+.btn-avancar:disabled,
+.btn-salvar:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .dropdown-exportar {
@@ -180,47 +225,6 @@
 .porcentagem-nao-atendimento {
   color: #dc2626;
   font-weight: 600;
-}
-
-.navigation-buttons {
-  margin-top: 2rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
-
-.btn-voltar,
-.btn-avancar {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-voltar {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-}
-
-.btn-avancar {
-  background: #2563eb;
-  color: white;
-  border: none;
-}
-
-.btn-avancar:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.btn-voltar:hover {
-  background: #e2e8f0;
-}
-
-.btn-avancar:hover:not(:disabled) {
-  background: #1d4ed8;
 }
 
 .btn-adicionar {

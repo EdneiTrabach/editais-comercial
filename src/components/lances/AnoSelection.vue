@@ -57,14 +57,6 @@ const contarProcessosPorAno = (ano) => {
 .ano-selection {
   padding: 1rem;
   max-width: 1200px;
-  margin: 0 auto;
-}
-
-.anos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
 }
 
 .ano-card {

@@ -232,3 +232,66 @@
   cursor: not-allowed;
   transform: none;
 }
+
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.analise-badge {
+  background: #2563eb;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.analise-info {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 4px;
+  border-left: 3px solid #2563eb;
+}
+
+.prazo-analise {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.prazo-analise i {
+  color: #2563eb;
+}
+
+.prazo-normal {
+  color: #059669;
+}
+
+.prazo-proximo {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.prazo-vencido {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.has-analysis {
+  border-left: 4px solid #2563eb;
+}
+
+/* Ajuste o hover para cartões com análise */
+.has-analysis:hover {
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
