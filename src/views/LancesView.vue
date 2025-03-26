@@ -8,6 +8,15 @@
         <h1>Planilha de Lances</h1>
       </div>
       
+      <!-- Componente de seleção de ano -->
+      <AnoSelection 
+        v-if="step === 0" 
+        :anos="anosDisponiveis"
+        :processos="processos" 
+        :selectedAno="anoSelecionado"
+        @select-ano="selecionarAno"
+      />
+      
       <!-- Componentes para cada etapa -->
       <ProcessoSelection 
         v-if="step === 1" 
@@ -38,40 +47,41 @@
       <!-- Navegação entre etapas -->
       <div class="navigation-buttons-lances">
         <button 
-        v-if="step < 3 && podeAvancar" 
-        @click="avancarEtapa" 
-        class="btn-avancar"
+          v-if="step < 3" 
+          @click="avancarEtapa" 
+          class="btn-avancar"
+          :disabled="!podeAvancar"
         >
-        Avançar
-      </button>
-      <button 
-        v-if="step > 1" 
-        @click="voltarEtapa" 
-        class="btn-voltar"
-      >
-      Voltar
-      </button>
+          Avançar
+        </button>
+        <button 
+          v-if="step > 0" 
+          @click="voltarEtapa" 
+          class="btn-voltar"
+        >
+          Voltar
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import ProcessoSelection from '@/components/lances/ProcessoSelection.vue'
 import SistemasSelection from '@/components/lances/SistemasSelection.vue'
 import PlanilhaValores from '@/components/lances/PlanilhaValores.vue'
+import AnoSelection from '@/components/lances/AnoSelection.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { SupabaseManager } from '@/lib/supabaseManager'
 import { useLances } from '@/composables/useLances'
 
-// Importar a lógica dos composables
 const {
   step,
   isSidebarExpanded,
-  processos,
+  processos, // Agora recebemos processos diretamente 
   sistemas,
   selectedProcesso,
   itensSelecionados,
@@ -89,15 +99,24 @@ const {
   voltarEtapa,
   avancarEtapa,
   loadProcessos,
-  carregarNomesSistemas // Adicionar esta linha
+  carregarNomesSistemas,
+  anoSelecionado,
+  anosDisponiveis,
+  selecionarAno
 } = useLances()
+
+// Computed property para obter o processo atual selecionado
+const processoAtual = computed(() => {
+  if (!selectedProcesso.value) return null
+  return processos.value.find(p => p.id === selectedProcesso.value)
+})
 
 // Use o composable de conexão
 useConnectionManager(loadProcessos)
 
-onMounted(() => {
-  loadProcessos()
-  carregarNomesSistemas() // Adicionar esta linha
+onMounted(async () => {
+  await loadProcessos()
+  await carregarNomesSistemas()
 })
 
 // Quando criar um canal

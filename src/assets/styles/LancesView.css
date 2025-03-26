@@ -242,3 +242,44 @@ h1 {
   text-align: center;
 }
 
+/* Adicionar no final do arquivo */
+
+/* Estilos para os cards de ano */
+.anos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ano-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.ano-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ano-card.selected {
+  border: 2px solid #193155;
+  background: #f8f9fa;
+}
+
+.ano-card h3 {
+  font-size: 1.8rem;
+  color: #193155;
+  margin-bottom: 0.5rem;
+}
+
+.ano-card p {
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+

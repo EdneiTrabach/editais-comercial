@@ -5,19 +5,51 @@ import { supabase } from '@/lib/supabase'
 import { useSistemasItens } from './useSistemasItens'
 
 export function useLances() {
-  const step = ref(1)
+  // Adicionar etapa inicial (0) para seleção de ano
+  const step = ref(0)
   const isSidebarExpanded = ref(true)
   const itensSelecionados = ref([])
+  const anoSelecionado = ref(null)
   
   // Importar funcionalidades de outros composables
   const {
-    processos,
+    processos, 
     sistemas,
     selectedProcesso,
     loadProcessos,
     loadSistemas
   } = useProcessos()
 
+  // Computed property para obter anos disponíveis
+  const anosDisponiveis = computed(() => {
+    const anos = new Set(processos.value.map(p => {
+      if (p.ano) return p.ano
+      if (p.data_pregao) return new Date(p.data_pregao).getFullYear()
+      return null
+    }).filter(Boolean))
+    return Array.from(anos).sort((a, b) => b - a)
+  })
+
+  // Computed property para filtrar processos pelo ano selecionado 
+  const processosFiltradosPorAno = computed(() => {
+    if (!anoSelecionado.value) return processos.value
+
+    return processos.value.filter(processo => {
+      if (processo.ano) return processo.ano === anoSelecionado.value
+      if (processo.data_pregao) {
+        const ano = new Date(processo.data_pregao).getFullYear()
+        return ano === anoSelecionado.value
+      }
+      return false
+    })
+  })
+
+  // Função para selecionar o ano
+  const selecionarAno = (ano) => {
+    anoSelecionado.value = ano
+    step.value = 1 
+  }
+  
   const {
     itensPlanilha,
     totalGeral,
@@ -169,8 +201,11 @@ export function useLances() {
     }
   })
 
+  // Modificar a função podeAvancar para considerar a nova etapa
   const podeAvancar = computed(() => {
     switch (step.value) {
+      case 0:
+        return anoSelecionado.value !== null
       case 1:
         return selectedProcesso.value !== null
       case 2:
@@ -180,9 +215,15 @@ export function useLances() {
     }
   })
 
+  // Modificar função voltarEtapa
   const voltarEtapa = () => {
-    if (step.value > 1) {
+    if (step.value > 0) {
       step.value--
+      
+      // Se voltar para a etapa de seleção de ano, limpar a seleção de processo
+      if (step.value === 0) {
+        selectedProcesso.value = null
+      }
     }
   }
 
@@ -208,11 +249,11 @@ export function useLances() {
   return {
     step,
     isSidebarExpanded,
-    processos,
+    processos: processosFiltradosPorAno,
     sistemas,
     selectedProcesso,
     itensSelecionados,
-    itensPlanilha,
+    itensPlanilha, 
     itensDisponiveis,
     totalGeral,
     podeAvancar,
@@ -227,7 +268,9 @@ export function useLances() {
     voltarEtapa,
     avancarEtapa,
     loadProcessos,
-    getSistemaNome,
-    carregarNomesSistemas
+    carregarNomesSistemas,
+    anoSelecionado,
+    anosDisponiveis,
+    selecionarAno
   }
 }
