@@ -65,6 +65,13 @@
           <table class="planilha-valores">
             <thead>
               <tr>
+                <th>
+                  <input 
+                    type="checkbox" 
+                    v-model="selecionarTodos"
+                    @change="toggleSelecionarTodos"
+                  >
+                </th>
                 <th>Item</th>
                 <th>Descrição</th>
                 <th class="hidden">Categoria</th>
@@ -77,24 +84,49 @@
             </thead>
             <tbody>
               <tr v-for="item in itensReadequados" :key="item.id">
+                <td>
+                  <input 
+                    type="checkbox" 
+                    v-model="item.selecionado"
+                    @change="calcularReadequacao"
+                  >
+                </td>
                 <td>{{ item.nome }}</td>
                 <td>{{ item.descricao }}</td>
                 <td class="hidden">{{ item.categoria }}</td>
                 <td>{{ item.marca }}</td>
                 <td>{{ item.quantidade }}</td>
                 <td>{{ formatarMoeda(item.valorUnitarioOriginal) }}</td>
-                <td class="valor-readequado">{{ formatarMoeda(item.valorUnitario) }}</td>
+                <td>
+                  <div class="valor-readequado-container">
+                    {{ formatarMoeda(item.valorUnitario) }} <!-- Exibe o valor readequado formatado -->
+                  </div>
+                </td>
                 <td class="valor-readequado">{{ formatarMoeda(item.total) }}</td>
               </tr>
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="4" class="total-label">Total Geral:</td>
+                <td colspan="6" class="total-label">Total Geral:</td>
                 <td>{{ formatarMoeda(totalOriginal) }}</td>
-                <td colspan="2" class="valor-readequado">{{ formatarMoeda(totalReadequado) }}</td>
+                <td class="valor-readequado">{{ formatarMoeda(totalReadequado) }}</td>
               </tr>
             </tfoot>
           </table>
+        </div>
+
+        <div class="resumo-proposta">
+          <h3>Resumo da Proposta</h3>
+          <div class="resumo-categorias">
+            <div v-for="categoria in categorias" :key="categoria" class="resumo-categoria">
+              <div class="resumo-categoria-titulo">{{ categoria }}:</div>
+              <div class="resumo-categoria-valor">{{ formatarMoeda(totalPorCategoria(categoria)) }}</div>
+            </div>
+          </div>
+          <div class="resumo-total">
+            <div class="resumo-total-titulo">Total Geral:</div>
+            <div class="resumo-total-valor">{{ formatarMoeda(totalGeral) }}</div>
+          </div>
         </div>
 
         <div class="acoes-planilha">
@@ -123,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlanilha } from '@/composables/usePlanilha'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -142,6 +174,10 @@ const percentualAjuste = ref('')
 const itensReadequados = ref([])
 const totalOriginal = ref(0)
 const valorEstimado = ref(0)
+const selecionarTodos = ref(false)
+const itensSelecionados = computed(() => 
+  itensReadequados.value.filter(item => item.selecionado)
+)
 
 // Computed para percentual formatado
 const percentualFormatado = computed(() => {
@@ -193,12 +229,20 @@ const calcularReadequacao = () => {
   const percentual = percentualFormatado.value
   const fator = 1 + (percentual / 100)
 
-  itensReadequados.value = itensReadequados.value.map(item => ({
-    ...item,
-    valorUnitarioOriginal: item.valorUnitarioOriginal || item.valorUnitario,
-    valorUnitario: Number((item.valorUnitarioOriginal * fator).toFixed(2)),
-    total: Number((item.valorUnitarioOriginal * fator * item.quantidade).toFixed(2))
-  }))
+  itensReadequados.value = itensReadequados.value.map(item => {
+    // Removida a condição de selecionado para calcular todos os itens
+    const valorUnitarioReadequado = Number((item.valorUnitarioOriginal * fator).toFixed(2))
+    const totalReadequado = Number((valorUnitarioReadequado * item.quantidade).toFixed(2))
+    
+    return {
+      ...item,
+      valorUnitarioOriginal: item.valorUnitarioOriginal || item.valorUnitario,
+      valorUnitario: valorUnitarioReadequado, // Atualiza o valor unitário
+      total: totalReadequado // Atualiza o total
+    }
+  })
+  
+  recalcularTotal()
 }
 
 // Modificar função de aplicar readequação
@@ -225,6 +269,28 @@ const voltarPlanilha = () => {
   router.back()
 }
 
+// Função para recalcular total
+const recalcularTotal = () => {
+  const total = itensReadequados.value.reduce((acc, item) => 
+    acc + Number(item.total || 0), 0
+  )
+  totalReadequado.value = Number(total.toFixed(2))
+}
+
+// Função para recalcular total de um item
+const recalcularTotalItem = (item) => {
+  item.total = Number((item.valorUnitario * item.quantidade).toFixed(2))
+  recalcularTotal()
+}
+
+// Função para selecionar todos os itens
+const toggleSelecionarTodos = () => {
+  itensReadequados.value.forEach(item => {
+    item.selecionado = selecionarTodos.value
+  })
+  recalcularTotal()
+}
+
 // Carregar dados iniciais
 onMounted(() => {
   const query = router.currentRoute.value.query
@@ -232,11 +298,19 @@ onMounted(() => {
     const itensOriginais = JSON.parse(decodeURIComponent(query.itens))
     itensReadequados.value = itensOriginais.map(item => ({
       ...item,
-      valorUnitarioOriginal: item.valorUnitario,
-      totalOriginal: item.total
+      selecionado: false,
+      valorUnitarioOriginal: item.valorUnitario, // Guarda o valor original
+      valorUnitario: item.valorUnitario, // Mantém o mesmo valor até recalcular
+      totalOriginal: item.total,
+      total: item.total // Mantém o mesmo total até recalcular
     }))
     totalOriginal.value = parseFloat(query.totalGeral || 0)
     valorEstimado.value = parseFloat(query.valorEstimado || 0)
+    
+    // Após carregar os dados, calcula a readequação se houver percentual
+    if (percentualFormatado.value !== 0) {
+      calcularReadequacao()
+    }
   }
   
   // Carregar estado da sidebar
@@ -245,6 +319,14 @@ onMounted(() => {
     isSidebarExpanded.value = savedState === 'true'
   }
 })
+
+// Adicione um watch para o percentualFormatado
+watch(percentualFormatado, (novoValor) => {
+  if (novoValor !== null) {
+    calcularReadequacao()
+  }
+}, { immediate: true })
+
 </script>
 
 <style src="./PlanilhaValoresReadequada.css" scoped></style>

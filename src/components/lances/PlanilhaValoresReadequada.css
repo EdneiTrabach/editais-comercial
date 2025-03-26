@@ -296,3 +296,30 @@ tfoot tr {
     overflow-x: auto;
   }
 }
+
+.valor-readequado-container {
+  display: flex;
+  align-items: center;
+}
+
+.input-valor-readequado {
+  width: 120px;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-align: right;
+  font-size: 1rem;
+}
+
+.input-valor-readequado:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Estilo para checkbox */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
