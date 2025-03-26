@@ -14,7 +14,7 @@ import { useProcessoUpdate } from '@/composables/useProcessoUpdate';
 import { processScheduledNotifications } from '@/api/notificationsApi';
 import { createUpdate } from '@/services/systemUpdatesService';
 import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
-
+import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue';
 
 export default {
   name: 'ProcessosView',
@@ -22,7 +22,8 @@ export default {
   components: {
     TheSidebar,
     BaseImage,
-    SystemUpdateModal
+    SystemUpdateModal,
+    SistemasImplantacaoSelector, // Adicione esta linha
   },
 
   setup() {
@@ -595,12 +596,20 @@ export default {
 
     const formatarDistancia = (processo) => {
       if (!processo) return '-';
-
-      // Check if the process has basic distance data
-      if (processo.distancia_km && processo.ponto_referencia_cidade && processo.ponto_referencia_uf) {
-        return `${processo.distancia_km} km (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})`;
+      
+      // Se tiver distâncias múltiplas
+      if (processo._distancias && processo._distancias.length > 0) {
+        return processo._distancias.map(d => 
+          `${d.distancia_km} km (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})`
+        ).join('; ');
       }
-
+    
+      // Se tiver distância única
+      if (processo.distancia_km) {
+        return `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
+          ` (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})` : ''}`;
+      }
+    
       return '-';
     };
 
@@ -1311,6 +1320,51 @@ export default {
 
             // Permitimos explicitamente valores null (campo em branco)
             console.log(`Atualizando empresa para: ${updateValue === null ? 'vazio' : updateValue} (validado)`);
+            break;
+
+          case 'distancia_km':
+            // Validar se é um número válido
+            const distanciaNum = parseFloat(editingCell.value.value.replace(/[^\d.,]/g, '').replace(',', '.'));
+            
+            if (isNaN(distanciaNum)) {
+              alert('A distância deve ser um número válido');
+              cancelEdit();
+              return;
+            }
+            
+            // Verificar se já existe uma distância
+            const { data: existingDistancia } = await supabase
+              .from('processo_distancias')
+              .select('*')
+              .eq('processo_id', processo.id)
+              .single();
+          
+            if (existingDistancia) {
+              // Atualiza a distância existente
+              const { error } = await supabase
+                .from('processo_distancias')
+                .update({
+                  distancia_km: distanciaNum,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', existingDistancia.id);
+          
+              if (error) throw error;
+            } else {
+              // Cria uma nova distância
+              const { error } = await supabase
+                .from('processo_distancias')
+                .insert({
+                  processo_id: processo.id,
+                  distancia_km: distanciaNum,
+                  created_at: new Date().toISOString()
+                });
+          
+              if (error) throw error;
+            }
+          
+            // Atualizar o valor para o formato numérico validado
+            updateValue = distanciaNum;
             break;
         }
 

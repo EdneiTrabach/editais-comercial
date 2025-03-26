@@ -102,7 +102,7 @@
 }
 
 .actions {
-  margin-top: 16px;
+  margin-top: -10px;
   display: flex;
   justify-content: flex-end;
 }
