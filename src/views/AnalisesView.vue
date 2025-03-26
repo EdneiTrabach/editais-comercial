@@ -28,11 +28,67 @@
 
         <!-- Tabela de Análise -->
         <div v-else-if="step === 2" class="analise-table-container">
+          <div class="header-actions">
+            <div class="acoes-principais">
+              <button 
+                @click="salvarAnalises" 
+                class="btn-salvar"
+                :disabled="!temAlteracoesPendentes"
+              >
+                <i class="fas fa-save"></i>
+                Salvar Análises
+              </button>
+              
+              <div class="dropdown-exportar">
+                <button class="btn-exportar">
+                  <i class="fas fa-file-export"></i>
+                  Exportar
+                </button>
+                <div class="dropdown-content">
+                  <button @click="exportarExcel">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                  <button @click="exportarPDF">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button @click="abrirDashboard">
+                    <i class="fas fa-chart-bar"></i> Dashboard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="table-header">
             <h2>Análise de Atendimento - {{ processoAtual?.numero_processo }}</h2>
-            <div class="total-geral">
-              <span>Porcentagem Geral de Atendimento: {{ porcentagemGeralAtendimento }}%</span>
+            <div class="analise-config">
+              <div class="percentual-container">
+                <div class="percentual-minimo">
+                  <label>% Mínimo Geral:</label>
+                  <input 
+                    type="number" 
+                    v-model="percentualMinimoGeral" 
+                    min="0" 
+                    max="100"
+                    class="percentual-input"
+                  />
+                </div>
+                <div class="percentual-obrigatorios">
+                  <label>% Mínimo Obrigatórios:</label>
+                  <input 
+                    type="number" 
+                    v-model="percentualMinimoObrigatorios" 
+                    min="0" 
+                    max="100"
+                    class="percentual-input"
+                  />
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div class="total-geral">
+            <span>Porcentagem Geral de Atendimento: {{ porcentagemGeralAtendimento }}%</span>
           </div>
 
           <table class="analise-table">
@@ -40,27 +96,123 @@
               <tr>
                 <th>Sistema</th>
                 <th>Total de Itens</th>
-                <th>Atendidos</th>
                 <th>Não Atendidos</th>
-                <th>% Atendimento</th>
+                <th>Atendidos</th>
                 <th>% Não Atendimento</th>
+                <th>% Atendimento</th>
+                <th>Obrigatório</th>
+                <th>% Mínimo</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="sistema in sistemasAnalise" :key="sistema.id">
+              <tr v-for="sistema in sistemasAnalise" :key="sistema.id" 
+                  :class="{ 
+                    'sistema-row': true,
+                    'sistema-obrigatorio': sistema.obrigatorio,
+                    'atende-percentual': getStatusAtendimento(sistema).atende,
+                    'nao-atende-percentual': !getStatusAtendimento(sistema).atende 
+                  }">
                 <td>{{ sistema.nome }}</td>
-                <td>{{ sistema.totalItens }}</td>
-                <td class="atendidos">{{ sistema.atendidos }}</td>
-                <td class="nao-atendidos">{{ sistema.naoAtendidos }}</td>
-                <td class="porcentagem-atendimento">
-                  {{ calcularPorcentagem(sistema.atendidos, sistema.totalItens) }}%
+                <td 
+                  class="editable" 
+                  @dblclick="editarCelula(sistema, 'totalItens', $event)"
+                >
+                  <template v-if="editando.id === sistema.id && editando.campo === 'totalItens'">
+                    <input 
+                      type="text"
+                      v-model="editando.valor"
+                      @blur="salvarEdicao(sistema)"
+                      @keyup.enter="salvarEdicao(sistema)"
+                      @keyup.esc="cancelarEdicao"
+                      class="edit-input"
+                      ref="editInput"
+                    />
+                  </template>
+                  <template v-else>
+                    {{ sistema.totalItens }}
+                  </template>
                 </td>
+                <td 
+                  class="editable nao-atendidos"
+                  @dblclick="editarCelula(sistema, 'naoAtendidos', $event)"
+                >
+                  <template v-if="editando.id === sistema.id && editando.campo === 'naoAtendidos'">
+                    <input 
+                      type="text"
+                      v-model="editando.valor"
+                      @blur="salvarEdicao(sistema)"
+                      @keyup.enter="salvarEdicao(sistema)"
+                      @keyup.esc="cancelarEdicao"
+                      class="edit-input"
+                      ref="editInput"
+                    />
+                  </template>
+                  <template v-else>
+                    {{ sistema.naoAtendidos }}
+                  </template>
+                </td>
+                <td class="atendidos">{{ sistema.totalItens - sistema.naoAtendidos }}</td>
                 <td class="porcentagem-nao-atendimento">
                   {{ calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens) }}%
+                </td>
+                <td class="porcentagem-atendimento">
+                  {{ calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens) }}%
+                </td>
+                <td>
+                  <label class="checkbox-container">
+                    <input 
+                      type="checkbox" 
+                      v-model="sistema.obrigatorio"
+                      @change="salvarObrigatoriedade(sistema)"
+                    />
+                    <span class="checkmark"></span>
+                  </label>
+                </td>
+                <td class="percentual-personalizado">
+                  <input 
+                    type="number"
+                    v-model="sistema.percentualMinimo"
+                    @change="salvarPercentualPersonalizado(sistema)"
+                    class="percentual-input-small"
+                    min="0"
+                    max="100"
+                  />
+                </td>
+                <td class="status-column">
+                  <span :class="getStatusAtendimento(sistema).class">
+                    {{ getStatusAtendimento(sistema).texto }}
+                  </span>
                 </td>
               </tr>
             </tbody>
           </table>
+
+          <div class="analise-resumo">
+            <div class="percentual-geral" :class="getStatusGeralClass">
+              <span>Atendimento Geral: {{ porcentagemGeralAtendimento }}%</span>
+              <span class="status-geral">{{ getStatusGeral }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Confirmação -->
+        <div v-if="showConfirmDialog" class="modal-overlay">
+          <div class="modal-content">
+            <h3>Alterações não salvas</h3>
+            <p>Existem alterações não salvas. O que deseja fazer?</p>
+            <div class="modal-actions">
+              <button @click="confirmarSaida" class="btn-secondary">
+                Sair sem salvar
+              </button>
+              <button @click="salvarESair" class="btn-primary">
+                Salvar e sair
+              </button>
+              <button @click="cancelarSaida" class="btn-cancel">
+                Continuar editando
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Botões de navegação -->
@@ -86,157 +238,248 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import TheSidebar from '@/components/TheSidebar.vue'
 import AnoSelection from '@/components/lances/AnoSelection.vue'
 import ProcessoSelection from '@/components/lances/ProcessoSelection.vue'
 import { useAnalises } from '@/composables/useAnalises'
+import * as XLSX from 'xlsx'
 
-const {
-  step,
-  isSidebarExpanded,
-  processos,
-  sistemas,
-  selectedProcesso,
-  processoAtual,
-  sistemasAnalise,
-  anosDisponiveis,
-  anoSelecionado,
-  processosFiltrados,
-  podeAvancar,
-  porcentagemGeralAtendimento,
-  handleSidebarToggle,
-  selecionarAno,
-  selectProcesso,
-  voltarEtapa,
-  avancarEtapa,
-  calcularPorcentagem,
-  loadProcessos // Adicionar esta linha
-} = useAnalises()
+export default {
+  name: 'AnalisesView',
+  
+  components: {
+    TheSidebar,
+    AnoSelection,
+    ProcessoSelection
+  },
 
-// Carregar dados quando o componente for montado
-onMounted(async () => {
-  await loadProcessos()
-})
+  // Adicionar hook de navegação como propriedade do componente
+  beforeRouteLeave(to, from, next) {
+    if (this.temAlteracoesPendentes) {
+      const confirmar = window.confirm('Existem alterações não salvas. Deseja sair mesmo assim?')
+      if (confirmar) {
+        next()
+      } else {
+        next(false)
+      }
+    } else {
+      next()
+    }
+  },
+
+  setup() {
+    const router = useRouter()
+    const alteracoesPendentes = ref(false)
+    const showConfirmDialog = ref(false)
+    const acaoAposSalvar = ref(null)
+    const editando = ref({ id: null, campo: null, valor: null })
+    const percentualMinimoGeral = ref(60)
+    const percentualMinimoObrigatorios = ref(90)
+
+    const {
+      step,
+      isSidebarExpanded,
+      processos,
+      sistemas,
+      selectedProcesso,
+      processoAtual,
+      sistemasAnalise,
+      anosDisponiveis,
+      anoSelecionado,
+      processosFiltrados,
+      podeAvancar,
+      porcentagemGeralAtendimento,
+      handleSidebarToggle,
+      selecionarAno,
+      selectProcesso,
+      voltarEtapa,
+      avancarEtapa,
+      calcularPorcentagem,
+      loadProcessos
+    } = useAnalises()
+
+    // Computed property para controle de alterações
+    const temAlteracoesPendentes = computed(() => {
+      return alteracoesPendentes.value && sistemasAnalise.value.length > 0
+    })
+
+    // Função para verificar alterações pendentes
+    const verificarAlteracoesPendentes = (callback) => {
+      if (temAlteracoesPendentes.value) {
+        showConfirmDialog.value = true
+        acaoAposSalvar.value = callback
+        return true
+      }
+      return false
+    }
+
+    // Funções de controle do modal de confirmação
+    const confirmarSaida = () => {
+      showConfirmDialog.value = false
+      acaoAposSalvar.value?.()
+    }
+
+    const salvarESair = async () => {
+      await salvarAnalises()
+      showConfirmDialog.value = false
+    }
+
+    const cancelarSaida = () => {
+      showConfirmDialog.value = false
+      acaoAposSalvar.value = null
+    }
+
+    // Event listener para fechar navegador
+    onMounted(() => {
+      window.addEventListener('beforeunload', handleBeforeUnload)
+      loadProcessos()
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    })
+
+    const handleBeforeUnload = (event) => {
+      if (temAlteracoesPendentes.value) {
+        event.preventDefault()
+        event.returnValue = ''
+      }
+    }
+
+    // Função para cálculo do status de atendimento
+    const getStatusAtendimento = (sistema) => {
+      const percentualAtendimento = calcularPorcentagem(
+        sistema.totalItens - sistema.naoAtendidos, 
+        sistema.totalItens
+      )
+      
+      const percentualMinimo = sistema.percentualMinimo || 
+        (sistema.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value)
+      
+      const atende = percentualAtendimento >= percentualMinimo
+      
+      return {
+        atende,
+        texto: `${atende ? 'Atende' : 'Não Atende'} (Min: ${percentualMinimo}%)`,
+        class: atende ? 'status-atende' : 'status-nao-atende'
+      }
+    }
+
+    // Status geral da análise
+    const getStatusGeralClass = computed(() => {
+      const obrigatoriosAtendidos = sistemasAnalise.value
+        .filter(s => s.obrigatorio)
+        .every(s => getStatusAtendimento(s).atende)
+      
+      const percentualGeral = porcentagemGeralAtendimento.value
+      return {
+        'status-geral-atende': obrigatoriosAtendidos && percentualGeral >= percentualMinimoGeral.value,
+        'status-geral-nao-atende': !obrigatoriosAtendidos || percentualGeral < percentualMinimoGeral.value
+      }
+    })
+
+    const getStatusGeral = computed(() => {
+      const obrigatoriosAtendidos = sistemasAnalise.value
+        .filter(s => s.obrigatorio)
+        .every(s => getStatusAtendimento(s).atende)
+      
+      const percentualGeral = porcentagemGeralAtendimento.value
+      
+      if (obrigatoriosAtendidos && percentualGeral >= percentualMinimoGeral.value) {
+        return 'Atende Requisitos'
+      }
+      return 'Não Atende Requisitos'
+    })
+
+    // Função para salvar todas as análises
+    const salvarAnalises = async () => {
+      try {
+        const promises = sistemasAnalise.value.map(sistema => {
+          return supabase
+            .from('analises_itens')
+            .upsert({
+              sistema_id: sistema.id,
+              processo_id: selectedProcesso.value,
+              totalItens: sistema.totalItens || 0,
+              naoAtendidos: sistema.naoAtendidos || 0,
+              obrigatorio: sistema.obrigatorio || false,
+              percentual_minimo: sistema.percentualMinimo,
+              updated_at: new Date().toISOString()
+            })
+        })
+
+        await Promise.all(promises)
+        alteracoesPendentes.value = false
+        alert('Análises salvas com sucesso!')
+
+        if (acaoAposSalvar.value) {
+          acaoAposSalvar.value()
+          acaoAposSalvar.value = null
+        }
+      } catch (error) {
+        console.error('Erro ao salvar análises:', error)
+        alert('Erro ao salvar análises')
+      }
+    }
+
+    // Exportações
+    const exportarExcel = () => {
+      const dados = sistemasAnalise.value.map(sistema => ({
+        'Sistema': sistema.nome,
+        'Total de Itens': sistema.totalItens,
+        'Não Atendidos': sistema.naoAtendidos,
+        'Atendidos': sistema.totalItens - sistema.naoAtendidos,
+        '% Não Atendimento': calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens),
+        '% Atendimento': calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens),
+        'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não',
+        '% Mínimo': sistema.percentualMinimo || '-',
+        'Status': getStatusAtendimento(sistema).texto
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(dados)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Análise de Sistemas')
+      XLSX.writeFile(wb, `analise_sistemas_${processoAtual.value?.numero_processo}.xlsx`)
+    }
+
+    return {
+      step,
+      isSidebarExpanded,
+      processos,
+      selectedProcesso,
+      processoAtual,
+      sistemasAnalise,
+      anosDisponiveis,
+      anoSelecionado,
+      processosFiltrados,
+      podeAvancar,
+      porcentagemGeralAtendimento,
+      handleSidebarToggle,
+      selecionarAno,
+      selectProcesso,
+      voltarEtapa,
+      avancarEtapa,
+      calcularPorcentagem,
+      alteracoesPendentes,
+      temAlteracoesPendentes,
+      showConfirmDialog,
+      confirmarSaida,
+      salvarESair,
+      cancelarSaida,
+      verificarAlteracoesPendentes,
+      percentualMinimoGeral,
+      percentualMinimoObrigatorios,
+      getStatusAtendimento,
+      getStatusGeralClass,
+      getStatusGeral,
+      salvarAnalises,
+      exportarExcel,
+      editando
+    }
+  }
+}
 </script>
-
-<style scoped>
-.analises-container {
-  padding: 2rem;
-}
-
-.header-section {
-  margin-bottom: 2rem;
-}
-
-.header-section h1 {
-  font-size: 1.8rem;
-  color: #1e293b;
-}
-
-.analise-table-container {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.table-header h2 {
-  font-size: 1.2rem;
-  color: #334155;
-}
-
-.total-geral {
-  background: #f8fafc;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.analise-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.analise-table th,
-.analise-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.analise-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #475569;
-}
-
-.atendidos {
-  color: #059669;
-  font-weight: 500;
-}
-
-.nao-atendidos {
-  color: #dc2626;
-  font-weight: 500;
-}
-
-.porcentagem-atendimento {
-  color: #059669;
-  font-weight: 600;
-}
-
-.porcentagem-nao-atendimento {
-  color: #dc2626;
-  font-weight: 600;
-}
-
-.navigation-buttons {
-  margin-top: 2rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
-
-.btn-voltar,
-.btn-avancar {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-voltar {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-}
-
-.btn-avancar {
-  background: #2563eb;
-  color: white;
-  border: none;
-}
-
-.btn-avancar:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.btn-voltar:hover {
-  background: #e2e8f0;
-}
-
-.btn-avancar:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-</style>
+<style src="./AnalisesView.css" scoped></style>

@@ -51,7 +51,7 @@
         
           <li class="sidebar-menu-item">
             <router-link to="/analises" class="sidebar-menu-link">
-              <img src="/icons/edicao.svg" alt="Análises" class="icon" />
+              <img src="/icons/analises.svg" alt="Análises" class="icon" />
               <span class="link-text">Análises</span>
             </router-link>
           </li>

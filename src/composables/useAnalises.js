@@ -106,20 +106,29 @@ export function useAnalises() {
     }
   }
 
-  // Função para carregar processos
+  const criarTabelaAnalises = async () => {
+    try {
+      const { error } = await supabase.rpc('criar_tabela_analises')
+      if (error) throw error
+    } catch (err) {
+      console.error('Erro ao criar tabela:', err)
+    }
+  }
+
+  // Modifique a função loadProcessos
   const loadProcessos = async () => {
     try {
+      await criarTabelaAnalises() // Adicione esta linha
+      
       const { data, error } = await supabase
         .from('processos')
         .select('*')
-        .eq('status', 'em_analise') // Filtrar apenas processos em análise
-        .order('data_pregao', { ascending: true })
+        .order('created_at', { ascending: false })
 
       if (error) throw error
-      processos.value = data || []
+      processos.value = data
     } catch (error) {
       console.error('Erro ao carregar processos:', error)
-      processos.value = []
     }
   }
 
