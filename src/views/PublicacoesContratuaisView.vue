@@ -1044,10 +1044,6 @@ textarea.full-width {
   border: 1px solid #ddd;
 }
 
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
 .btn-success {
   background-color: #4caf50;
   color: white;

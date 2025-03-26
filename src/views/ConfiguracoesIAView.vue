@@ -947,10 +947,6 @@ input:checked + .slider:before {
   border: 1px solid #ddd;
 }
 
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
 .btn-outline {
   background-color: transparent;
   color: #666;

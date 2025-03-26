@@ -690,15 +690,26 @@
               </div>
             </div>
 
+            <!-- Botões de ação no modal -->
             <div class="confirm-actions">
               <button class="btn-cancel" @click="hideReagendamentoDialog">Cancelar</button>
-              <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-secondary" @click="confirmSemNovaData">
+              
+              <!-- Adicionar este botão também para demonstração -->
+              <button v-if="!reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" 
+                class="btn-secondary" 
+                @click="confirmSemNovaData">
                 Não, apenas alterar o status
               </button>
-              <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" class="btn-confirm" @click="confirmarTemNovaData">
+              
+              <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" 
+                class="btn-confirm" 
+                @click="confirmarTemNovaData">
                 Sim, informar nova data
               </button>
-              <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="btn-confirm" @click="confirmarReagendamento" 
+              
+              <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" 
+                class="btn-confirm" 
+                @click="confirmarReagendamento" 
                 :disabled="!reagendamentoDialog.novaData || !reagendamentoDialog.novaHora">
                 Confirmar {{ reagendamentoDialog.status === 'demonstracao' ? 'Demonstração' : 'Reagendamento' }}
               </button>
