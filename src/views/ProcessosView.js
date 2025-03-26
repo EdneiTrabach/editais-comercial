@@ -298,8 +298,22 @@ export default {
 
     // Computed properties
     const anosDisponiveis = computed(() => {
-      const anos = new Set(processos.value.map(p => p.ano))
-      return Array.from(anos).sort((a, b) => b - a) // Descending order
+      // Pegar todos os anos únicos das datas dos processos
+      const anos = new Set();
+      
+      processos.value.forEach(processo => {
+        // Pegar o ano da data do pregão
+        if (processo.data_pregao) {
+          const ano = new Date(processo.data_pregao).getFullYear();
+          anos.add(ano);
+        }
+        // Também considerar o campo ano do processo
+        if (processo.ano) {
+          anos.add(parseInt(processo.ano));
+        }
+      });
+    
+      return Array.from(anos).sort((a, b) => b - a); // Ordem decrescente
     })
 
     const estadosFiltrados = computed(() => {
@@ -318,7 +332,13 @@ export default {
       if (!processos.value) return [];
 
       return processos.value
-        .filter(processo => processo.ano === anoSelecionado.value)
+        .filter(processo => {
+          // Verificar tanto o campo ano quanto a data_pregao
+          const anoPregao = processo.data_pregao ? new Date(processo.data_pregao).getFullYear() : null;
+          const anoProcesso = processo.ano ? parseInt(processo.ano) : null;
+          
+          return anoPregao === anoSelecionado.value || anoProcesso === anoSelecionado.value;
+        })
         .filter(processo => {
           return colunas.every(coluna => {
             // Se não há filtros ativos para esta coluna, incluir o processo
@@ -601,54 +621,32 @@ export default {
 
       try {
         isLoading.value = true;
-        console.log('Starting process loading...');
 
-        // Guardar o ano selecionado atual
-        const anoAtual = anoSelecionado.value;
-
-        // Query processes com ordenação composta
+        // Buscar todos os processos sem filtrar por ano
         const { data, error } = await supabase
           .from('processos')
-          .select(`*`)
-          .order('data_pregao', { ascending: true })
-          .order('created_at', { ascending: true }); // Segundo critério de ordenação
+          .select('*')
+          .order('data_pregao', { ascending: false });
 
         if (error) throw error;
 
-        // Additional data processing
-        const processosComNomes = [];
+        // Atualiza processos
+        processos.value = data;
 
-        for (const processo of data || []) {
-          // Fetch system names for each process
-          let sistemasNomes = '-';
-          if (processo.sistemas_ativos && processo.sistemas_ativos.length > 0) {
-            sistemasNomes = await getSistemasNomes(processo.sistemas_ativos);
-          }
-
-          // Add the process with sistemas_nomes field populated
-          processosComNomes.push({
-            ...processo,
-            sistemas_nomes: sistemasNomes
-          });
-        }
-
-        processos.value = processosComNomes;
-        console.log('Processes loaded with system names:', processos.value.length);
-
-        // Verificar se o ano selecionado ainda existe nos processos carregados
-        const anos = new Set(processos.value.map(p => p.ano));
-        
-        // Se o ano atual não estiver mais disponível, selecione o primeiro ano disponível
-        if (!anos.has(anoAtual) && anos.size > 0) {
-          anoSelecionado.value = Math.max(...Array.from(anos));
+        // Se o ano atual não existe nas abas, selecionar o ano mais recente
+        const anos = anosDisponiveis.value;
+        if (!anos.includes(anoSelecionado.value) && anos.length > 0) {
+          anoSelecionado.value = anos[0]; // Primeiro ano (mais recente)
+          showToast(`Visualização alterada para o ano ${anos[0]}`, 'info');
         }
 
       } catch (error) {
-        console.error('Error loading processes:', error);
+        console.error('Erro ao carregar processos:', error);
+        showToast('Erro ao carregar processos', 'error');
       } finally {
         isLoading.value = false;
       }
-    }
+    };
 
     const getSistemasNomes = async (sistemasIds) => {
       if (!sistemasIds || !sistemasIds.length) return '-'
@@ -1206,6 +1204,47 @@ export default {
     // Modificação na função handleUpdate
     const handleUpdate = async (processo) => {
       try {
+        // Verifica se é uma mudança de data que afeta o ano
+        if (editingCell.value.field === 'data_pregao') {
+          const anoAntigo = new Date(processo.data_pregao).getFullYear();
+          const anoNovo = new Date(editingCell.value.value).getFullYear();
+          
+          if (anoAntigo !== anoNovo) {
+            console.log(`Mudança de ano detectada: ${anoAntigo} -> ${anoNovo}`);
+            
+            // Atualiza o registro no banco
+            const updateData = {
+              data_pregao: editingCell.value.value,
+              ano: anoNovo, // Atualiza também o campo ano
+              updated_at: new Date().toISOString(),
+              updated_by: (await supabase.auth.getUser()).data.user?.id
+            };
+
+            const { error } = await supabase
+              .from('processos')
+              .update(updateData)
+              .eq('id', processo.id);
+
+            if (error) throw error;
+
+            // Recarrega os processos
+            await loadProcessos();
+
+            // Se estiver visualizando o ano antigo, muda para o novo ano
+            if (anoSelecionado.value === anoAntigo) {
+              anoSelecionado.value = anoNovo;
+            }
+
+            // Mostra mensagem de confirmação
+            showToast(`Processo movido para o ano ${anoNovo}`, 'success');
+            
+            // Cancela o modo de edição
+            cancelEdit();
+            return;
+          }
+        }
+
+        // Continua com a lógica normal de atualização para outros campos
         // Verifica se o campo está em edição
         if (editingCell.value.id !== processo.id) return;
 
@@ -2571,41 +2610,6 @@ export default {
       return valido;
     };
 
-    // Função para confirmar reagendamento
-    const confirmarReagendamento = async () => {
-      if (!reagendamentoDialog.value.processo) return;
-      
-      try {
-        // Validar data/hora
-        // ...existing validation code...
-        
-        // Preparar dados adicionais com a nova data
-        let additionalData = {};
-        if (reagendamentoDialog.value.novaData) {
-          additionalData.data_pregao = reagendamentoDialog.value.novaData;
-          additionalData.hora_pregao = reagendamentoDialog.value.novaHora || '10:00';
-        }
-        
-        // Alterar status do processo e agendar notificações
-        const result = await updateProcessoStatus(
-          reagendamentoDialog.value.processo.id,
-          reagendamentoDialog.value.status,
-          additionalData
-        );
-        
-        if (result.success) {
-          showToast(`Processo ${reagendamentoDialog.value.status.toLowerCase()} com sucesso!`, 'success');
-          loadProcessosAno(anoSelecionado.value);
-          hideReagendamentoDialog();
-        } else {
-          showToast(result.message, 'error');
-        }
-      } catch (error) {
-        console.error(`Erro ao ${reagendamentoDialog.value.status.toLowerCase()} processo:`, error);
-        showToast(`Erro ao ${reagendamentoDialog.value.status.toLowerCase()} processo`, 'error');
-      }
-    };
-
     // Função para tratar atualização de status
     const handleStatusUpdate = async (statusData) => {
       // Recarregar a lista de processos para refletir a mudança
@@ -2926,22 +2930,46 @@ export default {
     // Adicionar dentro do setup, após as outras funções
     const checkPendingNotifications = async () => {
       try {
-        // Buscar notificações para hoje
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString();
+        
         const { data, error } = await supabase
           .from('notification_schedules')
           .select('*, processos(*)')
           .eq('active', true)
-          .gte('next_notification', today + 'T00:00:00')
-          .lte('next_notification', today + 'T23:59:59');
+          .eq('status', 'pending')
+          .lte('next_notification', today)
+          .order('next_notification', { ascending: true });
     
         if (error) throw error;
     
-        // Exibir notificações pendentes
-        if (data && data.length > 0) {
-          data.forEach(notification => {
-            showToast(notification.mensagem, 'warning', 10000); // Mostrar por 10 segundos
-          });
+        for (const notification of data) {
+          try {
+            // Processar notificação
+            await showToast(notification.mensagem, 'warning', 10000);
+            
+            // Atualizar status
+            await supabase
+              .from('notification_schedules')
+              .update({
+                status: 'completed',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', notification.id);
+    
+          } catch (notifError) {
+            console.error('Erro ao processar notificação:', notifError);
+            
+            // Atualizar tentativas
+            await supabase
+              .from('notification_schedules')
+              .update({
+                attempts: notification.attempts + 1,
+                last_attempt: new Date().toISOString(),
+                error_message: notifError.message,
+                status: notification.attempts >= 2 ? 'failed' : 'pending'
+              })
+              .eq('id', notification.id);
+          }
         }
       } catch (error) {
         console.error('Erro ao verificar notificações:', error);
@@ -3145,6 +3173,148 @@ export default {
         style: 'currency',
         currency: 'BRL'
       }).format(valorNumerico);
+    };
+
+    // Dentro do setup()
+    const confirmarReagendamento = async () => {
+      try {
+        if (!validarDataHora()) {
+          return;
+        }
+    
+        const processo = reagendamentoDialog.value.processo;
+        const novoStatus = reagendamentoDialog.value.status;
+        const novaData = reagendamentoDialog.value.novaData;
+        const novaHora = reagendamentoDialog.value.novaHora;
+    
+        // Dados base para o novo registro
+        const dadosBase = {
+          ...processo,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+    
+        // Remover o ID para criar um novo registro
+        delete dadosBase.id;
+    
+        switch (novoStatus.toLowerCase()) {
+          case 'adiado':
+          case 'suspenso': {
+            // 1. Criar novo registro com status default e nova data
+            const novoProcesso = {
+              ...dadosBase,
+              data_pregao: novaData,
+              hora_pregao: novaHora,
+              status: 'em_analise' // Status default
+            };
+    
+            // 2. Atualizar processo original com status adiado/suspenso
+            const updateOriginal = {
+              status: novoStatus,
+              updated_at: new Date().toISOString()
+            };
+    
+            // Executar operações em paralelo
+            const [insertResult, updateResult] = await Promise.all([
+              supabase.from('processos').insert([novoProcesso]).select().single(),
+              supabase.from('processos').update(updateOriginal).eq('id', processo.id)
+            ]);
+    
+            if (insertResult.error) throw insertResult.error;
+            if (updateResult.error) throw updateResult.error;
+    
+            // Criar notificação apenas para o novo processo
+            await agendarNotificacao({
+              processo_id: insertResult.data.id,
+              data: novaData,
+              hora: novaHora,
+              tipo: 'processo_reagendado',
+              mensagem: `Novo agendamento do processo ${processo.numero_processo} para ${formatDate(novaData)} ${novaHora}`
+            });
+            break;
+          }
+    
+          case 'demonstracao': {
+            // Criar novo registro mantendo status demonstração
+            const novoProcesso = {
+              ...dadosBase,
+              data_pregao: novaData,
+              hora_pregao: novaHora,
+              status: 'demonstracao'
+            };
+    
+            // Inserir novo registro
+            const { data, error } = await supabase
+              .from('processos')
+              .insert([novoProcesso])
+              .select()
+              .single();
+    
+            if (error) throw error;
+    
+            // Agendar notificações para ambas as datas
+            await Promise.all([
+              agendarNotificacao({
+                processo_id: processo.id,
+                data: processo.data_pregao,
+                hora: processo.hora_pregao,
+                tipo: 'demonstracao',
+                mensagem: `Demonstração original do processo ${processo.numero_processo}`
+              }),
+              agendarNotificacao({
+                processo_id: data.id,
+                data: novaData,
+                hora: novaHora,
+                tipo: 'demonstracao',
+                mensagem: `Nova demonstração do processo ${processo.numero_processo}`
+              })
+            ]);
+            break;
+          }
+        }
+    
+        // Atualizar interface
+        await loadProcessos();
+        hideReagendamentoDialog();
+        showToast(`Processo ${formatStatus(novoStatus)} registrado com sucesso`, 'success');
+    
+      } catch (error) {
+        console.error('Erro ao reagendar processo:', error);
+        showToast('Erro ao reagendar processo: ' + error.message, 'error');
+      }
+    };
+    
+    // Função auxiliar para agendar notificações
+    const agendarNotificacao = async ({ processo_id, data, hora, tipo, mensagem }) => {
+      try {
+        const dataHora = new Date(`${data}T${hora}`);
+        
+        const notificacaoData = {
+          processo_id,
+          tipo,
+          mensagem,
+          data_notificacao: dataHora.toISOString(),
+          next_notification: dataHora.toISOString(),
+          created_at: new Date().toISOString(),
+          active: true,
+          status: 'pending'
+        };
+    
+        const { error } = await supabase
+          .from('notification_schedules')
+          .insert([notificacaoData]);
+    
+        if (error) {
+          console.error('Erro ao inserir notificação:', error);
+          throw error;
+        }
+    
+        console.log('Notificação agendada com sucesso');
+        return true;
+      } catch (error) {
+        console.error('Erro ao agendar notificação:', error);
+        throw error;
+      }
     };
 
     // Return all reactive properties and methods for the template
