@@ -75,16 +75,35 @@
       <div class="form-group">
         <label>Modelo</label>
         <select v-model="modeloConfig.ollama_modelo" class="full-width">
-          <option value="mistral">Mistral (recomendado)</option>
+          <option value="gemma3:1b">Gemma 3:1B (recomendado)</option>
+          <option value="mistral">Mistral</option>
           <option value="llama2">Llama 2</option>
           <option value="orca-mini">Orca Mini</option>
         </select>
         <p class="form-help">
-          Modelo a ser usado no Ollama. Certifique-se de tê-lo baixado usando o comando: ollama pull [modelo]
+          Modelo a ser usado no Ollama. Certifique-se de tê-lo baixado usando o comando: <code>ollama pull gemma3:1b</code> (ou outro modelo selecionado)
         </p>
       </div>
       
       <div class="form-group">
+        <div class="notification info-notification">
+          <p><strong>Dica para instalação do Gemma 3:1B:</strong></p>
+          <p>Para instalar o modelo Gemma 3:1B, execute no terminal:</p>
+          <pre>ollama pull gemma3:1b</pre>
+          <p>Tamanho aproximado: 815 MB</p>
+        </div>
+        
+        <!-- Adicionando diagnóstico de conexão -->
+        <OllamaStatusDiagnostic 
+          @tentar-conexao="$emit('testar-conexao-ollama')" 
+          @success="ollamaConectado = true"
+        />
+        
+        <div v-if="ollamaConectado" class="notification success-notification">
+          <p><strong>Ollama conectado!</strong> O sistema está pronto para usar o modelo local.</p>
+          <p>Modelo configurado: <strong>{{ modeloConfig.ollama_modelo }}</strong></p>
+        </div>
+        
         <button @click="$emit('testar-conexao-local')" class="btn-secondary">
           <span v-if="testando" class="spinner"></span>
           {{ testando ? 'Testando...' : 'Verificar Disponibilidade' }}
@@ -135,10 +154,16 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import OllamaStatusDiagnostic from './OllamaStatusDiagnostic.vue';
+import { ollamaService } from '@/services/ollamaService';
 
 export default {
   name: 'ModeloIAConfig',
+  
+  components: {
+    OllamaStatusDiagnostic
+  },
   
   props: {
     configuracoes: {
@@ -160,6 +185,7 @@ export default {
   setup(props, { emit }) {
     const mostrarChave = ref(false);
     const modeloConfig = ref({ ...props.configuracoes });
+    const ollamaConectado = ref(false);
     
     // Sincronizar mudanças dos props para a ref local
     watch(() => props.configuracoes, (newConfig) => {
@@ -175,9 +201,22 @@ export default {
       emit('salvar', modeloConfig.value);
     };
     
+    // Verificar status da conexão Ollama ao montar o componente
+    onMounted(async () => {
+      try {
+        // Verificar silenciosamente se o Ollama está disponível
+        const modelos = await ollamaService.getModelos();
+        ollamaConectado.value = modelos && modelos.length > 0;
+      } catch (error) {
+        console.log('Ollama ainda não está conectado:', error);
+        ollamaConectado.value = false;
+      }
+    });
+    
     return {
       mostrarChave,
       modeloConfig,
+      ollamaConectado,
       salvar
     };
   }
@@ -374,5 +413,31 @@ input:checked + .slider:before {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.notification {
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.info-notification {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  color: #0d47a1;
+}
+
+.info-notification pre {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  margin: 8px 0;
+}
+
+.notification.success-notification {
+  background-color: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  color: #1b5e20;
 }
 </style>

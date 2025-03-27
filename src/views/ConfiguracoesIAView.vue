@@ -54,6 +54,7 @@ import PadroesManager from '@/components/configuracoes/PadroesManager.vue';
 import { useIAFeedback } from '@/composables/useIAFeedback';
 import { usePadroesCampos } from '@/composables/usePadroesCampos';
 import axios from 'axios';
+import { ollamaService } from '@/services/ollamaService';
 
 export default {
   name: 'ConfiguracoesIAView',
@@ -72,7 +73,7 @@ export default {
       modelo_ia: 'openai',
       openai_api_key: '',
       ollama_url: 'http://localhost:11434',
-      ollama_modelo: 'mistral',
+      ollama_modelo: 'gemma3:1b', // Alterado para gemma3:1b como padrão
       limite_historico_analises: 5
     });
     const salvando = ref(false);
@@ -235,22 +236,16 @@ export default {
       try {
         testando.value = true;
         
-        const url = configuracoes.value.ollama_url || 'http://localhost:11434';
-        const response = await axios.get(`${url}/api/tags`);
+        // Usar ollamaService que já está configurado para usar o proxy
+        const modelos = await ollamaService.getModelos();
+        const modeloSelecionado = configuracoes.value.ollama_modelo || 'gemma3:1b';
         
-        if (response.status === 200) {
-          const modelos = response.data.models || [];
-          const modeloSelecionado = configuracoes.value.ollama_modelo || 'mistral';
-          
-          const modeloDisponivel = modelos.some(m => m.name === modeloSelecionado);
-          
-          if (modeloDisponivel) {
-            exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
-          } else {
-            exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
-          }
+        const modeloDisponivel = modelos.some(m => m.name === modeloSelecionado);
+        
+        if (modeloDisponivel) {
+          exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
         } else {
-          exibirMensagem('Servidor Ollama está respondendo, mas com status inesperado.', 'warning');
+          exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
         }
       } catch (error) {
         console.error('Erro ao testar conexão com Ollama:', error);
@@ -264,20 +259,14 @@ export default {
       try {
         testando.value = true;
         
-        const url = configuracoes.value.ollama_url || 'http://localhost:11434';
-        const response = await axios.get(`${url}/api/tags`);
+        // Usar ollamaService que já está configurado para usar o proxy
+        const modelos = await ollamaService.getModelos();
+        const modeloSelecionado = configuracoes.value.ollama_modelo || 'gemma3:1b';
         
-        if (response.status === 200) {
-          const modelos = response.data.models || [];
-          const modeloSelecionado = configuracoes.value.ollama_modelo || 'mistral';
-          
-          if (modelos.some(m => m.name === modeloSelecionado)) {
-            exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
-          } else {
-            exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
-          }
+        if (modelos.some(m => m.name === modeloSelecionado)) {
+          exibirMensagem(`Conexão com Ollama estabelecida e modelo ${modeloSelecionado} está disponível!`, 'success');
         } else {
-          exibirMensagem('Servidor Ollama está respondendo, mas com status inesperado.', 'warning');
+          exibirMensagem(`Conexão com Ollama estabelecida, mas o modelo ${modeloSelecionado} não está instalado. Execute 'ollama pull ${modeloSelecionado}' para baixá-lo.`, 'warning');
         }
       } catch (error) {
         console.error('Erro ao testar conexão com Ollama:', error);

@@ -6,6 +6,11 @@ import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
 import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
 import '@/assets/sharedStyles.css'
+// Não precisamos mais da configuração CSP via meta tag
+// import { configurarCSP } from './services/cspConfig'
+
+// Comentado pois agora é feito via cabeçalhos no servidor Vite
+// configurarCSP()
 
 // Função para reconectar quando a aplicação voltar a ser visível
 const setupVisibilityHandling = () => {
