@@ -20,7 +20,7 @@ export default {
     const isSidebarExpanded = ref(true);
     const showAddUserModal = ref(false);
     const showConfirmDialog = ref(false);
-    const showAccessDeniedModal = ref(false); // Novo estado para o modal de acesso negado
+    const showAccessDeniedModal = ref(false); 
     const dialogConfig = ref({});
     const previousRole = ref(null);
     const showToast = ref(false);

@@ -7,492 +7,901 @@
         <h1 class="title-cfg-usuarios">Configurações do Sistema</h1>
       </div>
 
-      <!-- Tela inicial com cards de navegação -->
-      <div v-if="activeTab === 'home'" class="cards-navigation">
-        <div class="nav-card-row">
-          <div class="nav-card" @click="activeTab = 'users'">
-            <div class="nav-card-icon">
-              <!-- SVG de usuários em vez do Font Awesome -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-            </div>
-            <h3 class="nav-card-title">Administração de Usuários</h3>
-            <p class="nav-card-description">
-              Gerencie usuários do sistema, defina permissões, ative ou desative contas e envie notificações.
-            </p>
-            <button class="nav-card-button">Acessar</button>
-          </div>
+      <!-- Componente da tela inicial com cards de navegação -->
+      <home-configuracoes
+        v-if="activeTab === 'home'"
+        @navigate="activeTab = $event"
+        @open-notification="openSendNotificationModal"
+        :router="router"
+      />
 
-          <div class="nav-card" @click="openSendNotificationModal">
-            <div class="nav-card-icon">
-              <!-- SVG de usuários em vez do Font Awesome -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-              </svg>
-            </div>
-            <h3 class="nav-card-title">Enviar Notificação </h3>
-            <p class="nav-card-description">
-              Envie notificações para usuários do sistema, alertas e informações importantes.
-            </p>
-            <button class="nav-card-button">Acessar</button>
-          </div>
+      <!-- Componente de administração de usuários -->
+      <admin-usuarios
+        v-if="activeTab === 'users'"
+        :users="users"
+        :currentUser="currentUser"
+        :loading="loading"
+        @voltar="activeTab = 'home'"
+        @add-user="showAddUserModal = true"
+        @update-name="handleNameUpdate"
+        @update-email="handleEmailUpdate"
+        @change-role="handleRoleChange"
+        @toggle-status="toggleUserStatus"
+        @reset-password="resetPassword"
+        @delete-user="deleteUser"
+      />
 
-          <div class="nav-card" @click="activeTab = 'updates'">
-            <div class="nav-card-icon">
-              <!-- SVG de atualização em vez do Font Awesome -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
-                <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-              </svg>
-            </div>
-            <h3 class="nav-card-title">Atualizações do Sistema</h3>
-            <p class="nav-card-description">
-              Registre e acompanhe atualizações do sistema, novas funcionalidades e correções de problemas.
-            </p>
-            <button class="nav-card-button">Acessar</button>
-          </div>
-
-          <div class="nav-card" @click="router.push('/backups')">
-            <div class="nav-card-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
-                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-              </svg>
-            </div>
-            <h3 class="nav-card-title">Backup do Sistema</h3>
-            <p class="nav-card-description">
-              Gerencie backups do sistema, realize download dos dados e restaure backups anteriores.
-            </p>
-            <button class="nav-card-button">Acessar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Conteúdo da aba de usuários -->
-      <div v-if="activeTab === 'users'">
-        <div class="section-header">
-          <h2 class="section-title">Administração de Usuários</h2>
-          <div class="section-actions">
-            <button @click="showAddUserModal = true" class="btn-add-cfg-usuarios">
-              <!-- SVG de adição -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
-              Novo Usuário
-            </button>
-          </div>
-          <button @click="activeTab = 'home'" class="btn-back">
-            <!-- SVG de seta para esquerda -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-            </svg>
-            Voltar
-          </button>
-        </div>
-        
-        <div class="table-container-cfg-usuarios">
-          <div v-if="loading" class="loading-cfg-usuarios">Carregando usuários...</div>
-          
-          <table v-else class="excel-table-cfg-usuarios">
-            <thead class="thead-cfg-usuarios">
-              <tr class="tr-head-cfg-usuarios">
-                <th class="th-cfg-usuarios">Nome</th>
-                <th class="th-cfg-usuarios">Email</th>
-                <th class="th-cfg-usuarios">Função</th>
-                <th class="th-cfg-usuarios">Status</th>
-                <th class="th-cfg-usuarios">Criado em</th>
-                <th class="th-cfg-usuarios">Ações</th>
-              </tr>
-            </thead>
-            <tbody class="tbody-cfg-usuarios">
-              <tr v-for="user in users" :key="user.id" class="tr-body-cfg-usuarios">
-                <td class="td-cfg-usuarios">
-                  <input 
-                    :value="user.nome || ''"
-                    @blur="handleNameUpdate(user, $event.target.value)"
-                    type="text"
-                    placeholder="Digite o nome"
-                    class="name-input-cfg-usuarios"
-                  />
-                </td>
-                <td class="td-cfg-usuarios">
-                  <input 
-                    :value="user.email || ''"
-                    @blur="handleEmailUpdate(user, $event.target.value)"
-                    type="email"
-                    placeholder="Digite o email"
-                    class="email-input-cfg-usuarios"
-                    :disabled="user.id === currentUser?.id"
-                  />
-                </td>
-                <td class="td-cfg-usuarios">
-                  <select 
-                    :value="user.role"
-                    @change="handleRoleChange(user, $event.target.value)"
-                    :disabled="user.id === currentUser?.id"
-                    class="role-select-cfg-usuarios"
-                  >
-                    <option value="user" class="option-cfg-usuarios">Usuário</option>
-                    <option value="admin" class="option-cfg-usuarios">Administrador</option>
-                  </select>
-                </td>
-                <td class="td-cfg-usuarios status-cell-cfg-usuarios">
-                  <div class="status-controls-cfg-usuarios">
-                    <span :class="['status-badge-cfg-usuarios', user.status?.toLowerCase()]">
-                      {{ formatStatus(user.status) }}
-                    </span>
-                    <button 
-                      @click="toggleUserStatus(user)"
-                      class="btn-toggle-cfg-usuarios"
-                      :disabled="user.id === currentUser?.id"
-                      :title="user.status === 'ACTIVE' ? 'Desativar usuário' : 'Ativar usuário'"
-                    >
-                      <img 
-                        :src="user.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'" 
-                        :alt="user.status === 'ACTIVE' ? 'Desativar' : 'Ativar'" 
-                        class="icon-status-cfg-usuarios"
-                      />
-                    </button>
-                  </div>
-                </td>
-                <td class="td-cfg-usuarios">{{ formatDate(user.created_at) }}</td>
-                <td class="td-actions-cfg-usuarios">
-                  <div class="actions-container-cfg-usuarios">
-                    <button 
-                      @click="resetPassword(user)" 
-                      class="btn-action-cfg-usuarios btn-reset-cfg-usuarios"
-                      :title="'Redefinir senha'"
-                    >
-                      <img src="../../public/icons/senha.svg" alt="Redefinir senha" class="icon-action-cfg-usuarios" />
-                    </button>
-                    <button 
-                      @click="deleteUser(user)" 
-                      class="btn-action-cfg-usuarios btn-delete-cfg-usuarios"
-                      :disabled="user.id === currentUser?.id"
-                    >
-                      <img src="../../public/icons/lixeira.svg" alt="Excluir" class="icon-delete-cfg-usuarios" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Conteúdo da aba de atualizações do sistema -->
-      <div v-if="activeTab === 'updates'">
-        <div class="section-header">
-          <h2 class="section-title">Atualizações do Sistema</h2>
-          <button @click="showNewUpdateForm = true" class="btn-add-cfg-usuarios">
-            <!-- SVG de adição -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-            Nova Atualização
-          </button>
-          <button @click="activeTab = 'home'" class="btn-back">
-            <!-- SVG de seta para esquerda -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-            </svg>
-            Voltar
-          </button>
-        </div>
-        
-        <div v-if="systemUpdates.length > 0" class="updates-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Versão</th>
-                <th>Data</th>
-                <th>Importância</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="update in systemUpdates" :key="update.id">
-                <td>{{ update.title }}</td>
-                <td>{{ update.version || '-' }}</td>
-                <td>{{ formatDate(update.release_date) }}</td>
-                <td>{{ update.importance === 'alta' ? 'Alta' : 
-                       update.importance === 'media' ? 'Média' : 'Baixa' }}</td>
-                <td>
-                  <button @click="previewUpdate(update)" class="btn-small">
-                    Visualizar
-                  </button>
-                  <button @click="editUpdate(update)" class="btn-small">
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div v-else class="no-updates">
-          <p>Nenhuma atualização cadastrada.</p>
-        </div>
-        
-        <!-- Modal para adicionar/editar atualização -->
-        <div v-if="showNewUpdateForm" class="modal-backdrop">
-          <div class="modal">
-            <h3>{{ editingUpdate ? 'Editar' : 'Nova' }} Atualização</h3>
-            
-            <form @submit.prevent="saveUpdate">
-              <div class="form-group">
-                <label>Título</label>
-                <input v-model="updateForm.title" required />
-              </div>
-              
-              <div class="form-group">
-                <label>Versão</label>
-                <input v-model="updateForm.version" placeholder="Ex: 1.0.0" />
-              </div>
-              
-              <div class="form-group">
-                <label>Importância</label>
-                <select v-model="updateForm.importance">
-                  <option value="baixa">Baixa</option>
-                  <option value="media">Média</option>
-                  <option value="alta">Alta</option>
-                </select>
-              </div>
-              
-              <div class="form-group">
-                <label>Descrição (suporta formatação básica)</label>
-                <textarea 
-                  v-model="updateForm.description" 
-                  rows="10" 
-                  required
-                  placeholder="Descreva as novidades. Use ** para negrito, * para itálico e [texto](url) para links."
-                ></textarea>
-              </div>
-              
-              <div class="form-actions">
-                <button type="button" @click="showNewUpdateForm = false">
-                  Cancelar
-                </button>
-                <button type="submit" :disabled="loading">
-                  Salvar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-        
-        <!-- Modal de preview -->
-        <SystemUpdateModal 
-          v-if="previewingUpdate"
-          :show="!!previewingUpdate"
-          :updates="[previewingUpdate]"
-          @close="previewingUpdate = null"
-          @mark-read="() => previewingUpdate = null"
-        />
-      </div>
+      <!-- Componente de atualizações do sistema -->
+      <atualizacoes-sistema
+        v-if="activeTab === 'updates'"
+        :systemUpdates="systemUpdates"
+        :loading="loading"
+        @voltar="activeTab = 'home'"
+        @add-update="showNewUpdateForm = true"
+        @preview-update="previewUpdate"
+        @edit-update="editUpdate"
+      />
     </div>
 
-    <!-- Modal Adicionar Usuário -->
-    <div v-if="showAddUserModal" class="modal-cfg-usuarios">
-      <div class="modal-content-cfg-usuarios">
-        <h2 class="modal-title-cfg-usuarios">Adicionar Novo Usuário</h2>
-        <form @submit.prevent="handleAddUser" class="form-cfg-usuarios">
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Email</label>
-            <input 
-              v-model="newUser.email" 
-              type="email" 
-              required 
-              class="input-cfg-usuarios"
-            />
-          </div>
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Senha</label>
-            <input 
-              v-model="newUser.password" 
-              type="password" 
-              required 
-              minlength="6"
-              class="input-cfg-usuarios"
-            />
-          </div>
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Nome</label>
-            <input 
-              v-model="newUser.nome" 
-              type="text" 
-              required 
-              class="input-cfg-usuarios"
-            />
-          </div>
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Função</label>
-            <select v-model="newUser.role" class="select-cfg-usuarios">
-              <option value="user" class="option-cfg-usuarios">Usuário</option>
-              <option value="admin" class="option-cfg-usuarios">Administrador</option>
-            </select>
-          </div>
-          <div class="modal-actions-cfg-usuarios">
-            <button type="button" @click="showAddUserModal = false" class="btn-cancel-cfg-usuarios">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-confirm-cfg-usuarios" :disabled="loading">
-              {{ loading ? 'Criando...' : 'Criar Usuário' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Componentes de modal -->
+    <add-user-modal
+      v-if="showAddUserModal"
+      :newUser="newUser"
+      :loading="loading"
+      @close="showAddUserModal = false"
+      @add-user="handleAddUser"
+    />
 
-    <!-- Confirm Dialog -->
-    <div v-if="showConfirmDialog" class="dialog-overlay-cfg-usuarios">
-      <div class="confirm-dialog-cfg-usuarios">
-        <div class="confirm-content-cfg-usuarios">
-          <h3 class="dialog-title-cfg-usuarios">{{ dialogConfig.title }}</h3>
-          <p class="dialog-message-cfg-usuarios">{{ dialogConfig.message }}</p>
-          <p v-if="dialogConfig.warning" class="warning-text-cfg-usuarios">
-            {{ dialogConfig.warning }}
-          </p>
-          <div class="confirm-actions-cfg-usuarios">
-            <button class="btn-secondary-cfg-usuarios" @click="hideConfirmDialog">
-              Cancelar
-            </button>
-            <button 
-              class="btn-danger-cfg-usuarios" 
-              @click="dialogConfig.onConfirm"
-            >
-              {{ dialogConfig.confirmText || 'Confirmar' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <dialog-confirmacao
+      v-if="showConfirmDialog"
+      :config="dialogConfig"
+      @close="hideConfirmDialog"
+    />
 
-    <!-- Modal de Acesso Negado -->
-    <div v-if="showAccessDeniedModal" class="dialog-overlay-cfg-usuarios">
-      <div class="confirm-dialog-cfg-usuarios">
-        <div class="confirm-content-cfg-usuarios">
-          <h3 class="dialog-title-cfg-usuarios">Acesso Restrito</h3>
-          <p class="dialog-message-cfg-usuarios">
-            Olá, {{currentUserEmail}}
-          </p>
-          <p class="warning-text-cfg-usuarios">
-            Você não tem permissão para acessar esta área. Esta seção é restrita apenas a administradores do sistema.
-          </p>
-          <div class="confirm-actions-cfg-usuarios">
-            <button 
-              class="btn-primary-cfg-usuarios" 
-              @click="redirectToHome"
-            >
-              Voltar para o início
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <access-denied-modal
+      v-if="showAccessDeniedModal"
+      :currentUserEmail="currentUserEmail"
+      @redirect="redirectToHome"
+    />
 
-    <!-- Modal Enviar Notificação -->
-    <div v-if="showSendNotificationModal" class="modal-cfg-usuarios">
-      <div class="modal-content-cfg-usuarios">
-        <h2 class="modal-title-cfg-usuarios">Enviar Notificação</h2>
-        <form @submit.prevent="sendNotification" class="form-cfg-usuarios">
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Título*</label>
-            <input 
-              v-model="notificationForm.title" 
-              type="text" 
-              required 
-              class="input-cfg-usuarios"
-              placeholder="Título da notificação"
-            />
-          </div>
-          
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Mensagem*</label>
-            <textarea 
-              v-model="notificationForm.message" 
-              required 
-              class="input-cfg-usuarios"
-              rows="4"
-              placeholder="Mensagem da notificação"
-            ></textarea>
-          </div>
-          
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Tipo</label>
-            <select v-model="notificationForm.tipo" class="select-cfg-usuarios">
-              <option value="usuario">Usuário</option>
-              <option value="sistema">Sistema</option>
-              <option value="alerta">Alerta</option>
-              <option value="prazo">Prazo</option>
-              <option value="impugnacao">Impugnação</option>
-            </select>
-          </div>
-          
-          <!-- Novo campo de nível de prioridade -->
-          <div class="form-group-cfg-usuarios">
-            <label class="label-cfg-usuarios">Nível de Prioridade</label>
-            <select v-model="notificationForm.nivel" class="select-cfg-usuarios">
-              <option value="muito_alto">Muito Alto</option>
-              <option value="alto">Alto</option>
-              <option value="medio" selected>Médio</option>
-              <option value="leve">Leve</option>
-            </select>
-          </div>
-          
-          <div class="notification-recipients">
-            <div class="recipients-header">
-              <h3>Destinatários</h3>
-              <label class="select-all-label">
-                <input 
-                  type="checkbox" 
-                  @change="toggleSelectAllUsers" 
-                  :checked="selectedUserIds.length === users.filter(u => u.status === 'ACTIVE').length"
-                />
-                Selecionar todos
-              </label>
-            </div>
-            
-            <div class="recipients-list">
-              <div 
-                v-for="user in users.filter(u => u.status === 'ACTIVE')" 
-                :key="user.id" 
-                class="recipient-item"
-              >
-                <label class="recipient-label">
-                  <input 
-                    type="checkbox" 
-                    :checked="selectedUserIds.includes(user.id)" 
-                    @change="toggleSelectUser(user.id)" 
-                  />
-                  <span class="recipient-name">{{ user.nome || user.email }}</span>
-                  <span class="recipient-email">{{ user.email }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <div class="modal-actions-cfg-usuarios">
-            <button type="button" @click="showSendNotificationModal = false" class="btn-cancel-cfg-usuarios">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-confirm-cfg-usuarios" :disabled="loading || selectedUserIds.length === 0">
-              {{ loading ? 'Enviando...' : 'Enviar Notificação' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <enviar-notificacao
+      v-if="showSendNotificationModal"
+      :notificationForm="notificationForm"
+      :selectedUserIds="selectedUserIds"
+      :users="users"
+      :loading="loading"
+      @close="showSendNotificationModal = false"
+      @send="sendNotification"
+      @toggle-all="toggleSelectAllUsers"
+      @toggle-user="toggleSelectUser"
+    />
+
+    <system-update-modal 
+      v-if="previewingUpdate"
+      :show="!!previewingUpdate"
+      :updates="[previewingUpdate]"
+      @close="previewingUpdate = null"
+      @mark-read="() => previewingUpdate = null"
+    />
+
+    <update-form-modal
+      v-if="showNewUpdateForm"
+      :updateForm="updateForm"
+      :editingUpdate="editingUpdate"
+      :loading="loading"
+      @close="showNewUpdateForm = false"
+      @save="saveUpdate"
+    />
 
     <!-- Toast de feedback -->
-    <div 
-      v-if="showToast" 
-      :class="['toast-cfg-usuarios', `toast-${toastConfig.type}`]"
-    >
-      {{ toastConfig.message }}
-    </div>
+    <toast-feedback
+      v-if="showToast"
+      :config="toastConfig"
+    />
   </div>
 </template>
 
-<script src="../views/ConfiguracoesView.js"></script>
-<style src="../assets/styles/ConfiguracoesView.css"></style>
+<script>
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { supabase } from "@/lib/supabase";
+import TheSidebar from "@/components/TheSidebar.vue";
+import { useRouter } from "vue-router";
+import { useConnectionManager } from "@/composables/useConnectionManager";
+import { SupabaseManager } from "@/lib/supabaseManager";
+import { createNotification } from "@/api/notificationsApi";
+import SystemUpdateModal from "@/components/SystemUpdateModal.vue";
+
+// Importar componentes internos
+import HomeConfiguracoes from './components/configuracoes/HomeConfiguracoes.vue';
+import AdminUsuarios from './components/configuracoes/AdminUsuarios.vue';
+import AtualizacoesSistema from './components/configuracoes/AtualizacoesSistema.vue';
+import AddUserModal from './components/configuracoes/AddUserModal.vue';
+import DialogConfirmacao from './components/configuracoes/DialogConfirmacao.vue';
+import AccessDeniedModal from './components/configuracoes/AccessDeniedModal.vue';
+import EnviarNotificacao from './components/configuracoes/EnviarNotificacao.vue';
+import UpdateFormModal from './components/configuracoes/UpdateFormModal.vue';
+import ToastFeedback from './components/configuracoes/ToastFeedback.vue';
+
+export default {
+  components: {
+    TheSidebar,
+    SystemUpdateModal,
+    HomeConfiguracoes,
+    AdminUsuarios,
+    AtualizacoesSistema,
+    AddUserModal,
+    DialogConfirmacao,
+    AccessDeniedModal,
+    EnviarNotificacao,
+    UpdateFormModal,
+    ToastFeedback
+  },
+  setup() {
+    const router = useRouter();
+    const loading = ref(false);
+    const users = ref([]);
+    const currentUser = ref(null);
+    const isSidebarExpanded = ref(true);
+    const showAddUserModal = ref(false);
+    const showConfirmDialog = ref(false);
+    const showAccessDeniedModal = ref(false);
+    const dialogConfig = ref({});
+    const previousRole = ref(null);
+    const showToast = ref(false);
+    const toastConfig = ref({
+      message: "",
+      type: "success",
+    });
+    const newUser = ref({
+      email: "",
+      password: "",
+      nome: "",
+      role: "user",
+    });
+    const currentUserEmail = ref("");
+    const showSendNotificationModal = ref(false);
+    const selectedUserIds = ref([]);
+    const notificationForm = ref({
+      title: "",
+      message: "",
+      tipo: "usuario",
+      nivel: "medio",
+      processo_id: null,
+    });
+    const activeTab = ref("home");
+    const systemUpdates = ref([]);
+    const showNewUpdateForm = ref(false);
+    const previewingUpdate = ref(null);
+    const editingUpdate = ref(null);
+    const updateForm = ref({
+      title: "",
+      description: "",
+      version: "",
+      importance: "media",
+      release_date: new Date().toISOString().split("T")[0],
+    });
+    const isAdmin = ref(true);
+
+    // Implementação das funções
+    const handleNameUpdate = async (user, newName) => {
+      if (user.nome === newName) return;
+
+      try {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            nome: newName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (profileError) throw profileError;
+
+        user.nome = newName;
+        showToastMessage("Nome atualizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao atualizar nome:", error);
+        showToastMessage("Erro ao atualizar nome", "error");
+      }
+    };
+
+    const handleAddUser = async () => {
+      try {
+        loading.value = true;
+
+        const { data, error } = await supabase.auth.signUp({
+          email: newUser.value.email,
+          password: newUser.value.password,
+          options: {
+            data: {
+              nome: newUser.value.nome,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              nome: newUser.value.nome,
+              role: newUser.value.role,
+              status: "ACTIVE",
+              created_at: new Date().toISOString(),
+            });
+
+          if (profileError) throw profileError;
+        }
+
+        showToastMessage("Usuário criado com sucesso!");
+        showAddUserModal.value = false;
+        await loadUsers();
+
+        newUser.value = {
+          email: "",
+          password: "",
+          nome: "",
+          role: "user",
+        };
+      } catch (error) {
+        console.error("Erro ao criar usuário:", error);
+        showToastMessage(error.message || "Erro ao criar usuário", "error");
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const loadUsers = async () => {
+      try {
+        console.log("Iniciando carregamento de usuários...");
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .order("status", { ascending: true })
+          .order("created_at", { ascending: false });
+
+        console.log("Resposta do servidor:", { profilesData, profilesError });
+
+        if (profilesError) throw profilesError;
+
+        users.value = profilesData.map((profile) => ({
+          ...profile,
+          nome: profile.nome || "",
+          email: profile.email || "",
+        }));
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        showToastMessage("Erro ao carregar usuários", "error");
+      }
+    };
+
+    const updateUserRole = async (user) => {
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ role: user.role })
+          .eq("id", user.id);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error("Erro ao atualizar função:", error);
+      }
+    };
+
+    const deleteUser = async (user) => {
+      if (user.id === currentUser.value?.id) {
+        showToastMessage("Não é possível excluir seu próprio usuário", "error");
+        return;
+      }
+
+      dialogConfig.value = {
+        title: "Confirmar Exclusão",
+        message: `Deseja realmente excluir o usuário ${user.email}?`,
+        warning: "Esta ação é irreversível!",
+        confirmText: "Excluir",
+        onConfirm: async () => {
+          try {
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .update({
+                status: "DELETED",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", user.id);
+
+            if (profileError) throw profileError;
+
+            await loadUsers();
+            showConfirmDialog.value = false;
+            showToastMessage("Usuário excluído com sucesso!");
+          } catch (error) {
+            console.error("Erro ao excluir usuário:", error);
+            showToastMessage("Erro ao excluir usuário", "error");
+          }
+        },
+      };
+      showConfirmDialog.value = true;
+    };
+
+    const toggleUserStatus = async (user) => {
+      const newStatus = user.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
+      const message =
+        newStatus === "ACTIVE"
+          ? `Deseja ativar o usuário ${user.email}?`
+          : `Deseja desativar o usuário ${user.email}?`;
+
+      dialogConfig.value = {
+        title: `${newStatus === "ACTIVE" ? "Ativar" : "Desativar"} usuário`,
+        message: message,
+        confirmText: newStatus === "ACTIVE" ? "Ativar" : "Desativar",
+        onConfirm: async () => {
+          try {
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .update({
+                status: newStatus,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", user.id);
+
+            if (profileError) throw profileError;
+
+            user.status = newStatus;
+            showConfirmDialog.value = false;
+            showToastMessage(
+              `Usuário ${
+                newStatus === "ACTIVE" ? "ativado" : "desativado"
+              } com sucesso!`
+            );
+          } catch (error) {
+            console.error("Erro ao alterar status:", error);
+            showToastMessage("Erro ao alterar status do usuário", "error");
+          }
+        },
+      };
+
+      showConfirmDialog.value = true;
+    };
+
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString("pt-BR");
+    };
+
+    const formatStatus = (status) => {
+      const statusMap = {
+        ACTIVE: "Ativo",
+        DISABLED: "Desativado",
+        PENDING: "Pendente",
+      };
+      return statusMap[status] || status;
+    };
+
+    const formatUserDisplay = (user) => {
+      return user.status === "DISABLED"
+        ? `${user.email} - DESATIVADO`
+        : user.email;
+    };
+
+    const showToastMessage = (message, type = "success") => {
+      toastConfig.value = { message, type };
+      showToast.value = true;
+      setTimeout(() => {
+        showToast.value = false;
+      }, 3000);
+    };
+
+    const handleRoleChange = (user, newRole) => {
+      previousRole.value = user.role;
+
+      dialogConfig.value = {
+        title: "Confirmar Alteração",
+        message: `Deseja realmente alterar a função do usuário ${
+          user.email
+        } para ${newRole === "admin" ? "Administrador" : "Usuário"}?`,
+        warning: "Esta ação afetará as permissões do usuário no sistema.",
+        confirmText: "Confirmar",
+        onConfirm: async () => {
+          try {
+            const { error } = await supabase
+              .from("profiles")
+              .update({
+                role: newRole,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", user.id);
+
+            if (error) throw error;
+
+            user.role = newRole;
+            await loadUsers();
+            showConfirmDialog.value = false;
+            showToastMessage("Função alterada com sucesso!");
+          } catch (error) {
+            console.error("Erro ao atualizar função:", error);
+            user.role = previousRole.value;
+            showToastMessage("Erro ao alterar função do usuário", "error");
+          }
+        },
+        onCancel: () => {
+          user.role = previousRole.value;
+          showConfirmDialog.value = false;
+        },
+      };
+      showConfirmDialog.value = true;
+    };
+
+    const redirectToHome = () => {
+      showAccessDeniedModal.value = false;
+      router.push("/");
+    };
+
+    const checkAdminAccess = async () => {
+      try {
+        console.log("Verificando acesso admin...");
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          router.push("/login");
+          return false;
+        }
+
+        currentUserEmail.value = user.email;
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, nome")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Erro ao buscar perfil:", error);
+          showAccessDeniedModal.value = true;
+          return false;
+        }
+
+        const adminStatus = profile?.role === "admin";
+        isAdmin.value = adminStatus;
+
+        if (!adminStatus) {
+          showAccessDeniedModal.value = true;
+          return false;
+        }
+
+        currentUser.value = user;
+        return true;
+      } catch (error) {
+        console.error("Erro ao verificar acesso:", error);
+        showAccessDeniedModal.value = true;
+        return false;
+      }
+    };
+
+    const debugAccess = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        console.log("Usuário autenticado:", user);
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        console.log("Perfil do usuário:", profile);
+        console.log("Role do usuário:", profile?.role);
+        console.log("Role no localStorage:", localStorage.getItem("userRole"));
+
+        return profile?.role === "admin";
+      } catch (error) {
+        console.error("Erro ao verificar acesso:", error);
+        return false;
+      }
+    };
+
+    const loadData = async () => {
+      try {
+        await loadUsers();
+      } catch (error) {
+        console.error("Erro carregando dados:", error);
+      }
+    };
+
+    useConnectionManager(loadData);
+
+    const handleEmailUpdate = async (user, newEmail) => {
+      if (user.email === newEmail || !newEmail) return;
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        showToastMessage("Formato de email inválido", "error");
+        await loadUsers();
+        return;
+      }
+
+      try {
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", newEmail)
+          .neq("id", user.id)
+          .single();
+
+        if (existingUser) {
+          showToastMessage("Este email já está em uso", "error");
+          await loadUsers();
+          return;
+        }
+
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            email: newEmail,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (profileError) throw profileError;
+
+        user.email = newEmail;
+        showToastMessage("Email atualizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao atualizar email:", error);
+        showToastMessage("Erro ao atualizar email", "error");
+        await loadUsers();
+      }
+    };
+
+    const resetPassword = async (user) => {
+      dialogConfig.value = {
+        title: "Confirmar redefinição de senha",
+        message: `Deseja enviar um email de redefinição de senha para ${user.email}?`,
+        confirmText: "Enviar",
+        onConfirm: async () => {
+          try {
+            const { error } = await supabase.auth.resetPasswordForEmail(
+              user.email,
+              {
+                redirectTo: `${window.location.origin}/reset-password`,
+              }
+            );
+
+            if (error) throw error;
+
+            showConfirmDialog.value = false;
+            showToastMessage("Email de redefinição enviado com sucesso!");
+          } catch (error) {
+            console.error("Erro ao enviar redefinição de senha:", error);
+            showToastMessage(
+              "Erro ao enviar email de redefinição de senha",
+              "error"
+            );
+          }
+        },
+      };
+      showConfirmDialog.value = true;
+    };
+
+    const openSendNotificationModal = () => {
+      selectedUserIds.value = [];
+      notificationForm.value = {
+        title: "",
+        message: "",
+        tipo: "usuario",
+        nivel: "medio",
+        processo_id: null,
+      };
+      showSendNotificationModal.value = true;
+    };
+
+    const toggleSelectAllUsers = (event) => {
+      if (event.target.checked) {
+        selectedUserIds.value = users.value
+          .filter((user) => user.status === "ACTIVE")
+          .map((user) => user.id);
+      } else {
+        selectedUserIds.value = [];
+      }
+    };
+
+    const toggleSelectUser = (userId) => {
+      const index = selectedUserIds.value.indexOf(userId);
+      if (index === -1) {
+        selectedUserIds.value.push(userId);
+      } else {
+        selectedUserIds.value.splice(index, 1);
+      }
+    };
+
+    const sendNotification = async () => {
+      try {
+        loading.value = true;
+
+        if (selectedUserIds.value.length === 0) {
+          showToastMessage("Selecione pelo menos um usuário", "error");
+          return;
+        }
+
+        if (!notificationForm.value.title || !notificationForm.value.message) {
+          showToastMessage("Preencha todos os campos obrigatórios", "error");
+          return;
+        }
+
+        const result = await createNotification(
+          notificationForm.value,
+          selectedUserIds.value
+        );
+
+        if (result.success) {
+          showToastMessage("Notificação enviada com sucesso!");
+          showSendNotificationModal.value = false;
+        } else {
+          throw new Error(
+            result.error?.message || "Erro ao enviar notificação"
+          );
+        }
+      } catch (error) {
+        console.error("Erro ao enviar notificação:", error);
+        showToastMessage("Erro ao enviar notificação", "error");
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const loadSystemUpdates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("system_updates")
+          .select("*")
+          .order("release_date", { ascending: false });
+
+        if (error) throw error;
+        systemUpdates.value = data || [];
+      } catch (error) {
+        console.error("Erro ao carregar atualizações:", error);
+        showToast("Erro ao carregar atualizações", "error");
+      }
+    };
+
+    const saveUpdate = async () => {
+      try {
+        loading.value = true;
+
+        const updateData = {
+          ...updateForm.value,
+          release_date:
+            updateForm.value.release_date || new Date().toISOString(),
+        };
+
+        let result;
+
+        if (editingUpdate.value) {
+          const { data, error } = await supabase
+            .from("system_updates")
+            .update(updateData)
+            .eq("id", editingUpdate.value.id)
+            .select();
+
+          if (error) throw error;
+          result = { success: true, data: data[0] };
+        } else {
+          const { data, error } = await supabase
+            .from("system_updates")
+            .insert(updateData)
+            .select();
+
+          if (error) throw error;
+          result = { success: true, data: data[0] };
+        }
+
+        if (result.success) {
+          showToastMessage("Atualização salva com sucesso!");
+          showNewUpdateForm.value = false;
+          editingUpdate.value = null;
+          await loadSystemUpdates();
+
+          updateForm.value = {
+            title: "",
+            description: "",
+            version: "",
+            importance: "media",
+            release_date: new Date().toISOString().split("T")[0],
+          };
+        }
+      } catch (error) {
+        console.error("Erro ao salvar atualização:", error);
+        showToastMessage("Erro ao salvar: " + error.message, "error");
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const editUpdate = (update) => {
+      editingUpdate.value = update;
+      updateForm.value = { ...update };
+      showNewUpdateForm.value = true;
+    };
+
+    const previewUpdate = (update) => {
+      previewingUpdate.value = update;
+    };
+
+    const handleStorage = (event) => {
+      if (event.key === "sidebarState") {
+        const newValue = event.newValue === "true";
+        if (isSidebarExpanded.value !== newValue) {
+          console.log("Sincronizando estado do sidebar do localStorage:", newValue);
+          isSidebarExpanded.value = newValue;
+          
+          nextTick(() => {
+            const mainContent = document.querySelector(".main-content");
+            if (mainContent) {
+              if (newValue) {
+                mainContent.classList.remove("expanded");
+              } else {
+                mainContent.classList.add("expanded");
+              }
+            }
+          });
+        }
+      }
+    };
+
+    const handleSidebarToggle = (expanded) => {
+      console.log("Sidebar toggle:", expanded);
+      
+      isSidebarExpanded.value = expanded;
+      
+      nextTick(() => {
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+          if (expanded) {
+            mainContent.classList.remove("expanded");
+          } else {
+            mainContent.classList.add("expanded");
+          }
+        }
+      });
+    };
+
+    const hideConfirmDialog = () => {
+      showConfirmDialog.value = false;
+    };
+
+    onMounted(() => {
+      try {
+        const savedState = localStorage.getItem("sidebarState");
+        if (savedState !== null) {
+          isSidebarExpanded.value = savedState === "true";
+        }
+
+        window.addEventListener("storage", handleStorage);
+      } catch (error) {
+        console.error("Erro ao montar componente:", error);
+      }
+    });
+
+    onUnmounted(() => {
+      try {
+        window.removeEventListener("storage", handleStorage);
+        
+        const channel = SupabaseManager.getSubscription("lances-updates");
+        if (channel) {
+          supabase.removeChannel(channel);
+          SupabaseManager.removeSubscription("lances-updates");
+        }
+      } catch (error) {
+        console.error("Erro ao desmontar componente:", error);
+      }
+    });
+
+    watch(isSidebarExpanded, (newValue) => {
+      console.log("isSidebarExpanded mudou para:", newValue);
+    });
+
+    onMounted(async () => {
+      try {
+        const isAdmin = await debugAccess();
+        console.log("Usuário é admin?", isAdmin);
+
+        if (!isAdmin) {
+          showAccessDeniedModal.value = true;
+          return;
+        }
+
+        const hasAccess = await checkAdminAccess();
+        console.log("Tem acesso?", hasAccess);
+
+        if (!hasAccess) {
+          console.log("Sem acesso, retornando...");
+          return;
+        }
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        currentUser.value = user;
+        await loadUsers();
+      } catch (error) {
+        console.error("Erro no onMounted:", error);
+        showToastMessage("Erro ao carregar página", "error");
+      }
+
+      const channel = supabase
+        .channel("lances-updates")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "profiles" },
+          () => loadData()
+        )
+        .subscribe();
+
+      SupabaseManager.addSubscription("lances-updates", channel);
+
+      await loadSystemUpdates();
+    });
+
+    return {
+      // Estado
+      loading,
+      users,
+      currentUser,
+      isSidebarExpanded,
+      showAddUserModal,
+      showConfirmDialog,
+      dialogConfig,
+      newUser,
+      showToast,
+      toastConfig,
+      showAccessDeniedModal,
+      currentUserEmail,
+      showSendNotificationModal,
+      selectedUserIds,
+      notificationForm,
+      isAdmin,
+      activeTab,
+      systemUpdates,
+      showNewUpdateForm,
+      previewingUpdate,
+      editingUpdate,
+      updateForm,
+      router,
+      
+      // Métodos
+      handleNameUpdate,
+      handleAddUser,
+      handleSidebarToggle,
+      formatDate,
+      formatStatus,
+      formatUserDisplay,
+      toggleUserStatus,
+      deleteUser,
+      handleRoleChange,
+      hideConfirmDialog,
+      redirectToHome,
+      handleEmailUpdate,
+      resetPassword,
+      openSendNotificationModal,
+      toggleSelectAllUsers,
+      toggleSelectUser,
+      sendNotification,
+      loadSystemUpdates,
+      saveUpdate,
+      editUpdate,
+      previewUpdate
+    };
+  },
+};
+</script>
+
+<style>
+/* Estilos globais para a tela de configurações */
+@import '../assets/styles/ConfiguracoesView.css';
+</style>
