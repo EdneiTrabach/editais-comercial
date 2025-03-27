@@ -34,19 +34,11 @@
       </div>
       
       <div class="notification-actions">
-        <button 
-          v-if="!notification.read" 
-          @click="markAsRead" 
-          class="btn-action"
-        >
-          Marcar como lida
+        <button @click="markRead" class="btn-action">
+          <i class="fas fa-check"></i> Marcar como lida
         </button>
-        <button 
-          v-if="!notification.resolved" 
-          @click="resolve" 
-          class="btn-action highlight"
-        >
-          Resolver
+        <button @click="resolve" class="btn-action highlight">
+          <i class="fas fa-clipboard-check"></i> Resolver
         </button>
       </div>
     </div>

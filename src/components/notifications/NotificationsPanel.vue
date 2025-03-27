@@ -8,17 +8,17 @@
     <div class="drag-handle" 
          @mousedown="startDrag"
          @touchstart="startDrag">
-      <span class="drag-icon">⋮⋮</span>
+      <span class="drag-icon"><i class="fas fa-grip-lines"></i></span>
     </div>
 
     <div class="notifications-header">
-      <h3>Notificações</h3>
+      <h3><i class="fas fa-bell"></i> Notificações</h3>
       <div class="notifications-actions">
         <button @click="markAllAsRead" class="btn-mark-all" :disabled="!hasUnread">
-          Marcar todas como lidas
+          <i class="fas fa-check-double"></i> Marcar todas como lidas
         </button>
         <button @click="close" class="btn-close">
-          <span class="close-icon">&times;</span>
+          <i class="fas fa-times"></i>
         </button>
       </div>
     </div>
@@ -28,32 +28,28 @@
         @click="activeTab = 'all'" 
         :class="['tab-btn', { active: activeTab === 'all' }]"
       >
-        Todas ({{ notifications.length }})
+        <i class="fas fa-inbox"></i> Todas <span class="badge">{{ notifications.length }}</span>
       </button>
       <button 
         @click="activeTab = 'unread'" 
         :class="['tab-btn', { active: activeTab === 'unread' }]"
       >
-        Não lidas ({{ unreadCount }})
+        <i class="fas fa-envelope"></i> Não lidas <span class="badge">{{ unreadCount }}</span>
       </button>
       <button 
         @click="activeTab = 'resolved'" 
         :class="['tab-btn', { active: activeTab === 'resolved' }]"
       >
-        Resolvidas
+        <i class="fas fa-check-circle"></i> Resolvidas
       </button>
     </div>
 
     <div v-if="loading" class="notifications-loading">
-      Carregando notificações...
+      <i class="fas fa-spinner fa-spin"></i> Carregando notificações...
     </div>
 
     <div v-else-if="filteredNotifications.length === 0" class="notifications-empty">
-      <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        <line x1="1" y1="1" x2="23" y2="23"></line>
-      </svg>
+      <i class="fas fa-bell-slash empty-icon"></i>
       <p>Nenhuma notificação {{ activeTab === 'unread' ? 'não lida' : activeTab === 'resolved' ? 'resolvida' : '' }}</p>
     </div>
 
@@ -76,7 +72,9 @@
     />
 
     <!-- Elementos de redimensionamento -->
-    <div class="resize-handle resize-handle-se" @mousedown="startResize" @touchstart="startResize"></div>
+    <div class="resize-handle resize-handle-se" @mousedown="startResize" @touchstart="startResize">
+      <i class="fas fa-caret-right"></i>
+    </div>
   </div>
 </template>
 

@@ -1,5 +1,29 @@
 /* Estilos para suporte ao tema escuro */
 
+:root {
+  /* Cores primárias */
+  --color-primary: #3b82f6;
+  --color-primary-light: #dbeafe;
+  --color-primary-dark: #2563eb;
+  
+  /* Cores de texto */
+  --color-text: #1f2937;
+  --color-text-light: #6b7280;
+  
+  /* Cores de fundo */
+  --color-background: #ffffff;
+  --color-background-light: #f9fafb;
+  
+  /* Cores de borda */
+  --color-border: #e5e7eb;
+  
+  /* Cores de sucesso e erro */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+
 /* Tema escuro para o painel principal */
 [data-theme="dark"] .notifications-panel {
   background-color: var(--color-background-dark, #1e293b);
@@ -94,4 +118,17 @@
 [data-theme="dark"] .level-leve {
   background-color: rgba(22, 101, 52, 0.2);
   color: #86efac;
+}
+
+/* Temas específicos para as notificações */
+.notification-priority-high {
+  border-left: 4px solid var(--color-error);
+}
+
+.notification-priority-medium {
+  border-left: 4px solid var(--color-warning);
+}
+
+.notification-priority-low {
+  border-left: 4px solid var(--color-info);
 }
