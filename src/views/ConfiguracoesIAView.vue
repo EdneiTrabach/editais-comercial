@@ -55,6 +55,7 @@ import { useIAFeedback } from '@/composables/useIAFeedback';
 import { usePadroesCampos } from '@/composables/usePadroesCampos';
 import axios from 'axios';
 import { ollamaService } from '@/services/ollamaService';
+import { iaService } from '@/services/iaService';
 
 export default {
   name: 'ConfiguracoesIAView',
@@ -74,7 +75,17 @@ export default {
       openai_api_key: '',
       ollama_url: 'http://localhost:11434',
       ollama_modelo: 'gemma3:1b', // Alterado para gemma3:1b como padrão
-      limite_historico_analises: 5
+      limite_historico_analises: 5,
+      // Novos modelos adicionados
+      claude_api_key: '',
+      claude_modelo: 'claude-3-sonnet-20240229',
+      gemini_api_key: '',
+      gemini_modelo: 'gemini-1.5-pro',
+      deepseek_api_key: '',
+      deepseek_modelo: 'deepseek-chat',
+      copilot_api_key: '',
+      mistral_api_key: '',
+      mistral_modelo: 'mistral-medium'
     });
     const salvando = ref(false);
     const testando = ref(false);
@@ -106,19 +117,28 @@ export default {
         if (error) throw error;
         
         if (data && data.length > 0) {
+          // Mapear entre as chaves do banco de dados e as propriedades do objeto de configuração
+          const mapeamento = {
+            'ia_avancada_ativa': (valor) => configuracoes.value.ia_avancada_ativa = valor === 'true',
+            'modelo_ia': (valor) => configuracoes.value.modelo_ia = valor,
+            'openai_api_key': (valor) => configuracoes.value.openai_api_key = valor,
+            'ollama_url': (valor) => configuracoes.value.ollama_url = valor,
+            'ollama_modelo': (valor) => configuracoes.value.ollama_modelo = valor,
+            'limite_historico_analises': (valor) => configuracoes.value.limite_historico_analises = parseInt(valor, 10) || 5,
+            'claude_api_key': (valor) => configuracoes.value.claude_api_key = valor,
+            'claude_modelo': (valor) => configuracoes.value.claude_modelo = valor,
+            'gemini_api_key': (valor) => configuracoes.value.gemini_api_key = valor,
+            'gemini_modelo': (valor) => configuracoes.value.gemini_modelo = valor,
+            'deepseek_api_key': (valor) => configuracoes.value.deepseek_api_key = valor,
+            'deepseek_modelo': (valor) => configuracoes.value.deepseek_modelo = valor,
+            'copilot_api_key': (valor) => configuracoes.value.copilot_api_key = valor,
+            'mistral_api_key': (valor) => configuracoes.value.mistral_api_key = valor,
+            'mistral_modelo': (valor) => configuracoes.value.mistral_modelo = valor
+          };
+          
           data.forEach(config => {
-            if (config.chave === 'ia_avancada_ativa') {
-              configuracoes.value.ia_avancada_ativa = config.valor === 'true';
-            } else if (config.chave === 'modelo_ia') {
-              configuracoes.value.modelo_ia = config.valor;
-            } else if (config.chave === 'openai_api_key') {
-              configuracoes.value.openai_api_key = config.valor;
-            } else if (config.chave === 'ollama_url') {
-              configuracoes.value.ollama_url = config.valor;
-            } else if (config.chave === 'ollama_modelo') {
-              configuracoes.value.ollama_modelo = config.valor;
-            } else if (config.chave === 'limite_historico_analises') {
-              configuracoes.value.limite_historico_analises = parseInt(config.valor, 10) || 5;
+            if (mapeamento[config.chave]) {
+              mapeamento[config.chave](config.valor);
             }
           });
         }
@@ -133,44 +153,62 @@ export default {
       try {
         salvando.value = true;
         
-        const updates = [
-          { 
-            chave: 'ia_avancada_ativa', 
-            valor: configuracoes.value.ia_avancada_ativa.toString()
-          },
-          {
-            chave: 'modelo_ia',
-            valor: configuracoes.value.modelo_ia
-          },
-          {
-            chave: 'limite_historico_analises',
-            valor: configuracoes.value.limite_historico_analises.toString()
-          },
-          {
-            chave: 'ollama_url',
-            valor: configuracoes.value.ollama_url
-          },
-          {
-            chave: 'ollama_modelo',
-            valor: configuracoes.value.ollama_modelo
-          }
+        // Criar um array com todas as configurações para salvar
+        const todasConfiguracoes = [
+          { chave: 'ia_avancada_ativa', valor: configuracoes.value.ia_avancada_ativa.toString() },
+          { chave: 'modelo_ia', valor: configuracoes.value.modelo_ia },
+          { chave: 'limite_historico_analises', valor: configuracoes.value.limite_historico_analises.toString() },
+          { chave: 'ollama_url', valor: configuracoes.value.ollama_url },
+          { chave: 'ollama_modelo', valor: configuracoes.value.ollama_modelo },
+          { chave: 'claude_modelo', valor: configuracoes.value.claude_modelo },
+          { chave: 'gemini_modelo', valor: configuracoes.value.gemini_modelo },
+          { chave: 'deepseek_modelo', valor: configuracoes.value.deepseek_modelo },
+          { chave: 'mistral_modelo', valor: configuracoes.value.mistral_modelo }
         ];
         
-        if (configuracoes.value.openai_api_key) {
-          updates.push({
-            chave: 'openai_api_key',
-            valor: configuracoes.value.openai_api_key,
-            ultima_atualizacao: new Date().toISOString()
-          });
+        // Adicionar chaves de API apenas se estiverem presentes
+        const apiKeys = [
+          { chave: 'openai_api_key', valor: configuracoes.value.openai_api_key },
+          { chave: 'claude_api_key', valor: configuracoes.value.claude_api_key },
+          { chave: 'gemini_api_key', valor: configuracoes.value.gemini_api_key },
+          { chave: 'deepseek_api_key', valor: configuracoes.value.deepseek_api_key },
+          { chave: 'copilot_api_key', valor: configuracoes.value.copilot_api_key },
+          { chave: 'mistral_api_key', valor: configuracoes.value.mistral_api_key }
+        ];
+        
+        for (const apiKey of apiKeys) {
+          if (apiKey.valor) {
+            todasConfiguracoes.push({
+              ...apiKey,
+              ultima_atualizacao: new Date().toISOString()
+            });
+          }
         }
         
-        for (const update of updates) {
+        // Atualizar cada configuração no banco de dados
+        for (const config of todasConfiguracoes) {
           const { error } = await supabase
             .from('configuracoes')
-            .update({ valor: update.valor, ultima_atualizacao: update.ultima_atualizacao })
-            .eq('chave', update.chave);
+            .update({ 
+              valor: config.valor, 
+              ultima_atualizacao: config.ultima_atualizacao 
+            })
+            .eq('chave', config.chave);
           
-          if (error) throw error;
+          // Se a entrada não existir, insira uma nova
+          if (error && error.code === 'PGRST116') {
+            const { error: insertError } = await supabase
+              .from('configuracoes')
+              .insert({
+                chave: config.chave,
+                valor: config.valor,
+                ultima_atualizacao: config.ultima_atualizacao || new Date().toISOString()
+              });
+            
+            if (insertError) throw insertError;
+          } else if (error) {
+            throw error;
+          }
         }
         
         exibirMensagem('Configurações salvas com sucesso!', 'success');
@@ -182,35 +220,40 @@ export default {
       }
     };
     
-    // Função para testar conexão com OpenAI
+    // Função para testar conexão com o provedor selecionado
     const testarConexao = async () => {
-      if (!configuracoes.value.openai_api_key) {
-        exibirMensagem('Informe uma chave API para testar a conexão.', 'warning');
-        return;
-      }
-      
       try {
         testando.value = true;
         
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-3.5-turbo',
-            messages: [
-              { role: 'system', content: 'Você é um assistente útil.' },
-              { role: 'user', content: 'Olá, este é um teste de conexão.' }
-            ],
-            max_tokens: 5
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${configuracoes.value.openai_api_key}`
-            }
-          }
-        );
+        let mensagemSucesso = 'Conexão estabelecida com sucesso!';
+        let provedor = configuracoes.value.modelo_ia;
         
-        exibirMensagem('Conexão com a API OpenAI estabelecida com sucesso!', 'success');
+        if (provedor === 'local') {
+          // Para Ollama, usamos o testarConexaoOllama
+          await testarConexaoOllama();
+          return;
+        }
+        
+        // Verificar se a chave API está configurada
+        const chavesAPI = {
+          'openai': configuracoes.value.openai_api_key,
+          'claude': configuracoes.value.claude_api_key,
+          'mistral': configuracoes.value.mistral_api_key,
+          'gemini': configuracoes.value.gemini_api_key,
+          'deepseek': configuracoes.value.deepseek_api_key,
+          'copilot': configuracoes.value.copilot_api_key
+        };
+        
+        if (!chavesAPI[provedor]) {
+          exibirMensagem(`Informe uma chave API para o provedor ${provedor}.`, 'warning');
+          return;
+        }
+        
+        // Obter o cliente do provedor selecionado
+        const cliente = iaService.getProvedor(provedor, configuracoes.value);
+        await cliente.testarConexao();
+        
+        exibirMensagem(`Conexão com ${provedor.toUpperCase()} estabelecida com sucesso!`, 'success');
       } catch (error) {
         console.error('Erro ao testar conexão:', error);
         
@@ -223,7 +266,7 @@ export default {
             exibirMensagem(`Erro ${error.response.status}: ${error.response.statusText}`, 'error');
           }
         } else if (error.request) {
-          exibirMensagem('Sem resposta do servidor OpenAI. Verifique sua conexão.', 'error');
+          exibirMensagem('Sem resposta do servidor. Verifique sua conexão.', 'error');
         } else {
           exibirMensagem('Erro na requisição: ' + error.message, 'error');
         }

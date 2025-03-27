@@ -30,6 +30,10 @@
         <option value="openai">OpenAI (GPT-4/GPT-3.5)</option>
         <option value="local">Modelo Local (Ollama)</option>
         <option value="mistral">Mistral AI</option>
+        <option value="claude">Anthropic Claude</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="copilot">Microsoft Copilot</option>
         <option value="together">Together.ai</option>
       </select>
       <p class="form-help">
@@ -111,6 +115,155 @@
       </div>
     </div>
     
+    <div v-if="modeloConfig.ia_avancada_ativa && modeloConfig.modelo_ia === 'claude'">
+      <div class="form-group">
+        <label for="claude-api-key">Chave API Claude (Anthropic)</label>
+        <div class="input-with-buttons">
+          <input 
+            :type="mostrarChavesClaude ? 'text' : 'password'" 
+            id="claude-api-key" 
+            v-model="modeloConfig.claude_api_key"
+            placeholder="sk-ant-..." 
+            class="full-width"
+          >
+          <button class="btn-icon-only" @click="mostrarChavesClaude = !mostrarChavesClaude">
+            <img :src="mostrarChavesClaude ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+          </button>
+        </div>
+        <p class="form-help">
+          Obtenha uma chave API em <a href="https://console.anthropic.com/keys" target="_blank">console.anthropic.com</a>
+        </p>
+      </div>
+      
+      <div class="form-group">
+        <label for="claude-modelo">Modelo Claude</label>
+        <select id="claude-modelo" v-model="modeloConfig.claude_modelo" class="full-width">
+          <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+          <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+          <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+          <option value="claude-2.1">Claude 2.1</option>
+        </select>
+        <p class="form-help">
+          Selecione o modelo Claude a ser utilizado. Opus é o mais potente, Haiku é o mais rápido.
+        </p>
+      </div>
+    </div>
+    
+    <div v-if="modeloConfig.ia_avancada_ativa && modeloConfig.modelo_ia === 'gemini'">
+      <div class="form-group">
+        <label for="gemini-api-key">Chave API Google Gemini</label>
+        <div class="input-with-buttons">
+          <input 
+            :type="mostrarChavesGemini ? 'text' : 'password'" 
+            id="gemini-api-key" 
+            v-model="modeloConfig.gemini_api_key"
+            placeholder="AIza..." 
+            class="full-width"
+          >
+          <button class="btn-icon-only" @click="mostrarChavesGemini = !mostrarChavesGemini">
+            <img :src="mostrarChavesGemini ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+          </button>
+        </div>
+        <p class="form-help">
+          Obtenha uma chave API em <a href="https://ai.google.dev/tutorials/setup" target="_blank">Google AI Studio</a>
+        </p>
+      </div>
+      
+      <div class="form-group">
+        <label for="gemini-modelo">Modelo Gemini</label>
+        <select id="gemini-modelo" v-model="modeloConfig.gemini_modelo" class="full-width">
+          <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+        </select>
+      </div>
+    </div>
+    
+    <div v-if="modeloConfig.ia_avancada_ativa && modeloConfig.modelo_ia === 'deepseek'">
+      <div class="form-group">
+        <label for="deepseek-api-key">Chave API DeepSeek</label>
+        <div class="input-with-buttons">
+          <input 
+            :type="mostrarChavesDeepseek ? 'text' : 'password'" 
+            id="deepseek-api-key" 
+            v-model="modeloConfig.deepseek_api_key"
+            placeholder="sk-..." 
+            class="full-width"
+          >
+          <button class="btn-icon-only" @click="mostrarChavesDeepseek = !mostrarChavesDeepseek">
+            <img :src="mostrarChavesDeepseek ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+          </button>
+        </div>
+        <p class="form-help">
+          Obtenha uma chave API em <a href="https://platform.deepseek.com/" target="_blank">platform.deepseek.com</a>
+        </p>
+      </div>
+      
+      <div class="form-group">
+        <label for="deepseek-modelo">Modelo DeepSeek</label>
+        <select id="deepseek-modelo" v-model="modeloConfig.deepseek_modelo" class="full-width">
+          <option value="deepseek-chat">DeepSeek Chat</option>
+          <option value="deepseek-coder">DeepSeek Coder</option>
+        </select>
+      </div>
+    </div>
+    
+    <div v-if="modeloConfig.ia_avancada_ativa && modeloConfig.modelo_ia === 'copilot'">
+      <div class="form-group">
+        <label for="copilot-api-key">Chave API Microsoft Copilot</label>
+        <div class="input-with-buttons">
+          <input 
+            :type="mostrarChavesCopilot ? 'text' : 'password'" 
+            id="copilot-api-key" 
+            v-model="modeloConfig.copilot_api_key"
+            placeholder="..." 
+            class="full-width"
+          >
+          <button class="btn-icon-only" @click="mostrarChavesCopilot = !mostrarChavesCopilot">
+            <img :src="mostrarChavesCopilot ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+          </button>
+        </div>
+        <p class="form-help">
+          Para usar o Microsoft Copilot, é necessário ter uma assinatura válida da Microsoft.
+        </p>
+      </div>
+      
+      <div class="notification info-notification">
+        <p><strong>Nota:</strong> A integração com Microsoft Copilot é limitada e requer configurações adicionais de autenticação Microsoft.</p>
+      </div>
+    </div>
+    
+    <div v-if="modeloConfig.ia_avancada_ativa && modeloConfig.modelo_ia === 'mistral'">
+      <div class="form-group">
+        <label for="mistral-api-key">Chave API Mistral AI</label>
+        <div class="input-with-buttons">
+          <input 
+            :type="mostrarChavesMistral ? 'text' : 'password'" 
+            id="mistral-api-key" 
+            v-model="modeloConfig.mistral_api_key"
+            placeholder="..." 
+            class="full-width"
+          >
+          <button class="btn-icon-only" @click="mostrarChavesMistral = !mostrarChavesMistral">
+            <img :src="mostrarChavesMistral ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Mostrar/Ocultar">
+          </button>
+        </div>
+        <p class="form-help">
+          Obtenha uma chave API em <a href="https://console.mistral.ai/" target="_blank">console.mistral.ai</a>
+        </p>
+      </div>
+      
+      <div class="form-group">
+        <label for="mistral-modelo">Modelo Mistral</label>
+        <select id="mistral-modelo" v-model="modeloConfig.mistral_modelo" class="full-width">
+          <option value="mistral-tiny">Mistral Tiny</option>
+          <option value="mistral-small">Mistral Small</option>
+          <option value="mistral-medium">Mistral Medium</option>
+          <option value="mistral-large">Mistral Large</option>
+        </select>
+      </div>
+    </div>
+    
     <div class="form-group" v-if="modeloConfig.ia_avancada_ativa">
       <label for="historico-limite">Limite de histórico para contexto</label>
       <input 
@@ -184,12 +337,42 @@ export default {
   
   setup(props, { emit }) {
     const mostrarChave = ref(false);
-    const modeloConfig = ref({ ...props.configuracoes });
+    const mostrarChavesClaude = ref(false);
+    const mostrarChavesGemini = ref(false);
+    const mostrarChavesDeepseek = ref(false);
+    const mostrarChavesCopilot = ref(false);
+    const mostrarChavesMistral = ref(false);
+    
+    const modeloConfig = ref({ 
+      ...props.configuracoes,
+      claude_api_key: '',
+      claude_modelo: 'claude-3-sonnet-20240229',
+      gemini_api_key: '',
+      gemini_modelo: 'gemini-1.5-pro',
+      deepseek_api_key: '',
+      deepseek_modelo: 'deepseek-chat',
+      copilot_api_key: '',
+      mistral_api_key: '',
+      mistral_modelo: 'mistral-medium'
+    });
+    
     const ollamaConectado = ref(false);
     
     // Sincronizar mudanças dos props para a ref local
     watch(() => props.configuracoes, (newConfig) => {
-      modeloConfig.value = { ...newConfig };
+      // Manter as chaves existentes mas adicionar as novas propriedades
+      modeloConfig.value = { 
+        ...newConfig,
+        claude_api_key: modeloConfig.value.claude_api_key || '',
+        claude_modelo: modeloConfig.value.claude_modelo || 'claude-3-sonnet-20240229',
+        gemini_api_key: modeloConfig.value.gemini_api_key || '',
+        gemini_modelo: modeloConfig.value.gemini_modelo || 'gemini-1.5-pro',
+        deepseek_api_key: modeloConfig.value.deepseek_api_key || '',
+        deepseek_modelo: modeloConfig.value.deepseek_modelo || 'deepseek-chat',
+        copilot_api_key: modeloConfig.value.copilot_api_key || '',
+        mistral_api_key: modeloConfig.value.mistral_api_key || '',
+        mistral_modelo: modeloConfig.value.mistral_modelo || 'mistral-medium'
+      };
     }, { deep: true });
     
     // Sincronizar mudanças da ref local para o componente pai
@@ -215,6 +398,11 @@ export default {
     
     return {
       mostrarChave,
+      mostrarChavesClaude,
+      mostrarChavesGemini,
+      mostrarChavesDeepseek,
+      mostrarChavesCopilot,
+      mostrarChavesMistral,
       modeloConfig,
       ollamaConectado,
       salvar
