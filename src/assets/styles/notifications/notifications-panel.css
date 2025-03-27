@@ -120,6 +120,24 @@
   gap: 6px;
 }
 
+/* Adicionando estilo específico para o ícone no botão de marcar todas como lidas */
+.btn-mark-all i {
+  font-size: 14px;
+  color: var(--color-primary, #3b82f6); /* Garantindo que a cor do ícone seja azul */
+}
+
+/* Estilo para o ícone de check quando usamos o símbolo HTML */
+.check-icon {
+  font-size: 14px;
+  color: var(--color-primary, #3b82f6);
+  margin-right: 4px;
+  font-weight: bold;
+}
+
+.btn-mark-all:disabled .check-icon {
+  color: var(--color-text-light, #9ca3af);
+}
+
 .btn-mark-all:hover:not(:disabled) {
   background-color: rgba(59, 130, 246, 0.1);
 }
@@ -127,6 +145,11 @@
 .btn-mark-all:disabled {
   color: var(--color-text-light, #9ca3af);
   cursor: default;
+}
+
+/* Ajustando o ícone quando o botão está desabilitado */
+.btn-mark-all:disabled i {
+  color: var(--color-text-light, #9ca3af);
 }
 
 .btn-close {
@@ -147,7 +170,14 @@
 
 .btn-close i {
   font-size: 16px;
-  color: #ef4444;
+  color: #ef4444; /* Mantendo a cor vermelha, mas garantindo que seja aplicada */
+}
+
+/* Estilo para o ícone X de fechamento */
+.close-icon {
+  font-size: 18px;
+  color: #ef4444; /* Cor vermelha para o X */
+  font-weight: bold;
 }
 
 /* Tabs de navegação */

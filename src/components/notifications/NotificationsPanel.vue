@@ -15,10 +15,10 @@
       <h3><i class="fas fa-bell"></i> Notificações</h3>
       <div class="notifications-actions">
         <button @click="markAllAsRead" class="btn-mark-all" :disabled="!hasUnread">
-          <i class="fas fa-check-double"></i> Marcar todas como lidas
+          <span class="check-icon">✓</span> Marcar todas como lidas
         </button>
         <button @click="close" class="btn-close">
-          <i class="fas fa-times"></i>
+          <span class="close-icon">×</span>
         </button>
       </div>
     </div>
