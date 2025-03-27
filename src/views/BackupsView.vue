@@ -242,6 +242,10 @@ export default {
       });
     });
 
+    const today = computed(() => {
+      return new Date().toISOString().split('T')[0];
+    });
+
     onMounted(() => {
       loadBackups();
     });
@@ -268,7 +272,8 @@ export default {
       downloadBackup,
       confirmarRestauracao,
       restaurarBackup,
-      backupsFiltrados
+      backupsFiltrados,
+      today // Adicione aqui
     };
   }
 };
