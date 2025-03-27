@@ -15,6 +15,7 @@ import { processScheduledNotifications } from '@/api/notificationsApi';
 import { createUpdate } from '@/services/systemUpdatesService';
 import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
 import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue';
+import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
 
 export default {
   name: 'ProcessosView',
@@ -24,6 +25,7 @@ export default {
     BaseImage,
     SystemUpdateModal,
     SistemasImplantacaoSelector, // Adicione esta linha
+    AcoesColumn
   },
 
   setup() {
@@ -170,15 +172,12 @@ export default {
 
     // Modificar a função ordenarColunas para excluir explicitamente a coluna de ações
     const ordenarColunas = computed(() => {
-      if (colunasOrder.value.length === 0) {
-        // Retorna todas as colunas exceto a de ações (que será adicionada separadamente)
-        return colunas.filter(coluna => coluna.campo !== 'acoes');
-      }
-
-      return colunasOrder.value
-        .map(campo => colunas.find(coluna => coluna.campo === campo))
-        .filter(Boolean) // Filtra valores undefined/null
-        .filter(coluna => coluna.campo !== 'acoes'); // Exclui a coluna de ações da ordem
+      // Retorna todas as colunas exceto a de ações
+      return colunasOrder.value.length > 0
+        ? colunasOrder.value
+            .map(campo => colunas.find(coluna => coluna.campo === campo))
+            .filter(coluna => coluna && coluna.campo !== 'acoes')
+        : colunas.filter(coluna => coluna.campo !== 'acoes');
     })
 
     // Modificar/adicionar esta função computada 
@@ -259,6 +258,13 @@ export default {
         tabela: 'processo',
         tipo: 'objeto'
       },
+      {
+        titulo: 'Ações',
+        campo: 'acoes',
+        tipoExibicao: 'componente',
+        componente: 'AcoesColumn',
+        fixedRight: true // Para manter fixo à direita
+      }
     ]
 
     // Brazilian states
@@ -3344,6 +3350,14 @@ export default {
       }
     };
 
+    const handleDelete = (processo) => {
+      // Exibe o diálogo de confirmação de exclusão
+      deleteConfirmDialog.value = {
+        show: true,
+        processo: processo
+      };
+    };
+
     // Return all reactive properties and methods for the template
     return {
       // ...existing return variables...
@@ -3577,7 +3591,8 @@ export default {
         
         // Limita entre 1 e 100 linhas
         return Math.min(Math.max(estimatedLines, 1), 100);
-      }
+      },
+      handleDelete
     }
   }
 }

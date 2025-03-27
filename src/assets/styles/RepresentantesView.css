@@ -78,10 +78,6 @@ th {
   background: #9fd5fc;
 }
 
-.btn-action.delete {
-  background: #f77777;
-}
-
 .btn-action:hover {
   transform: translateY(-2px);
 }

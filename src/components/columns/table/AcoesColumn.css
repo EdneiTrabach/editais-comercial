@@ -1,0 +1,39 @@
+.acoes-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action.delete {
+  background-color: #fee2e2;
+}
+
+.btn-action.delete:hover {
+  background-color: #fecaca;
+  transform: translateY(-1px);
+}
+
+.btn-action .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

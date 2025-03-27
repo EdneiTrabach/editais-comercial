@@ -28,7 +28,19 @@
   width: 60px;
   min-width: 60px;
   white-space: nowrap;
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: #fff;
+  box-shadow: -2px 0 4px rgba(0,0,0,0.1);
 }
+
+
+[data-theme="dark"] .actions-column {
+  background: #1a1a1a;
+}
+
+
 
 .excel-table td>*,
 .excel-table th>* {

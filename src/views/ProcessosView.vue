@@ -103,6 +103,8 @@
                 </div>
                 <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
               </th>
+              <!-- Coluna de ações separada -->
+              <th class="actions-column">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -436,7 +438,13 @@
                   </template>
                 </template>
               </td>
-
+              <!-- Célula de ações separada -->
+              <td class="actions-column">
+                <AcoesColumn 
+                  :processo="processo"
+                  @delete="handleDelete"
+                />
+              </td>
               <!-- Row resize handle -->
               <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
             </tr>
@@ -831,6 +839,7 @@ import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
 import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue'
+import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -862,7 +871,8 @@ export default {
   components: {
     ...ProcessosViewModel.components || {},
     Shepherd,
-    EmpresaVencedoraColuna
+    EmpresaVencedoraColuna,
+    AcoesColumn
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 
