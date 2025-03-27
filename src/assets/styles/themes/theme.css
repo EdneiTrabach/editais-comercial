@@ -283,6 +283,7 @@
   margin-bottom: 1rem;
   position: relative;
   user-select: text;
+  min-height: 100%;
 }
 
 table {

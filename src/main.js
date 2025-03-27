@@ -5,6 +5,7 @@ import { createAppService } from './services/appService'
 import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
 import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
+import '@/assets/sharedStyles.css'
 
 // Função para reconectar quando a aplicação voltar a ser visível
 const setupVisibilityHandling = () => {
