@@ -7,9 +7,9 @@
       <p>Cada arquivo ZIP de backup contém:</p>
       
       <ul>
-        <li><strong>metadata/</strong> - Pasta com metadados do backup (data de criação, informações do sistema, etc.)</li>
-        <li><strong>tables/</strong> - Pasta com arquivos JSON para cada tabela do banco de dados</li>
-        <li>Cada arquivo JSON contém todos os registros da tabela respectiva</li>
+        <li><strong>metadata/</strong> - Pasta com metadados do backup em formato SQL</li>
+        <li><strong>sql_data/</strong> - Pasta com scripts SQL para cada tabela do banco de dados</li>
+        <li><strong>restaurar_backup.sql</strong> - Script principal que importa todos os outros scripts em ordem</li>
       </ul>
     </div>
     
@@ -19,14 +19,24 @@
       
       <ol>
         <li>Extraia o arquivo ZIP para uma pasta</li>
-        <li>Vá para a pasta "tables" para acessar os dados de cada tabela</li>
-        <li>Para restauração parcial, copie apenas os dados necessários</li>
-        <li>Para restauração completa, use a função "Restaurar Backup" na interface do sistema</li>
+        <li>Execute o arquivo <code>restaurar_backup.sql</code> usando psql ou outra ferramenta SQL</li>
+        <li>Para restauração parcial, execute scripts SQL individuais da pasta <code>sql_data</code></li>
       </ol>
       
       <div class="alert alert-warning">
         <strong>Importante:</strong> A restauração sobrescreverá os dados existentes. Faça um backup do estado atual antes de restaurar.
       </div>
+    </div>
+    
+    <div class="help-section">
+      <h4>Formato SQL</h4>
+      <p>Cada arquivo SQL contém instruções INSERT para uma tabela específica do banco de dados, facilitando importação direta ou seletiva no banco de dados PostgreSQL.</p>
+      
+      <pre class="sql-example">
+INSERT INTO "public"."tabela" ("coluna1", "coluna2", "coluna3") VALUES
+('valor1', 'valor2', 123),
+('valor3', 'valor4', 456);
+      </pre>
     </div>
     
     <div class="help-section">
@@ -166,5 +176,18 @@ export default {
   .table-category {
     min-width: 100%;
   }
+}
+
+.sql-example {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #333;
+  white-space: pre-wrap;
+  margin: 10px 0;
+  overflow-x: auto;
 }
 </style>

@@ -22,7 +22,7 @@ export function useBackups() {
 
   const agendamentoBackup = ref({
     frequencia: 'diario', // diario, semanal, mensal
-    horario: '03:00',     // horário padrão (madrugada)
+    horario: '10:00',     // horário padrão (madrugada)
     diasSemana: [],       // relevante para frequência semanal
     diaMes: 1,            // relevante para frequência mensal
     ativo: true
@@ -303,20 +303,20 @@ export function useBackups() {
       // Criar uma instância do JSZip para gerar um backup real
       const zip = new JSZip()
       const metaFolder = zip.folder("metadata")
-      const tablesFolder = zip.folder("tables")
+      const tablesFolder = zip.folder("sql_data")
       
       // Adicionar informações do backup
-      metaFolder.file("backup_info.json", JSON.stringify({
-        id: backupId,
-        created_at: new Date().toISOString(),
-        note: "Este é um backup real com estrutura completa"
-      }, null, 2))
+      metaFolder.file("backup_info.sql", `-- Metadados do backup
+-- ID: ${backupId}
+-- Criado em: ${new Date().toISOString()}
+-- Nota: Este é um backup simulado para demonstração
+`)
       
       // Adicionar alguns dados de exemplo
       const exampleData = {
         profiles: [
-          { id: "exemplo1", name: "Exemplo 1", role: "admin" },
-          { id: "exemplo2", name: "Exemplo 2", role: "user" }
+          { id: "exemplo1", nome: "Exemplo 1", role: "admin" },
+          { id: "exemplo2", nome: "Exemplo 2", role: "user" }
         ],
         empresas: [
           { id: "emp1", nome: "Empresa Exemplo", cnpj: "00.000.000/0001-00" }
@@ -324,9 +324,10 @@ export function useBackups() {
         // Mais dados de exemplo...
       }
       
-      // Adicionar cada tabela de exemplo
+      // Adicionar cada tabela de exemplo como script SQL
       for (const [table, data] of Object.entries(exampleData)) {
-        tablesFolder.file(`${table}.json`, JSON.stringify(data, null, 2))
+        const sqlContent = generateSqlInserts(table, data)
+        tablesFolder.file(`${table}_rows.sql`, sqlContent)
       }
       
       // Gerar o conteúdo do ZIP
@@ -442,13 +443,13 @@ export function useBackups() {
       const metaFolder = zip.folder("metadata")
       
       // Adicionar informações do backup
-      metaFolder.file("backup_info.json", JSON.stringify({
-        id: backup.id,
-        created_at: backup.created_at,
-        tipo: backup.tipo,
-        size: backup.size,
-        filename: backup.filename
-      }, null, 2))
+      metaFolder.file("backup_info.sql", `-- Metadados do backup
+-- ID: ${backup.id}
+-- Criado em: ${backup.created_at}
+-- Tipo: ${backup.tipo}
+-- Tamanho: ${backup.size} bytes
+-- Arquivo: ${backup.filename}
+`)
       
       // Lista de tabelas a serem incluídas no backup
       const tables = [
@@ -491,7 +492,7 @@ export function useBackups() {
       ]
       
       // Criar pasta para dados das tabelas
-      const tablesFolder = zip.folder("tables")
+      const tablesFolder = zip.folder("sql_data")
       const totalTables = tables.length
       
       // Se tiver o backup no storage, tentar baixar de lá primeiro
@@ -535,10 +536,43 @@ export function useBackups() {
         await collectLiveBackupData(tables, tablesFolder, totalTables)
       }
       
+      // Adicionar um arquivo principal para restauração
+      const mainSqlFile = `-- Backup completo gerado em ${new Date().toISOString()}
+-- Este arquivo contém os scripts para restauração completa do banco de dados
+
+-- Ordem de execução:
+-- 1. Execute este script principal
+-- 2. Todos os scripts serão importados na ordem correta
+
+-- Importar todos os scripts de dados
+\\i sql_data/profiles_rows.sql
+\\i sql_data/empresas_rows.sql
+\\i sql_data/representantes_rows.sql
+\\i sql_data/plataformas_rows.sql
+\\i sql_data/empresa_plataforma_rows.sql
+\\i sql_data/empresa_plataforma_dados_rows.sql
+\\i sql_data/editais_rows.sql
+\\i sql_data/responsaveis_processos_rows.sql
+\\i sql_data/reunioes_rows.sql
+\\i sql_data/setores_rows.sql
+\\i sql_data/sistemas_rows.sql
+\\i sql_data/configuracoes_rows.sql
+\\i sql_data/analises_ia_rows.sql
+\\i sql_data/notifications_rows.sql
+\\i sql_data/notification_recipients_rows.sql
+\\i sql_data/system_updates_rows.sql
+\\i sql_data/system_update_reads_rows.sql
+\\i sql_data/system_config_rows.sql
+\\i sql_data/system_backups_rows.sql
+
+-- Fim do backup
+`
+      zip.file("restaurar_backup.sql", mainSqlFile)
+      
       // Gerar o arquivo ZIP
       backupMessage.value = 'Gerando arquivo ZIP...'
       backupProgress.value = 90
-      addExecutionLog('Gerando arquivo ZIP com todos os dados')
+      addExecutionLog('Gerando arquivo ZIP com scripts SQL')
       
       const zipContent = await zip.generateAsync({ 
         type: 'blob',
@@ -622,30 +656,59 @@ export function useBackups() {
         if (error) {
           addExecutionLog(`Aviso: Erro ao coletar dados da tabela ${table}: ${error.message}`)
           // Continuar mesmo em caso de erro em uma tabela
-          tablesFolder.file(`${table}.json`, JSON.stringify({
-            error: error.message,
-            table: table,
-            timestamp: new Date().toISOString()
-          }, null, 2))
-        } else {
+          tablesFolder.file(`${table}_rows.sql`, `-- Erro ao coletar dados: ${error.message}`)
+        } else if (data && data.length > 0) {
+          // Converter os dados para formato SQL INSERT
+          const sqlContent = generateSqlInserts(table, data)
           // Adicionar os dados da tabela ao arquivo ZIP
-          tablesFolder.file(`${table}.json`, JSON.stringify(data || [], null, 2))
+          tablesFolder.file(`${table}_rows.sql`, sqlContent)
           addExecutionLog(`Tabela ${table}: ${data ? data.length : 0} registros coletados`)
+        } else {
+          // Tabela vazia ou não existente
+          tablesFolder.file(`${table}_rows.sql`, `-- Nenhum registro encontrado na tabela ${table}`)
+          addExecutionLog(`Tabela ${table}: Nenhum registro encontrado`)
         }
       } catch (tableError) {
         addExecutionLog(`Erro ao processar tabela ${table}: ${tableError.message}`)
         // Continuar mesmo em caso de erro em uma tabela
-        tablesFolder.file(`${table}.json`, JSON.stringify({
-          error: tableError.message,
-          table: table,
-          timestamp: new Date().toISOString()
-        }, null, 2))
+        tablesFolder.file(`${table}_rows.sql`, `-- Erro ao processar: ${tableError.message}`)
       }
     }
     
     backupProgress.value = 80
     backupMessage.value = 'Dados coletados. Preparando arquivo de backup...'
     addExecutionLog('Coleta de dados concluída com sucesso')
+  }
+
+  // Função para gerar instruções SQL INSERT a partir dos dados
+  const generateSqlInserts = (tableName, data) => {
+    if (!data || data.length === 0) return `-- Nenhum dado encontrado para a tabela ${tableName}`
+    
+    // Obter todas as colunas do primeiro registro
+    const columns = Object.keys(data[0])
+    
+    // Construir a instrução SQL INSERT
+    let sql = `INSERT INTO "public"."${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) VALUES\n`
+    
+    // Adicionar os valores de cada linha
+    const rows = data.map(row => {
+      const values = columns.map(col => {
+        const value = row[col]
+        
+        // Tratar os diferentes tipos de dados
+        if (value === null) return 'NULL'
+        if (typeof value === 'number') return value
+        if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE'
+        if (typeof value === 'object') return `'${JSON.stringify(value).replace(/'/g, "''")}'`
+        
+        // String padrão
+        return `'${String(value).replace(/'/g, "''")}'`
+      }).join(', ')
+      
+      return `(${values})`
+    }).join(',\n')
+    
+    return sql + rows + ';'
   }
 
   const formatDate = (date) => {
