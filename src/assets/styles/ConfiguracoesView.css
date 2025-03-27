@@ -1105,6 +1105,7 @@ input {
 [data-theme="dark"] .modal-title-cfg-usuarios {
   color: #f9fafb;
   border-bottom-color: #2d3748;
+  background: transparent;
 }
 
 [data-theme="dark"] .btn-cancel-cfg-usuarios {
@@ -1283,6 +1284,11 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+[data-theme="dark"] .nav-card-icon {
+  background: rgba(59, 130, 246, 0.2);
+  color: white;
 }
 
 .nav-card-icon i {
