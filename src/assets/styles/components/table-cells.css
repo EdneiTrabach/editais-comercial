@@ -120,16 +120,16 @@ td select option {
 /* Células especiais */
 td[data-field="objeto_completo"],
 th[data-field="objeto_completo"] {
-  min-width: 500px;
-  width: 500px;
+  min-width: 500px !important;
+  width: 500px; 
 }
 
 .objeto-cell {
-  max-width: 500px;
-  min-width: 500px;
-  white-space: normal;
+  max-width:1000px !important;
+  min-width: 500px !important;
+  white-space: normal !important;
   line-height: 1.4;
-  word-wrap: break-word;
+  word-wrap: break-word !important;
   user-select: text;
 }
 
