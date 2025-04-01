@@ -6,16 +6,15 @@ export function useSystemUpdates() {
   const showUpdateModal = ref(false);
   const loading = ref(false);
   
-  // Busca atualizações não lidas pelo usuário atual
+  // Função melhorada para verificar atualizações
   const checkForUpdates = async () => {
     try {
       loading.value = true;
       
-      // Verificar se o usuário está autenticado
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      // Buscar todas as atualizações
+      // Buscar atualizações
       const { data: updates, error } = await supabase
         .from('system_updates')
         .select('*')
@@ -35,9 +34,13 @@ export function useSystemUpdates() {
       const readIds = new Set(readUpdates?.map(item => item.update_id) || []);
       const unread = updates?.filter(update => !readIds.has(update.id)) || [];
       
+      // IMPORTANTE: verificar se há atualizações não lidas
       if (unread.length > 0) {
         unreadUpdates.value = unread;
         showUpdateModal.value = true;
+      } else {
+        // Fechar o modal se não existirem atualizações não lidas
+        showUpdateModal.value = false;
       }
     } catch (error) {
       console.error('Erro ao verificar atualizações:', error);

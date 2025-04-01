@@ -107,7 +107,7 @@ export default {
     const markAsRead = async () => {
       try {
         // Marcar a atualização atual como lida
-        emit('mark-read', currentUpdate.value.id);
+        await emit('mark-read', currentUpdate.value.id);
         
         // Registrar localmente que essa atualização foi lida
         readUpdates.value.add(currentUpdate.value.id);
