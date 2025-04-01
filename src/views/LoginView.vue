@@ -125,13 +125,13 @@ useConnectionManager(loadData)
   <div class="container-login">
     <div class="login-wrapper">
       <div class="login-illustration">
+        <h1 class="titulo-login">Sistema de Editais Comerciais</h1>
         <img src="/icons/undraw-login.svg" alt="Login Illustration" class="illustration-image">
       </div>
 
       <div class="card-login">
         <div class="logo-container-login">
           <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo-login">
-          <h1>Sistema de Editais Comerciais</h1>
         </div>
 
         <form class="form-login" @submit.prevent="handleLogin">

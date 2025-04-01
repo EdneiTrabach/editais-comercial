@@ -44,19 +44,24 @@
   0% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-25px) scale(1.1);
   }
+
   100% {
     transform: translateY(0) scale(1);
   }
 }
 
 @keyframes techPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.5;
     transform: scale(1.2);
@@ -86,6 +91,19 @@
   padding: 2rem;
   position: relative;
   overflow: hidden;
+  flex-direction: column;
+  align-content: center;
+  flex-wrap: nowrap;
+}
+
+h1.titulo-login {
+  margin-bottom: 5rem;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 40px;
+  text-align: center;
+  bottom: 46px;
+  position: relative;
 }
 
 .login-illustration::after {
@@ -98,8 +116,17 @@
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 
 .illustration-image {
@@ -218,8 +245,8 @@
 }
 
 /* Efeito de flutuação da label */
-.input-login:focus + .label-login,
-.input-login:not(:placeholder-shown) + .label-login {
+.input-login:focus+.label-login,
+.input-login:not(:placeholder-shown)+.label-login {
   top: -0.75rem;
   left: 1rem;
   transform: translateY(0);
@@ -429,6 +456,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -440,6 +468,7 @@
     transform: translateY(-20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -458,30 +487,30 @@
     flex-direction: column;
     max-width: 450px;
   }
-  
+
   .login-illustration {
     height: 180px;
     padding: 1rem;
   }
-  
+
   .illustration-image {
     max-width: 200px;
   }
-  
+
   .card-login {
     padding: 1.5rem;
   }
-  
+
   .modal-content-login {
     padding: 1.5rem;
     width: 95%;
   }
-  
+
   .modal-actions-login {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn-cancelar-login,
   .btn-enviar-login {
     width: 100%;
@@ -491,20 +520,21 @@
   .logo-login {
     width: 80px;
   }
-  
+
   .logo-container-login h1 {
     font-size: 1.3rem;
   }
-  
-  .input-login, .button-login {
+
+  .input-login,
+  .button-login {
     font-size: 0.95rem;
   }
-  
+
   .forgot-link-login {
     display: inline-block;
     margin-top: 0.5rem;
   }
-  
+
   .toast-login {
     max-width: 80%;
     font-size: 0.9rem;
@@ -518,44 +548,46 @@
   .login-wrapper {
     width: 95%;
   }
-  
+
   .card-login {
     padding: 1.25rem;
   }
-  
+
   .login-illustration {
     height: 150px;
   }
-  
+
   .illustration-image {
     max-width: 150px;
   }
-  
+
   .logo-login {
     width: 70px;
     margin-bottom: 0.75rem;
   }
-  
+
   .logo-container-login h1 {
     font-size: 1.2rem;
   }
-  
+
   .form-group-login {
     margin-bottom: 1.25rem;
   }
-  
+
   .input-icon-login {
     font-size: 0.9rem;
   }
-  
-  .label-login, .input-login, .button-login {
+
+  .label-login,
+  .input-login,
+  .button-login {
     font-size: 0.9rem;
   }
-  
+
   .modal-content-login {
     padding: 1.25rem;
   }
-  
+
   .modal-title-login {
     font-size: 1.2rem;
     margin-bottom: 2rem;
@@ -569,12 +601,12 @@
     max-width: 85%;
     height: 90vh;
   }
-  
+
   .login-illustration {
     width: 30%;
     height: auto;
   }
-  
+
   .card-login {
     width: 70%;
     overflow-y: auto;
