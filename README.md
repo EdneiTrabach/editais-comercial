@@ -13,22 +13,26 @@ Sistema para gerenciamento de processos licitatórios, desenvolvido para auxilia
 ## Módulos do Sistema
 
 ### Dashboard
+
 Visão geral dos processos licitatórios, com gráficos e estatísticas.
 
 ### Processos
+
 Gerenciamento de processos licitatórios, desde a identificação até a conclusão.
 
 ### Configurações do Sistema
+
 Gerenciamento de configurações globais da aplicação.
 
 #### Subcomponentes de Configurações
+
 - **Gerenciamento de Usuários**: Controle de acesso, permissões e perfis.
 - **Configurações de IA**: Ajustes de modelos de IA e parâmetros de extração.
 - **Sistemas Integrados**: Gerenciamento dos sistemas comercializados pela empresa.
 - **Atualizações do Sistema**: Notas de versão e comunicação de melhorias.
 - **Parâmetros Gerais**: Configurações visuais, notificações, segurança, etc.
 
-## Instalação
+## Instalação Rápida
 
 ```bash
 # Instalar dependências
