@@ -12,12 +12,14 @@ Sistema para gestão e acompanhamento de processos licitatórios e editais comer
 ### Instalação
 
 1. Clone o repositório:
+
 ```bash
 git clone [URL_DO_REPOSITORIO]
 cd editais-comercial
 ```
 
 2. Instale as dependências:
+
 ```bash
 npm install
 ```
@@ -29,6 +31,7 @@ npm install
 ### Executando o projeto
 
 1. Inicie o servidor de desenvolvimento:
+
 ```bash
 npm run dev
 ```
@@ -139,6 +142,3 @@ npm run dev
 │       └── index.js              # Ponto de entrada do backend
 └── scripts/                      # Scripts utilitários
     └── baixarCoordenadas.js      # Script para baixar coordenadas
-
-
-
