@@ -1052,11 +1052,21 @@ export default {
         const savedWidths = localStorage.getItem('table-columns-width')
         if (savedWidths) {
           colunasWidth.value = JSON.parse(savedWidths)
+          
+          // Garantir que a coluna objeto_completo tenha pelo menos 500px
+          if (!colunasWidth.value['objeto_completo'] || 
+              parseInt(colunasWidth.value['objeto_completo']) < 700) {
+            colunasWidth.value['objeto_completo'] = '700px'
+          }
         } else {
           colunas.forEach(coluna => {
-            colunasWidth.value[coluna.campo] = '150px'
+            // Definir largura padrão de 700px para objeto_completo
+            colunasWidth.value[coluna.campo] = coluna.campo === 'objeto_completo' ? '700px' : '150px'
           })
         }
+        
+        // Salvar as larguras atualizadas
+        saveColumnWidths()
       } catch (error) {
         console.error('Error loading column widths:', error)
       }
