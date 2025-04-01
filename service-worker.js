@@ -1,63 +1,71 @@
 // public/service-worker.js
-const CACHE_NAME = 'editais-comerciais-v1';
-const ASSETS = [
+const CACHE_NAME = 'editais-comercial-v1';
+const URLS_TO_CACHE = [
   '/',
   '/index.html',
-  '/icons/pdf.svg',
-  '/icons/excel.svg',
-  '/icons/fallback.svg'
+  '/assets/index.css',
+  '/assets/index.js',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
-      .catch(error => console.error('Erro no cache:', error))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(URLS_TO_CACHE);
+    })
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((cacheName) => {
+            return cacheName !== CACHE_NAME;
+          })
+          .map((cacheName) => {
+            return caches.delete(cacheName);
+          })
+      );
+    })
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Não intercepta requisições para o Supabase
-  if (event.request.url.includes('supabase.co')) {
+  // Para requisições à API do Supabase e outras externas, vamos sempre para a rede
+  if (event.request.url.includes('supabase.co') || 
+      event.request.url.includes('openai.com') || 
+      event.request.url.includes('servicodados.ibge.gov.br')) {
+    event.respondWith(fetch(event.request));
     return;
   }
-
+  
+  // Para outros recursos, tentamos o cache primeiro
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
+    caches.match(event.request).then((response) => {
+      // Se encontramos no cache, retornamos o recurso
+      if (response) {
+        return response;
+      }
+      
+      // Se não está no cache, fazemos a requisição
+      return fetch(event.request).then((response) => {
+        // Se a resposta não é válida, retornamos a resposta diretamente
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        return fetch(event.request).catch(() => {
-          // Retorna imagem fallback para ícones que falharem
-          if (event.request.url.includes('/icons/')) {
-            return caches.match('/icons/fallback.svg');
-          }
-          throw new Error('Network error');
+        
+        // Se for um recurso que vale a pena cachear, fazemos uma cópia
+        const responseToCache = response.clone();
+        
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
         });
-      })
+        
+        return response;
+      });
+    })
   );
 });
-
-// Adicione este handler para lidar com reconexões
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'RECONNECT') {
-    // Limpa o cache para forçar novas requisições
-    caches.delete(CACHE_NAME).then(() => {
-      // Notifica a página que o cache foi limpo
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'CACHE_CLEARED'
-          })
-        })
-      })
-    })
-  }
-})
-
-// Adicione também este evento:
-self.addEventListener('activate', (event) => {
-  // Reivindicar controle imediatamente
-  event.waitUntil(self.clients.claim())
-})

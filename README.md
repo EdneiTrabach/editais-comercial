@@ -1,6 +1,49 @@
-# Sistema de Editais Comerciais
+# Editais Comercial
 
-Sistema para gestão e acompanhamento de processos licitatórios e editais comerciais.
+Sistema para gerenciamento de processos licitatórios, desenvolvido para auxiliar empresas na identificação, acompanhamento e participação em processos de licitações públicas.
+
+## Tecnologias
+
+- Vue 3
+- Vite
+- Supabase (Autenticação e Banco de Dados)
+- Chart.js (Gráficos e Dashboards)
+- XLSX (Processamento de planilhas)
+
+## Módulos do Sistema
+
+### Dashboard
+Visão geral dos processos licitatórios, com gráficos e estatísticas.
+
+### Processos
+Gerenciamento de processos licitatórios, desde a identificação até a conclusão.
+
+### Configurações do Sistema
+Gerenciamento de configurações globais da aplicação.
+
+#### Subcomponentes de Configurações
+- **Gerenciamento de Usuários**: Controle de acesso, permissões e perfis.
+- **Configurações de IA**: Ajustes de modelos de IA e parâmetros de extração.
+- **Sistemas Integrados**: Gerenciamento dos sistemas comercializados pela empresa.
+- **Atualizações do Sistema**: Notas de versão e comunicação de melhorias.
+- **Parâmetros Gerais**: Configurações visuais, notificações, segurança, etc.
+
+## Instalação
+
+```bash
+# Instalar dependências
+npm install
+
+# Executar em modo de desenvolvimento
+npm run dev
+
+# Compilar para produção
+npm run build
+```
+
+## Configuração
+
+O sistema utiliza variáveis de ambiente para configuração. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ## Configuração do Ambiente de Desenvolvimento
 
