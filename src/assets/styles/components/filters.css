@@ -262,3 +262,49 @@
   right: 0;
   z-index: 10;
 }
+
+/* Novos estilos para o botão de filtro avançado */
+.btn-filter {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #495057;
+  gap: 6px;
+}
+
+.btn-filter:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.btn-filter.active {
+  background-color: #e7f1ff;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.btn-filter .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Badge para indicar filtros ativos */
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  margin-left: 4px;
+  padding: 0 4px;
+}

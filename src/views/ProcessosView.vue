@@ -22,6 +22,22 @@
             <img src="/icons/question-circle.svg" alt="Tour" class="icon" />
           </button>
           
+          <!-- Novo botão de filtro avançado -->
+          <button 
+            class="btn-filter" 
+            :class="{ 'active': showAdvancedFilter }" 
+            @click="toggleAdvancedFilter" 
+            title="Filtro Avançado"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon">
+              <path d="M10 18H14V16H10V18ZM3 6V8H21V6H3ZM6 13H18V11H6V13Z"></path>
+            </svg>
+            Filtros
+            <span v-if="activeAdvancedFiltersCount > 0" class="filter-badge">
+              {{ activeAdvancedFiltersCount }}
+            </span>
+          </button>
+
           <button class="btn-export" @click="exportToExcel">
             <img src="/icons/excel.svg" alt="Exportar" class="icon" />
             Exportar
@@ -43,6 +59,20 @@
 
       <!-- Data Table -->
       <div class="table-container">
+        <!-- Componente de filtro avançado -->
+        <AdvancedFilterComponent
+          :is-active="showAdvancedFilter"
+          :status-options="statusOptions"
+          :modalidade-options="opcoesModalidade"
+          :responsaveis="responsaveisProcessos"
+          :estados="estados"
+          :initial-filters="advancedFilters"
+          @close="showAdvancedFilter = false"
+          @update-filters="updateAdvancedFilters"
+          @apply-filters="applyAdvancedFilters"
+          @clear-filters="clearAdvancedFilters"
+        />
+
         <table class="excel-table resizable">
           <thead>
             <tr>
@@ -840,6 +870,7 @@ import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
 import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue'
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
+import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -872,7 +903,8 @@ export default {
     ...ProcessosViewModel.components || {},
     Shepherd,
     EmpresaVencedoraColuna,
-    AcoesColumn
+    AcoesColumn,
+    AdvancedFilterComponent // Adicionar o novo componente
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 

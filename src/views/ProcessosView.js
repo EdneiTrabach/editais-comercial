@@ -16,6 +16,7 @@ import { createUpdate } from '@/services/systemUpdatesService';
 import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
 import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue';
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
+import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'
 
 export default {
   name: 'ProcessosView',
@@ -24,12 +25,12 @@ export default {
     TheSidebar,
     BaseImage,
     SystemUpdateModal,
-    SistemasImplantacaoSelector, // Adicione esta linha
-    AcoesColumn
+    SistemasImplantacaoSelector,
+    AcoesColumn,
+    AdvancedFilterComponent
   },
 
   setup() {
-    // Router and basic component state
     const router = useRouter()
     const isSidebarExpanded = ref(true)
     const processos = ref([])
@@ -39,10 +40,8 @@ export default {
     const filtroModalidadeSearch = ref('');
     const filtroSearch = ref({})
 
-    // System cache
     const sistemasNomesCache = ref({})
 
-    // UI state
     const confirmDialog = ref({
       show: false,
       position: {},
@@ -78,51 +77,38 @@ export default {
     const estadoSearch = ref('')
     const refreshInterval = ref(null)
 
-    // Reference Data
     const representantes = ref([])
     const empresas = ref([])
     const sistemasAtivos = ref([])
     const plataformas = ref([])
 
-    // UI Configuration
     const colunasWidth = ref({})
     const rowsHeight = ref({})
 
-    // Adicionar após a definição de colunasWidth e rowsHeight
     const colunasOrder = ref([])
 
-    // Função para carregar a ordem das colunas do localStorage
     const loadColumnsOrder = () => {
       try {
         const savedOrder = localStorage.getItem('table-columns-order');
         if (savedOrder) {
-          // Carrega a ordem salva
           const savedColumns = JSON.parse(savedOrder);
-          
-          // Verifica se todas as colunas atuais estão na ordem salva
           const currentColumns = colunas.map(coluna => coluna.campo);
           const missingColumns = currentColumns.filter(campo => !savedColumns.includes(campo));
-          
-          // Se existem novas colunas, adiciona ao final da ordem
           if (missingColumns.length > 0) {
             colunasOrder.value = [...savedColumns, ...missingColumns];
-            // Salva a nova ordem atualizada
             saveColumnsOrder();
           } else {
             colunasOrder.value = savedColumns;
           }
         } else {
-          // Define a ordem padrão (todas as colunas)
           colunasOrder.value = colunas.map(coluna => coluna.campo);
         }
       } catch (error) {
         console.error('Erro ao carregar ordem das colunas:', error);
-        // Fallback para ordem padrão se ocorrer erro
         colunasOrder.value = colunas.map(coluna => coluna.campo);
       }
     }
 
-    // Função para salvar a ordem das colunas no localStorage
     const saveColumnsOrder = () => {
       try {
         localStorage.setItem('table-columns-order', JSON.stringify(colunasOrder.value))
@@ -131,48 +117,34 @@ export default {
       }
     }
 
-    // Função para iniciar o arrastar de colunas
     const startColumnDrag = (event, index) => {
       event.dataTransfer.setData('text/plain', index)
       event.currentTarget.classList.add('dragging')
     }
 
-    // Função para permitir o soltar
     const allowColumnDrop = (event) => {
       event.preventDefault()
     }
 
-    // Função para processar o soltar da coluna
     const handleColumnDrop = (event, targetIndex) => {
       event.preventDefault()
       const draggedIndex = parseInt(event.dataTransfer.getData('text/plain'))
 
-      // Remove a classe de arrasto de todos os elementos
       document.querySelectorAll('th').forEach(th => th.classList.remove('dragging'))
 
-      // Evita reordenar se for o mesmo índice
       if (draggedIndex === targetIndex) return
 
-      // Reordena as colunas
       const columnOrder = [...colunasOrder.value]
       const draggedColumn = columnOrder[draggedIndex]
 
-      // Remove a coluna arrastada
       columnOrder.splice(draggedIndex, 1)
-
-      // Insere no novo local
       columnOrder.splice(targetIndex, 0, draggedColumn)
 
-      // Atualiza a ordem
       colunasOrder.value = columnOrder
-
-      // Salva a nova ordem
       saveColumnsOrder()
     }
 
-    // Modificar a função ordenarColunas para excluir explicitamente a coluna de ações
     const ordenarColunas = computed(() => {
-      // Retorna todas as colunas exceto a de ações
       return colunasOrder.value.length > 0
         ? colunasOrder.value
             .map(campo => colunas.find(coluna => coluna.campo === campo))
@@ -180,20 +152,15 @@ export default {
         : colunas.filter(coluna => coluna.campo !== 'acoes');
     })
 
-    // Modificar/adicionar esta função computada 
     const colunasOrdenadas = computed(() => {
-      // Usa as colunas na ordem armazenada ou na ordem original
       if (colunasOrder.value.length > 0) {
         return colunasOrder.value
           .map(campo => colunas.find(coluna => coluna.campo === campo))
-          .filter(Boolean); // Remove valores undefined
+          .filter(Boolean);
       }
-      
-      // Ordem padrão (todas as colunas)
       return colunas;
     });
 
-    // Table columns definition
     const colunas = [
       { titulo: 'Data', campo: 'data_pregao' },
       { titulo: 'Hora', campo: 'hora_pregao' },
@@ -210,10 +177,8 @@ export default {
       { titulo: 'Código Análise', campo: 'codigo_analise' },
       { titulo: 'Órgão', campo: 'orgao' },
       { titulo: 'Objeto Completo', campo: 'objeto_completo' },
-      { titulo: 'Valor Estimado', campo: 'valor_estimado' }, // Nova coluna
+      { titulo: 'Valor Estimado', campo: 'valor_estimado' },
       { titulo: 'Status', campo: 'status' },
-
-      // Nova coluna Responsáveis
       {
         titulo: 'Responsáveis',
         campo: 'responsavel_id',
@@ -221,8 +186,6 @@ export default {
         campoExibicao: 'nome',
         tipoEdicao: 'select'
       },
-
-      // Continuar com as outras colunas
       {
         titulo: 'Distâncias',
         campo: 'distancia_km',
@@ -263,11 +226,10 @@ export default {
         campo: 'acoes',
         tipoExibicao: 'componente',
         componente: 'AcoesColumn',
-        fixedRight: true // Para manter fixo à direita
+        fixedRight: true
       }
     ]
 
-    // Brazilian states
     const estados = ref([
       { uf: 'AC', nome: 'Acre' },
       { uf: 'AL', nome: 'Alagoas' },
@@ -298,29 +260,24 @@ export default {
       { uf: 'TO', nome: 'Tocantins' }
     ])
 
-    // Form data
     const formData = ref({
       status: null
     })
 
-    // Computed properties
     const anosDisponiveis = computed(() => {
-      // Pegar todos os anos únicos das datas dos processos
       const anos = new Set();
       
       processos.value.forEach(processo => {
-        // Pegar o ano da data do pregão
         if (processo.data_pregao) {
           const ano = new Date(processo.data_pregao).getFullYear();
           anos.add(ano);
         }
-        // Também considerar o campo ano do processo
         if (processo.ano) {
           anos.add(parseInt(processo.ano));
         }
       });
     
-      return Array.from(anos).sort((a, b) => b - a); // Ordem decrescente
+      return Array.from(anos).sort((a, b) => b - a);
     })
 
     const estadosFiltrados = computed(() => {
@@ -333,14 +290,11 @@ export default {
       )
     })
 
-    // Substitua a implementação de processosFiltrados por esta versão melhorada:
-
     const processosFiltrados = computed(() => {
       if (!processos.value) return [];
 
       return processos.value
         .filter(processo => {
-          // Verificar tanto o campo ano quanto a data_pregao
           const anoPregao = processo.data_pregao ? new Date(processo.data_pregao).getFullYear() : null;
           const anoProcesso = processo.ano ? parseInt(processo.ano) : null;
           
@@ -348,46 +302,35 @@ export default {
         })
         .filter(processo => {
           return colunas.every(coluna => {
-            // Se não há filtros ativos para esta coluna, incluir o processo
             if (!filtros.value[coluna.campo] || filtros.value[coluna.campo].length === 0) {
               return true;
             }
 
-            // Obter o valor do processo para esta coluna
             let valorProcesso = processo[coluna.campo];
 
-            // Se o valor não existe, não incluir no resultado do filtro
             if (valorProcesso === null || valorProcesso === undefined) {
               return false;
             }
 
-            // Tratamento especial para diferentes tipos de colunas
             switch (coluna.campo) {
               case 'data_pregao':
-                // Comparar o valor formatado
                 return filtros.value[coluna.campo].includes(formatDate(valorProcesso));
 
               case 'hora_pregao':
-                // Comparar o valor formatado
                 return filtros.value[coluna.campo].includes(formatTime(valorProcesso));
 
               case 'modalidade':
-                // Para modalidade, o filtro armazena o valor interno (ex: pregao_eletronico)
-                // mas precisa comparar com o valor do processo diretamente
                 return filtros.value[coluna.campo].includes(valorProcesso);
 
               case 'status':
-                // Comparar o status diretamente
                 return filtros.value[coluna.campo].includes(valorProcesso);
 
               case 'representante_id':
               case 'responsavel_id':
               case 'empresa_id':
-                // Para chaves estrangeiras, o filtro armazena o ID
                 return filtros.value[coluna.campo].includes(valorProcesso);
 
               default:
-                // Para outros campos, fazer uma comparação simples
                 if (typeof valorProcesso === 'string') {
                   return filtros.value[coluna.campo].some(filtro =>
                     valorProcesso.toLowerCase().includes(filtro.toLowerCase())
@@ -397,6 +340,49 @@ export default {
                 }
             }
           });
+        })
+        .filter(processo => {
+          if (advancedFilters.value.dataInicio) {
+            if (!processo.data_pregao) return false;
+            if (processo.data_pregao < advancedFilters.value.dataInicio) return false;
+          }
+          
+          if (advancedFilters.value.dataFim) {
+            if (!processo.data_pregao) return false;
+            if (processo.data_pregao > advancedFilters.value.dataFim) return false;
+          }
+          
+          if (advancedFilters.value.status && advancedFilters.value.status.length > 0) {
+            if (!advancedFilters.value.status.includes(processo.status)) return false;
+          }
+          
+          if (advancedFilters.value.modalidade && advancedFilters.value.modalidade.length > 0) {
+            if (!advancedFilters.value.modalidade.includes(processo.modalidade)) return false;
+          }
+          
+          if (advancedFilters.value.responsavel && advancedFilters.value.responsavel.length > 0) {
+            if (!processo.responsavel_id || !advancedFilters.value.responsavel.includes(processo.responsavel_id)) return false;
+          }
+          
+          if (advancedFilters.value.estados && advancedFilters.value.estados.length > 0) {
+            if (!processo.estado || !advancedFilters.value.estados.includes(processo.estado)) return false;
+          }
+          
+          if (advancedFilters.value.valorMin) {
+            const valorMin = parseFloat(advancedFilters.value.valorMin.replace(',', '.'));
+            const valorProcesso = parseFloat(processo.valor_estimado) || 0;
+            
+            if (valorProcesso < valorMin) return false;
+          }
+          
+          if (advancedFilters.value.valorMax) {
+            const valorMax = parseFloat(advancedFilters.value.valorMax.replace(',', '.'));
+            const valorProcesso = parseFloat(processo.valor_estimado) || 0;
+            
+            if (valorProcesso > valorMax) return false;
+          }
+          
+          return true;
         });
     });
 
@@ -405,14 +391,12 @@ export default {
     })
 
     const empresasCadastradas = computed(() => {
-      return empresas.value.filter(empresa => empresa.id) // Filter only valid companies
+      return empresas.value.filter(empresa => empresa.id)
     })
 
     const showPlataformaField = computed(() => {
       return formData.value.modalidade === 'pregao_eletronico';
     });
-
-    // Adicione este computed para filtrar as opções de modalidade
 
     const opcoesFiltradasModalidade = computed(() => {
       if (!filtroModalidadeSearch.value) {
@@ -425,25 +409,19 @@ export default {
       );
     });
 
-    // Adicione esta função para filtrar as opções genéricas
     const filtrarOpcoes = (coluna) => {
-      // Esta função pode ser expandida para outros tipos de colunas
       console.log('Filtrando opções para coluna:', coluna);
     };
 
-    // Helper functions
     const getSistemasNomesFromCache = async (sistemasIds) => {
       if (!sistemasIds || !sistemasIds.length) return '-';
 
-      // Create a unique key for this set of IDs
       const cacheKey = sistemasIds.sort().join(',');
 
-      // Check if we already have this result in cache
       if (sistemasNomesCache.value[cacheKey]) {
         return sistemasNomesCache.value[cacheKey];
       }
 
-      // If not in cache, fetch and store
       const resultado = await getSistemasNomes(sistemasIds);
       sistemasNomesCache.value[cacheKey] = resultado;
 
@@ -453,11 +431,8 @@ export default {
     const formatDate = (dateString) => {
       if (!dateString) return '-';
       try {
-        // Ensure we're only dealing with the date part
         const [date] = dateString.split('T');
         const [year, month, day] = date.split('-');
-
-        // Return the formatted date without timezone manipulation
         return `${day}/${month}/${year}`;
       } catch (error) {
         console.error('Error formatting date:', error);
@@ -603,14 +578,12 @@ export default {
     const formatarDistancia = (processo) => {
       if (!processo) return '-';
       
-      // Se tiver distâncias múltiplas
       if (processo._distancias && processo._distancias.length > 0) {
         return processo._distancias.map(d => 
           `${d.distancia_km} km (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})`
         ).join('; ');
       }
     
-      // Se tiver distância única
       if (processo.distancia_km) {
         return `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
           ` (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})` : ''}`;
@@ -619,7 +592,6 @@ export default {
       return '-';
     };
 
-    // API and data loading functions
     const handleLoading = async (loadingFunction) => {
       try {
         isLoading.value = true
@@ -640,13 +612,12 @@ export default {
         const { data, error } = await supabase
           .from('processos')
           .select('*')
-          .order('data_pregao', { ascending: true }) // Ordem crescente por padrão
+          .order('data_pregao', { ascending: true })
 
         if (error) throw error;
 
         processos.value = data;
 
-        // Se o ano atual não existe nas abas, selecionar o ano mais recente
         const anos = anosDisponiveis.value;
         if (!anos.includes(anoSelecionado.value) && anos.length > 0) {
           anoSelecionado.value = anos[0];
@@ -747,7 +718,6 @@ export default {
         if (error) throw error
         sistemasAtivos.value = data || []
 
-        // Update names cache
         data.forEach(sistema => {
           sistemasNomesCache.value[sistema.id] = sistema.nome
         })
@@ -766,7 +736,6 @@ export default {
       return data || []
     }
 
-    // Event handlers
     const handleSidebarToggle = (expanded) => {
       isSidebarExpanded.value = expanded
     }
@@ -809,23 +778,19 @@ export default {
       }
     }
 
-    // Versão corrigida da função logSystemAction
     const logSystemAction = async (dados) => {
       try {
-        // Verificar se dados essenciais foram fornecidos
         if (!dados || !dados.registro_id) {
           console.warn('Dados de log incompletos');
-          return; // Encerra suavemente sem lançar erro
+          return;
         }
     
-        // Obter usuário atual
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           console.warn('Usuário não autenticado para logging');
-          return; // Encerra sem afetar o fluxo principal
+          return;
         }
     
-        // Preparar dados com valores padrão para evitar undefined
         const logData = {
           usuario_id: user.id,
           usuario_email: user.email,
@@ -838,26 +803,21 @@ export default {
           data_hora: new Date().toISOString()
         };
     
-        // CORRIGIDO: Verificação segura do erro para evitar problemas com propriedades undefined
         try {
-          // Tenta inserir os dados - se a tabela não existir, o erro será capturado no catch
           const { error } = await supabase
             .from('system_logs')
             .insert(logData);
             
-          // CORRIGIDO: Verificação segura de error e error.message
           if (error && error.message && error.message.includes('does not exist')) {
             console.warn('Tabela system_logs não encontrada. Logging desativado.');
-            return; // Sai sem afetar o fluxo principal
+            return;
           } else if (error) {
             console.warn('Erro ao inserir log (não crítico):', error.message || 'Erro desconhecido');
           }
         } catch (error) {
-          // Captura qualquer erro e apenas registra, sem interromper o fluxo
           console.warn('Erro no sistema de logging (não crítico):', error && error.message ? error.message : 'Erro desconhecido');
         }
       } catch (error) {
-        // Não propaga o erro, apenas registra
         console.warn('Erro no processo de logging (não crítico):', error && error.message ? error.message : 'Erro desconhecido');
       }
     };
@@ -883,35 +843,26 @@ export default {
       writeFileXLSX(wb, 'processos_licitatorios.xlsx')
     }
 
-    // Substitua a função toggleFiltro existente por esta versão melhorada
-
     const toggleFiltro = (coluna) => {
-      // Fecha todos os outros filtros primeiro
       Object.keys(mostrarFiltro.value).forEach(key => {
         if (key !== coluna) {
           mostrarFiltro.value[key] = false;
         }
       });
 
-      // Inverte o estado do filtro atual
       mostrarFiltro.value[coluna] = !mostrarFiltro.value[coluna];
 
-      // Se estiver abrindo o filtro, certifique-se de posicioná-lo corretamente
       if (mostrarFiltro.value[coluna]) {
-        // Reset search input when opening
         filtroModalidadeSearch.value = '';
 
         nextTick(() => {
-          // Find the dropdown
           const dropdown = document.querySelector(`.filtro-dropdown[data-campo="${coluna}"]`);
 
           if (dropdown) {
-            // Get the container dimensions to ensure the dropdown stays visible
             const container = dropdown.closest('.filtro-container');
             if (container) {
               const rect = container.getBoundingClientRect();
 
-              // Position based on available space
               if (window.innerWidth - rect.right < 250) {
                 dropdown.style.right = '0';
                 dropdown.style.left = 'auto';
@@ -920,7 +871,6 @@ export default {
                 dropdown.style.right = 'auto';
               }
 
-              // Ensure dropdown doesn't go off-screen bottom
               const dropdownHeight = dropdown.offsetHeight;
               if (rect.bottom + dropdownHeight > window.innerHeight) {
                 dropdown.style.bottom = '100%';
@@ -935,7 +885,6 @@ export default {
               }
             }
 
-            // Focus the search input
             const searchInput = dropdown.querySelector('input[type="search"]');
             if (searchInput) {
               searchInput.focus();
@@ -955,21 +904,18 @@ export default {
       try {
         sortConfig.value = { field, direction };
 
-        // Ordenação local 
         processos.value.sort((a, b) => {
           if (field === 'data_pregao') {
             const dateA = new Date(a[field] || '1900-01-01');
             const dateB = new Date(b[field] || '1900-01-01');
             
-            const comparison = dateA - dateB; // Ordem crescente por padrão
+            const comparison = dateA - dateB;
             
-            // Se for descendente, inverte a ordem
             return direction === 'desc' ? -comparison : comparison;
           }
           return 0;
         });
 
-        // Indica visualmente a coluna ordenada
         const thElements = document.querySelectorAll('th');
         thElements.forEach(th => {
           th.classList.remove('sorted-asc', 'sorted-desc');
@@ -997,7 +943,6 @@ export default {
       }
     };
 
-    // Table editing functions
     const startColumnResize = (event, campo) => {
       event.preventDefault()
       const th = event.target.closest('th')
@@ -1053,19 +998,16 @@ export default {
         if (savedWidths) {
           colunasWidth.value = JSON.parse(savedWidths)
           
-          // Garantir que a coluna objeto_completo tenha pelo menos 500px
           if (!colunasWidth.value['objeto_completo'] || 
               parseInt(colunasWidth.value['objeto_completo']) < 700) {
             colunasWidth.value['objeto_completo'] = '700px'
           }
         } else {
           colunas.forEach(coluna => {
-            // Definir largura padrão de 700px para objeto_completo
             colunasWidth.value[coluna.campo] = coluna.campo === 'objeto_completo' ? '700px' : '150px'
           })
         }
         
-        // Salvar as larguras atualizadas
         saveColumnWidths()
       } catch (error) {
         console.error('Error loading column widths:', error)
@@ -1080,7 +1022,6 @@ export default {
       }
     }
 
-    // Cell editing functions
     const handleDblClick = async (field, processo, event) => {
       if (editingCell.value.id === processo.id && editingCell.value.field === field) {
         return;
@@ -1089,7 +1030,6 @@ export default {
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
 
-      // Special handling for sistemas_ativos field
       if (field === 'sistemas_ativos') {
         editingCell.value = {
           id: processo.id,
@@ -1108,19 +1048,16 @@ export default {
         return;
       }
 
-      // Check if field is representante_id
       if (field === 'representante_id') {
         console.log('Clicked on representative field');
-        debugRepresentantes(); // Add this log
+        debugRepresentantes();
 
-        // Check if we have representatives loaded
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
 
-          debugRepresentantes(); // Log after loading
+          debugRepresentantes();
 
-          // Check again after loading
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
             alert('Could not load the list of representatives.');
@@ -1129,18 +1066,13 @@ export default {
         }
       }
 
-      // Dentro da função handleDblClick
-
-      // Verifique se o campo é responsavel_id
       if (field === 'responsavel_id') {
         console.log('Clicked on responsável field');
 
-        // Verificar se os responsáveis foram carregados
         if (responsaveisProcessos.value.length === 0) {
           console.log('Loading responsáveis on demand...');
           await loadResponsaveisProcessos();
 
-          // Verificar novamente após carregar
           if (responsaveisProcessos.value.length === 0) {
             console.error('Could not load responsáveis.');
             alert('Não foi possível carregar a lista de responsáveis.');
@@ -1149,7 +1081,6 @@ export default {
         }
       }
 
-      // Default behavior for other fields
       confirmDialog.value = {
         show: true,
         position: {
@@ -1167,11 +1098,9 @@ export default {
     };
 
     const handleConfirmEdit = () => {
-      // Execute callback to start editing
       confirmDialog.value.callback?.()
       hideConfirmDialog()
 
-      // Focus on input field after rendering
       nextTick(() => {
         const input = document.querySelector('.editing-cell input, .editing-cell textarea, .editing-cell select')
         if (input) {
@@ -1199,10 +1128,8 @@ export default {
       }
     }
 
-    // Modificação na função handleUpdate
     const handleUpdate = async (processo) => {
       try {
-        // Verifica se é uma mudança de data que afeta o ano
         if (editingCell.value.field === 'data_pregao') {
           const anoAntigo = new Date(processo.data_pregao).getFullYear();
           const anoNovo = new Date(editingCell.value.value).getFullYear();
@@ -1210,10 +1137,9 @@ export default {
           if (anoAntigo !== anoNovo) {
             console.log(`Mudança de ano detectada: ${anoAntigo} -> ${anoNovo}`);
             
-            // Atualiza o registro no banco
             const updateData = {
               data_pregao: editingCell.value.value,
-              ano: anoNovo, // Atualiza também o campo ano
+              ano: anoNovo,
               updated_at: new Date().toISOString(),
               updated_by: (await supabase.auth.getUser()).data.user?.id
             };
@@ -1225,29 +1151,21 @@ export default {
 
             if (error) throw error;
 
-            // Recarrega os processos
             await loadProcessos();
 
-            // Se estiver visualizando o ano antigo, muda para o novo ano
             if (anoSelecionado.value === anoAntigo) {
               anoSelecionado.value = anoNovo;
             }
 
-            // Mostra mensagem de confirmação
             showToast(`Processo movido para o ano ${anoNovo}`, 'success');
             
-            // Cancela o modo de edição
             cancelEdit();
             return;
           }
         }
 
-        // Continua com a lógica normal de atualização para outros campos
-        // Verifica se o campo está em edição
         if (editingCell.value.id !== processo.id) return;
 
-        // Importante: Permitir valores vazios (string vazia)
-        // O valor atual e anterior devem ser diferentes para prosseguir
         if (editingCell.value.value === processo[editingCell.value.field]) {
           console.log('Value did not change, canceling update')
           cancelEdit()
@@ -1256,17 +1174,13 @@ export default {
 
         let updateValue = editingCell.value.value
 
-        // Specific formatting by field type
         switch (editingCell.value.field) {
           case 'data_pregao':
-            // Ensure date is in the correct format for the database
             if (typeof updateValue === 'string') {
               if (updateValue.includes('/')) {
-                // Convert from DD/MM/YYYY to YYYY-MM-DD
                 const [day, month, year] = updateValue.split('/')
                 updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
               } else if (updateValue.includes('-')) {
-                // Already in YYYY-MM-DD format, just ensure
                 const [year, month, day] = updateValue.split('-')
                 updateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
               }
@@ -1274,7 +1188,6 @@ export default {
             break
 
           case 'hora_pregao':
-            // Ensure HH:mm format
             if (typeof updateValue === 'string') {
               const [hours, minutes] = updateValue.split(':')
               updateValue = `${hours.padStart(2, '0')}:${minutes ? minutes.padStart(2, '0') : '00'}`
@@ -1282,33 +1195,27 @@ export default {
             break
 
           case 'sistemas_ativos':
-            // Ensure it's an array
             updateValue = Array.isArray(updateValue) ? updateValue : []
             break
 
           case 'representante_id':
-            // Ensure it's UUID or null
             updateValue = updateValue || null;
             console.log('Updating representative to:', updateValue);
 
             if (updateValue) {
-              // Check if the representative exists in the loaded list
               const representante = representantes.value.find(r => r.id === updateValue);
               if (representante) {
                 console.log(`Selected representative name: ${representante.nome}`);
               } else {
                 console.warn('Selected representative ID not found in list!');
-                // Reload the list if not found
                 await loadRepresentantes();
               }
             }
             break;
 
           case 'responsavel_id':
-            // Usar o helper para garantir ID válido
             updateValue = ensureValidResponsavelId(updateValue)
 
-            // Se mesmo após a conversão não temos um UUID válido, cancelar a atualização
             if (!updateValue) {
               console.error('Valor inválido para responsável:', editingCell.value.value)
               alert('Responsável inválido. Por favor, selecione um responsável válido da lista.')
@@ -1320,26 +1227,12 @@ export default {
             break
 
           case 'empresa_id':
-            // Usar o helper para garantir ID válido
             updateValue = ensureValidEmpresaId(updateValue);
 
-            // Removendo a validação que impede valores nulos
-            // O código abaixo será substituído
-            /*
-            if (!updateValue) {
-              console.error('Valor inválido para empresa:', editingCell.value.value);
-              alert('Empresa inválida. Por favor, selecione uma empresa válida da lista.');
-              cancelEdit();
-              return;
-            }
-            */
-
-            // Permitimos explicitamente valores null (campo em branco)
             console.log(`Atualizando empresa para: ${updateValue === null ? 'vazio' : updateValue} (validado)`);
             break;
 
           case 'distancia_km':
-            // Validar se é um número válido
             const distanciaNum = parseFloat(editingCell.value.value.replace(/[^\d.,]/g, '').replace(',', '.'));
             
             if (isNaN(distanciaNum)) {
@@ -1348,7 +1241,6 @@ export default {
               return;
             }
             
-            // Verificar se já existe uma distância
             const { data: existingDistancia } = await supabase
               .from('processo_distancias')
               .select('*')
@@ -1356,7 +1248,6 @@ export default {
               .single();
           
             if (existingDistancia) {
-              // Atualiza a distância existente
               const { error } = await supabase
                 .from('processo_distancias')
                 .update({
@@ -1367,7 +1258,6 @@ export default {
           
               if (error) throw error;
             } else {
-              // Cria uma nova distância
               const { error } = await supabase
                 .from('processo_distancias')
                 .insert({
@@ -1379,12 +1269,10 @@ export default {
               if (error) throw error;
             }
           
-            // Atualizar o valor para o formato numérico validado
             updateValue = distanciaNum;
             break;
         }
 
-        // Check if value actually changed to avoid unnecessary updates
         if (updateValue === processo[editingCell.value.field]) {
           console.log('Value did not change, canceling update')
           cancelEdit()
@@ -1393,26 +1281,22 @@ export default {
 
         console.log(`Updating ${editingCell.value.field} to:`, updateValue)
 
-        // Prepare data for update
         const updateData = {
           [editingCell.value.field]: updateValue,
           updated_at: new Date().toISOString()
         }
 
-        // Add user who is making the change if available
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.id) {
           updateData.updated_by = user.id
         }
 
-        // Antes da chamada ao supabase
         console.log('Dados para atualização:', {
           campo: editingCell.value.field,
           valor: updateValue,
           tipo: typeof updateValue
         });
 
-        // Registrar no histórico de desfazer
         undoHistory.value.push({
           id: processo.id,
           field: editingCell.value.field,
@@ -1420,35 +1304,27 @@ export default {
           newValue: updateValue
         });
 
-        // Limitar o tamanho do histórico
         if (undoHistory.value.length > MAX_HISTORY_SIZE) {
-          undoHistory.value.shift(); // Remove o item mais antigo
+          undoHistory.value.shift();
         }
 
-        // Limpar o histórico de refazer sempre que uma nova alteração é feita
         redoHistory.value = [];
 
-        // Adicione esta verificação antes da atualização final:
-        // Verificar se é uma alteração de status para SUSPENSO, ADIADO ou DEMONSTRACAO
         if (editingCell.value.field === 'status' && 
             ['suspenso', 'adiado', 'demonstracao'].includes(updateValue) && 
             processo.status !== updateValue) {
           
-          // Cancelar a edição normal e abrir o diálogo de reagendamento
           cancelEdit();
           abrirReagendamentoDialog(processo, updateValue);
-          return; // Interromper o fluxo normal de atualização
+          return;
         }
 
-        // Dentro da função handleUpdate, antes das outras verificações específicas
         if (editingCell.value.field === 'codigo_analise' && editingCell.value.value) {
-          // Cancelar a edição normal e abrir o diálogo de análise
           cancelEdit();
           showAnaliseDialog(processo, editingCell.value.value);
-          return; // Interromper o fluxo normal de atualização
+          return;
         }
 
-        // Update in database
         console.log('Update data:', updateData)
 
         const { error } = await supabase
@@ -1461,7 +1337,6 @@ export default {
           throw error
         }
 
-        // Log the change
         try {
           await logSystemAction({
             tipo: 'atualizacao',
@@ -1472,26 +1347,21 @@ export default {
             dados_novos: updateValue
           })
         } catch (logError) {
-          // If log fails, just report the error but continue
           console.warn('Error in change log:', logError)
         }
 
-        // Reload processes after successful update
         await loadProcessos()
         console.log('Update completed successfully')
 
       } catch (error) {
         console.error('Error updating:', error)
-        // Display error message to the user
         alert(`Error updating field: ${error.message || 'Check the data and try again'}`)
       } finally {
         cancelEdit()
       }
     }
 
-    // Systems handling
     const handleSistemasChange = (event) => {
-      // Get selected values from the multiple select
       const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value)
       editingCell.value.value = selectedOptions
     }
@@ -1520,7 +1390,6 @@ export default {
           updated_at: new Date().toISOString()
         };
 
-        // Add user who is making the change if available
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           updateData.updated_by = user.id;
@@ -1533,7 +1402,6 @@ export default {
 
         if (error) throw error;
 
-        // Log the change
         await logSystemAction({
           tipo: 'atualizacao',
           tabela: 'processos',
@@ -1543,7 +1411,6 @@ export default {
           dados_novos: editingCell.value.value
         });
 
-        // Reload processes
         await loadProcessos();
 
         hideSistemasDialog();
@@ -1560,7 +1427,6 @@ export default {
         processo: null
       };
 
-      // Clear editing state
       editingCell.value = {
         id: null,
         field: null,
@@ -1568,10 +1434,9 @@ export default {
       };
     };
 
-    // Page visibility and auto-refresh
     const pageVisibilityHandler = () => {
       if (!document.hidden) {
-        loadProcessos().catch(console.error) // Load in background
+        loadProcessos().catch(console.error)
       }
     }
 
@@ -1588,10 +1453,10 @@ export default {
     }
 
     const startAutoRefresh = () => {
-      stopAutoRefresh() // To avoid multiple intervals
+      stopAutoRefresh()
       refreshInterval.value = setInterval(() => {
         loadProcessos()
-      }, 30000) // Update every 30 seconds
+      }, 30000)
     }
 
     const stopAutoRefresh = () => {
@@ -1601,7 +1466,6 @@ export default {
       }
     }
 
-    // Debugging function
     const debugRepresentantes = () => {
       console.log(`Status of representatives: 
       - Array loaded: ${representantes.value ? 'Yes' : 'No'}
@@ -1609,9 +1473,8 @@ export default {
       - First representative: ${representantes.value?.[0]?.nome || 'None'}`);
     }
 
-    // Validation helpers
     const validarIdRelacionamento = async (tabela, campo, id) => {
-      if (!id) return null; // Null values are valid
+      if (!id) return null;
 
       try {
         const { data, error } = await supabase
@@ -1625,36 +1488,28 @@ export default {
           return null;
         }
 
-        return id; // Valid ID
+        return id;
       } catch (err) {
         console.error(`Error validating ID in ${tabela}:`, err);
         return null;
       }
     };
 
-    // Adicione esta função dentro do setup(), antes do uso na função handleUpdate
-
-    // Helper para validar e garantir UUID válido para responsável
     const ensureValidResponsavelId = (value) => {
-      // Se o valor for vazio ou null, retorna null (sem responsável)
       if (!value) return null;
 
-      // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
 
-      // Se não for UUID, tenta encontrar por nome (improvável neste caso)
       const responsavel = responsaveisProcessos.value.find(r =>
         r.nome.toLowerCase() === value.toLowerCase());
 
       if (responsavel) return responsavel.id;
 
-      // Se não encontrar, retorna null
       console.warn(`Valor inválido para responsável: ${value}`);
       return null;
     };
 
-    // Form submission
     const handleSubmit = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -1694,27 +1549,20 @@ export default {
       }
     };
 
-    // Helper for filter options
-    // Substitua a função opcoesUnicas por esta versão melhorada:
-
     const opcoesUnicas = (coluna) => {
       if (!processos.value || processos.value.length === 0) return [];
 
       const opcoes = new Set();
 
-      // Para colunas especiais que precisam de tratamento diferenciado
       if (coluna === 'modalidade') {
-        // Retorna diretamente as opções pré-definidas
         return opcoesModalidade;
       }
 
       processos.value.forEach(processo => {
         let valor = processo[coluna];
 
-        // Pular valores nulos ou indefinidos
         if (valor === null || valor === undefined) return;
 
-        // Tratamento específico para diferentes tipos de coluna
         switch (coluna) {
           case 'data_pregao':
             valor = formatDate(valor);
@@ -1726,17 +1574,14 @@ export default {
             valor = { value: valor, text: formatStatus(valor) };
             break;
           case 'responsavel_id':
-            // Busca o nome do responsável
             const responsavel = responsaveisProcessos.value.find(r => r.id === valor);
             valor = { value: valor, text: responsavel ? responsavel.nome : valor };
             break;
           case 'representante_id':
-            // Busca o nome do representante
             const representante = representantes.value.find(r => r.id === valor);
             valor = { value: valor, text: representante ? representante.nome : valor };
             break;
           case 'empresa_id':
-            // Busca o nome da empresa
             const empresa = empresas.value.find(e => e.id === valor);
             valor = { value: valor, text: empresa ? empresa.nome : valor };
             break;
@@ -1745,7 +1590,6 @@ export default {
         if (valor) opcoes.add(JSON.stringify(valor));
       });
 
-      // Convertemos de volta os objetos JSON para JavaScript
       return Array.from(opcoes).map(item => {
         try {
           return JSON.parse(item);
@@ -1753,14 +1597,12 @@ export default {
           return item;
         }
       }).sort((a, b) => {
-        // Ordenar string ou objeto com campo text
         const textA = typeof a === 'object' ? a.text : a;
         const textB = typeof b === 'object' ? b.text : b;
         return textA.localeCompare(textB);
       });
     };
 
-    // Atualizar filtros quando um item é selecionado
     const toggleFiltroItem = (coluna, valor) => {
       if (!filtros.value[coluna]) {
         filtros.value[coluna] = [];
@@ -1768,15 +1610,12 @@ export default {
 
       const index = filtros.value[coluna].indexOf(valor);
       if (index === -1) {
-        // Adiciona o item ao filtro
         filtros.value[coluna].push(valor);
       } else {
-        // Remove o item do filtro
         filtros.value[coluna].splice(index, 1);
       }
     };
 
-    // Initialize filters
     const initializeFiltros = () => {
       const filtrosIniciais = {}
       colunas.forEach(coluna => {
@@ -1785,16 +1624,12 @@ export default {
       return filtrosIniciais
     }
 
-    // Lifecycle hooks
     onMounted(async () => {
       try {
-        // 1. Start page visibility monitoring
         startVisibilityMonitoring()
 
-        // 2. Initialize filters
         filtros.value = initializeFiltros()
 
-        // 3. Register listener to close filter dropdowns when clicking outside
         document.addEventListener('click', (e) => {
           const isFilterClick = e.target.closest('.filtro-container')
           if (!isFilterClick) {
@@ -1804,28 +1639,22 @@ export default {
           }
         })
 
-        // 4. Load data in parallel for better performance
         console.log('Starting data loading...');
 
-        // Then load other data in parallel
         await Promise.all([
           loadProcessos(),
           loadRepresentantes(),
           loadEmpresas(),
           loadPlataformas(),
           loadSistemas(),
-          loadResponsaveisProcessos() // Adicionar carregamento de responsáveis
+          loadResponsaveisProcessos()
         ]);
 
         console.log('All other data loaded successfully!');
 
-        // 5. Load interface settings
         loadColumnWidths()
-
-        // Adicionar este código no método onMounted após loadColumnWidths()
         loadColumnsOrder()
 
-        // 6. Set up Realtime channel for real-time updates
         const channel = supabase.channel('processos-updates')
           .on('postgres_changes',
             {
@@ -1839,16 +1668,12 @@ export default {
           )
           .subscribe()
 
-        // 7. Register channel in manager
         SupabaseManager.addSubscription('processos-updates', channel)
 
-        // 8. Start auto-refresh
         startAutoRefresh()
 
-        // Adicionar dentro de onMounted()
         document.addEventListener('keydown', handleKeyDown);
 
-        // Verificar e processar notificações agendadas
         try {
           const result = await processScheduledNotifications();
           if (result.success && result.count > 0) {
@@ -1858,10 +1683,8 @@ export default {
           console.error('Erro ao processar notificações agendadas:', error);
         }
 
-        // Verificar notificações pendentes
         await checkPendingNotifications();
         
-        // Verificar notificações a cada 1 hora
         setInterval(checkPendingNotifications, 3600000);
 
         await loadSystemUpdates();
@@ -1870,29 +1693,21 @@ export default {
       }
     })
 
-    // Cleanup on unmount
     onUnmounted(() => {
-      // Stop visibility monitoring
       stopVisibilityMonitoring()
-
-      // Stop auto-refresh
       stopAutoRefresh()
 
-      // Remove Supabase channel
       const channel = SupabaseManager.getSubscription('processos-updates')
       if (channel) {
         supabase.removeChannel(channel)
         SupabaseManager.removeSubscription('processos-updates')
       }
 
-      // Adicionar dentro de onUnmounted()
       document.removeEventListener('keydown', handleKeyDown);
     })
 
-    // Use connection manager
     useConnectionManager(loadProcessos)
 
-    // Dialog para distâncias
     const distanciaDialog = ref({
       show: false,
       position: {},
@@ -1906,10 +1721,8 @@ export default {
       }
     });
 
-    // Funções para gerenciamento das distâncias
     const abrirDialogDistancia = async (processo, event) => {
       try {
-        // Carregar as distâncias do processo
         const { data, error } = await supabase
           .from('processo_distancias')
           .select('*')
@@ -1918,7 +1731,6 @@ export default {
 
         if (error) throw error;
 
-        // Configurar o dialog
         const rect = event.target.getBoundingClientRect();
         distanciaDialog.value = {
           show: true,
@@ -1980,7 +1792,6 @@ export default {
 
         if (error) throw error;
 
-        // Atualiza a distância na lista local
         distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex] = {
           ...distanciaDialog.value.distancias[distanciaDialog.value.editandoIndex],
           distancia_km,
@@ -1988,7 +1799,6 @@ export default {
           ponto_referencia_uf
         };
 
-        // Limpa o formulário de edição
         cancelarEdicaoDistancia();
       } catch (error) {
         console.error('Erro ao salvar distância:', error);
@@ -2017,10 +1827,8 @@ export default {
 
         if (error) throw error;
 
-        // Adiciona a nova distância à lista local
         distanciaDialog.value.distancias.push(data[0]);
 
-        // Limpa o formulário
         distanciaDialog.value.novaDistancia = {
           distancia_km: '',
           ponto_referencia_cidade: '',
@@ -2042,7 +1850,6 @@ export default {
 
         if (error) throw error;
 
-        // Remove a distância da lista local
         distanciaDialog.value.distancias.splice(index, 1);
       } catch (error) {
         console.error('Erro ao excluir distância:', error);
@@ -2051,7 +1858,6 @@ export default {
 
     const fecharDistanciaDialog = () => {
       distanciaDialog.value.show = false;
-      // Recarregar processos para atualizar as distâncias na interface
       loadProcessos();
     };
 
@@ -2061,8 +1867,6 @@ export default {
       getResponsavelNome: getResponsavelProcessoNome
     } = useResponsaveis()
 
-    // Adicionar esta função dentro do setup()
-
     const getOpcoesParaCampo = (coluna) => {
       if (coluna.campo === 'responsavel_id') {
         return responsaveisProcessos.value;
@@ -2071,29 +1875,23 @@ export default {
       } else if (coluna.campo === 'empresa_id') {
         return empresas.value;
       }
-      // Adicione outras relações conforme necessário
       return [];
     };
 
-    // Dialog para responsáveis
     const responsaveisDialog = ref({
       show: false,
       position: {},
       processo: null
     });
 
-    // Função para lidar com o clique no responsável
     const handleDblClickResponsavel = async (field, processo, event) => {
-      // Verifica se já carregou os responsáveis
       if (responsaveisProcessos.value.length === 0) {
         await loadResponsaveisProcessos();
       }
 
-      // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
 
-      // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
@@ -2110,17 +1908,14 @@ export default {
       };
     };
 
-    // Função para remover o responsável selecionado
     const removerResponsavel = () => {
       editingCell.value.value = null;
     };
 
-    // Função para lidar com a mudança de responsável no select
     const handleResponsavelChange = (event) => {
       editingCell.value.value = event.target.value;
     };
 
-    // Função para salvar o responsável
     const saveResponsavel = async () => {
       try {
         if (!editingCell.value.id || !responsaveisDialog.value.processo) {
@@ -2136,7 +1931,6 @@ export default {
       }
     };
 
-    // Função para fechar o diálogo de responsáveis
     const hideResponsaveisDialog = () => {
       responsaveisDialog.value = {
         show: false,
@@ -2145,45 +1939,35 @@ export default {
       };
     };
 
-    // Dialog para representantes
     const representantesDialog = ref({
       show: false,
       position: {},
       processo: null
     });
 
-    // Função para validar ID de representante
     const ensureValidRepresentanteId = (value) => {
-      // Se o valor for vazio ou null, retorna null (sem representante)
       if (!value) return null;
 
-      // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
 
-      // Se não for UUID, tenta encontrar por nome (improvável neste caso)
       const representante = representantes.value.find(r =>
         r.nome.toLowerCase() === value.toLowerCase());
 
       if (representante) return representante.id;
 
-      // Se não encontrar, retorna null
       console.warn(`Valor inválido para representante: ${value}`);
       return null;
     };
 
-    // Função para lidar com o clique no representante
     const handleDblClickRepresentante = async (field, processo, event) => {
-      // Verifica se já carregou os representantes
       if (representantes.value.length === 0) {
         await loadRepresentantes();
       }
 
-      // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
 
-      // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
@@ -2200,17 +1984,14 @@ export default {
       };
     };
 
-    // Função para remover o representante selecionado
     const removerRepresentante = () => {
       editingCell.value.value = null;
     };
 
-    // Função para lidar com a mudança de representante no select
     const handleRepresentanteChange = (event) => {
       editingCell.value.value = event.target.value;
     };
 
-    // Função para salvar o representante
     const saveRepresentante = async () => {
       try {
         if (!editingCell.value.id || !representantesDialog.value.processo) {
@@ -2226,7 +2007,6 @@ export default {
       }
     };
 
-    // Função para fechar o diálogo de representantes
     const hideRepresentantesDialog = () => {
       representantesDialog.value = {
         show: false,
@@ -2235,51 +2015,40 @@ export default {
       };
     };
 
-    // Dialog para empresas
     const empresasDialog = ref({
       show: false,
       position: {},
       processo: null
     });
 
-    // Função para formatar CNPJ na exibição
     const formatCNPJ = (cnpj) => {
       if (!cnpj) return '';
       return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
     };
 
-    // Função para validar ID de empresa
     const ensureValidEmpresaId = (value) => {
-      // Se o valor for vazio ou null, retorna null (sem empresa)
       if (!value) return null;
 
-      // Se já for um UUID válido, retorna direto
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(value)) return value;
 
-      // Se não for UUID, tenta encontrar por nome
       const empresa = empresas.value.find(e =>
         e.nome.toLowerCase() === value.toLowerCase());
 
       if (empresa) return empresa.id;
 
-      // Se não encontrar, retorna null
       console.warn(`Valor inválido para empresa: ${value}`);
       return null;
     };
 
-    // Função para lidar com o clique na empresa
     const handleDblClickEmpresa = async (field, processo, event) => {
-      // Verifica se já carregou as empresas
       if (empresas.value.length === 0) {
         await loadEmpresas();
       }
 
-      // Configura o diálogo
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
 
-      // Prepara dados para edição
       editingCell.value = {
         id: processo.id,
         field,
@@ -2296,17 +2065,14 @@ export default {
       };
     };
 
-    // Função para remover a empresa selecionada
     const removerEmpresa = () => {
       editingCell.value.value = null;
     };
 
-    // Função para lidar com a mudança de empresa no select
     const handleEmpresaChange = (event) => {
       editingCell.value.value = event.target.value;
     };
 
-    // Função para salvar a empresa
     const saveEmpresa = async () => {
       try {
         if (!editingCell.value.id || !empresasDialog.value.processo) {
@@ -2322,7 +2088,6 @@ export default {
       }
     };
 
-    // Função para fechar o diálogo de empresas
     const hideEmpresasDialog = () => {
       empresasDialog.value = {
         show: false,
@@ -2331,10 +2096,8 @@ export default {
       };
     };
 
-    // Adicionar no início do setup()
     const toasts = ref([])
 
-    // Adicionar esta função dentro do setup()
     const showToast = (message, type = 'success', duration = 3000) => {
       const id = Date.now();
       toasts.value.push({ id, message, type });
@@ -2344,26 +2107,21 @@ export default {
       }, duration);
     }
 
-    // Adicionar no setup(), próximo aos outros refs
-    const undoHistory = ref([]);  // Histórico de mudanças
-    const redoHistory = ref([]);  // Histórico de mudanças refeitas
-    const MAX_HISTORY_SIZE = 50; // Limite do histórico
+    const undoHistory = ref([]);
+    const redoHistory = ref([]);
+    const MAX_HISTORY_SIZE = 50;
 
-    // Adicionar esta função dentro do setup()
     const handleKeyDown = (event) => {
-      // Ctrl+Z para desfazer
       if (event.ctrlKey && event.key === 'z') {
         event.preventDefault();
         undoAction();
       }
-      // Ctrl+Y para refazer
       else if (event.ctrlKey && event.key === 'y') {
         event.preventDefault();
         redoAction();
       }
     };
 
-    // Adicionar dentro do setup()
     const undoAction = async () => {
       try {
         if (undoHistory.value.length === 0) {
@@ -2374,27 +2132,23 @@ export default {
         const lastAction = undoHistory.value.pop();
         console.log('Desfazendo ação:', lastAction);
 
-        // Adicionar ao histórico de refazer
         redoHistory.value.push({
           id: lastAction.id,
           field: lastAction.field,
-          oldValue: lastAction.newValue, // Inverte valores
+          oldValue: lastAction.newValue,
           newValue: lastAction.oldValue
         });
 
-        // Atualizar no banco de dados
         const updateData = {
           [lastAction.field]: lastAction.oldValue,
           updated_at: new Date().toISOString()
         };
 
-        // Adicionar usuário que está fazendo a alteração
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           updateData.updated_by = user.id;
         }
 
-        // Atualizar no banco de dados
         const { error } = await supabase
           .from('processos')
           .update(updateData)
@@ -2402,7 +2156,6 @@ export default {
 
         if (error) throw error;
 
-        // Registrar no log do sistema
         await logSystemAction({
           tipo: 'desfazer',
           tabela: 'processos',
@@ -2412,10 +2165,8 @@ export default {
           dados_novos: lastAction.oldValue
         });
 
-        // Recarregar os dados
         await loadProcessos();
 
-        // Mostrar mensagem de confirmação
         showToast(`Ação desfeita: ${lastAction.field}`, 'success')
       } catch (error) {
         console.error('Erro ao desfazer ação:', error);
@@ -2433,27 +2184,23 @@ export default {
         const nextAction = redoHistory.value.pop();
         console.log('Refazendo ação:', nextAction);
 
-        // Adicionar de volta ao histórico de desfazer
         undoHistory.value.push({
           id: nextAction.id,
           field: nextAction.field,
-          oldValue: nextAction.newValue, // Inverte valores
+          oldValue: nextAction.newValue,
           newValue: nextAction.oldValue
         });
 
-        // Atualizar no banco de dados
         const updateData = {
           [nextAction.field]: nextAction.oldValue,
           updated_at: new Date().toISOString()
         };
 
-        // Adicionar usuário que está fazendo a alteração
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           updateData.updated_by = user.id;
         }
 
-        // Atualizar no banco de dados
         const { error } = await supabase
           .from('processos')
           .update(updateData)
@@ -2461,7 +2208,6 @@ export default {
 
         if (error) throw error;
 
-        // Registrar no log do sistema
         await logSystemAction({
           tipo: 'refazer',
           tabela: 'processos',
@@ -2471,10 +2217,8 @@ export default {
           dados_novos: nextAction.oldValue
         });
 
-        // Recarregar os dados
         await loadProcessos();
 
-        // Mostrar mensagem de confirmação
         showToast(`Ação refeita: ${nextAction.field}`, 'success')
       } catch (error) {
         console.error('Erro ao refazer ação:', error);
@@ -2482,7 +2226,6 @@ export default {
       }
     };
 
-    // Completar a lista de opções de modalidade
     const opcoesModalidade = [
       { valor: 'pregao_eletronico', texto: 'Pregão Eletrônico' },
       { valor: 'pregao_presencial', texto: 'Pregão Presencial' },
@@ -2500,15 +2243,12 @@ export default {
       { valor: 'srp_internacional', texto: 'SRP Internacional' }
     ];
 
-    // Adicione esta nova função
-
     const limparFiltroColuna = (coluna) => {
       if (filtros.value[coluna]) {
         filtros.value[coluna] = [];
       }
     };
 
-    // Adicione esta função para filtrar as opções com base na pesquisa
     const filtrarOpcoesPorColuna = (coluna, opcoes) => {
       if (!filtroSearch.value[coluna]) {
         return opcoes;
@@ -2526,7 +2266,6 @@ export default {
       });
     };
 
-    // Dialog para reagendamento
     const reagendamentoDialog = ref({
       show: false,
       processo: null,
@@ -2536,9 +2275,7 @@ export default {
       novaHora: ''
     });
 
-    // Função para abrir o diálogo de reagendamento
     const abrirReagendamentoDialog = (processo, status) => {
-      // Formatar a data original do processo para o formato yyyy-MM-dd
       const dataProcesso = processo.data_pregao ? new Date(processo.data_pregao) : new Date();
       const dataOriginal = dataProcesso.toISOString().split('T')[0];
       
@@ -2549,30 +2286,25 @@ export default {
         temNovaData: status === 'demonstracao',
         novaData: '',
         novaHora: '',
-        dataOriginal: dataOriginal, // Guarda a data original
+        dataOriginal: dataOriginal,
         dataError: '',
         horaError: ''
       };
     };
 
-    // Função para fechar o diálogo de reagendamento
     const hideReagendamentoDialog = () => {
       reagendamentoDialog.value.show = false;
     };
 
-    // Função para confirmar que há nova data
     const confirmarTemNovaData = () => {
       reagendamentoDialog.value.temNovaData = true;
     };
 
-    // Função para confirmar que não há nova data
     const confirmSemNovaData = async () => {
-      // Apenas atualiza o status e fecha o diálogo
       await atualizarStatusProcesso(reagendamentoDialog.value.processo, reagendamentoDialog.value.status);
       hideReagendamentoDialog();
     };
 
-    // Função para atualizar status do processo
     const atualizarStatusProcesso = async (processo, status) => {
       try {
         const updateData = {
@@ -2580,13 +2312,11 @@ export default {
           updated_at: new Date().toISOString()
         };
 
-        // Adicionar usuário que está fazendo a alteração
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           updateData.updated_by = user.id;
         }
 
-        // Atualizar no banco de dados
         const { error } = await supabase
           .from('processos')
           .update(updateData)
@@ -2594,7 +2324,6 @@ export default {
 
         if (error) throw error;
 
-        // Registrar no log do sistema
         await logSystemAction({
           tipo: 'atualizacao',
           tabela: 'processos',
@@ -2604,7 +2333,6 @@ export default {
           dados_novos: status
         });
 
-        // Recarregar processos
         await loadProcessos();
         
         showToast(`Status atualizado para ${formatStatus(status)}`, 'success');
@@ -2614,13 +2342,11 @@ export default {
       }
     };
 
-    // Adicionar nova função para validação
     const validarDataHora = () => {
       let valido = true;
       reagendamentoDialog.value.dataError = '';
       reagendamentoDialog.value.horaError = '';
       
-      // Validar data
       if (!reagendamentoDialog.value.novaData) {
         reagendamentoDialog.value.dataError = 'Data é obrigatória';
         valido = false;
@@ -2628,7 +2354,6 @@ export default {
         const novaData = new Date(reagendamentoDialog.value.novaData);
         const dataOriginal = new Date(reagendamentoDialog.value.dataOriginal);
         
-        // Comparar apenas as datas, sem considerar as horas
         novaData.setHours(0, 0, 0, 0);
         dataOriginal.setHours(0, 0, 0, 0);
         
@@ -2638,7 +2363,6 @@ export default {
         }
       }
       
-      // Validar hora
       if (!reagendamentoDialog.value.novaHora) {
         reagendamentoDialog.value.horaError = 'Hora é obrigatória';
         valido = false;
@@ -2653,23 +2377,16 @@ export default {
       return valido;
     };
 
-    // Função para tratar atualização de status
     const handleStatusUpdate = async (statusData) => {
-      // Recarregar a lista de processos para refletir a mudança
       await loadProcessosAno(anoSelecionado.value);
-      
-      // Mostrar feedback ao usuário
       showToast(`Status do processo atualizado para ${statusData.newStatus}`, 'success');
     };
 
-    // Adicionar essas variáveis e funções para o controle de status
     const selectedStatusMap = ref({});
     const nextNotificationDateMap = ref({});
     const { updateProcessoStatus } = useProcessoUpdate();
     
-    // Remover a definição de statusOptions e usar o statusMap existente
     const statusOptions = computed(() => {
-      // Obter as chaves e valores do statusMap na função formatStatus
       const statusMap = {
         'vamos_participar': 'Vamos Participar',
         'em_analise': 'Em Análise',
@@ -2684,7 +2401,6 @@ export default {
         'nao_participar': 'Decidido Não Participar'
       };
       
-      // Transformar em array no formato esperado
       return Object.entries(statusMap).map(([value, label]) => ({
         value,
         label
@@ -2701,20 +2417,16 @@ export default {
       return ['suspenso', 'adiado', 'demonstracao'].includes(status);
     };
     
-    // Modificação na função handleStatusChange para validação robusta
     const handleStatusChange = async (processo, event) => {
       try {
         const newStatus = event.target.value;
         console.log('Updating status to:', newStatus);
         
-        // Se o status não mudou, não faz nada
         if (newStatus === processo.status) return;
         
-        // Verificar se está mudando para "vamos_participar" e se os requisitos são atendidos
         if (newStatus.toLowerCase() === 'vamos_participar') {
           let mensagensErro = [];
           
-          // 1. Verificação do portal/plataforma
           const plataformaInvalida = !processo.site_pregao || 
               processo.site_pregao === 'https://semurl.com.br' || 
               processo.site_pregao.toLowerCase().includes('a confirmar') ||
@@ -2723,10 +2435,8 @@ export default {
               processo.site_pregao.toLowerCase().includes('não definido') ||
               processo.site_pregao.toLowerCase().includes('pendente');
           
-          // 2. Verificação da empresa participante
           const empresaInvalida = !processo.empresa_id;
           
-          // Preparar mensagens de erro dependendo das condições
           if (plataformaInvalida) {
             mensagensErro.push('Portal/plataforma inválido ou não definido');
           }
@@ -2735,19 +2445,15 @@ export default {
             mensagensErro.push('Empresa participante não selecionada');
           }
           
-          // Se houver qualquer erro, impedir a alteração e exibir avisos
           if (mensagensErro.length > 0) {
-            // IMPORTANTE: Reverter a seleção para o status anterior
             event.target.value = processo.status;
             
-            // Exibir mensagem de erro clara
             showToast(
               `ATENÇÃO: Para alterar para "Vamos Participar", corrija: ${mensagensErro.join(' e ')}`, 
               'error', 
               7000
             );
             
-            // Destacar visualmente os campos com problemas no console (para depuração)
             if (plataformaInvalida) {
               console.error('VALIDAÇÃO FALHOU: Portal/plataforma precisa ser definido adequadamente');
             }
@@ -2756,19 +2462,14 @@ export default {
               console.error('VALIDAÇÃO FALHOU: Empresa participante precisa ser selecionada');
             }
             
-            // Encerrar a função sem prosseguir com a atualização
             return;
           }
         }
         
-        // Continuar com a atualização se passar nas validações
         console.log('Passed validations, updating status...');
         
-        // O resto da função permanece igual
-        // Atualiza o estado local imediatamente para feedback visual
         selectedStatusMap.value[processo.id] = newStatus;
         
-        // Executa a atualização no banco de dados com tratamento de erro
         const result = await updateProcessoStatus(
           processo.id, 
           newStatus
@@ -2778,12 +2479,9 @@ export default {
         });
         
         if (result.success) {
-          // Continuar com operações secundárias...
         } else {
-          // Reverter para o status anterior em caso de erro...
         }
       } catch (error) {
-        // Tratamento de erro global...
       }
     };
     
@@ -2814,24 +2512,18 @@ export default {
       }
     };
     
-    // Atualizar função de carregamento de processos para inicializar o estado do status
     const loadProcessosAno = async (ano) => {
-      // ...existing code...
-      
-      // Inicializar o status selecionado para todos os processos
       processos.value.forEach(processo => {
         if (!selectedStatusMap.value[processo.id]) {
           selectedStatusMap.value[processo.id] = processo.status;
         }
         
-        // Verificar se precisa carregar a próxima data de notificação
         if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(processo.status)) {
           loadNextNotificationDate(processo.id, processo.status);
         }
       });
     };
 
-    // Adicionar dentro do objeto setup() antes do return
     const statusInfoBalloon = ref({
       show: false,
       processo: null,
@@ -2843,10 +2535,8 @@ export default {
     });
 
     const showStatusInfo = (processo, event) => {
-      // Só mostrar o balão se o status requer notificações
       if (!isRecurringStatus(processo)) return;
       
-      // Calcular posição para o balão (abaixo do cursor)
       const x = event.clientX;
       const y = event.clientY;
       
@@ -2856,7 +2546,7 @@ export default {
         nextNotification: nextNotificationDateMap.value[processo.id] || 'calculando...',
         position: {
           top: `${y + 25}px`,
-          left: `${x - 150}px` // Centralizado em relação ao cursor
+          left: `${x - 150}px`
         }
       };
     };
@@ -2865,7 +2555,6 @@ export default {
       statusInfoBalloon.value.show = false;
     };
 
-    // Dialog para detalhes de análise
     const analiseDialog = ref({
       show: false,
       processo: null,
@@ -2874,23 +2563,20 @@ export default {
       codigoAnalise: ''
     });
 
-    // Função para abrir o diálogo de análise
     const showAnaliseDialog = (processo, codigoAnalise) => {
       analiseDialog.value = {
         show: true,
         processo: processo,
-        codigoAnalise: processo.codigo_gpi || codigoAnalise, // Use o código GPI existente ou o fornecido
+        codigoAnalise: processo.codigo_gpi || codigoAnalise,
         codigoGPI: processo.codigo_gpi || '',
         prazoResposta: processo.prazo_analise || ''
       };
     };
 
-    // Função para fechar o diálogo de análise
     const hideAnaliseDialog = () => {
       analiseDialog.value.show = false;
     };
 
-    // Função para salvar os detalhes da análise
     const salvarAnalise = async () => {
       try {
         if (!analiseDialog.value.processo || !analiseDialog.value.codigoGPI || !analiseDialog.value.prazoResposta) {
@@ -2898,12 +2584,10 @@ export default {
           return;
         }
 
-        // Formatar a data corretamente para o banco
         const prazoFormatado = analiseDialog.value.prazoResposta instanceof Date 
           ? analiseDialog.value.prazoResposta.toISOString().split('T')[0] 
           : analiseDialog.value.prazoResposta;
 
-        // 1. Atualizar o registro do processo com o código de análise
         const updateData = {
           codigo_analise: analiseDialog.value.codigoAnalise,
           codigo_gpi: analiseDialog.value.codigoGPI,
@@ -2911,13 +2595,11 @@ export default {
           updated_at: new Date().toISOString()
         };
 
-        // Adicionar usuário que está fazendo a alteração
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           updateData.updated_by = user.id;
         }
 
-        // Atualizar no banco de dados
         const { error } = await supabase
           .from('processos')
           .update(updateData)
@@ -2925,7 +2607,6 @@ export default {
 
         if (error) throw error;
 
-        // 2. Programar notificação para o prazo final
         const notificationData = {
           processo_id: analiseDialog.value.processo.id,
           tipo: 'analise',
@@ -2935,14 +2616,12 @@ export default {
           active: true
         };
 
-        // Inserir no sistema de notificações
         const { error: notificationError } = await supabase
           .from('notification_schedules')
           .insert(notificationData);
 
         if (notificationError) throw notificationError;
 
-        // Registrar no log do sistema
         await logSystemAction({
           tipo: 'analise',
           tabela: 'processos',
@@ -2956,13 +2635,10 @@ export default {
           dados_novos: JSON.stringify(updateData)
         });
 
-        // Recarregar os dados
         await loadProcessos();
         
-        // Fechar o diálogo
         hideAnaliseDialog();
         
-        // Mostrar mensagem de sucesso
         showToast(`Análise registrada com sucesso! Código GPI: ${analiseDialog.value.codigoGPI}. Notificação agendada para ${formatDate(prazoFormatado)}`, 'success', 5000);
       } catch (error) {
         console.error('Erro ao salvar análise:', error);
@@ -2970,7 +2646,6 @@ export default {
       }
     };
 
-    // Adicionar dentro do setup, após as outras funções
     const checkPendingNotifications = async () => {
       try {
         const today = new Date().toISOString();
@@ -2987,10 +2662,8 @@ export default {
     
         for (const notification of data) {
           try {
-            // Processar notificação
             await showToast(notification.mensagem, 'warning', 10000);
             
-            // Atualizar status
             await supabase
               .from('notification_schedules')
               .update({
@@ -3002,7 +2675,6 @@ export default {
           } catch (notifError) {
             console.error('Erro ao processar notificação:', notifError);
             
-            // Atualizar tentativas
             await supabase
               .from('notification_schedules')
               .update({
@@ -3019,13 +2691,11 @@ export default {
       }
     };
 
-    // Adicione esta função dentro do setup()
     const handleAnaliseClick = (processo) => {
-      // Abrir o modal diretamente sem passar pela edição
       showAnaliseDialog(processo, processo.codigo_analise || '');
     };
 
-    const activeTab = ref('users'); // ou o que já existir
+    const activeTab = ref('users');
     const systemUpdates = ref([]);
     const showNewUpdateForm = ref(false);
     const previewingUpdate = ref(null);
@@ -3064,7 +2734,6 @@ export default {
           showNewUpdateForm.value = false;
           await loadSystemUpdates();
           
-          // Limpar form
           newUpdate.value = {
             title: '',
             description: '',
@@ -3096,25 +2765,17 @@ export default {
       return map[importance] || importance;
     };
 
-    // Adicionar dentro do setup()
     const handleComponentUpdate = async (data) => {
-      // Recarregar os processos para refletir a mudança
       await loadProcessos();
-      
-      // Mostrar mensagem de sucesso
       showToast(`Campo atualizado com sucesso`, 'success');
     };
 
-    // Adicione estas funções dentro do método setup()
-
-    // Referência para o diálogo de sistemas a implantar
     const sistemasImplantacaoDialog = ref({
       show: false,
       position: {},
       processo: null
     });
 
-    // Função para mostrar o diálogo de sistemas a implantar
     const showSistemasImplantacaoDialog = (processo, event) => {
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
@@ -3129,7 +2790,6 @@ export default {
       };
     };
 
-    // Função para fechar o diálogo
     const hideSistemasImplantacaoDialog = () => {
       sistemasImplantacaoDialog.value = {
         show: false,
@@ -3138,7 +2798,6 @@ export default {
       };
     };
 
-    // Função para formatar os sistemas a implantar para exibição
     const formatarSistemasImplantacao = (dados) => {
       if (!dados || !dados.sistemas_ids || dados.sistemas_ids.length === 0) {
         return dados?.informacoes_adicionais || '-';
@@ -3153,7 +2812,6 @@ export default {
       return nomesSistemas;
     };
 
-    // Função para atualizar os sistemas a implantar
     const atualizarSistemasImplantacao = async (processo, dados) => {
       try {
         const { error } = await supabase
@@ -3166,7 +2824,6 @@ export default {
           
         if (error) throw error;
         
-        // Registrar no log do sistema
         await logSystemAction({
           tipo: 'atualizacao',
           tabela: 'processos',
@@ -3176,13 +2833,10 @@ export default {
           dados_novos: JSON.stringify(dados)
         });
         
-        // Recarregar processos
         await loadProcessos();
         
-        // Fechar diálogo
         hideSistemasImplantacaoDialog();
         
-        // Mostrar mensagem de sucesso
         showToast('Sistemas a implantar atualizados com sucesso', 'success');
       } catch (error) {
         console.error('Erro ao atualizar sistemas a implantar:', error);
@@ -3190,35 +2844,26 @@ export default {
       }
     };
 
-    // Substitua a função formatarMoeda atual por esta versão:
-
     const formatarMoeda = (valor) => {
-      // Se valor for falsy (null, undefined, 0, ''), retorne apenas um traço
       if (!valor) return '-';
       
-      // Verificar se é um número ou string
       let valorNumerico;
       
       if (typeof valor === 'string') {
-        // Remove qualquer texto ou R$ que possa estar presente
-        // Remove todos os pontos de milhar e substitui vírgula por ponto
         const valorLimpo = valor.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
         valorNumerico = parseFloat(valorLimpo);
       } else {
         valorNumerico = parseFloat(valor);
       }
       
-      // Verificar se é um número válido e diferente de zero
       if (isNaN(valorNumerico) || valorNumerico === 0) return '-';
       
-      // Formatar como moeda brasileira
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(valorNumerico);
     };
 
-    // Dentro do setup()
     const confirmarReagendamento = async () => {
       try {
         if (!validarDataHora()) {
@@ -3230,34 +2875,29 @@ export default {
         const novaData = reagendamentoDialog.value.novaData;
         const novaHora = reagendamentoDialog.value.novaHora;
     
-        // Dados base para o novo registro
         const dadosBase = {
           ...processo,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
     
-        // Remover o ID para criar um novo registro
         delete dadosBase.id;
     
         switch (novoStatus.toLowerCase()) {
           case 'adiado':
           case 'suspenso': {
-            // 1. Criar novo registro com status default e nova data
             const novoProcesso = {
               ...dadosBase,
               data_pregao: novaData,
               hora_pregao: novaHora,
-              status: 'em_analise' // Status default
+              status: 'em_analise'
             };
     
-            // 2. Atualizar processo original com status adiado/suspenso
             const updateOriginal = {
               status: novoStatus,
               updated_at: new Date().toISOString()
             };
     
-            // Executar operações em paralelo
             const [insertResult, updateResult] = await Promise.all([
               supabase.from('processos').insert([novoProcesso]).select().single(),
               supabase.from('processos').update(updateOriginal).eq('id', processo.id)
@@ -3266,7 +2906,6 @@ export default {
             if (insertResult.error) throw insertResult.error;
             if (updateResult.error) throw updateResult.error;
     
-            // Criar notificação apenas para o novo processo
             await agendarNotificacao({
               processo_id: insertResult.data.id,
               data: novaData,
@@ -3278,7 +2917,6 @@ export default {
           }
     
           case 'demonstracao': {
-            // Criar novo registro mantendo status demonstração
             const novoProcesso = {
               ...dadosBase,
               data_pregao: novaData,
@@ -3286,7 +2924,6 @@ export default {
               status: 'demonstracao'
             };
     
-            // Inserir novo registro
             const { data, error } = await supabase
               .from('processos')
               .insert([novoProcesso])
@@ -3295,7 +2932,6 @@ export default {
     
             if (error) throw error;
     
-            // Agendar notificações para ambas as datas
             await Promise.all([
               agendarNotificacao({
                 processo_id: processo.id,
@@ -3316,7 +2952,6 @@ export default {
           }
         }
     
-        // Atualizar interface
         await loadProcessos();
         hideReagendamentoDialog();
         showToast(`Processo ${formatStatus(novoStatus)} registrado com sucesso`, 'success');
@@ -3327,7 +2962,6 @@ export default {
       }
     };
     
-    // Função auxiliar para agendar notificações
     const agendarNotificacao = async ({ processo_id, data, hora, tipo, mensagem }) => {
       try {
         const dataHora = new Date(`${data}T${hora}`);
@@ -3361,26 +2995,72 @@ export default {
     };
 
     const handleDelete = (processo) => {
-      // Exibe o diálogo de confirmação de exclusão
       deleteConfirmDialog.value = {
         show: true,
         processo: processo
       };
     };
 
-    // Return all reactive properties and methods for the template
+    const showAdvancedFilter = ref(false);
+    const advancedFilters = ref({
+      dataInicio: '',
+      dataFim: '',
+      status: [],
+      modalidade: [],
+      responsavel: [],
+      estados: [],
+      valorMin: '',
+      valorMax: ''
+    });
+    
+    const activeAdvancedFiltersCount = computed(() => {
+      let count = 0;
+      
+      if (advancedFilters.value.dataInicio) count++;
+      if (advancedFilters.value.dataFim) count++;
+      if (advancedFilters.value.status.length) count += advancedFilters.value.status.length;
+      if (advancedFilters.value.modalidade.length) count += advancedFilters.value.modalidade.length;
+      if (advancedFilters.value.responsavel.length) count += advancedFilters.value.responsavel.length;
+      if (advancedFilters.value.estados.length) count += advancedFilters.value.estados.length;
+      if (advancedFilters.value.valorMin) count++;
+      if (advancedFilters.value.valorMax) count++;
+      
+      return count;
+    });
+    
+    const toggleAdvancedFilter = () => {
+      showAdvancedFilter.value = !showAdvancedFilter.value;
+    };
+    
+    const updateAdvancedFilters = (filters) => {
+      advancedFilters.value = { ...filters };
+    };
+    
+    const applyAdvancedFilters = (filters) => {
+      advancedFilters.value = { ...filters };
+      showAdvancedFilter.value = false;
+      
+      showToast(`${activeAdvancedFiltersCount.value} filtros aplicados com sucesso`, 'success');
+    };
+    
+    const clearAdvancedFilters = () => {
+      advancedFilters.value = {
+        dataInicio: '',
+        dataFim: '',
+        status: [],
+        modalidade: [],
+        responsavel: [],
+        estados: [],
+        valorMin: '',
+        valorMax: ''
+      };
+      
+      showToast('Filtros avançados removidos', 'info');
+    };
+
     return {
-      // ...existing return variables...
       handleStatusUpdate,
-
-      // Estado, dados, etc...
-
-      // Funções auxiliares
       getOpcoesParaCampo,
-
-      // Resto do return...
-
-      // State
       processos,
       loading,
       isLoading,
@@ -3395,8 +3075,6 @@ export default {
       mostrarFiltro,
       filtros,
       estadoSearch,
-
-      // Reference data
       representantes,
       empresas,
       sistemasAtivos,
@@ -3406,16 +3084,12 @@ export default {
       colunas,
       colunasWidth,
       rowsHeight,
-
-      // Computed properties
       anosDisponiveis,
       estadosFiltrados,
       processosFiltrados,
       temFiltrosAtivos,
       empresasCadastradas,
       showPlataformaField,
-
-      // Helper functions
       formatDate,
       formatTime,
       formatModalidade,
@@ -3430,8 +3104,6 @@ export default {
       getSistemasNomesString,
       formatarDistancia,
       getDistancias,
-
-      // Event handlers
       handleSidebarToggle,
       handleNewProcess,
       hideDeleteDialog,
@@ -3443,31 +3115,19 @@ export default {
       selecionarAno,
       selectRow,
       handleModalidadeChange,
-
-      // Table editing
       startColumnResize,
       startRowResize,
-
-      // Cell editing
       handleDblClick,
       handleConfirmEdit,
       hideConfirmDialog,
       cancelEdit,
       handleUpdate,
-
-      // Systems handling
       handleSistemasChange,
       removerSistema,
       saveSistemas,
       hideSistemasDialog,
-
-      // Form submission
       handleSubmit,
-
-      // Filter options
       opcoesUnicas,
-
-      // Distances dialog
       distanciaDialog,
       abrirDialogDistancia,
       iniciarEdicaoDistancia,
@@ -3476,28 +3136,20 @@ export default {
       adicionarDistancia,
       cancelarEdicaoDistancia,
       fecharDistanciaDialog,
-
-      // Adicionar as props relacionadas a responsáveis
       responsaveisProcessos,
       getResponsavelProcessoNome,
-
-      // Responsáveis dialog
       responsaveisDialog,
       handleDblClickResponsavel,
       removerResponsavel,
       handleResponsavelChange,
       saveResponsavel,
       hideResponsaveisDialog,
-
-      // Representantes dialog
       representantesDialog,
       handleDblClickRepresentante,
       removerRepresentante,
       handleRepresentanteChange,
       saveRepresentante,
       hideRepresentantesDialog,
-
-      // Empresas dialog
       empresasDialog,
       formatCNPJ,
       handleDblClickEmpresa,
@@ -3505,38 +3157,25 @@ export default {
       handleEmpresaChange,
       saveEmpresa,
       hideEmpresasDialog,
-
-      // Adicionar histórico de ações
       undoAction,
       redoAction,
-      undoHistory,  // Adicionar esta linha
-      redoHistory,  // Adicionar esta linha
-
-      // Adicionar as novas propriedades para filtros
+      undoHistory,
+      redoHistory,
       filtrarOpcoes,
       toggleFiltroItem,
       filtroModalidadeSearch,
       opcoesModalidade,
       opcoesFiltradasModalidade,
-
-      // Adicionar a nova função
       limparFiltroColuna,
-
-      // Adicione esta função para filtrar as opções com base na pesquisa
       filtrarOpcoesPorColuna,
-
       colunasOrder,
       ordenarColunas,
       startColumnDrag,
       allowColumnDrop,
       handleColumnDrop,
-
-      // Adicionar no return
       toasts,
       showToast,
       colunasOrdenadas,
-
-      // Reagendamento
       reagendamentoDialog,
       abrirReagendamentoDialog,
       hideReagendamentoDialog,
@@ -3544,8 +3183,6 @@ export default {
       confirmSemNovaData,
       confirmarReagendamento,
       validarDataHora,
-
-      // Adicionar variáveis e funções do controle de status
       selectedStatusMap,
       nextNotificationDateMap,
       statusOptions,
@@ -3553,21 +3190,14 @@ export default {
       isRecurringStatus,
       handleStatusChange,
       loadNextNotificationDate,
-
-      // Adicionar no return
       statusInfoBalloon,
       showStatusInfo,
       hideStatusInfo,
-
-      // Análise
       analiseDialog,
       showAnaliseDialog,
       hideAnaliseDialog,
       salvarAnalise,
-
-      // Adicionar handleAnaliseClick ao objeto retornado pelo setup
       handleAnaliseClick,
-
       activeTab,
       systemUpdates,
       showNewUpdateForm,
@@ -3578,31 +3208,30 @@ export default {
       previewUpdate,
       formatImportance,
       handleComponentUpdate,
-
-      // Adicionar ao objeto de retorno do setup()
       sistemasImplantacaoDialog,
       showSistemasImplantacaoDialog,
       hideSistemasImplantacaoDialog,
       formatarSistemasImplantacao,
       atualizarSistemasImplantacao,
-
-      // Adicionar formatarMoeda ao return do setup
       formatarMoeda,
-
       calculateRows(text) {
         if (!text) return 10;
         
-        // Calcula baseado no comprimento do texto
         const charCount = text.length;
         const lineBreaks = (text.match(/\n/g) || []).length;
         
-        // Base: ~50 caracteres por linha
         const estimatedLines = Math.ceil(charCount / 900) + lineBreaks;
         
-        // Limita entre 1 e 100 linhas
         return Math.min(Math.max(estimatedLines, 1), 100);
       },
-      handleDelete
+      handleDelete,
+      showAdvancedFilter,
+      advancedFilters,
+      activeAdvancedFiltersCount,
+      toggleAdvancedFilter,
+      updateAdvancedFilters,
+      applyAdvancedFilters,
+      clearAdvancedFilters
     }
   }
 }
