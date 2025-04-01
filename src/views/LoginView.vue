@@ -14,6 +14,11 @@ const showMatrix = ref(false)
 const loading = ref(false)
 const showForgotModal = ref(false)
 const resetEmail = ref('')
+const showPassword = ref(false)
+const showResetModal = ref(false)
+const emailError = ref('')
+const passwordError = ref('')
+const resetLoading = ref(false)
 
 const toast = ref({
   show: false,
@@ -166,7 +171,8 @@ useConnectionManager(loadData)
         </form>
 
         <div class="login-footer">
-          <p>© 2024 Sistema de Editais Comerciais</p>
+          <p>© 2025 Sistema de Editais Comerciais</p>
+          <!-- <p></p> -->
         </div>
       </div>
     </div>

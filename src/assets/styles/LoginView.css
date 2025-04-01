@@ -140,7 +140,7 @@
 }
 
 .logo-login {
-  width: 100px;
+  width: 200px;
   height: auto;
   margin-bottom: 1rem;
   animation: fadeIn 1s ease;
@@ -227,6 +227,12 @@
   color: #193155;
   background-color: white;
   z-index: 5;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  outline: none;
+  border-color: #193155;
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
 }
 
 .input-login:focus {
@@ -497,14 +503,6 @@
   .forgot-link-login {
     display: inline-block;
     margin-top: 0.5rem;
-  }
-  
-  /* Melhorar o posicionamento do label flutuante em mobile */
-  .input-login:focus + .label-login,
-  .input-login:not(:placeholder-shown) + .label-login {
-    top: -0.75rem;
-    left: 1rem;
-    font-size: 0.75rem;
   }
   
   .toast-login {

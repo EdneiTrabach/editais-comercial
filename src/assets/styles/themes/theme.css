@@ -497,6 +497,7 @@ tr:hover td {
 
 .icon-white {
   filter: brightness(0) invert(1);
+  height: 20px;
 }
 
 .text-center {
