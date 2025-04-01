@@ -116,7 +116,7 @@ const togglePasswordVisibility = (field) => {
           <div class="form-group">
             <div class="input-container">
               <span class="input-icon">
-                <img src="/icons/lock-check.svg" alt="Confirm Password" class="icon-black">
+                <img src="/icons/check.svg" alt="Confirm Password" class="icon-black">
               </span>
               <input 
                 :type="showConfirmPassword ? 'text' : 'password'" 

@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      // Removendo o alias duplicado
+      '/icons': fileURLToPath(new URL('./public/icons', import.meta.url))
     }
   },
   build: {
