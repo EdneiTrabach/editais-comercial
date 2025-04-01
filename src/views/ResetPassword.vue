@@ -79,7 +79,7 @@ const togglePasswordVisibility = (field) => {
         </div>
 
         <div v-if="success" class="success-message">
-          <img src="/icons/check-circle.svg" alt="Success" class="success-icon">
+          <img src="/icons/check.svg" alt="Success" class="success-icon">
           <p>Senha atualizada com sucesso!</p>
           <p class="redirect-message">Você será redirecionado para o login em instantes...</p>
         </div>
