@@ -139,44 +139,54 @@
 
             <!-- Dropdown de temas -->
             <div class="theme-dropdown" v-if="showThemeSelector">
-              <button class="theme-option" @click="setTheme('light')" :class="{ active: currentTheme === 'light' }">
+              <button class="theme-option" @click="setTheme('light')" :class="{ active: currentTheme === 'light' }"
+                title="Tema padrão com alto contraste entre texto e fundo. Recomendado para uso geral e pessoas com visão normal.">
                 <div class="theme-preview light-preview"></div>
                 <span>Padrão</span>
               </button>
-              <button class="theme-option" @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }">
+              <button class="theme-option" @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }"
+                title="Tema escuro que reduz a fadiga ocular e o brilho da tela. Ideal para uso noturno, pessoas com sensibilidade à luz e astigmatismo.">
                 <div class="theme-preview dark-preview"></div>
                 <span>Escuro</span>
               </button>
-              <button class="theme-option" @click="setTheme('red')" :class="{ active: currentTheme === 'red' }">
+              <button class="theme-option" @click="setTheme('red')" :class="{ active: currentTheme === 'red' }"
+                title="Tema vermelho que facilita a percepção para pessoas com deuteranopia (dificuldade para ver verde) e protanopia (dificuldade para ver vermelho). Útil também para pessoas com ceratocone.">
                 <div class="theme-preview red-preview"></div>
                 <span>Vermelho</span>
               </button>
-              <button class="theme-option" @click="setTheme('yellow')" :class="{ active: currentTheme === 'yellow' }">
+              <button class="theme-option" @click="setTheme('yellow')" :class="{ active: currentTheme === 'yellow' }"
+                title="Tema amarelo com maior contraste para pessoas com baixa visão e catarata. O amarelo é uma das cores mais fáceis de identificar para a maioria dos tipos de daltonismo.">
                 <div class="theme-preview yellow-preview"></div>
                 <span>Amarelo</span>
               </button>
-              <button class="theme-option" @click="setTheme('purple')" :class="{ active: currentTheme === 'purple' }">
+              <button class="theme-option" @click="setTheme('purple')" :class="{ active: currentTheme === 'purple' }"
+                title="Tema roxo que ajuda pessoas com tritanopia (dificuldade com azul). Também reduz a fadiga visual em sessões prolongadas de uso.">
                 <div class="theme-preview purple-preview"></div>
                 <span>Roxo</span>
               </button>
-              <button class="theme-option" @click="setTheme('green')" :class="{ active: currentTheme === 'green' }">
+              <button class="theme-option" @click="setTheme('green')" :class="{ active: currentTheme === 'green' }"
+                title="Tema verde que proporciona calma visual e é mais fácil para pessoas com certos tipos de fotofobia. Benéfico para quem sofre de migraines visuais.">
                 <div class="theme-preview green-preview"></div>
                 <span>Verde</span>
               </button>
-              <button class="theme-option" @click="setTheme('black')" :class="{ active: currentTheme === 'black' }">
+              <button class="theme-option" @click="setTheme('black')" :class="{ active: currentTheme === 'black' }"
+                title="Tema preto com máximo contraste para pessoas com severa baixa visão, miopia avançada e retinopatias. Reduz significativamente o consumo de bateria em telas OLED/AMOLED.">
                 <div class="theme-preview black-preview"></div>
                 <span>Preto</span>
               </button>
-              <button class="theme-option" @click="setTheme('pink')" :class="{ active: currentTheme === 'pink' }">
+              <button class="theme-option" @click="setTheme('pink')" :class="{ active: currentTheme === 'pink' }"
+                title="Tema rosa que pode ser mais confortável para pessoas com dificuldade de percepção em espectros específicos. Útil para pessoas com certas formas de acromatopsia.">
                 <div class="theme-preview pink-preview"></div>
                 <span>Rosa</span>
               </button>
-              <button class="theme-option" @click="setTheme('orange')" :class="{ active: currentTheme === 'orange' }">
+              <button class="theme-option" @click="setTheme('orange')" :class="{ active: currentTheme === 'orange' }"
+                title="Tema laranja que oferece bom contraste para pessoas com deficiência visual moderada e certos tipos de daltonismo. Ajuda na redução da fadiga ocular.">
                 <div class="theme-preview orange-preview"></div>
                 <span>Laranja</span>
               </button>
               <button class="theme-option" @click="setTheme('baby-blue')"
-                :class="{ active: currentTheme === 'baby-blue' }">
+                :class="{ active: currentTheme === 'baby-blue' }"
+                title="Tema azul claro que reduz o cansaço visual e é benéfico para pessoas com hipermetropia e presbiopia. A cor azul suave ajuda a diminuir a tensão ocular durante o uso prolongado.">
                 <div class="theme-preview baby-blue-preview"></div>
                 <span>Azul Bebê</span>
               </button>
