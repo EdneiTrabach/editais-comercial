@@ -1,76 +1,170 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabase'
+import { useConnectionManager } from '@/composables/useConnectionManager'
+import eyeOffIcon from '/icons/eye-off.svg'
+import eyeIcon from '/icons/eye.svg'
+
+const router = useRouter()
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const showMatrix = ref(false)
+const loading = ref(false)
+const showForgotModal = ref(false)
+const resetEmail = ref('')
+
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+const generateRandomChars = () => {
+  return Array(20).fill(0)
+    .map(() => String.fromCharCode(33 + Math.random() * 94))
+    .join('')
+}
+
+const showToast = (message, type = 'success') => {
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
+}
+
+const handleLogin = async () => {
+  try {
+    loading.value = true
+
+    if (!email.value || !password.value) {
+      error.value = 'Email e senha são obrigatórios'
+      return
+    }
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value
+    })
+
+    if (authError) throw authError
+
+    if (data) {
+      console.log('✅ Login bem sucedido:', {
+        email: email.value,
+        userId: data.user.id
+      })
+
+      // Buscar perfil para confirmar role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError)
+      } else {
+        localStorage.setItem('userRole', profile?.role || '')
+        console.log('Role definida:', profile?.role)
+      }
+
+      await router.push('/processos')
+    }
+  } catch (err) {
+    console.error('❌ Erro no login:', err)
+    error.value = 'Email ou senha incorretos'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleForgotClick = (e) => {
+  e.preventDefault()
+  showForgotModal.value = true
+}
+
+const handleResetPassword = async () => {
+  try {
+    loading.value = true
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
+      redirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL
+    })
+
+    if (error) throw error
+    showForgotModal.value = false
+    showToast('Email de recuperação enviado com sucesso!', 'success')
+  } catch (err) {
+    showToast('Erro ao enviar email: ' + err.message, 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadData = async () => {
+  // Não tente carregar dados específicos no login
+  console.log('Login bem-sucedido')
+}
+
+// Use o composable
+useConnectionManager(loadData)
+</script>
+
 <template>
   <div class="container-login">
     <div class="login-wrapper">
       <div class="login-illustration">
         <img src="/icons/undraw-login.svg" alt="Login Illustration" class="illustration-image">
       </div>
-      
+
       <div class="card-login">
         <div class="logo-container-login">
           <img src="/icons/logo-licitacao.svg" alt="Logo" class="logo-login">
           <h1>Sistema de Editais Comerciais</h1>
         </div>
-        
+
         <form class="form-login" @submit.prevent="handleLogin">
           <div class="form-group-login">
             <div class="input-container-login">
               <span class="input-icon-login">
                 <img src="/icons/usuario.svg" alt="User" class="icon-black-login">
               </span>
-              <input 
-                type="email" 
-                class="input-login" 
-                v-model="email" 
-                placeholder=" "
-                required
-                autocomplete="username"
-              >
+              <input type="email" class="input-login" v-model="email" placeholder=" " required autocomplete="username">
               <label class="label-login">Email</label>
             </div>
             <div v-if="emailError" class="error-message-login">{{ emailError }}</div>
           </div>
-          
+
           <div class="form-group-login">
             <div class="input-container-login">
               <span class="input-icon-login">
                 <img src="/icons/lock.svg" alt="Lock" class="icon-black-login">
               </span>
-              <input 
-                :type="showPassword ? 'text' : 'password'" 
-                class="input-login" 
-                v-model="password" 
-                placeholder=" "
-                required
-                autocomplete="current-password"
-              >
+              <input :type="showPassword ? 'text' : 'password'" class="input-login" v-model="password" placeholder=" "
+                required autocomplete="current-password">
               <label class="label-login">Senha</label>
-              <span 
-                class="toggle-password" 
-                @click="showPassword = !showPassword"
-              >
-                <img 
-                  :src="showPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'" 
-                  alt="Toggle Password" 
-                  class="icon-black-login"
-                >
+              <span class="toggle-password" @click="showPassword = !showPassword">
+                <img :src="showPassword ? eyeOffIcon : eyeIcon" alt="Toggle Password" class="icon-black-login">
               </span>
             </div>
             <div v-if="passwordError" class="error-message-login">{{ passwordError }}</div>
           </div>
-          
+
           <div class="forgot-password-login">
             <a href="#" class="forgot-link-login" @click.prevent="showResetModal = true">Esqueceu sua senha?</a>
           </div>
-          
-          <button 
-            type="submit" 
-            class="button-login" 
-            :disabled="loading"
-          >
+
+          <button type="submit" class="button-login" :disabled="loading">
             {{ loading ? 'Entrando...' : 'Entrar' }}
           </button>
         </form>
-        
+
         <div class="login-footer">
           <p>© 2024 Sistema de Editais Comerciais</p>
         </div>
@@ -87,14 +181,8 @@
               <span class="input-icon-login">
                 <img src="/icons/email.svg" alt="Email" class="icon-black-login">
               </span>
-              <input 
-                type="email" 
-                class="input-login" 
-                v-model="resetEmail" 
-                placeholder=" "
-                required
-                autocomplete="email"
-              >
+              <input type="email" class="input-login" v-model="resetEmail" placeholder=" " required
+                autocomplete="email">
               <label class="label-login">Email de recuperação</label>
             </div>
           </div>
@@ -113,208 +201,10 @@
     </div>
 
     <!-- Toast para mensagens -->
-    <div 
-      v-if="toast.show" 
-      class="toast-login" 
-      :class="toast.type"
-      @click="toast.show = false"
-    >
+    <div v-if="toast.show" class="toast-login" :class="toast.type" @click="toast.show = false">
       {{ toast.message }}
     </div>
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { supabase } from '@/services/supabase';
-import { useSidebarStore } from '@/stores/sidebar';
-
-export default {
-  setup() {
-    const router = useRouter();
-    
-    // Usar try/catch para evitar erros se o Pinia não estiver inicializado
-    let sidebarStore = null;
-    try {
-      sidebarStore = useSidebarStore();
-    } catch (error) {
-      console.warn('SidebarStore não disponível. Isso é esperado em certas situações.');
-      // Criar um objeto stub para o caso onde o sidebarStore não está disponível
-      sidebarStore = {
-        isCollapsed: ref(false),
-        isMobileOpen: ref(false),
-        toggleSidebar: () => {},
-        toggleMobileSidebar: () => {},
-        closeMobileSidebar: () => {},
-        expandSidebar: () => {},
-        collapseSidebar: () => {}
-      };
-    }
-
-    const email = ref('');
-    const password = ref('');
-    const loading = ref(false);
-    const emailError = ref('');
-    const passwordError = ref('');
-    const showPassword = ref(false);
-    
-    // Estado para toast
-    const toast = ref({
-      show: false,
-      message: '',
-      type: 'success'
-    });
-    
-    // Estado para modal de resetar senha
-    const showResetModal = ref(false);
-    const resetEmail = ref('');
-    const resetLoading = ref(false);
-    
-    onMounted(() => {
-      // Verificar se o usuário já está logado
-      checkUser();
-    });
-    
-    // Verificar se o usuário já está logado
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          router.push({ name: 'Home' });
-        }
-      } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
-      }
-    };
-    
-    // Exibir toast
-    const showToast = (message, type = 'success') => {
-      toast.value = {
-        show: true,
-        message,
-        type
-      };
-      
-      // Esconder o toast após 5 segundos
-      setTimeout(() => {
-        toast.value.show = false;
-      }, 5000);
-    };
-    
-    // Validar email
-    const validateEmail = () => {
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(email.value)) {
-        emailError.value = 'Email inválido';
-        return false;
-      }
-      emailError.value = '';
-      return true;
-    };
-    
-    // Validar senha
-    const validatePassword = () => {
-      if (password.value.length < 6) {
-        passwordError.value = 'A senha deve ter pelo menos 6 caracteres';
-        return false;
-      }
-      passwordError.value = '';
-      return true;
-    };
-    
-    // Tratar login
-    const handleLogin = async () => {
-      if (!validateEmail() || !validatePassword()) {
-        return;
-      }
-      
-      loading.value = true;
-      
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.value,
-          password: password.value
-        });
-        
-        if (error) {
-          showToast(error.message, 'error');
-          loading.value = false;
-          return;
-        }
-
-        if (data?.user) {
-          // Buscar dados do perfil do usuário (opcional)
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-          
-          if (!profileError && profileData) {
-            // Você pode fazer algo com os dados do perfil aqui
-            console.log('Perfil do usuário:', profileData);
-          }
-          
-          // Redirecionar para a Home
-          router.push({ name: 'Home' });
-        }
-      } catch (error) {
-        showToast('Ocorreu um erro ao fazer login. Por favor, tente novamente.', 'error');
-      } finally {
-        loading.value = false;
-      }
-    };
-    
-    // Tratar resetar senha
-    const handleResetPassword = async () => {
-      if (!resetEmail.value) {
-        showToast('Por favor, insira seu email', 'error');
-        return;
-      }
-      
-      resetLoading.value = true;
-      
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(
-          resetEmail.value,
-          { redirectTo: `${import.meta.env.VITE_SUPABASE_REDIRECT_URL || window.location.origin}/reset-password` }
-        );
-        
-        if (error) {
-          showToast(error.message, 'error');
-          resetLoading.value = false;
-          return;
-        }
-        
-        showToast('Link de redefinição de senha enviado para seu email!', 'success');
-        showResetModal.value = false;
-        resetEmail.value = '';
-      } catch (error) {
-        showToast('Ocorreu um erro ao solicitar redefinição de senha. Por favor, tente novamente.', 'error');
-      } finally {
-        resetLoading.value = false;
-      }
-    };
-    
-    return {
-      email,
-      password,
-      loading,
-      emailError,
-      passwordError,
-      showPassword,
-      toast,
-      showResetModal,
-      resetEmail,
-      resetLoading,
-      handleLogin,
-      handleResetPassword
-    };
-  }
-};
-</script>
-
-<style>
-@import '../assets/styles/LoginView.css';
-</style>
+<style src="../assets/styles/LoginView.css"></style>
