@@ -22,6 +22,9 @@ export default {
       { path: '/plataformas', name: 'Plataformas' },
       { path: '/empresas', name: 'Empresas' },
       { path: '/relatorios', name: 'Relatórios' },
+      { path: '/publicacoes-contratuais', name: 'Publicações Contratuais' },
+      { path: '/configuracoes-ia', name: 'Configurações IA' },
+      { path: '/responsaveis', name: 'Responsáveis' },
       { path: '/configuracoes', name: 'Admin. de Usuários' }
     ]
 

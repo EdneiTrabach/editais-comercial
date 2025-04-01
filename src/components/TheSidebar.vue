@@ -99,13 +99,6 @@
               <span class="link-text">Relatórios</span>
             </router-link>
           </li>
-          <li class="sidebar-menu-item">
-            <router-link to="/responsaveis" class="sidebar-menu-link" v-slot="{ isActive }"
-              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
-              <img src="/icons/responsavel.svg" alt="Responsáveis" class="icon" />
-              <span class="link-text">Responsáveis</span>
-            </router-link>
-          </li>
           <!-- Novo item de menu para Publicações Contratuais -->
           <li class="sidebar-menu-item">
             <router-link to="/publicacoes-contratuais" class="sidebar-menu-link">
@@ -119,6 +112,13 @@
             <router-link to="/configuracoes-ia" class="sidebar-menu-link">
               <img src="/icons/settings-ia.svg" alt="Configurações IA" class="icon" />
               <span class="link-text">Configurações IA</span>
+            </router-link>
+          </li>
+          <li class="sidebar-menu-item">
+            <router-link to="/responsaveis" class="sidebar-menu-link" v-slot="{ isActive }"
+              :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
+              <img src="/icons/responsavel.svg" alt="Responsáveis" class="icon" />
+              <span class="link-text">Responsáveis</span>
             </router-link>
           </li>
           <li class="sidebar-menu-item">
