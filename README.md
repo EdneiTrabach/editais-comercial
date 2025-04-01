@@ -1,88 +1,47 @@
 # Sistema de Editais Comerciais
 
-## 📋 Sobre o Projeto
-Sistema desenvolvido para gerenciamento de editais comerciais, permitindo o cadastro, consulta e acompanhamento de processos licitatórios.
+Sistema para gestão e acompanhamento de processos licitatórios e editais comerciais.
 
-## 🚀 Tecnologias Utilizadas
-
-### Backend
-- Node.js
-- Express.js
-- PostgreSQL
-- JSON Web Token (JWT)
-- BCrypt
-- CORS
-- Dotenv
-
-### Segurança
-- Autenticação via JWT
-- Senha criptografada com BCrypt
-- Proteção contra CORS
-- Variáveis de ambiente
-
-## 🛠️ Configuração do Ambiente
+## Configuração do Ambiente de Desenvolvimento
 
 ### Pré-requisitos
-- Node.js
-- PostgreSQL
-- NPM ou Yarn
 
-### Instalação e Execução
-1. Clone o repositório
+- Node.js (versão 18.x ou superior)
+- NPM (versão 9.x ou superior)
+
+### Instalação
+
+1. Clone o repositório:
 ```bash
-git clone [url-do-repositorio]
+git clone [URL_DO_REPOSITORIO]
+cd editais-comercial
 ```
 
-2. Acesse a pasta do backend
-```bash
-cd backend
-```
-
-3. Instale as dependências
+2. Instale as dependências:
 ```bash
 npm install
 ```
 
-4. Configure as variáveis de ambiente
-Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
-```
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/nome_banco
-JWT_SECRET=sua_chave_secreta
-PORT=3000
-```
+3. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env`
+   - Preencha os valores das variáveis no arquivo `.env`
 
-5. Execute o projeto
+### Executando o projeto
+
+1. Inicie o servidor de desenvolvimento:
 ```bash
-# Modo desenvolvimento
 npm run dev
-
-# Modo produção
-npm start
 ```
 
-## 🔒 Endpoints da API
+2. Acesse o aplicativo em [http://localhost:3000](http://localhost:3000)
 
-### Autenticação
-- POST /auth/login - Login do usuário
-- POST /auth/register - Registro de novo usuário
+### Scripts Disponíveis
 
-### Editais
-- GET /editais - Lista todos os editais
-- POST /editais - Cria novo edital
-- PUT /editais/:id - Atualiza edital
-- DELETE /editais/:id - Remove edital
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Compila o projeto para produção
+- `npm run preview` - Visualiza o build de produção localmente
 
-## 👥 Controle de Acesso
-O sistema possui controle de acesso baseado em roles:
-- Administrador: Acesso total
-- Usuário: Acesso limitado a consultas
-
-## 📝 Licença
-Este projeto está sob a licença MIT.
-
-
-
-
+## Estrutura do Projeto
 
 /editais-comercial
 ├── .env                          # Variáveis de ambiente para desenvolvimento
@@ -181,5 +140,5 @@ Este projeto está sob a licença MIT.
 └── scripts/                      # Scripts utilitários
     └── baixarCoordenadas.js      # Script para baixar coordenadas
 
-    
-    
+
+
