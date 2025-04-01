@@ -79,7 +79,7 @@ const togglePasswordVisibility = (field) => {
         </div>
 
         <div v-if="success" class="success-message">
-          <!-- <img src="/icons/check.svg" alt="Success" class="success-icon"> -->
+          <img src="/icons/check.svg" alt="Success" class="success-icon">
           <p>Senha atualizada com sucesso!</p>
           <p class="redirect-message">Você será redirecionado para o login em instantes...</p>
         </div>
@@ -140,7 +140,7 @@ const togglePasswordVisibility = (field) => {
           </div>
 
           <div v-if="error" class="error-message">
-            <img src="/icons/alert-circle.svg" alt="Error" class="error-icon">
+            <img src="/icons/error.svg" alt="Error" class="error-icon">
             <span>{{ error }}</span>
           </div>
 
@@ -149,13 +149,13 @@ const togglePasswordVisibility = (field) => {
             class="button-reset" 
             :disabled="loading"
           >
-            <img v-if="!loading" src="/icons/save.svg" alt="Save" class="button-icon">
+            <img v-if="!loading" src="/icons/save-fill.svg" alt="Save" class="button-icon">
             <span>{{ loading ? 'Redefinindo...' : 'Redefinir senha' }}</span>
           </button>
 
           <div class="back-to-login">
             <a href="/login" class="login-link">
-              <img src="/icons/arrow-left.svg" alt="Back" class="back-icon">
+              <img src="/icons/arrow-left-line.svg" alt="Back" class="back-icon">
               <span>Voltar para o login</span>
             </a>
           </div>
