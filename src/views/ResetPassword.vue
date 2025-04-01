@@ -20,34 +20,34 @@ const resetPassword = async () => {
   try {
     loading.value = true
     error.value = ''
-    
+
     if (!newPassword.value || !confirmPassword.value) {
       error.value = 'Todos os campos são obrigatórios'
       return
     }
-    
+
     if (newPassword.value !== confirmPassword.value) {
       error.value = 'As senhas não conferem'
       return
     }
-    
+
     if (newPassword.value.length < 8) {
       error.value = 'A senha deve ter no mínimo 8 caracteres'
       return
     }
-    
+
     const { error: resetError } = await supabase.auth.updateUser({
       password: newPassword.value
     })
-    
+
     if (resetError) throw resetError
-    
+
     success.value = true
-    
+
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-    
+
   } catch (err) {
     console.error('Erro ao redefinir senha:', err)
     error.value = err.message || 'Erro ao redefinir senha'
@@ -71,7 +71,7 @@ const togglePasswordVisibility = (field) => {
       <div class="reset-password-illustration">
         <img src="/icons/undraw-password-reset.svg" alt="Password Reset" class="illustration-image">
       </div>
-      
+
       <div class="reset-password-content">
         <div class="logo-container">
           <img src="/icons/logo-licitacao.svg" alt="Logo" class="reset-logo">
@@ -86,55 +86,33 @@ const togglePasswordVisibility = (field) => {
 
         <form v-else @submit.prevent="resetPassword" class="reset-form">
           <p class="reset-instruction">Digite sua nova senha para continuar</p>
-          
-          <div class="form-group">
+
+          <div class="form-group-reset">
             <div class="input-container">
               <span class="input-icon">
                 <img src="/icons/lock.svg" alt="Password" class="icon-black">
               </span>
-              <input 
-                :type="showPassword ? 'text' : 'password'" 
-                v-model="newPassword" 
-                class="input-reset" 
-                placeholder=" " 
-                required
-              >
+              <input :type="showPassword ? 'text' : 'password'" v-model="newPassword" class="input-reset"
+                placeholder=" " required>
               <label class="label-reset">Nova senha</label>
-              <span 
-                class="toggle-password" 
-                @click="togglePasswordVisibility('password')"
-              >
-                <img 
-                  :src="showPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'" 
-                  alt="Toggle Password" 
-                  class="icon-black"
-                >
+              <span class="toggle-password" @click="togglePasswordVisibility('password')">
+                <img :src="showPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Toggle Password"
+                  class="icon-black">
               </span>
             </div>
           </div>
-          
+
           <div class="form-group">
             <div class="input-container">
               <span class="input-icon">
                 <img src="/icons/check.svg" alt="Confirm Password" class="icon-black">
               </span>
-              <input 
-                :type="showConfirmPassword ? 'text' : 'password'" 
-                v-model="confirmPassword" 
-                class="input-reset" 
-                placeholder=" " 
-                required
-              >
+              <input :type="showConfirmPassword ? 'text' : 'password'" v-model="confirmPassword" class="input-reset"
+                placeholder=" " required>
               <label class="label-reset">Confirme sua senha</label>
-              <span 
-                class="toggle-password" 
-                @click="togglePasswordVisibility('confirm')"
-              >
-                <img 
-                  :src="showConfirmPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'" 
-                  alt="Toggle Password" 
-                  class="icon-black"
-                >
+              <span class="toggle-password" @click="togglePasswordVisibility('confirm')">
+                <img :src="showConfirmPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'" alt="Toggle Password"
+                  class="icon-black">
               </span>
             </div>
           </div>
@@ -144,11 +122,7 @@ const togglePasswordVisibility = (field) => {
             <span>{{ error }}</span>
           </div>
 
-          <button 
-            type="submit" 
-            class="button-reset" 
-            :disabled="loading"
-          >
+          <button type="submit" class="button-reset" :disabled="loading">
             <img v-if="!loading" src="/icons/save-fill.svg" alt="Save" class="button-icon">
             <span>{{ loading ? 'Redefinindo...' : 'Redefinir senha' }}</span>
           </button>
@@ -171,8 +145,12 @@ const togglePasswordVisibility = (field) => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
-  padding: 20px;
+  min-width: 100vw;
+  background: linear-gradient(135deg, #551919 0%, #1f2023 100%);
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .reset-password-card {
@@ -190,7 +168,7 @@ const togglePasswordVisibility = (field) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f5ff;
+  background-color: #4c020c;
   padding: 40px;
 }
 
@@ -215,7 +193,7 @@ const togglePasswordVisibility = (field) => {
 }
 
 .reset-logo {
-  width: 70px;
+  width: 200px;
   height: 70px;
   margin-bottom: 16px;
 }
@@ -239,8 +217,12 @@ const togglePasswordVisibility = (field) => {
   gap: 20px;
 }
 
-.form-group {
-  position: relative;
+.form-group-reset {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  flex: 1;
 }
 
 .input-container {
@@ -277,8 +259,8 @@ const togglePasswordVisibility = (field) => {
   outline: none;
 }
 
-.input-reset:focus + .label-reset,
-.input-reset:not(:placeholder-shown) + .label-reset {
+.input-reset:focus+.label-reset,
+.input-reset:not(:placeholder-shown)+.label-reset {
   transform: translateY(-22px) scale(0.85);
   background-color: #fff;
   padding: 0 4px;
@@ -417,12 +399,12 @@ const togglePasswordVisibility = (field) => {
   .reset-password-card {
     flex-direction: column;
   }
-  
+
   .reset-password-illustration {
     padding: 20px;
     max-height: 200px;
   }
-  
+
   .reset-password-content {
     padding: 30px 20px;
   }
