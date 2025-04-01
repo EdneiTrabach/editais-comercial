@@ -386,7 +386,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-/* Estilos removidos - agora são gerenciados no arquivo filters.css */
-</style>
