@@ -46,10 +46,34 @@ export function useFormatters() {
     return modalidades[modalidade] || modalidade
   }
   
+  // Novo método para formatar valores monetários
+  const formatCurrency = (value) => {
+    if (!value || value === '') return 'R$ 0,00'
+    
+    // Remove caracteres não numéricos, exceto vírgula
+    let numericValue = value.toString().replace(/[^\d,]/g, '')
+    
+    // Substituir vírgula por ponto para cálculos
+    let calculableValue = numericValue.replace(',', '.')
+    
+    // Converter para número se possível
+    let number = parseFloat(calculableValue)
+    if (isNaN(number)) return 'R$ 0,00'
+    
+    // Formatar usando Intl.NumberFormat
+    return new Intl.NumberFormat('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(number)
+  }
+
   return {
     formatDate,
     formatTime,
     formatStatus,
-    formatModalidade
+    formatModalidade,
+    formatCurrency
   }
 }
