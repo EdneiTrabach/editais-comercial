@@ -111,3 +111,57 @@ td[data-field="empresa_vencedora"] {
   outline: none;
   box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
 }
+
+/* Layout principal com flexbox para melhorar organização vertical */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Container para o conteúdo scrollável */
+.scrollable-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+/* Corrigir problema do filtro avançado empurrando a tabela */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: auto;
+  margin-bottom: 1rem;
+  position: relative;
+  user-select: text;
+  flex: 1;
+  min-height: 300px; /* Altura mínima para garantir visibilidade suficiente */
+}
+
+/* Ajustes para o filtro avançado */
+.advanced-filter-container-wrapper {
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.3s ease, margin 0.3s ease;
+  opacity: 0;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0;
+  position: relative;
+  z-index: 30;
+}
+
+.advanced-filter-container-wrapper.is-visible {
+  max-height: 1200px;
+  opacity: 1;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}

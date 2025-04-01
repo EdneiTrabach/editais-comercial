@@ -3,7 +3,6 @@
     <TheSidebar @sidebarToggle="handleSidebarToggle" />
 
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
-      <!-- Header Section -->
       <div class="header-processos">
         <h1>Processos Licitatórios</h1>
 
@@ -17,12 +16,12 @@
             <img src="/icons/redo.svg" alt="Refazer" class="icon" />
           </button>
           
-          <!-- Novo botão de Tour -->
+          <!-- Botão de Tour -->
           <button class="btn-tour" @click="startTour" title="Iniciar Tour">
             <img src="/icons/question-circle.svg" alt="Tour" class="icon" />
           </button>
           
-          <!-- Novo botão de filtro avançado -->
+          <!-- Botão de filtro avançado -->
           <button 
             class="btn-filter" 
             :class="{ 'active': showAdvancedFilter }" 
@@ -48,447 +47,455 @@
           </button>
         </div>
       </div>
+      
+      <!-- Área com scroll -->
+      <div class="scrollable-content">
+        <!-- Container do Filtro Avançado -->
+        <div 
+          class="advanced-filter-container-wrapper"
+          :class="{ 'is-visible': showAdvancedFilter }"
+          v-show="showAdvancedFilter"
+        >
+          <AdvancedFilterComponent
+            :status-options="statusOptions"
+            :modalidade-options="opcoesModalidade"
+            :responsaveis="responsaveisProcessos"
+            :estados="estados"
+            :initial-filters="advancedFilters"
+            @close="showAdvancedFilter = false"
+            @update-filters="updateAdvancedFilters"
+            @apply-filters="applyAdvancedFilters"
+            @clear-filters="clearAdvancedFilters"
+          />
+        </div>
 
-      <!-- Active Filters -->
-      <div class="filtros-ativos" v-if="temFiltrosAtivos">
-        <span>Filtros ativos:</span>
-        <button @click="limparFiltros" class="btn-limpar-filtros">
-          Limpar todos os filtros
-        </button>
-      </div>
-
-      <!-- Data Table -->
-      <div class="table-container">
-        <!-- Componente de filtro avançado -->
-        <AdvancedFilterComponent
-          :is-active="showAdvancedFilter"
-          :status-options="statusOptions"
-          :modalidade-options="opcoesModalidade"
-          :responsaveis="responsaveisProcessos"
-          :estados="estados"
-          :initial-filters="advancedFilters"
-          @close="showAdvancedFilter = false"
-          @update-filters="updateAdvancedFilters"
-          @apply-filters="applyAdvancedFilters"
-          @clear-filters="clearAdvancedFilters"
-        />
-
-        <table class="excel-table resizable">
-          <thead>
-            <tr>
-              <th class="row-number-cell"></th>
-              <!-- Colunas ordenáveis -->
-              <th v-for="(coluna, index) in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo"
-                draggable="true" @dragstart="startColumnDrag($event, index)" @dragover="allowColumnDrop($event)"
-                @drop="handleColumnDrop($event, index)" :style="{ width: colunasWidth[coluna.campo] }"
-                :class="{ 'resizable-column': true }">
-                <div class="th-content">
-                  {{ coluna.titulo }}
-                  <!-- <div class="column-drag-handle" title="Arraste para reordenar">⋮⋮</div> -->
-                  <!-- Sort buttons for date column -->
-                  <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
-                    <button class="btn-sort"
-                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
-                      @click="handleSort('data_pregao', 'asc')">
-                      ▲
-                    </button>
-                    <button class="btn-sort"
-                      :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
-                      @click="handleSort('data_pregao', 'desc')">
-                      ▼
-                    </button>
-                  </div>
-
-                  <!-- Filter button for filterable columns -->
-                  <div
-                    v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
-                    class="filtro-container">
-                    <button @click="toggleFiltro(coluna.campo)" class="btn-filtro"
-                      :class="{ active: filtros[coluna.campo]?.length > 0 }">
-                      <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
-                    </button>
-
-                    <!-- Dropdown de filtro para modalidade -->
-                    <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown" :data-campo="coluna.campo">
-                      <div class="dropdown-header">
-                        <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search"
-                          v-model="filtroModalidadeSearch" @input="filtrarOpcoes(coluna.campo)" />
-                      </div>
-                      <div class="dropdown-list">
-                        <div v-for="opcao in opcoesFiltradasModalidade" :key="opcao.valor" class="filtro-opcao">
-                          <label class="filtro-checkbox">
-                            <input type="checkbox" :checked="filtros[coluna.campo]?.includes(opcao.valor)"
-                              @change="toggleFiltroItem(coluna.campo, opcao.valor)" />
-                            <span class="checkbox-label">{{ opcao.texto }}</span>
-                          </label>
-                        </div>
-                      </div>
-                      <div class="dropdown-footer">
-                        <button @click="limparFiltroColuna(coluna.campo)" class="btn-limpar-filtro">
-                          Limpar filtro
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
-              </th>
-              <!-- Coluna de ações separada -->
-              <th class="actions-column">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
-              :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
-              @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
-              <td class="row-number-cell">{{ index + 1 }}</td>
-
-              <!-- Células de dados ordenáveis -->
-              <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
-                :class="{ 'selecionada': selectedRow === processo.id }"
-                @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : 
-          coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
-          coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
-          coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) : 
-          handleDblClick(coluna.campo, processo, $event)">
-                
-                <!-- Editing Mode -->
-                <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
-                  <!-- Analysis Code field -->
-                  <!-- <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    placeholder="Digite o código"> -->
-
-                  <!-- Date field -->
-                  <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
-                    :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-
-                  <!-- Time field -->
-                  <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value" min="08:00"
-                    max="18:00" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()">
-
-                  <!-- State field -->
-                  <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                    <option value="">Selecione o estado...</option>
-                    <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
-                      {{ estado.nome }}
-                    </option>
-                  </select>
-
-                  <!-- Impugnações field -->
-                  <textarea v-else-if="coluna.campo === 'impugnacoes'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    rows="3" placeholder="Digite as impugnações..."></textarea>
-
-                  <!-- Representative field -->
-                  <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
-                    @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                    <option value="">Selecione o representante...</option>
-                    <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
-                      {{ rep.nome }}
-                    </option>
-                  </select>
-
-                  <!-- Full Object field -->
-                  <textarea 
-                    v-else-if="coluna.campo === 'objeto_completo'" 
-                    v-model="editingCell.value"
-                    rows="100"
-                    @blur="handleUpdate(processo)" 
-                    @keyup.enter="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
-                    class="auto-resize-textarea">
-                  </textarea>
-
-                  <!-- Modality field -->
-                  <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                    <option value="pregao_eletronico">Pregão Eletrônico</option>
-                    <option value="pregao_presencial">Pregão Presencial</option>
-                    <option value="credenciamento">Credenciamento</option>
-                    <option value="concorrencia">Concorrência</option>
-                    <option value="concurso">Concurso</option>
-                    <option value="leilao">Leilão</option>
-                    <option value="dialogo_competitivo">Diálogo Competitivo</option>
-                    <option value="tomada_precos">Tomada de Preços</option>
-                    <option value="chamamento_publico">Chamamento Público</option>
-                    <option value="rdc">RDC</option>
-                    <option value="rdc_eletronico">RDC Eletrônico</option>
-                    <option value="srp">SRP</option>
-                    <option value="srp_eletronico">SRP Eletrônico</option>
-                    <option value="srp_internacional">SRP Internacional</option>
-                  </select>
-
-                  <!-- Status field -->
-                  <select v-else-if="coluna.campo === 'status'" 
-                    v-model="editingCell.value"
-                    @change="handleUpdate(processo)" 
-                    @blur="handleUpdate(processo)" 
-                    @keyup.esc="cancelEdit()"
-                    class="status-select"
-                    :class="getStatusClass(processo)"
-                    :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''">
-                    <option value="">Selecione um status...</option>
-                    <option value="em_analise">Em Análise</option>
-                    <option value="em_andamento">Em Andamento</option>
-                    <option value="vamos_participar">Vamos Participar</option>
-                    <option value="ganhamos">Ganhamos</option>
-                    <option value="perdemos">Perdemos</option>
-                    <option value="suspenso">Suspenso</option>
-                    <option value="revogado">Revogado</option>
-                    <option value="adiado">Adiado</option>
-                    <option value="demonstracao">Demonstração</option>
-                    <option value="cancelado">Cancelado</option>
-                    <option value="nao_participar">Decidido Não Participar</option>
-                  </select>
-
-                  <!-- Systems field -->
-                  <template v-else-if="coluna.campo === 'sistemas_ativos'">
-                    <div class="sistemas-dropdown-container">
-                      <div class="sistemas-selected">
-                        <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
-                          {{ getSistemaNome(id) }}
-                          <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
-                        </div>
-                      </div>
-                      <!-- <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-                        <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
-                          :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-                          {{ sistema.nome }}
-                        </option>
-                      </select> -->
-                    </div>
-                  </template>
-
-                  <!-- Additional field (Observações) -->
-                  <textarea v-else-if="coluna.campo === 'campo_adicional1'" v-model="editingCell.value" rows="3"
-                    class="observacoes-edit" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"></textarea>
-
-                  <!-- Default input for codigo_analise -->
-                  <input v-else-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
-                    placeholder="Digite o código">
-
-                  <!-- Portal/Plataforma field -->
-                  <select v-else-if="coluna.campo === 'site_pregao'" v-model="editingCell.value"
-                    @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
-                    <option value="">Selecione uma plataforma...</option>
-                    <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
-                      {{ plataforma.nome }}
-                    </option>
-                  </select>
-
-                  <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
-                  <textarea 
-                    v-else 
-                    v-model="editingCell.value" 
-                    rows="100"
-                    @blur="handleUpdate(processo)"
-                    @keyup.enter="handleUpdate(processo)"
-                    @keyup.esc="cancelEdit()"
-                    class="auto-resize-textarea"
-                  ></textarea>
-                    
-                </template>
-
-                <!-- View Mode -->
-                <template v-else>
-                  <!-- Date field -->
-                  <span v-if="coluna.campo === 'data_pregao'">
-                    {{ formatDate(processo.data_pregao) }}
-                  </span>
-
-                  <!-- Time field -->
-                  <span v-else-if="coluna.campo === 'hora_pregao'">
-                    {{ formatTime(processo.hora_pregao) }}
-                  </span>
-
-                  <!-- Modality field -->
-                  <span v-else-if="coluna.campo === 'modalidade'">
-                    <span :title="formatModalidadeCompleta(processo.modalidade)">
-                      {{ getModalidadeSigla(processo.modalidade) }}
-                    </span>
-                  </span>
-
-                  <!-- Object fields -->
-                  <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
-                    class="objeto-cell">
-                    {{ processo[coluna.campo] || '-' }}
-                  </span>
-
-                  <!-- Representative field -->
-                  <span v-else-if="coluna.campo === 'representante'">
-                    {{ processo.representantes?.nome || '-' }}
-                  </span>
-
-                  <!-- Responsible name field -->
-                  <span v-else-if="coluna.campo === 'responsavel_nome'">
-                    {{ processo.profiles?.nome || '-' }}
-                  </span>
-
-                  <!-- Site field -->
-                  <span v-else-if="coluna.campo === 'site_pregao'">
-                    <div class="portal-link">
-                      <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
-                        rel="noopener noreferrer" class="portal-button">
-                        {{ getPlataformaNome(processo.site_pregao) }}
-                      </a>
-                      <span v-else>-</span>
-                    </div>
-                  </span>
-
-                  <!-- Company field -->
-                  <span v-else-if="coluna.campo === 'empresa_id'">
-                    <div class="responsavel-container">
-                      <span class="responsavel-display">
-                        {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
-                      </span>
-                    </div>
-                  </span>
-
-                  <!-- Distances field -->
-                  <span v-else-if="coluna.campo === 'distancias'">
-                    <div class="distancias-stack">
-                      <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                        {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
-                      </div>
-                    </div>
-                  </span>
-
-                  <!-- Systems field -->
-                  <span v-else-if="coluna.campo === 'sistemas_ativos'">
-                    <div class="sistemas-chips">
-                      <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
-                        {{ getSistemasNomesString(processo.sistemas_ativos) }}
-                      </div>
-                      <div v-else class="sem-sistemas">-</div>
-                    </div>
-                  </span>
-
-                  <!-- Distance type display -->
-                  <span v-else-if="coluna.tipoExibicao === 'distancia'">
-                    <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
-                      <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
-                        {{ formatarDistancia(processo) }}
-                      </div>
-                      <div v-else class="distancia-multiple">
-                        <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
-                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                            {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
-                              distancia.ponto_referencia_uf }})
-                          </div>
-                        </span>
-                        <span v-else class="sem-distancia">Clique para adicionar</span>
-                      </div>
-                    </div>
-                  </span>
-
-                  <!-- Representative ID field -->
-                  <span v-else-if="coluna.campo === 'representante_id'">
-                    <div class="responsavel-container">
-                      <span class="responsavel-display">
-                        {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
-                      </span>
-                    </div>
-                  </span>
-
-                  <!-- Responsible ID field -->
-                  <span v-else-if="coluna.campo === 'responsavel_id'">
-                    <div class="responsavel-container">
-                      <span class="responsavel-display">
-                        {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
-                      </span>
-                    </div>
-                  </span>
-
-                  <!-- Default display for other fields -->
-                  <template v-else-if="coluna.campo === 'status'">
-                    <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
-                    <span 
-                      class="status-display" 
-                      :class="getStatusClass(processo)"
-                      @mouseenter="showStatusInfo(processo, $event)" 
-                      @mouseleave="hideStatusInfo"
-                      :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"
-                    >
-                      {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
-                    </span>
-                  </template>
-
-                  <!-- Default display for other fields -->
-                  <span v-else>
-                    {{ processo[coluna.campo] || '-' }}
-                  </span>
-
-                  <!-- Tratamento especial para coluna codigo_analise -->
-                  <div v-if="coluna.campo === 'codigo_analise'" class="analise-cell">
-                    <template v-if="processo.codigo_analise">
-                      <!-- Se já tem código de análise, mostra só o GPI e prazo -->
-                      <span class="codigo-gpi">
-                        <!-- GPI: {{ processo.codigo_gpi }} -->
-                        <span v-if="processo.prazo_analise" class="prazo">
-                          (Prazo: {{ formatDate(processo.prazo_analise) }})
-                        </span>
-                      </span>
-                    </template>
-                    <template v-else>
-                      <!-- Se não tem código, mostra o botão de adicionar -->
-                      <!-- <span>Definir análise</span> -->
-                      <!-- <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button> -->
-                    </template>
-                  </div>
-
-                  <!-- Componente EmpresaVencedoraColuna -->
-                  <template v-else-if="coluna.tipoExibicao === 'componente' && coluna.componente === 'EmpresaVencedoraColuna'">
-                    <EmpresaVencedoraColuna 
-                      :processo="processo" 
-                      @update="handleComponentUpdate"
-                    />
-                  </template>
-
-                  <!-- Em ProcessosView.vue, na seção onde são renderizadas as colunas -->
-                  <template v-else-if="coluna.campo === 'sistemas_implantacao'">
-                    <div 
-                      class="sistemas-implantacao-cell" 
-                      @dblclick="showSistemasImplantacaoDialog(processo)"
-                    >
-                      <span v-if="processo.sistemas_implantacao && processo.sistemas_implantacao.sistemas_ids">
-                        {{ formatarSistemasImplantacao(processo.sistemas_implantacao) }}
-                      </span>
-                      <span v-else class="empty-cell">-</span>
-                    </div>
-                  </template>
-
-                  <!-- Na seção onde são renderizadas as células de visualização -->
-                  <template v-else-if="coluna.campo === 'valor_estimado'">
-                  </template>
-                </template>
-              </td>
-              <!-- Célula de ações separada -->
-              <td class="actions-column">
-                <AcoesColumn 
-                  :processo="processo"
-                  @delete="handleDelete"
-                />
-              </td>
-              <!-- Row resize handle -->
-              <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Year tabs -->
-      <div class="anos-tabs">
-        <div class="tabs-header">
-          <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
-            @click="selecionarAno(ano)">
-            {{ ano }}
+        <!-- Active Filters -->
+        <div class="filtros-ativos" v-if="temFiltrosAtivos || activeAdvancedFiltersCount > 0">
+          <span>Filtros ativos:</span>
+          <button @click="limparTodosFiltros" class="btn-limpar-filtros">
+            Limpar todos os filtros
           </button>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+          <table class="excel-table resizable">
+            <thead>
+              <tr>
+                <th class="row-number-cell"></th>
+                <!-- Colunas ordenáveis -->
+                <th v-for="(coluna, index) in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo"
+                  draggable="true" @dragstart="startColumnDrag($event, index)" @dragover="allowColumnDrop($event)"
+                  @drop="handleColumnDrop($event, index)" :style="{ width: colunasWidth[coluna.campo] }"
+                  :class="{ 'resizable-column': true }">
+                  <div class="th-content">
+                    {{ coluna.titulo }}
+                    <!-- <div class="column-drag-handle" title="Arraste para reordenar">⋮⋮</div> -->
+                    <!-- Sort buttons for date column -->
+                    <div v-if="coluna.campo === 'data_pregao'" class="sort-buttons">
+                      <button class="btn-sort"
+                        :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'asc' }"
+                        @click="handleSort('data_pregao', 'asc')">
+                        ▲
+                      </button>
+                      <button class="btn-sort"
+                        :class="{ active: sortConfig.field === 'data_pregao' && sortConfig.direction === 'desc' }"
+                        @click="handleSort('data_pregao', 'desc')">
+                        ▼
+                      </button>
+                    </div>
+
+                    <!-- Filter button for filterable columns -->
+                    <div
+                      v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
+                      class="filtro-container">
+                      <button @click="toggleFiltro(coluna.campo)" class="btn-filtro"
+                        :class="{ active: filtros[coluna.campo]?.length > 0 }">
+                        <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
+                      </button>
+
+                      <!-- Dropdown de filtro para modalidade -->
+                      <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown" :data-campo="coluna.campo">
+                        <div class="dropdown-header">
+                          <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search"
+                            v-model="filtroModalidadeSearch" @input="filtrarOpcoes(coluna.campo)" />
+                        </div>
+                        <div class="dropdown-list">
+                          <div v-for="opcao in opcoesFiltradasModalidade" :key="opcao.valor" class="filtro-opcao">
+                            <label class="filtro-checkbox">
+                              <input type="checkbox" :checked="filtros[coluna.campo]?.includes(opcao.valor)"
+                                @change="toggleFiltroItem(coluna.campo, opcao.valor)" />
+                              <span class="checkbox-label">{{ opcao.texto }}</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div class="dropdown-footer">
+                          <button @click="limparFiltroColuna(coluna.campo)" class="btn-limpar-filtro">
+                            Limpar filtro
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
+                </th>
+                <!-- Coluna de ações separada -->
+                <th class="actions-column">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(processo, index) in processosFiltrados" :key="processo.id" class="resizable-row"
+                :class="{ 'selected-row': selectedRow === processo.id }" :data-status="processo.status"
+                @click="selectRow(processo.id)" :style="{ height: rowsHeight[processo.id] }">
+                <td class="row-number-cell">{{ index + 1 }}</td>
+
+                <!-- Células de dados ordenáveis -->
+                <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
+                  :class="{ 'selecionada': selectedRow === processo.id }"
+                  @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : 
+            coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
+            coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
+            coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) : 
+            handleDblClick(coluna.campo, processo, $event)">
+                  
+                  <!-- Editing Mode -->
+                  <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                    <!-- Analysis Code field -->
+                    <!-- <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                      @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                      placeholder="Digite o código"> -->
+
+                    <!-- Date field -->
+                    <input v-if="coluna.campo === 'data_pregao'" ref="editInput" type="date" v-model="editingCell.value"
+                      :min="new Date().toISOString().split('T')[0]" @blur="handleUpdate(processo)"
+                      @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+
+                    <!-- Time field -->
+                    <input v-else-if="coluna.campo === 'hora_pregao'" type="time" v-model="editingCell.value" min="08:00"
+                      max="18:00" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+                      @keyup.esc="cancelEdit()">
+
+                    <!-- State field -->
+                    <select v-else-if="coluna.campo === 'estado'" v-model="editingCell.value"
+                      @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                      <option value="">Selecione o estado...</option>
+                      <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
+                        {{ estado.nome }}
+                      </option>
+                    </select>
+
+                    <!-- Impugnações field -->
+                    <textarea v-else-if="coluna.campo === 'impugnacoes'" v-model="editingCell.value"
+                      @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                      rows="3" placeholder="Digite as impugnações..."></textarea>
+
+                    <!-- Representative field -->
+                    <select v-else-if="coluna.campo === 'representante'" v-model="editingCell.value"
+                      @change="handleUpdate(processo)" @blur="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                      <option value="">Selecione o representante...</option>
+                      <option v-for="rep in representantes" :key="rep.id" :value="rep.id">
+                        {{ rep.nome }}
+                      </option>
+                    </select>
+
+                    <!-- Full Object field -->
+                    <textarea 
+                      v-else-if="coluna.campo === 'objeto_completo'" 
+                      v-model="editingCell.value"
+                      rows="100"
+                      @blur="handleUpdate(processo)" 
+                      @keyup.enter="handleUpdate(processo)" 
+                      @keyup.esc="cancelEdit()"
+                      class="auto-resize-textarea">
+                    </textarea>
+
+                    <!-- Modality field -->
+                    <select v-else-if="coluna.campo === 'modalidade'" v-model="editingCell.value"
+                      @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                      <option value="pregao_eletronico">Pregão Eletrônico</option>
+                      <option value="pregao_presencial">Pregão Presencial</option>
+                      <option value="credenciamento">Credenciamento</option>
+                      <option value="concorrencia">Concorrência</option>
+                      <option value="concurso">Concurso</option>
+                      <option value="leilao">Leilão</option>
+                      <option value="dialogo_competitivo">Diálogo Competitivo</option>
+                      <option value="tomada_precos">Tomada de Preços</option>
+                      <option value="chamamento_publico">Chamamento Público</option>
+                      <option value="rdc">RDC</option>
+                      <option value="rdc_eletronico">RDC Eletrônico</option>
+                      <option value="srp">SRP</option>
+                      <option value="srp_eletronico">SRP Eletrônico</option>
+                      <option value="srp_internacional">SRP Internacional</option>
+                    </select>
+
+                    <!-- Status field -->
+                    <select v-else-if="coluna.campo === 'status'" 
+                      v-model="editingCell.value"
+                      @change="handleUpdate(processo)" 
+                      @blur="handleUpdate(processo)" 
+                      @keyup.esc="cancelEdit()"
+                      class="status-select"
+                      :class="getStatusClass(processo)"
+                      :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''">
+                      <option value="">Selecione um status...</option>
+                      <option value="em_analise">Em Análise</option>
+                      <option value="em_andamento">Em Andamento</option>
+                      <option value="vamos_participar">Vamos Participar</option>
+                      <option value="ganhamos">Ganhamos</option>
+                      <option value="perdemos">Perdemos</option>
+                      <option value="suspenso">Suspenso</option>
+                      <option value="revogado">Revogado</option>
+                      <option value="adiado">Adiado</option>
+                      <option value="demonstracao">Demonstração</option>
+                      <option value="cancelado">Cancelado</option>
+                      <option value="nao_participar">Decidido Não Participar</option>
+                    </select>
+
+                    <!-- Systems field -->
+                    <template v-else-if="coluna.campo === 'sistemas_ativos'">
+                      <div class="sistemas-dropdown-container">
+                        <div class="sistemas-selected">
+                          <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
+                            {{ getSistemaNome(id) }}
+                            <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
+                          </div>
+                        </div>
+                        <!-- <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+                          <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
+                            :selected="editingCell.value && editingCell.value.includes(sistema.id)">
+                            {{ sistema.nome }}
+                          </option>
+                        </select> -->
+                      </div>
+                    </template>
+
+                    <!-- Additional field (Observações) -->
+                    <textarea v-else-if="coluna.campo === 'campo_adicional1'" v-model="editingCell.value" rows="3"
+                      class="observacoes-edit" @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)"
+                      @keyup.esc="cancelEdit()"></textarea>
+
+                    <!-- Default input for codigo_analise -->
+                    <input v-else-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
+                      @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
+                      placeholder="Digite o código">
+
+                    <!-- Portal/Plataforma field -->
+                    <select v-else-if="coluna.campo === 'site_pregao'" v-model="editingCell.value"
+                      @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
+                      <option value="">Selecione uma plataforma...</option>
+                      <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
+                        {{ plataforma.nome }}
+                      </option>
+                    </select>
+
+                    <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
+                    <textarea 
+                      v-else 
+                      v-model="editingCell.value" 
+                      rows="100"
+                      @blur="handleUpdate(processo)"
+                      @keyup.enter="handleUpdate(processo)"
+                      @keyup.esc="cancelEdit()"
+                      class="auto-resize-textarea"
+                    ></textarea>
+                      
+                  </template>
+
+                  <!-- View Mode -->
+                  <template v-else>
+                    <!-- Date field -->
+                    <span v-if="coluna.campo === 'data_pregao'">
+                      {{ formatDate(processo.data_pregao) }}
+                    </span>
+
+                    <!-- Time field -->
+                    <span v-else-if="coluna.campo === 'hora_pregao'">
+                      {{ formatTime(processo.hora_pregao) }}
+                    </span>
+
+                    <!-- Modality field -->
+                    <span v-else-if="coluna.campo === 'modalidade'">
+                      <span :title="formatModalidadeCompleta(processo.modalidade)">
+                        {{ getModalidadeSigla(processo.modalidade) }}
+                      </span>
+                    </span>
+
+                    <!-- Object fields -->
+                    <span v-else-if="coluna.campo === 'objeto_resumido' || coluna.campo === 'objeto_completo'"
+                      class="objeto-cell">
+                      {{ processo[coluna.campo] || '-' }}
+                    </span>
+
+                    <!-- Representative field -->
+                    <span v-else-if="coluna.campo === 'representante'">
+                      {{ processo.representantes?.nome || '-' }}
+                    </span>
+
+                    <!-- Responsible name field -->
+                    <span v-else-if="coluna.campo === 'responsavel_nome'">
+                      {{ processo.profiles?.nome || '-' }}
+                    </span>
+
+                    <!-- Site field -->
+                    <span v-else-if="coluna.campo === 'site_pregao'">
+                      <div class="portal-link">
+                        <a v-if="processo.site_pregao" :href="processo.site_pregao" target="_blank"
+                          rel="noopener noreferrer" class="portal-button">
+                          {{ getPlataformaNome(processo.site_pregao) }}
+                        </a>
+                        <span v-else>-</span>
+                      </div>
+                    </span>
+
+                    <!-- Company field -->
+                    <span v-else-if="coluna.campo === 'empresa_id'">
+                      <div class="responsavel-container">
+                        <span class="responsavel-display">
+                          {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
+                        </span>
+                      </div>
+                    </span>
+
+                    <!-- Distances field -->
+                    <span v-else-if="coluna.campo === 'distancias'">
+                      <div class="distancias-stack">
+                        <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
+                          {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                        </div>
+                      </div>
+                    </span>
+
+                    <!-- Systems field -->
+                    <span v-else-if="coluna.campo === 'sistemas_ativos'">
+                      <div class="sistemas-chips">
+                        <div v-if="processo.sistemas_ativos && processo.sistemas_ativos.length > 0" class="sistemas-lista">
+                          {{ getSistemasNomesString(processo.sistemas_ativos) }}
+                        </div>
+                        <div v-else class="sem-sistemas">-</div>
+                      </div>
+                    </span>
+
+                    <!-- Distance type display -->
+                    <span v-else-if="coluna.tipoExibicao === 'distancia'">
+                      <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
+                        <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
+                          {{ formatarDistancia(processo) }}
+                        </div>
+                        <div v-else class="distancia-multiple">
+                          <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
+                            <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                              {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
+                                distancia.ponto_referencia_uf }})
+                            </div>
+                          </span>
+                          <span v-else class="sem-distancia">Clique para adicionar</span>
+                        </div>
+                      </div>
+                    </span>
+
+                    <!-- Representative ID field -->
+                    <span v-else-if="coluna.campo === 'representante_id'">
+                      <div class="responsavel-container">
+                        <span class="responsavel-display">
+                          {{ getRepresentanteNome(processo.representante_id) || 'Sem representante' }}
+                        </span>
+                      </div>
+                    </span>
+
+                    <!-- Responsible ID field -->
+                    <span v-else-if="coluna.campo === 'responsavel_id'">
+                      <div class="responsavel-container">
+                        <span class="responsavel-display">
+                          {{ getResponsavelProcessoNome(processo.responsavel_id) || 'Sem responsável' }}
+                        </span>
+                      </div>
+                    </span>
+
+                    <!-- Default display for other fields -->
+                    <template v-else-if="coluna.campo === 'status'">
+                      <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
+                      <span 
+                        class="status-display" 
+                        :class="getStatusClass(processo)"
+                        @mouseenter="showStatusInfo(processo, $event)" 
+                        @mouseleave="hideStatusInfo"
+                        :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"
+                      >
+                        {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
+                      </span>
+                    </template>
+
+                    <!-- Default display for other fields -->
+                    <span v-else>
+                      {{ processo[coluna.campo] || '-' }}
+                    </span>
+
+                    <!-- Tratamento especial para coluna codigo_analise -->
+                    <div v-if="coluna.campo === 'codigo_analise'" class="analise-cell">
+                      <template v-if="processo.codigo_analise">
+                        <!-- Se já tem código de análise, mostra só o GPI e prazo -->
+                        <span class="codigo-gpi">
+                          <!-- GPI: {{ processo.codigo_gpi }} -->
+                          <span v-if="processo.prazo_analise" class="prazo">
+                            (Prazo: {{ formatDate(processo.prazo_analise) }})
+                          </span>
+                        </span>
+                      </template>
+                      <template v-else>
+                        <!-- Se não tem código, mostra o botão de adicionar -->
+                        <!-- <span>Definir análise</span> -->
+                        <!-- <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button> -->
+                      </template>
+                    </div>
+
+                    <!-- Componente EmpresaVencedoraColuna -->
+                    <template v-else-if="coluna.tipoExibicao === 'componente' && coluna.componente === 'EmpresaVencedoraColuna'">
+                      <EmpresaVencedoraColuna 
+                        :processo="processo" 
+                        @update="handleComponentUpdate"
+                      />
+                    </template>
+
+                    <!-- Em ProcessosView.vue, na seção onde são renderizadas as colunas -->
+                    <template v-else-if="coluna.campo === 'sistemas_implantacao'">
+                      <div 
+                        class="sistemas-implantacao-cell" 
+                        @dblclick="showSistemasImplantacaoDialog(processo)"
+                      >
+                        <span v-if="processo.sistemas_implantacao && processo.sistemas_implantacao.sistemas_ids">
+                          {{ formatarSistemasImplantacao(processo.sistemas_implantacao) }}
+                        </span>
+                        <span v-else class="empty-cell">-</span>
+                      </div>
+                    </template>
+
+                    <!-- Na seção onde são renderizadas as células de visualização -->
+                    <template v-else-if="coluna.campo === 'valor_estimado'">
+                    </template>
+                  </template>
+                </td>
+                <!-- Célula de ações separada -->
+                <td class="actions-column">
+                  <AcoesColumn 
+                    :processo="processo"
+                    @delete="handleDelete"
+                  />
+                </td>
+                <!-- Row resize handle -->
+                <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Year tabs -->
+        <div class="anos-tabs">
+          <div class="tabs-header">
+            <button v-for="ano in anosDisponiveis" :key="ano" :class="['tab-button', { active: anoSelecionado === ano }]"
+              @click="selecionarAno(ano)">
+              {{ ano }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1193,5 +1200,3 @@ export default {
 
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
-<style src="/src/assets/styles/components/actions.css"></style>
-<style src="/src/assets/styles/components/filters.css"></style>

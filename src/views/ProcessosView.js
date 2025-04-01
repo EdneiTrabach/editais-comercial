@@ -900,6 +900,16 @@ export default {
       })
     }
 
+    const limparTodosFiltros = () => {
+      // Limpar filtros normais
+      limparFiltros();
+      
+      // Limpar filtros avançados
+      clearAdvancedFilters();
+      
+      showToast('Todos os filtros foram removidos', 'info');
+    };
+
     const handleSort = async (field, direction) => {
       try {
         sortConfig.value = { field, direction };
@@ -3030,6 +3040,24 @@ export default {
     
     const toggleAdvancedFilter = () => {
       showAdvancedFilter.value = !showAdvancedFilter.value;
+      
+      // Se o filtro estiver sendo aberto, rolar para cima para garantir visibilidade
+      if (showAdvancedFilter.value) {
+        nextTick(() => {
+          const scrollableContent = document.querySelector('.scrollable-content');
+          if (scrollableContent) {
+            scrollableContent.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+          }
+        });
+      }
+      
+      // Se estiver fechando o filtro e houver filtros ativos, mostrar feedback
+      if (!showAdvancedFilter.value && activeAdvancedFiltersCount.value > 0) {
+        showToast(`${activeAdvancedFiltersCount.value} filtros avançados aplicados`, 'info');
+      }
     };
     
     const updateAdvancedFilters = (filters) => {
@@ -3111,6 +3139,7 @@ export default {
       exportToExcel,
       toggleFiltro,
       limparFiltros,
+      limparTodosFiltros,
       handleSort,
       selecionarAno,
       selectRow,
