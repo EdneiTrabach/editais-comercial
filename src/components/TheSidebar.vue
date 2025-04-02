@@ -188,7 +188,7 @@
                 :class="{ active: currentTheme === 'baby-blue' }"
                 title="Tema azul claro que reduz o cansaço visual e é benéfico para pessoas com hipermetropia e presbiopia. A cor azul suave ajuda a diminuir a tensão ocular durante o uso prolongado.">
                 <div class="theme-preview baby-blue-preview"></div>
-                <span>Azul Bebê</span>
+                <span>Azul</span>
               </button>
             </div>
           </div>
