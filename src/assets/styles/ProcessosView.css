@@ -479,7 +479,6 @@ td[data-field="empresa_vencedora"] {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 550px;
-  position: relative;
   animation: dialogFadeIn 0.3s ease-out;
   border: 1px solid rgba(230, 230, 230, 0.7);
 }

@@ -476,12 +476,21 @@
       </div>
 
       <!-- Confirm dialog -->
-      <div v-if="confirmDialog.show" class="confirm-dialog" :style="confirmDialog.position">
+      <div 
+        v-if="confirmDialog.show" 
+        class="confirm-dialog" 
+        :style="{
+          position: 'absolute',
+          top: confirmDialog.position.top,
+          left: confirmDialog.position.left,
+          zIndex: 1000
+        }"
+      >
         <div class="confirm-content">
           <p>Deseja editar este campo?</p>
           <div class="confirm-actions">
-            <button @click="handleConfirmEdit" class="btn-confirm">Confirmar</button>
-            <button @click="hideConfirmDialog" class="btn-cancel">Cancelar</button>
+            <button class="btn-confirm" @click="handleConfirmEdit">Confirmar</button>
+            <button class="btn-cancel" @click="hideConfirmDialog">Cancelar</button>
           </div>
         </div>
       </div>
