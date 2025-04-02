@@ -285,21 +285,6 @@ td[data-field="impugnacoes"] {
   justify-content: center;
 }
 
-.status-select {
-  position: absolute;
-  z-index: 1000;
-  width: 90%;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0.5rem;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-top: 0px;
-  /* top: 50%; */
-  height: 60px;
-  left: 10px;
-}
-
 .saved-success {
   animation: successPulse 1s forwards;
 }

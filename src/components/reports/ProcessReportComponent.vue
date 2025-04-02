@@ -446,53 +446,6 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const formatStatus = (status) => {
-  const statusMap = {
-    'aberto': 'Aberto',
-    'em_analise': 'Em Análise',
-    'participando': 'Participando',
-    'vencido': 'Vencido',
-    'perdido': 'Perdido',
-    'cancelado': 'Cancelado',
-    'revogado': 'Revogado',
-    'suspenso': 'Suspenso',
-    'nao_participar': 'Não Participar'
-  };
-  
-  return statusMap[status] || status;
-};
-
-const formatModalidade = (modalidade) => {
-  const modalidadeMap = {
-    'pregao_eletronico': 'Pregão Eletrônico',
-    'pregao_presencial': 'Pregão Presencial',
-    'concorrencia': 'Concorrência',
-    'tomada_preco': 'Tomada de Preço',
-    'convite': 'Convite',
-    'chamamento_publico': 'Chamamento Público',
-    'inexigibilidade': 'Inexigibilidade',
-    'dispensa': 'Dispensa'
-  };
-  
-  return modalidadeMap[modalidade] || modalidade;
-};
-
-const getStatusClass = (status) => {
-  const statusMap = {
-    'aberto': 'status-open',
-    'em_analise': 'status-analyzing',
-    'participando': 'status-participating',
-    'vencido': 'status-won',
-    'perdido': 'status-lost',
-    'cancelado': 'status-canceled',
-    'revogado': 'status-revoked',
-    'suspenso': 'status-suspended',
-    'nao_participar': 'status-not-participating'
-  };
-  
-  return statusMap[status] || '';
-};
-
 // Carrega dados iniciais
 onMounted(async () => {
   console.log("Componente montado, testando conexão com Supabase...");

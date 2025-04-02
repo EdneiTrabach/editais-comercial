@@ -205,17 +205,17 @@
                       :class="getStatusClass(processo)"
                       :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''">
                       <option value="">Selecione um status...</option>
+                      <option value="adiado">Adiado</option>
+                      <option value="cancelado">Cancelado</option>
+                      <option value="demonstracao">Demonstração</option>
                       <option value="em_analise">Em Análise</option>
                       <option value="em_andamento">Em Andamento</option>
-                      <option value="vamos_participar">Vamos Participar</option>
                       <option value="ganhamos">Ganhamos</option>
-                      <option value="perdemos">Perdemos</option>
-                      <option value="suspenso">Suspenso</option>
-                      <option value="revogado">Revogado</option>
-                      <option value="adiado">Adiado</option>
-                      <option value="demonstracao">Demonstração</option>
-                      <option value="cancelado">Cancelado</option>
                       <option value="nao_participar">Decidido Não Participar</option>
+                      <option value="perdemos">Perdemos</option>
+                      <option value="revogado">Revogado</option>
+                      <option value="suspenso">Suspenso</option>
+                      <option value="vamos_participar">Vamos Participar</option>
                     </select>
 
                     <!-- Systems field -->
