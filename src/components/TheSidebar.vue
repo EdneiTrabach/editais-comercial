@@ -93,12 +93,12 @@
               <span class="link-text">Empresas</span>
             </router-link>
           </li>
-          <li class="sidebar-menu-item">
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/relatorios" class="sidebar-menu-link">
               <img src="/icons/check.svg" alt="Relatórios" class="icon" />
               <span class="link-text">Relatórios</span>
             </router-link>
-          </li>
+          </li> -->
           <!-- Novo item de menu para Publicações Contratuais -->
           <li class="sidebar-menu-item">
             <router-link to="/publicacoes-contratuais" class="sidebar-menu-link">

@@ -1,72 +1,64 @@
-import { createClient } from '@supabase/supabase-js'
-import router from '@/router'  // Adicione esta importação
+import { createClient } from '@supabase/supabase-js';
+import router from '@/router'; // Adicione esta importação
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Implementar um padrão Singleton adequado
-let supabaseInstance = null
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Erro: Variáveis de ambiente do Supabase não configuradas corretamente!');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl);
+  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Definida' : 'Não definida');
+}
 
-export function getSupabase() {
-  if (supabaseInstance) return supabaseInstance
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Erro: Variáveis de ambiente do Supabase não configuradas.')
-    throw new Error('Faltam variáveis de ambiente do Supabase')
+const options = {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
   }
-  
+};
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
+
+// Adicionando função de verificação de conexão para debugging
+export const testConnection = async () => {
   try {
-    // Criar cliente com configurações adequadas
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        storageKey: 'editais-comercial-auth' // Chave personalizada para evitar conflitos
-      }
-    })
-    return supabaseInstance
-  } catch (error) {
-    console.error('Erro ao criar cliente Supabase:', error)
-    throw error
+    const { data, error } = await supabase
+      .from('processos') // Verifica se esta tabela existe
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Erro ao testar conexão com Supabase:', error);
+      return false;
+    }
+    
+    console.log('Conexão com Supabase estabelecida com sucesso!');
+    return true;
+  } catch (err) {
+    console.error('Erro de conexão com Supabase:', err);
+    return false;
   }
-}
-
-// Exportar uma única instância do Supabase cliente
-export const supabase = getSupabase()
-
-// Adicionar uma função para resetar a instância em caso de necessidade
-export function resetSupabaseClient() {
-  supabaseInstance = null
-}
-
-// Não use o router aqui para evitar problemas de importação circular
-// Em vez disso, use o hook onAuthStateChange no appService
-
-// Adicione um interceptor global para erros de rede
-window.addEventListener('unhandledrejection', async (event) => {
-  if (event.reason?.code === 'NETWORK_ERROR') {
-    await supabase.auth.refreshSession()
-  }
-})
+};
 
 // Adicione esta função de helper
 const handleSupabaseError = (error) => {
-  console.error('Supabase error:', error)
+  console.error('Supabase error:', error);
   if (error.code === '42P07') { // Relation already exists
-    return null
+    return null;
   }
-  throw error
-}
+  throw error;
+};
 
 // Função helper para consultas
 async function handleQuery(promise) {
   try {
-    const { data, error } = await promise
-    if (error) throw error
-    return { data, error: null }
+    const { data, error } = await promise;
+    if (error) throw error;
+    return { data, error: null };
   } catch (error) {
-    console.error('Erro na consulta:', error)
-    return { data: null, error }
+    console.error('Erro na consulta:', error);
+    return { data: null, error };
   }
 }
 
@@ -84,34 +76,34 @@ const makeRequest = async (url) => {
     console.error('Erro na requisição:', error);
     return null;
   }
-}
+};
 
 // Helper para verificar se é admin
 export const checkIsAdmin = async () => {
   try {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return false
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
 
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .maybeSingle()
+      .maybeSingle();
 
     if (error) {
-      console.error('Erro ao verificar admin:', error)
-      return false
+      console.error('Erro ao verificar admin:', error);
+      return false;
     }
 
-    const isAdmin = profile?.role === 'admin'
-    localStorage.setItem('userRole', profile?.role || '')
-    return isAdmin
+    const isAdmin = profile?.role === 'admin';
+    localStorage.setItem('userRole', profile?.role || '');
+    return isAdmin;
 
   } catch (error) {
-    console.error('Erro ao verificar admin:', error)
-    return false
+    console.error('Erro ao verificar admin:', error);
+    return false;
   }
-}
+};
 
 // API de Autenticação
 export const authApi = {
@@ -125,9 +117,9 @@ export const authApi = {
             role: 'user'
           }
         }
-      })
+      });
 
-      if (error) throw error
+      if (error) throw error;
 
       // Criar perfil apenas se o usuário for criado com sucesso
       if (data.user) {
@@ -139,14 +131,14 @@ export const authApi = {
             role: 'user',
             created_at: new Date().toISOString()
           })
-          .single()
+          .single();
 
-        if (profileError) handleSupabaseError(profileError)
+        if (profileError) handleSupabaseError(profileError);
       }
 
-      return data
+      return data;
     } catch (error) {
-      handleSupabaseError(error)
+      handleSupabaseError(error);
     }
   },
 
@@ -154,61 +146,61 @@ export const authApi = {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
-    })
-    if (error) throw error
-    return data
+    });
+    if (error) throw error;
+    return data;
   },
 
   async resetPassword(email) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL
-    })
-    if (error) throw error
+    });
+    if (error) throw error;
   },
 
   async deleteUser(userId) {
     try {
       // Verifica se é admin
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single()
+        .single();
 
       if (profile.role !== 'admin') {
-        throw new Error('Apenas administradores podem deletar usuários')
+        throw new Error('Apenas administradores podem deletar usuários');
       }
 
       // 1. Primeiro remove todas as referências do usuário
       const { error: refsError } = await supabase.rpc('cleanup_user_references', {
         user_id: userId
-      })
+      });
 
-      if (refsError) throw refsError
+      if (refsError) throw refsError;
 
       // 2. Remove o perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', userId)
+        .eq('id', userId);
 
-      if (profileError) throw profileError
+      if (profileError) throw profileError;
 
       // 3. Remove o usuário via função RPC
       const { error: userError } = await supabase.rpc('delete_user', {
         user_id: userId
-      })
+      });
 
-      if (userError) throw userError
+      if (userError) throw userError;
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      console.error('Erro ao deletar usuário:', error)
-      throw error
+      console.error('Erro ao deletar usuário:', error);
+      throw error;
     }
   }
-}
+};
 
 // API de Editais
 export const editaisApi = {
@@ -223,24 +215,24 @@ export const editaisApi = {
           departamento
         )
       `)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
     
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   },
 
   async criar(edital) {
-    const user = await supabase.auth.getUser()
+    const user = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('editais')
       .insert([{
         ...edital,
         responsavel_id: user.data.user.id
       }])
-      .select()
+      .select();
     
-    if (error) throw error
-    return data[0]
+    if (error) throw error;
+    return data[0];
   },
 
   async atualizar(id, edital) {
@@ -248,21 +240,21 @@ export const editaisApi = {
       .from('editais')
       .update(edital)
       .eq('id', id)
-      .select()
+      .select();
     
-    if (error) throw error
-    return data[0]
+    if (error) throw error;
+    return data[0];
   },
 
   async deletar(id) {
     const { error } = await supabase
       .from('editais')
       .delete()
-      .eq('id', id)
+      .eq('id', id);
     
-    if (error) throw error
+    if (error) throw error;
   }
-}
+};
 
 // API de dados
 export const dataApi = {
@@ -273,7 +265,7 @@ export const dataApi = {
         .select('*')
         .eq('id', userId)
         .single()
-    )
+    );
   },
 
   async getPlataformas() {
@@ -282,7 +274,7 @@ export const dataApi = {
         .from('plataformas')
         .select('*')
         .order('nome', { ascending: true })
-    )
+    );
   },
 
   async getRepresentantes() {
@@ -291,53 +283,53 @@ export const dataApi = {
         .from('representantes')
         .select('*')
         .order('nome', { ascending: true })
-    )
+    );
   }
-}
+};
 
 const deleteUser = async (userId) => {
   try {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) {
-      return
+      return;
     }
 
-    const { error } = await authApi.deleteUser(userId)
+    const { error } = await authApi.deleteUser(userId);
     
-    if (error) throw error
+    if (error) throw error;
     
-    showToast('Usuário excluído com sucesso', 'success')
-    await loadUsers() // Recarrega a lista
+    showToast('Usuário excluído com sucesso', 'success');
+    await loadUsers(); // Recarrega a lista
     
   } catch (error) {
-    console.error('Erro ao excluir usuário:', error)
+    console.error('Erro ao excluir usuário:', error);
     showToast(
       error.message || 'Erro ao excluir usuário', 
       'error'
-    )
+    );
   }
-}
+};
 
 const loadPlataformas = async () => {
   try {
-    const { data, error } = await dataApi.getPlataformas()
-    if (error) throw error
-    plataformas.value = data || []
+    const { data, error } = await dataApi.getPlataformas();
+    if (error) throw error;
+    plataformas.value = data || [];
   } catch (error) {
-    console.error('Erro ao carregar plataformas:', error)
-    showToast('Erro ao carregar plataformas', 'error')
+    console.error('Erro ao carregar plataformas:', error);
+    showToast('Erro ao carregar plataformas', 'error');
   }
-}
+};
 
 const loadRepresentantes = async () => {
   try {
-    const { data, error } = await dataApi.getRepresentantes()
-    if (error) throw error
-    representantes.value = data || []
+    const { data, error } = await dataApi.getRepresentantes();
+    if (error) throw error;
+    representantes.value = data || [];
   } catch (error) {
-    console.error('Erro ao carregar representantes:', error)
-    showToast('Erro ao carregar representantes', 'error') 
+    console.error('Erro ao carregar representantes:', error);
+    showToast('Erro ao carregar representantes', 'error'); 
   }
-}
+};
 
 async function exportAllTables() {
   const { data, error } = await supabase.rpc('export_all_tables');
