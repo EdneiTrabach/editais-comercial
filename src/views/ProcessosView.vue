@@ -244,9 +244,20 @@
                     <select v-else-if="coluna.campo === 'site_pregao'" v-model="editingCell.value"
                       @blur="handleUpdate(processo)" @change="handleUpdate(processo)" @keyup.esc="cancelEdit()">
                       <option value="">Selecione uma plataforma...</option>
-                      <option v-for="plataforma in plataformas" :key="plataforma.id" :value="plataforma.url">
-                        {{ plataforma.nome }}
-                      </option>
+                      <option value="https://semurl.com.br">A CONFIRMAR!</option>
+                      <option value="https://minhaconta.ammlicita.org.br/oauth2/in/">AMM LICITA</option>
+                      <option value="https://www.bec.sp.gov.br/bec_pregao_UI/OC/pesquisa_publica.aspx?chave=">BEC</option>
+                      <option value="https://auth.novobbmnet.com.br/realms/BBM/protocol/openid-connect/auth?client_id=cadastro-participantes-admin-site&redirect_uri=https%3A%2F%2Fsistema.novobbmnet.com.br%2F&state=20beb4b7-5987-4a16-9906-1c03ecfe53b7&response_mode=fragment&response_type=code&scope=openid&nonce=6641a057-d2de-4064-ad17-6a1461d42a81&code_challenge=HjW7w3_2OWK-sR0nodbHpIFVW_mqs7HAfSIqMygjiTE&code_challenge_method=S256">BBMNET</option>
+                      <option value="https://bllcompras.com/Home/Login">BLL</option>
+                      <option value="https://bnccompras.com/Home/Login">BNC</option>
+                      <option value="https://www.licitacoes.caixa.gov.br/SitePages/pagina_inicial.aspx">CAIXA</option>
+                      <option value="https://app.comprasbr.com.br/auto-cadastro/#/validado/login/externo?uri=https:%2F%2Fapp.comprasbr.com.br%2Flicitacao&produto=licitacao">COMPRASBR</option>
+                      <option value="https://www.comprasnet.gov.br/seguro/loginPortal.asp">COMPRASNET</option>
+                      <option value="https://elicitacao.com.br/">eLICITAÇÃO</option>
+                      <option value="https://www.licitacoes-e.com.br/aop/index.jsp">LICITAÇÕES-E</option>
+                      <option value="https://portal.licitanet.com.br/login">LICITANET</option>
+                      <option value="https://minhaconta.licitardigital.com.br/oauth2/in/">LICITAR DIGITAL</option>
+                      <option value="https://operacao.portaldecompraspublicas.com.br/18/loginext/">PORTAL DE COMPRAS PUBLICAS</option>
                     </select>
 
                     <!-- Input genérico para campos sem tratamento específico (como Órgão) -->
