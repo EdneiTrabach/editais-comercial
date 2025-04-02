@@ -397,17 +397,6 @@
                             <span class="impugnacao-value">{{ formatDate(processo.impugnacao_data_limite) || '-' }}</span>
                           </div>
                           
-                          <div class="impugnacao-item">
-                            <span class="impugnacao-label">Status:</span>
-                            <span class="impugnacao-value impugnacao-status" :class="`status-imp-${processo.impugnacao_status || 'nao_iniciado'}`">
-                              {{ formatImpugnacaoStatus(processo.impugnacao_status) }}
-                            </span>
-                          </div>
-                          
-                          <div class="impugnacao-item">
-                            <span class="impugnacao-label">Forma de envio:</span>
-                            <span class="impugnacao-value">{{ processo.impugnacao_forma_envio || '-' }}</span>
-                          </div>
                           
                           <div v-if="processo.impugnacao_itens" class="impugnacao-item">
                             <span class="impugnacao-label">Itens:</span>
@@ -418,7 +407,18 @@
                             <span class="impugnacao-label">Observações:</span>
                             <span class="impugnacao-value impugnacao-text">{{ processo.impugnacoes }}</span>
                           </div>
+
+                          <div class="impugnacao-item">
+                            <span class="impugnacao-label">Forma de envio:</span>
+                            <span class="impugnacao-value">{{ processo.impugnacao_forma_envio || '-' }}</span>
+                          </div>
                           
+                          <div class="impugnacao-item">
+                            <span class="impugnacao-label">Status:</span>
+                            <span class="impugnacao-value impugnacao-status" :class="`status-imp-${processo.impugnacao_status || 'nao_iniciado'}`">
+                              {{ formatImpugnacaoStatus(processo.impugnacao_status) }}
+                            </span>
+                          </div>
                           <button class="impugnacao-edit-btn" @click.stop="showImpugnacaoDialog(processo)">
                             <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
                           </button>
@@ -771,26 +771,26 @@
       </div>
 
       <!-- Diálogo para registro de impugnação -->
-      <div v-if="impugnacaoDialog.show" class="modal-overlay">
-        <div class="confirm-dialog impugnacao-dialog">
-          <h3>Registro de Impugnação</h3>
-          <div class="confirm-content">
-            <p>Processo: {{ impugnacaoDialog.processo?.numero_processo }}</p>
+      <div v-if="impugnacaoDialog.show" class="modal-overlay impugnacao-modal-overlay">
+        <div class="confirm-dialog impugnacao-dialog impugnacao-dialog-container">
+          <h3 class="impugnacao-dialog-title">Registro de Impugnação</h3>
+          <div class="confirm-content impugnacao-dialog-content">
+            <p class="impugnacao-processo-info">Processo: {{ impugnacaoDialog.processo?.numero_processo }}</p>
             
-            <div class="impugnacao-info">
-              <div class="impugnacao-alert">
-                <h4>⚠️ Informações importantes sobre impugnações:</h4>
-                <div class="impugnacao-alert-content">
-                  <p><strong>Itens Mais Impugnados em Editais:</strong></p>
-                  <ul>
+            <div class="impugnacao-info impugnacao-info-container">
+              <div class="impugnacao-alert impugnacao-alert-box">
+                <h4 class="impugnacao-alert-title">⚠️ Informações importantes sobre impugnações:</h4>
+                <div class="impugnacao-alert-content impugnacao-alert-content-box">
+                  <p class="impugnacao-section-title"><strong class="impugnacao-strong-text">Itens Mais Impugnados em Editais:</strong></p>
+                  <ul class="impugnacao-items-list">
                     <li>Exigências técnicas excessivas</li>
                     <li>Critérios de julgamento subjetivos</li>
                     <li>Prazos exíguos para apresentação de propostas</li>
                     <li>Falta de clareza nas especificações do objeto</li>
                   </ul>
                   
-                  <p><strong>Cuidados ao Elaborar Impugnações:</strong></p>
-                  <ul>
+                  <p class="impugnacao-section-title"><strong class="impugnacao-strong-text">Cuidados ao Elaborar Impugnações:</strong></p>
+                  <ul class="impugnacao-care-list">
                     <li>Verificar conformidade com a Lei 14.133</li>
                     <li>Garantir clareza e objetividade nas especificações</li>
                     <li>Estabelecer prazos razoáveis para apresentação de propostas</li>
@@ -800,55 +800,58 @@
               </div>
             </div>
             
-            <div class="form-row">
-              <div class="form-group">
-                <label>Data limite para impugnação</label>
+            <div class="form-row impugnacao-form-row">
+              <div class="form-group impugnacao-form-group">
+                <label class="impugnacao-label">Data limite para impugnação</label>
                 <input 
+                  class="impugnacao-date-input"
                   type="date" 
                   v-model="impugnacaoDialog.dataLimite" 
                   :min="new Date().toISOString().split('T')[0]"
                 />
               </div>
               
-              <div class="form-group">
-                <label>Status da impugnação</label>
-                <select v-model="impugnacaoDialog.status">
-                  <option value="nao_iniciado">Não iniciado</option>
-                  <option value="em_andamento">Em andamento</option>
-                  <option value="enviado">Enviado</option>
-                  <option value="respondido">Respondido</option>
-                  <option value="aprovado">Aprovado</option>
-                  <option value="rejeitado">Rejeitado</option>
+              <div class="form-group impugnacao-form-group">
+                <label class="impugnacao-label">Status da impugnação</label>
+                <select class="impugnacao-status-select" v-model="impugnacaoDialog.status">
+                  <option class="impugnacao-status-option" value="nao_iniciado">Não iniciado</option>
+                  <option class="impugnacao-status-option" value="em_andamento">Em andamento</option>
+                  <option class="impugnacao-status-option" value="enviado">Enviado</option>
+                  <option class="impugnacao-status-option" value="respondido">Respondido</option>
+                  <option class="impugnacao-status-option" value="aprovado">Aprovado</option>
+                  <option class="impugnacao-status-option" value="rejeitado">Rejeitado</option>
                 </select>
               </div>
             </div>
             
-            <div class="form-row single">
-              <div class="form-group">
-                <label>Forma de envio da impugnação</label>
-                <select v-model="impugnacaoDialog.formaEnvio">
-                  <option value="">Selecione a forma de envio</option>
-                  <option value="email">E-mail</option>
-                  <option value="portal">Portal do órgão</option>
-                  <option value="fisico">Físico (Protocolo)</option>
-                  <option value="outro">Outro</option>
+            <div class="form-row single impugnacao-form-row-single">
+              <div class="form-group impugnacao-form-group">
+                <label class="impugnacao-label">Forma de envio da impugnação</label>
+                <select class="impugnacao-forma-select" v-model="impugnacaoDialog.formaEnvio">
+                  <option class="impugnacao-forma-option" value="">Selecione a forma de envio</option>
+                  <option class="impugnacao-forma-option" value="email">E-mail</option>
+                  <option class="impugnacao-forma-option" value="portal">Portal do órgão</option>
+                  <option class="impugnacao-forma-option" value="fisico">Físico (Protocolo)</option>
+                  <option class="impugnacao-forma-option" value="outro">Outro</option>
                 </select>
                 <input 
-                  v-if="impugnacaoDialog.formaEnvio === 'outro'" 
-                  type="text" 
-                  v-model="impugnacaoDialog.formaEnvioOutro" 
+                  v-if="impugnacaoDialog.formaEnvio === 'outro'"
+                  v-model="impugnacaoDialog.formaEnvioOutro"
+                  class="impugnacao-outro-input"
+                  type="text"
                   placeholder="Especifique a forma de envio"
                 />
               </div>
             </div>
             
-            <div class="form-row single">
-              <div class="form-group">
-                <label>Itens a impugnar</label>
+            <div class="form-row single impugnacao-form-row-single">
+              <div class="form-group impugnacao-form-group">
+                <label class="impugnacao-label">Itens a impugnar</label>
                 <textarea 
-                  v-model="impugnacaoDialog.itens"
-                  rows="6"
+                  class="impugnacao-itens-textarea" 
+                  rows="6" 
                   placeholder="Descreva os itens que serão impugnados..."
+                  v-model="impugnacaoDialog.itens"
                 ></textarea>
               </div>
             </div>
@@ -857,14 +860,14 @@
               <div class="form-group">
                 <label>Observações adicionais</label>
                 <textarea 
-                  v-model="impugnacaoDialog.observacoes"
-                  rows="4"
+                  rows="4" 
                   placeholder="Adicione observações relevantes sobre a impugnação..."
+                  v-model="impugnacaoDialog.observacoes"
                 ></textarea>
               </div>
             </div>
-            
           </div>
+          
           <div class="confirm-actions">
             <button class="btn-cancel" @click="hideImpugnacaoDialog">Cancelar</button>
             <button 
@@ -1455,39 +1458,37 @@ export default {
 .valor-monetario {  
   white-space: nowrap;  
 }
+
 .impugnacoes-cell {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-.impugnacao-data-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+
 .impugnacao-item {
   display: flex;
   justify-content: space-between;
 }
+
 .impugnacao-label {
   font-weight: bold;
 }
-.impugnacao-value {
-  flex-grow: 1;
-  text-align: right;
-}
+
 .impugnacao-status {
   font-weight: bold;
 }
+
 .impugnacao-text {
   white-space: pre-wrap;
 }
+
 .empty-impugnacao {
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
+
 .add-impugnacao {
   font-size: 1.5rem;
   font-weight: bold;

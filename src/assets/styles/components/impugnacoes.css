@@ -8,14 +8,15 @@
 }
 
 .impugnacao-data-container {
-  display: flex;
+  display: grid;
   flex-direction: column;
   gap: 4px;
   position: relative;
-  padding: 6px 2px;
-  padding-right: 24px;
-  border-left: 3px solid #f59e0b;
-  border-radius: 2px;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: 1fr;
 }
 
 .impugnacao-item {
@@ -141,9 +142,13 @@
   .impugnacao-data-container {
     padding-right: 20px;
   }
-  
+
   .impugnacao-text {
     max-height: 40px;
     -webkit-line-clamp: 2;
   }
+}
+
+select.impugnacao-status-select {
+  height: 64px;
 }
