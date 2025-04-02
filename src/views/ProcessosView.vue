@@ -383,7 +383,7 @@
                       <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
                       <span 
                         class="status-display" 
-                        :class="getStatusClass(processo)"
+                        :class="[getStatusClass(processo), `status-${processo.status}`]"
                         @mouseenter="showStatusInfo(processo, $event)" 
                         @mouseleave="hideStatusInfo"
                         :title="isRecurringStatus(processo) ? `Notificações automáticas ativadas. Próxima notificação: ${nextNotificationDateMap[processo.id] || 'calculando...'}` : ''"

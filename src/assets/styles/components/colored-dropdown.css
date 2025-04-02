@@ -14,58 +14,78 @@
   padding: 8px 12px;
 }
 
-/* Cores específicas para cada opção */
-.status-select option[value="em_analise"] {
+/* Classes para células de exibição de status */
+.status-display {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Cores específicas para cada opção no dropdown e na exibição */
+.status-select option[value="em_analise"],
+.status-em_analise {
   background-color: #f8f9fa;
   color: #495057;
 }
 
-.status-select option[value="em_andamento"] {
+.status-select option[value="em_andamento"],
+.status-em_andamento {
   background-color: #ffe0b2;
   color: #ef6c00;
 }
 
-.status-select option[value="vamos_participar"] {
+.status-select option[value="vamos_participar"],
+.status-vamos_participar {
   background-color: #e3f2fd;
   color: #1976d2;
 }
 
-.status-select option[value="ganhamos"] {
+.status-select option[value="ganhamos"],
+.status-ganhamos {
   background-color: #d4edda;
   color: #155724;
 }
 
-.status-select option[value="perdemos"] {
+.status-select option[value="perdemos"],
+.status-perdemos {
   background-color: #ffc2c2;
   color: #e90b0b;
 }
 
-.status-select option[value="suspenso"] {
+.status-select option[value="suspenso"],
+.status-suspenso {
   background-color: #e3f2fd;
   color: #1976d2;
 }
 
-.status-select option[value="revogado"] {
+.status-select option[value="revogado"],
+.status-revogado {
   background-color: #bbdefb;
   color: #1565c0;
 }
 
-.status-select option[value="adiado"] {
+.status-select option[value="adiado"],
+.status-adiado {
   background-color: #e1f5fe;
   color: #0288d1;
 }
 
-.status-select option[value="demonstracao"] {
+.status-select option[value="demonstracao"],
+.status-demonstracao {
   background-color: #ff9800;
   color: #ffffff;
 }
 
-.status-select option[value="cancelado"] {
+.status-select option[value="cancelado"],
+.status-cancelado {
   background-color: #1a237e;
   color: #ffffff;
 }
 
-.status-select option[value="nao_participar"] {
+.status-select option[value="nao_participar"],
+.status-nao_participar {
   background-color: #fff9c4;
   color: #f9a825;
 }
