@@ -1,0 +1,71 @@
+/* Estilos para dropdown com opções coloridas */
+
+/* Estilo base para o select */
+.status-select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  width: 100%;
+}
+
+/* Estilo para as opções do dropdown */
+.status-select option {
+  padding: 8px 12px;
+}
+
+/* Cores específicas para cada opção */
+.status-select option[value="em_analise"] {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.status-select option[value="em_andamento"] {
+  background-color: #ffe0b2;
+  color: #ef6c00;
+}
+
+.status-select option[value="vamos_participar"] {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-select option[value="ganhamos"] {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-select option[value="perdemos"] {
+  background-color: #ffc2c2;
+  color: #e90b0b;
+}
+
+.status-select option[value="suspenso"] {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-select option[value="revogado"] {
+  background-color: #bbdefb;
+  color: #1565c0;
+}
+
+.status-select option[value="adiado"] {
+  background-color: #e1f5fe;
+  color: #0288d1;
+}
+
+.status-select option[value="demonstracao"] {
+  background-color: #ff9800;
+  color: #ffffff;
+}
+
+.status-select option[value="cancelado"] {
+  background-color: #1a237e;
+  color: #ffffff;
+}
+
+.status-select option[value="nao_participar"] {
+  background-color: #fff9c4;
+  color: #f9a825;
+}

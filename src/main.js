@@ -4,6 +4,7 @@ import router from './router'
 import { createAppService } from './services/appService'
 import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
+import './assets/styles/components/colored-dropdown.css'
 import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
 import '@/assets/sharedStyles.css'
 // Não precisamos mais da configuração CSP via meta tag
