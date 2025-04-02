@@ -1,9 +1,11 @@
 # Funcionalidade: Adicionar Responsável
 
 ## Descrição
+
 Esta funcionalidade permite adicionar novos responsáveis ao sistema. Um modal é exibido com um formulário para preenchimento dos dados do novo responsável.
 
 ## Fluxo da Funcionalidade
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -54,19 +56,24 @@ sequenceDiagram
 ```
 
 ## Interface de Usuário
+
 O modal de adição contém um formulário com os seguintes campos:
+
 - Nome (obrigatório)
 - Email (obrigatório)
 - Departamento (opcional)
 - Botões de "Cancelar" e "Salvar"
 
 ## Validações
+
 O processo de adição realiza as seguintes validações:
+
 1. Validação de campos obrigatórios (nome e email)
 2. Verificação se o email já existe na tabela de responsáveis
 3. Verificação se o email já existe na tabela de profiles (evita conflitos)
 
 ## Dados Inseridos
+
 Os dados são inseridos na tabela `responsaveis_processos` através de uma função RPC:
 
 ```javascript
@@ -78,6 +85,7 @@ const { error } = await supabase.rpc('adicionar_responsavel', {
 ```
 
 ## Tabela e Colunas
+
 | Tabela | Coluna | Tipo | Descrição |
 |--------|--------|------|-----------|
 | responsaveis_processos | nome | text | Nome do responsável |
@@ -88,6 +96,7 @@ const { error } = await supabase.rpc('adicionar_responsavel', {
 | responsaveis_processos | updated_at | timestamp | Data de atualização (automático) |
 
 ## Função PostgreSQL Utilizada
+
 ```sql
 CREATE OR REPLACE FUNCTION adicionar_responsavel(p_nome TEXT, p_email TEXT, p_departamento TEXT DEFAULT NULL)
 RETURNS void
@@ -102,6 +111,7 @@ $$;
 ```
 
 ## Tratamento de Erros
+
 - Validação local para campos obrigatórios
 - Verificação de duplicidade de email em duas tabelas
 - Exibição de mensagens de erro específicas para cada caso

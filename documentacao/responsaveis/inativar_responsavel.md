@@ -1,9 +1,11 @@
 # Funcionalidade: Ativar/Inativar Responsável
 
 ## Descrição
+
 Esta funcionalidade permite alterar o status de um responsável entre ativo (ACTIVE) e inativo (INACTIVE). Um diálogo de confirmação é exibido antes de processar a alteração.
 
 ## Fluxo da Funcionalidade
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -39,6 +41,7 @@ sequenceDiagram
 ```
 
 ## Interface de Usuário
+
 - Botão na coluna de ações com ícone correspondente ao estado atual:
   - Ativo: Mostra ícone para inativar
   - Inativo: Mostra ícone para ativar
@@ -51,6 +54,7 @@ sequenceDiagram
   - Inativo: Badge vermelho
   
 ## Dados Atualizados
+
 ```javascript
 const { error } = await supabase
   .from('responsaveis_processos')
@@ -62,12 +66,14 @@ const { error } = await supabase
 ```
 
 ## Tabela e Colunas Atualizadas
+
 | Tabela | Coluna | Tipo | Descrição |
 |--------|--------|------|-----------|
 | responsaveis_processos | status | text | Status do responsável ('ACTIVE' ou 'INACTIVE') |
 | responsaveis_processos | updated_at | timestamp | Data de atualização (atualizada automaticamente) |
 
 ## Função de Alteração de Status
+
 ```javascript
 const toggleResponsavelStatus = (responsavel) => {
   const newStatus = responsavel.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
@@ -103,6 +109,7 @@ const toggleResponsavelStatus = (responsavel) => {
 ```
 
 ## Impacto Funcional
+
 - Responsáveis com status 'INACTIVE' não podem ser designados para novos processos
 - A interface visual mostra claramente o status do responsável através de badges coloridos
 - Essa funcionalidade é útil quando um responsável deixa temporariamente de atuar nos processos, mas não deve ser excluído do sistema

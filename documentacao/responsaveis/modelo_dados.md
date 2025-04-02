@@ -1,9 +1,11 @@
 # Modelo de Dados - Administração de Responsáveis
 
 ## Visão Geral do Modelo
+
 O módulo de Administração de Responsáveis trabalha principalmente com a tabela `responsaveis_processos`, que mantém o cadastro de pessoas que podem ser designadas como responsáveis pelos processos licitatórios. Esta tabela tem uma relação com a tabela `processos`.
 
 ## Diagrama ER
+
 ```mermaid
 erDiagram
     responsaveis_processos ||--o{ processos : "é responsável por"
@@ -42,6 +44,7 @@ erDiagram
 ## Detalhamento das Tabelas
 
 ### Tabela: responsaveis_processos
+
 Esta é a tabela principal usada pela funcionalidade de Administração de Responsáveis.
 
 | Coluna | Tipo | Nulável | Descrição | Restrições |
@@ -55,11 +58,13 @@ Esta é a tabela principal usada pela funcionalidade de Administração de Respo
 | updated_at | timestamp with time zone | não | Data de última atualização | Default: now() |
 
 #### Índices
+
 - Índice primário: id
 - Índice único: email
 - Índice para melhorar performance de consulta: status
 
 ### Tabela: processos (Relacionada)
+
 Esta tabela se relaciona com `responsaveis_processos` através da coluna `responsavel_id`.
 
 | Coluna | Tipo | Nulável | Descrição | Restrições |
@@ -69,9 +74,11 @@ Esta tabela se relaciona com `responsaveis_processos` através da coluna `respon
 | ... | ... | ... | (outros campos do processo) | ... |
 
 #### Relacionamentos
+
 - `responsavel_id` é uma chave estrangeira que referencia `responsaveis_processos.id`
 
 ### Tabela: profiles (Relacionada)
+
 Esta tabela não é diretamente modificada pela funcionalidade, mas é consultada para verificar duplicidade de emails.
 
 | Coluna | Tipo | Nulável | Descrição | Restrições |
@@ -82,6 +89,7 @@ Esta tabela não é diretamente modificada pela funcionalidade, mas é consultad
 | ... | ... | ... | (outros campos do perfil) | ... |
 
 ## Chaves Estrangeiras
+
 - `processos.responsavel_id` → `responsaveis_processos.id`
   - ON DELETE: SET NULL (ao excluir um responsável, o campo em processos é definido como NULL)
   - ON UPDATE: CASCADE (ao atualizar o ID de um responsável, a referência em processos é atualizada)

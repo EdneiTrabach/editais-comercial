@@ -1,9 +1,11 @@
 # Funcionalidade: Listar Responsáveis
 
 ## Descrição
+
 Esta funcionalidade exibe uma tabela com todos os responsáveis cadastrados no sistema, incluindo seus dados principais e status. A lista é atualizada em tempo real usando o recurso Realtime do Supabase.
 
 ## Fluxo da Funcionalidade
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -33,7 +35,9 @@ sequenceDiagram
 ```
 
 ## Interface de Usuário
+
 A tabela de responsáveis exibe as seguintes colunas:
+
 - Nome (editável inline)
 - Email
 - Departamento (editável inline)
@@ -41,6 +45,7 @@ A tabela de responsáveis exibe as seguintes colunas:
 - Ações (ativar/inativar e excluir)
 
 ## Dados Recuperados
+
 Os dados são carregados da tabela `responsaveis_processos` usando a função `loadResponsaveis`:
 
 ```javascript
@@ -64,6 +69,7 @@ const loadResponsaveis = async () => {
 ```
 
 ## Atualização em Tempo Real
+
 A funcionalidade utiliza o recurso Realtime do Supabase para manter a lista sempre atualizada:
 
 ```javascript
@@ -76,6 +82,7 @@ const channel = supabase.channel('responsaveis-updates')
 ```
 
 ## Tabela do Banco de Dados
+
 | Tabela | Coluna | Tipo | Descrição |
 |--------|--------|------|-----------|
 | responsaveis_processos | id | uuid | Identificador único do responsável |

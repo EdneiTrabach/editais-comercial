@@ -1,9 +1,11 @@
 # Funcionalidade: Atualizar Responsável
 
 ## Descrição
+
 Esta funcionalidade permite a edição inline dos dados de um responsável diretamente na tabela, sem necessidade de abrir um modal. Os campos editáveis são: Nome e Departamento.
 
 ## Fluxo da Funcionalidade - Atualização de Nome
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -40,6 +42,7 @@ sequenceDiagram
 ```
 
 ## Fluxo da Funcionalidade - Atualização de Departamento
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -76,14 +79,18 @@ sequenceDiagram
 ```
 
 ## Interface de Usuário
+
 A edição acontece diretamente na tabela:
+
 - Campos editáveis têm um ícone de edição ao lado
 - Ao clicar no ícone, o texto transforma-se em um campo de entrada
 - A atualização ocorre ao pressionar Enter ou quando o campo perde o foco
 - Feedback visual é fornecido através de toast messages
 
 ## Dados Atualizados
+
 ### Atualização de Nome
+
 ```javascript
 const { error } = await supabase
   .from('responsaveis_processos')
@@ -95,6 +102,7 @@ const { error } = await supabase
 ```
 
 ### Atualização de Departamento
+
 ```javascript
 const { error } = await supabase
   .from('responsaveis_processos')
@@ -106,6 +114,7 @@ const { error } = await supabase
 ```
 
 ## Tabela e Colunas Atualizadas
+
 | Tabela | Coluna | Tipo | Descrição |
 |--------|--------|------|-----------|
 | responsaveis_processos | nome | text | Nome do responsável |
@@ -113,7 +122,9 @@ const { error } = await supabase
 | responsaveis_processos | updated_at | timestamp | Data de atualização (atualizada automaticamente) |
 
 ## Controles de Edição Inline
+
 A funcionalidade usa estados locais para controlar a edição inline:
+
 ```javascript
 // Estados para controle da edição inline
 const editingNames = ref({})      // Controla quais linhas estão editando o nome
@@ -122,9 +133,11 @@ const editingData = ref({})       // Armazena os dados em edição
 ```
 
 ## Validações
+
 - O nome não pode ficar em branco após a edição
 - O departamento pode ficar em branco (será armazenado como null)
 
 ## Tratamento de Erros
+
 - Exibe mensagem de erro em caso de falha na atualização
 - Retorna ao modo de visualização em caso de erro

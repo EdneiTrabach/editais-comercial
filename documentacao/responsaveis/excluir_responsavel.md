@@ -1,9 +1,11 @@
 # Funcionalidade: Excluir Responsável
 
 ## Descrição
+
 Esta funcionalidade permite excluir um responsável do sistema, desde que ele não esteja associado a nenhum processo. Um diálogo de confirmação é exibido antes da exclusão, e verificações são realizadas para garantir que não existam processos associados.
 
 ## Fluxo da Funcionalidade
+
 ```mermaid
 sequenceDiagram
     actor U as Usuário Admin
@@ -50,6 +52,7 @@ sequenceDiagram
 ```
 
 ## Interface de Usuário
+
 - Botão de exclusão na coluna de ações com ícone de lixeira
 - Diálogo de confirmação com:
   - Título "Confirmar Exclusão"
@@ -59,6 +62,7 @@ sequenceDiagram
   - O botão "Excluir" tem estilo visual de perigo/vermelho
 
 ## Verificações Realizadas
+
 Antes da exclusão, o sistema verifica se o responsável está associado a algum processo:
 
 ```javascript
@@ -71,6 +75,7 @@ const { data: processos, error: checkError } = await supabase
 ```
 
 ## Dados Excluídos
+
 ```javascript
 const { error } = await supabase
   .from('responsaveis_processos')
@@ -79,12 +84,14 @@ const { error } = await supabase
 ```
 
 ## Tabela e Relações
+
 | Tabela | Coluna | Tipo | Descrição |
 |--------|--------|------|-----------|
 | responsaveis_processos | id | uuid | ID do responsável (excluído) |
 | processos | responsavel_id | uuid | FK referenciando responsaveis_processos.id |
 
 ## Função de Exclusão
+
 ```javascript
 const deleteResponsavel = (responsavel) => {
   showConfirmDialog.value = true;
@@ -134,6 +141,7 @@ const deleteResponsavel = (responsavel) => {
 ```
 
 ## Regras de Negócio
+
 - Um responsável só pode ser excluído se não estiver associado a nenhum processo
 - A exclusão é permanente e não pode ser desfeita
 - Para casos temporários, é recomendado usar a funcionalidade de inativação em vez de exclusão
