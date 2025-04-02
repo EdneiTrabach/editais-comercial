@@ -59,6 +59,17 @@ export default {
       processo: null
     })
 
+    const impugnacaoDialog = ref({
+      show: false,
+      processo: null,
+      dataLimite: '',
+      itens: '',
+      formaEnvio: '',
+      formaEnvioOutro: '',
+      status: 'nao_iniciado',
+      observacoes: ''
+    });
+
     const editingCell = ref({
       id: null,
       field: null,
@@ -1033,6 +1044,11 @@ export default {
     }
 
     const handleDblClick = async (field, processo, event) => {
+      if (field === 'impugnacoes') {
+        showImpugnacaoDialog(processo);
+        return;
+      }
+
       if (editingCell.value.id === processo.id && editingCell.value.field === field) {
         return;
       }
@@ -1077,6 +1093,22 @@ export default {
       }
 
       if (field === 'responsavel_id') {
+
+        if (representantes.value.length === 0) {
+          console.log('Loading representatives on demand...');
+          await loadRepresentantes();
+
+          debugRepresentantes();
+
+          if (representantes.value.length === 0) {
+            console.error('Could not load representatives.');
+            alert('Could not load the list of representatives.');
+            return;
+          }
+        }
+      }
+
+      if (field === 'responsavel_id') {
         console.log('Clicked on responsável field');
 
         if (responsaveisProcessos.value.length === 0) {
@@ -1105,6 +1137,116 @@ export default {
           };
         }
       };
+    };
+
+    const showImpugnacaoDialog = (processo) => {
+      impugnacaoDialog.value.show = true;
+      impugnacaoDialog.value.processo = processo;
+
+      impugnacaoDialog.value.dataLimite = processo.impugnacao_data_limite || '';
+      impugnacaoDialog.value.itens = processo.impugnacao_itens || '';
+      impugnacaoDialog.value.status = processo.impugnacao_status || 'nao_iniciado';
+
+      if (processo.impugnacao_forma_envio) {
+        if (['email', 'portal', 'fisico'].includes(processo.impugnacao_forma_envio)) {
+          impugnacaoDialog.value.formaEnvio = processo.impugnacao_forma_envio;
+          impugnacaoDialog.value.formaEnvioOutro = '';
+        } else {
+          impugnacaoDialog.value.formaEnvio = 'outro';
+          impugnacaoDialog.value.formaEnvioOutro = processo.impugnacao_forma_envio;
+        }
+      } else {
+        impugnacaoDialog.value.formaEnvio = '';
+        impugnacaoDialog.value.formaEnvioOutro = '';
+      }
+
+      impugnacaoDialog.value.observacoes = processo.impugnacoes || '';
+    };
+
+    const hideImpugnacaoDialog = () => {
+      impugnacaoDialog.value.show = false;
+    };
+
+    const salvarImpugnacao = async () => {
+      try {
+        if (!impugnacaoDialog.value.processo) {
+          showToast('Erro ao identificar o processo', 'error');
+          return;
+        }
+
+        const processo = impugnacaoDialog.value.processo;
+
+        const formaEnvio = impugnacaoDialog.value.formaEnvio === 'outro'
+          ? impugnacaoDialog.value.formaEnvioOutro
+          : impugnacaoDialog.value.formaEnvio;
+
+        const updateData = {
+          impugnacao_data_limite: impugnacaoDialog.value.dataLimite,
+          impugnacao_itens: impugnacaoDialog.value.itens,
+          impugnacao_forma_envio: formaEnvio,
+          impugnacao_status: impugnacaoDialog.value.status,
+          impugnacoes: impugnacaoDialog.value.observacoes,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', processo.id);
+
+        if (error) throw error;
+
+        const index = processos.value.findIndex(p => p.id === processo.id);
+        if (index !== -1) {
+          processos.value[index] = { ...processos.value[index], ...updateData };
+        }
+
+        await logSystemAction({
+          tipo: 'update_impugnacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          dados_anteriores: { 
+            impugnacao_data_limite: processo.impugnacao_data_limite,
+            impugnacao_itens: processo.impugnacao_itens,
+            impugnacao_forma_envio: processo.impugnacao_forma_envio,
+            impugnacao_status: processo.impugnacao_status,
+            impugnacoes: processo.impugnacoes
+          },
+          dados_novos: updateData
+        });
+
+        hideImpugnacaoDialog();
+        showToast('Dados de impugnação salvos com sucesso!', 'success');
+
+        if (impugnacaoDialog.value.status === 'enviado') {
+          const dataLembrete = new Date();
+          dataLembrete.setDate(dataLembrete.getDate() + 3);
+
+          const notificationData = {
+            processo_id: processo.id,
+            status: 'impugnacao_acompanhamento',
+            message: `Acompanhar resposta da impugnação do processo ${processo.numero_processo}`,
+            next_notification: dataLembrete.toISOString(),
+            created_at: new Date().toISOString(),
+            active: true
+          };
+
+          await supabase
+            .from('notification_schedules')
+            .insert(notificationData);
+
+          showToast('Notificação de acompanhamento programada.', 'info');
+        }
+
+      } catch (error) {
+        console.error('Erro ao salvar impugnação:', error);
+        showToast(`Erro ao salvar dados de impugnação: ${error.message}`, 'error');
+      }
     };
 
     const handleConfirmEdit = () => {
@@ -3096,6 +3238,7 @@ export default {
       confirmDialog,
       deleteConfirmDialog,
       sistemasDialog,
+      impugnacaoDialog,
       editingCell,
       sortConfig,
       selectedRow,
@@ -3147,6 +3290,9 @@ export default {
       startColumnResize,
       startRowResize,
       handleDblClick,
+      showImpugnacaoDialog,
+      hideImpugnacaoDialog,
+      salvarImpugnacao,
       handleConfirmEdit,
       hideConfirmDialog,
       cancelEdit,

@@ -13,8 +13,29 @@
 @import 'components/responsavel.css';
 @import 'components/distancias.css';
 @import 'components/actions.css';
+@import 'components/dialogs.css'; /* Nova importação para diálogos específicos */
 
-/* Adicione em algum arquivo CSS relevante */
+/* Layout */
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  transition: margin-left 0.3s;
+  margin-left: 250px;
+  background-color: #f5f7fa;
+}
+
+.main-content.expanded {
+  margin-left: 64px;
+}
+
+/* Status indicators */
 .status-display {
   padding: 4px 8px;
   border-radius: 4px;
@@ -24,6 +45,65 @@
   text-align: center;
 }
 
+/* Status colors */
+.status-vamos_participar {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.status-em_analise {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-em_andamento {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.status-ganhamos {
+  background-color: #f6ffed;
+  color: #52c41a;
+  font-weight: bold;
+}
+
+.status-perdemos {
+  background-color: #fff1f0;
+  color: #f5222d;
+}
+
+.status-suspenso {
+  background-color: #f9f0ff;
+  color: #722ed1;
+}
+
+.status-revogado {
+  background-color: #fff1f0;
+  color: #cf1322;
+}
+
+.status-adiado {
+  background-color: #fcf4e6;
+  color: #fa8c16;
+}
+
+.status-demonstracao {
+  background-color: #e6fffb;
+  color: #13c2c2;
+}
+
+.status-cancelado {
+  background-color: #f0f2f5;
+  color: #8c8c8c;
+  text-decoration: line-through;
+}
+
+.status-nao_participar {
+  background-color: #f0f2f5;
+  color: #8c8c8c;
+}
+
+/* Buttons */
 button.btn-tour {
   display: flex;
   align-items: center;
@@ -33,7 +113,7 @@ button.btn-tour {
   font-weight: 500;
 }
 
-/* Adicionar ao arquivo src/assets/styles/components/table-cells.css */
+/* Table cells */
 td[data-field="empresa_vencedora"] {
   padding: 0;
   vertical-align: middle;
@@ -42,13 +122,14 @@ td[data-field="empresa_vencedora"] {
   background-color: inherit;
 }
 
-/* Estilos específicos para o modo dark */
+/* Dark mode */
 [data-theme="dark"] td[data-field="empresa_vencedora"] {
   border-color: #2d3748;
   background-color: #1e293b;
   color: #e2e8f0;
 }
-/* Adicione estes estilos ao seu CSS */
+
+/* Sistemas implantação dialog */
 .sistemas-implantacao-dialog {
   position: absolute;
   z-index: 1000;
@@ -112,7 +193,7 @@ td[data-field="empresa_vencedora"] {
   box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
 }
 
-/* Layout principal com flexbox para melhorar organização vertical */
+/* Layout principal com flexbox */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -130,7 +211,7 @@ td[data-field="empresa_vencedora"] {
   position: relative;
 }
 
-/* Corrigir problema do filtro avançado empurrando a tabela */
+/* Container da tabela */
 .table-container {
   background: white;
   border-radius: 12px;
@@ -140,10 +221,10 @@ td[data-field="empresa_vencedora"] {
   position: relative;
   user-select: text;
   flex: 1;
-  min-height: 300px; /* Altura mínima para garantir visibilidade suficiente */
+  min-height: 300px;
 }
 
-/* Ajustes para o filtro avançado */
+/* Filtro avançado */
 .advanced-filter-container-wrapper {
   width: 100%;
   max-height: 0;
@@ -164,4 +245,287 @@ td[data-field="empresa_vencedora"] {
   opacity: 1;
   margin-bottom: 16px;
   border-bottom: 1px solid #e9ecef;
+}
+
+/* Estilos para diálogo de impugnação */
+.impugnacao-dialog {
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.impugnacao-info {
+  margin-bottom: 20px;
+}
+
+.impugnacao-alert {
+  background-color: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.impugnacao-alert h4 {
+  color: #b45309;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.impugnacao-alert-content {
+  font-size: 0.9375rem;
+  color: #4b5563;
+}
+
+.impugnacao-alert-content ul {
+  margin-top: 8px;
+  padding-left: 24px;
+}
+
+.impugnacao-alert-content li {
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.impugnacao-alert-content li::before {
+  content: "•";
+  color: #d97706;
+  font-weight: bold;
+  position: absolute;
+  left: -16px;
+}
+
+.impugnacao-alert-content strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Layout do formulário */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-row.single {
+  grid-template-columns: 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+/* Estilos para inputs e selects */
+.form-group input[type="date"],
+.form-group input[type="text"],
+.form-group select {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  height: 42px;
+}
+
+.form-group input[type="date"]:focus,
+.form-group input[type="text"]:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+
+.form-group textarea {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-group textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+
+/* Botões do formulário */
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.btn-cancel {
+  padding: 10px 16px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-confirm {
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-confirm:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-confirm:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Animação de entrada para o diálogo */
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .impugnacao-dialog {
+    width: 95%;
+  }
+  
+  .confirm-dialog .confirm-content {
+    padding: 16px;
+  }
+}
+
+/* Modal overlay - fundo escuro que cobre a página */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Diálogo de confirmação base */
+.confirm-dialog {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 550px;
+  position: relative;
+  animation: dialogFadeIn 0.3s ease-out;
+  border: 1px solid rgba(230, 230, 230, 0.7);
+}
+
+/* Conteúdo do diálogo com scroll interno */
+.confirm-dialog .confirm-content {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 80vh;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.confirm-dialog .confirm-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.confirm-dialog .confirm-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.confirm-dialog .confirm-content::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 10px;
+}
+
+/* Título e subtítulo */
+.confirm-dialog h3 {
+  margin-top: 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.confirm-dialog p {
+  color: #475569;
+  margin-bottom: 16px;
+}
+
+/* Valor monetário - evita quebra de linha */
+.valor-monetario {  
+  white-space: nowrap;  
 }

@@ -728,6 +728,116 @@
         </div>
       </div>
 
+      <!-- Diálogo para registro de impugnação -->
+      <div v-if="impugnacaoDialog.show" class="modal-overlay">
+        <div class="confirm-dialog impugnacao-dialog">
+          <div class="confirm-content">
+            <h3>Registro de Impugnação</h3>
+            <p>Processo: {{ impugnacaoDialog.processo?.numero_processo }}</p>
+            
+            <div class="impugnacao-info">
+              <div class="impugnacao-alert">
+                <h4>⚠️ Informações importantes sobre impugnações:</h4>
+                <div class="impugnacao-alert-content">
+                  <p><strong>Lei 14.133:</strong> A empresa presta serviços de software para gestão pública municipal e estadual com base na Lei 14.133.</p>
+                  
+                  <p><strong>Itens Mais Impugnados em Editais:</strong></p>
+                  <ul>
+                    <li>Exigências técnicas excessivas</li>
+                    <li>Critérios de julgamento subjetivos</li>
+                    <li>Prazos exíguos para apresentação de propostas</li>
+                    <li>Falta de clareza nas especificações do objeto</li>
+                  </ul>
+                  
+                  <p><strong>Cuidados ao Elaborar Impugnações:</strong></p>
+                  <ul>
+                    <li>Verificar conformidade com a Lei 14.133</li>
+                    <li>Garantir clareza e objetividade nas especificações</li>
+                    <li>Estabelecer prazos razoáveis para apresentação de propostas</li>
+                    <li>Evitar exigências técnicas desnecessárias</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Data limite para impugnação</label>
+                <input 
+                  type="date" 
+                  v-model="impugnacaoDialog.dataLimite" 
+                  :min="new Date().toISOString().split('T')[0]"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label>Status da impugnação</label>
+                <select v-model="impugnacaoDialog.status">
+                  <option value="nao_iniciado">Não iniciado</option>
+                  <option value="em_andamento">Em andamento</option>
+                  <option value="enviado">Enviado</option>
+                  <option value="respondido">Respondido</option>
+                  <option value="aprovado">Aprovado</option>
+                  <option value="rejeitado">Rejeitado</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Forma de envio da impugnação</label>
+                <select v-model="impugnacaoDialog.formaEnvio">
+                  <option value="">Selecione a forma de envio</option>
+                  <option value="email">E-mail</option>
+                  <option value="portal">Portal do órgão</option>
+                  <option value="fisico">Físico (Protocolo)</option>
+                  <option value="outro">Outro</option>
+                </select>
+                <input 
+                  v-if="impugnacaoDialog.formaEnvio === 'outro'" 
+                  type="text" 
+                  v-model="impugnacaoDialog.formaEnvioOutro" 
+                  placeholder="Especifique a forma de envio"
+                />
+              </div>
+            </div>
+            
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Itens a impugnar</label>
+                <textarea 
+                  v-model="impugnacaoDialog.itens"
+                  rows="6"
+                  placeholder="Descreva os itens que serão impugnados..."
+                ></textarea>
+              </div>
+            </div>
+            
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Observações adicionais</label>
+                <textarea 
+                  v-model="impugnacaoDialog.observacoes"
+                  rows="4"
+                  placeholder="Adicione observações relevantes sobre a impugnação..."
+                ></textarea>
+              </div>
+            </div>
+            
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="hideImpugnacaoDialog">Cancelar</button>
+              <button 
+                class="btn-confirm" 
+                @click="salvarImpugnacao"
+                :disabled="!impugnacaoDialog.dataLimite || !impugnacaoDialog.itens || !impugnacaoDialog.formaEnvio"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="toast-container">
         <div v-for="toast in toasts" :key="toast.id" class="toast" :class="toast.type">
           {{ toast.message }}
