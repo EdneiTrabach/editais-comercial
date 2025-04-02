@@ -14,6 +14,7 @@
 @import 'components/distancias.css';
 @import 'components/actions.css';
 @import 'components/dialogs.css'; /* Nova importação para diálogos específicos */
+@import 'components/impugnacoes.css'; /* Adicionado o novo arquivo de estilos */
 
 /* Layout */
 .layout {
@@ -379,7 +380,7 @@ td[data-field="empresa_vencedora"] {
   justify-content: flex-end;
   gap: 12px;
   padding-top: 16px;
-  margin-top: 16px;
+  margin-top: 0px;
   border-top: 1px solid #f1f5f9;
   position: sticky;
   bottom: 0;
@@ -485,7 +486,7 @@ td[data-field="empresa_vencedora"] {
 
 /* Conteúdo do diálogo com scroll interno */
 .confirm-dialog .confirm-content {
-  padding: 24px;
+  padding: 0 5px;
   overflow-y: auto;
   max-height: 80vh;
   scrollbar-width: thin;
@@ -512,12 +513,12 @@ td[data-field="empresa_vencedora"] {
   font-size: 1.5rem;
   font-weight: 600;
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   position: sticky;
   top: 0;
   background-color: #fff;
   z-index: 10;
+  text-align: center;
 }
 
 .confirm-dialog p {

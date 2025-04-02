@@ -388,6 +388,48 @@
                       </div>
                     </span>
 
+                    <!-- Impugnações field -->
+                    <span v-else-if="coluna.campo === 'impugnacoes'" class="impugnacoes-cell">
+                      <template v-if="hasImpugnacaoData(processo)">
+                        <div class="impugnacao-data-container">
+                          <div class="impugnacao-item">
+                            <span class="impugnacao-label">Data limite:</span>
+                            <span class="impugnacao-value">{{ formatDate(processo.impugnacao_data_limite) || '-' }}</span>
+                          </div>
+                          
+                          <div class="impugnacao-item">
+                            <span class="impugnacao-label">Status:</span>
+                            <span class="impugnacao-value impugnacao-status" :class="`status-imp-${processo.impugnacao_status || 'nao_iniciado'}`">
+                              {{ formatImpugnacaoStatus(processo.impugnacao_status) }}
+                            </span>
+                          </div>
+                          
+                          <div class="impugnacao-item">
+                            <span class="impugnacao-label">Forma de envio:</span>
+                            <span class="impugnacao-value">{{ processo.impugnacao_forma_envio || '-' }}</span>
+                          </div>
+                          
+                          <div v-if="processo.impugnacao_itens" class="impugnacao-item">
+                            <span class="impugnacao-label">Itens:</span>
+                            <span class="impugnacao-value impugnacao-text">{{ processo.impugnacao_itens }}</span>
+                          </div>
+                          
+                          <div v-if="processo.impugnacoes" class="impugnacao-item">
+                            <span class="impugnacao-label">Observações:</span>
+                            <span class="impugnacao-value impugnacao-text">{{ processo.impugnacoes }}</span>
+                          </div>
+                          
+                          <button class="impugnacao-edit-btn" @click.stop="showImpugnacaoDialog(processo)">
+                            <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
+                          </button>
+                        </div>
+                      </template>
+                      <div v-else class="empty-impugnacao" @click.stop="showImpugnacaoDialog(processo)">
+                        <span class="add-impugnacao">+</span>
+                        <span>Clique para registrar impugnação</span>
+                      </div>
+                    </span>
+
                     <!-- Default display for other fields -->
                     <template v-else-if="coluna.campo === 'status'">
                       <!-- Mostrar apenas o texto formatado do status em modo de visualização -->
@@ -731,16 +773,14 @@
       <!-- Diálogo para registro de impugnação -->
       <div v-if="impugnacaoDialog.show" class="modal-overlay">
         <div class="confirm-dialog impugnacao-dialog">
+          <h3>Registro de Impugnação</h3>
           <div class="confirm-content">
-            <h3>Registro de Impugnação</h3>
             <p>Processo: {{ impugnacaoDialog.processo?.numero_processo }}</p>
             
             <div class="impugnacao-info">
               <div class="impugnacao-alert">
                 <h4>⚠️ Informações importantes sobre impugnações:</h4>
                 <div class="impugnacao-alert-content">
-                  <p><strong>Lei 14.133:</strong> A empresa presta serviços de software para gestão pública municipal e estadual com base na Lei 14.133.</p>
-                  
                   <p><strong>Itens Mais Impugnados em Editais:</strong></p>
                   <ul>
                     <li>Exigências técnicas excessivas</li>
@@ -824,16 +864,16 @@
               </div>
             </div>
             
-            <div class="confirm-actions">
-              <button class="btn-cancel" @click="hideImpugnacaoDialog">Cancelar</button>
-              <button 
-                class="btn-confirm" 
-                @click="salvarImpugnacao"
-                :disabled="!impugnacaoDialog.dataLimite || !impugnacaoDialog.itens || !impugnacaoDialog.formaEnvio"
-              >
-                Salvar
-              </button>
-            </div>
+          </div>
+          <div class="confirm-actions">
+            <button class="btn-cancel" @click="hideImpugnacaoDialog">Cancelar</button>
+            <button 
+              class="btn-confirm" 
+              @click="salvarImpugnacao"
+              :disabled="!impugnacaoDialog.dataLimite || !impugnacaoDialog.itens || !impugnacaoDialog.formaEnvio"
+            >
+              Salvar
+            </button>
           </div>
         </div>
       </div>
@@ -1414,5 +1454,43 @@ export default {
 <style scoped>
 .valor-monetario {  
   white-space: nowrap;  
+}
+.impugnacoes-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.impugnacao-data-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.impugnacao-item {
+  display: flex;
+  justify-content: space-between;
+}
+.impugnacao-label {
+  font-weight: bold;
+}
+.impugnacao-value {
+  flex-grow: 1;
+  text-align: right;
+}
+.impugnacao-status {
+  font-weight: bold;
+}
+.impugnacao-text {
+  white-space: pre-wrap;
+}
+.empty-impugnacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.add-impugnacao {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
 }
 </style>

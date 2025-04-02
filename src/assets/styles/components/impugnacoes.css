@@ -1,0 +1,149 @@
+/* Estilos para exibição de impugnações na tabela */
+
+.impugnacoes-cell {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.impugnacao-data-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  padding: 6px 2px;
+  padding-right: 24px;
+  border-left: 3px solid #f59e0b;
+  border-radius: 2px;
+}
+
+.impugnacao-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+.impugnacao-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.impugnacao-value {
+  font-size: 0.85rem;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.impugnacao-text {
+  max-height: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  background-color: #f8fafc;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+
+.impugnacao-status {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Status específicos para impugnações */
+.status-imp-nao_iniciado {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-imp-em_andamento {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-imp-enviado {
+  background-color: #e6fffb;
+  color: #13c2c2;
+}
+
+.status-imp-respondido {
+  background-color: #f0f9ff;
+  color: #1890ff;
+}
+
+.status-imp-aprovado {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.status-imp-rejeitado {
+  background-color: #fff1f0;
+  color: #f5222d;
+}
+
+.impugnacao-edit-btn {
+  position: absolute;
+  top: 5px;
+  right: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.impugnacao-edit-btn:hover {
+  opacity: 1;
+}
+
+.impugnacao-edit-btn img {
+  width: 14px;
+  height: 14px;
+}
+
+.empty-impugnacao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  padding: 8px;
+  transition: all 0.2s;
+}
+
+.empty-impugnacao:hover {
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+.add-impugnacao {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+/* Ajuste responsivo */
+@media (max-width: 768px) {
+  .impugnacao-data-container {
+    padding-right: 20px;
+  }
+  
+  .impugnacao-text {
+    max-height: 40px;
+    -webkit-line-clamp: 2;
+  }
+}

@@ -3228,6 +3228,28 @@ export default {
       showToast('Filtros avançados removidos', 'info');
     };
 
+    // Função para verificar se o processo tem dados de impugnação
+    const hasImpugnacaoData = (processo) => {
+      return processo.impugnacao_data_limite || 
+             processo.impugnacao_status || 
+             processo.impugnacao_forma_envio || 
+             processo.impugnacao_itens || 
+             processo.impugnacoes;
+    };
+
+    // Função para formatar o status de impugnação
+    const formatImpugnacaoStatus = (status) => {
+      const statusMap = {
+        'nao_iniciado': 'Não iniciado',
+        'em_andamento': 'Em andamento',
+        'enviado': 'Enviado',
+        'respondido': 'Respondido',
+        'aprovado': 'Aprovado',
+        'rejeitado': 'Rejeitado'
+      };
+      return statusMap[status] || 'Não iniciado';
+    };
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,
@@ -3406,7 +3428,9 @@ export default {
       toggleAdvancedFilter,
       updateAdvancedFilters,
       applyAdvancedFilters,
-      clearAdvancedFilters
+      clearAdvancedFilters,
+      hasImpugnacaoData,
+      formatImpugnacaoStatus
     }
   }
 }
