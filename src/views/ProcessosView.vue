@@ -227,12 +227,6 @@
                             <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
                           </div>
                         </div>
-                        <!-- <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
-                          <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
-                            :selected="editingCell.value && editingCell.value.includes(sistema.id)">
-                            {{ sistema.nome }}
-                          </option>
-                        </select> -->
                       </div>
                     </template>
 
@@ -278,6 +272,11 @@
                     <!-- Time field -->
                     <span v-else-if="coluna.campo === 'hora_pregao'">
                       {{ formatTime(processo.hora_pregao) }}
+                    </span>
+
+                    <!-- Valor Estimado field -->
+                    <span v-else-if="coluna.campo === 'valor_estimado'" class="valor-monetario">
+                      {{ formatarMoeda(processo.valor_estimado) }}
                     </span>
 
                     <!-- Modality field -->
@@ -391,54 +390,11 @@
                         {{ formatStatus(selectedStatusMap[processo.id] || processo.status) }}
                       </span>
                     </template>
-
+                    
                     <!-- Default display for other fields -->
                     <span v-else>
                       {{ processo[coluna.campo] || '-' }}
                     </span>
-
-                    <!-- Tratamento especial para coluna codigo_analise -->
-                    <div v-if="coluna.campo === 'codigo_analise'" class="analise-cell">
-                      <template v-if="processo.codigo_analise">
-                        <!-- Se já tem código de análise, mostra só o GPI e prazo -->
-                        <span class="codigo-gpi">
-                          <!-- GPI: {{ processo.codigo_gpi }} -->
-                          <span v-if="processo.prazo_analise" class="prazo">
-                            (Prazo: {{ formatDate(processo.prazo_analise) }})
-                          </span>
-                        </span>
-                      </template>
-                      <template v-else>
-                        <!-- Se não tem código, mostra o botão de adicionar -->
-                        <!-- <span>Definir análise</span> -->
-                        <!-- <button class="btn-small btn-add-analise" @click="handleAnaliseClick(processo)">+</button> -->
-                      </template>
-                    </div>
-
-                    <!-- Componente EmpresaVencedoraColuna -->
-                    <template v-else-if="coluna.tipoExibicao === 'componente' && coluna.componente === 'EmpresaVencedoraColuna'">
-                      <EmpresaVencedoraColuna 
-                        :processo="processo" 
-                        @update="handleComponentUpdate"
-                      />
-                    </template>
-
-                    <!-- Em ProcessosView.vue, na seção onde são renderizadas as colunas -->
-                    <template v-else-if="coluna.campo === 'sistemas_implantacao'">
-                      <div 
-                        class="sistemas-implantacao-cell" 
-                        @dblclick="showSistemasImplantacaoDialog(processo)"
-                      >
-                        <span v-if="processo.sistemas_implantacao && processo.sistemas_implantacao.sistemas_ids">
-                          {{ formatarSistemasImplantacao(processo.sistemas_implantacao) }}
-                        </span>
-                        <span v-else class="empty-cell">-</span>
-                      </div>
-                    </template>
-
-                    <!-- Na seção onde são renderizadas as células de visualização -->
-                    <template v-else-if="coluna.campo === 'valor_estimado'">
-                    </template>
                   </template>
                 </td>
                 <!-- Célula de ações separada -->
@@ -496,8 +452,8 @@
 
       <!-- Systems dialog -->
       <div v-if="sistemasDialog.show" class="sistemas-dialog" :style="sistemasDialog.position">
+        <h3>Selecionar Sistemas</h3>
         <div class="sistemas-dialog-content">
-          <h3>Selecionar Sistemas</h3>
           <div class="sistemas-selected">
             <div v-for="id in editingCell.value" :key="id" class="sistema-chip">
               {{ getSistemaNome(id) }}
@@ -521,7 +477,6 @@
       <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
         <div class="distancia-dialog-content">
           <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
-
           <div class="distancias-list">
             <table class="distancias-table">
               <thead>
@@ -552,7 +507,6 @@
               </tbody>
             </table>
           </div>
-
           <div class="distancia-form">
             <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
             <div class="form-row">
@@ -561,13 +515,11 @@
                 <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
                   placeholder="Digite a distância" />
               </div>
-
               <div class="form-group">
                 <label>Cidade</label>
                 <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
                   placeholder="Digite a cidade" />
               </div>
-
               <div class="form-group">
                 <label>UF</label>
                 <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
@@ -578,7 +530,6 @@
                 </select>
               </div>
             </div>
-
             <div class="form-actions">
               <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
                 Salvar Alterações
@@ -586,13 +537,11 @@
               <button v-else class="btn-add" @click="adicionarDistancia">
                 Adicionar
               </button>
-
               <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
                 Cancelar Edição
               </button>
             </div>
           </div>
-
           <div class="dialog-footer">
             <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
           </div>
@@ -601,8 +550,8 @@
 
       <!-- Responsáveis dialog -->
       <div v-if="responsaveisDialog.show" class="sistemas-dialog" :style="responsaveisDialog.position">
+        <h3>Selecionar Responsável</h3>
         <div class="sistemas-dialog-content">
-          <h3>Selecionar Responsável</h3>
           <div class="sistemas-selected">
             <div v-if="editingCell.value" class="sistema-chip">
               {{ getResponsavelProcessoNome(editingCell.value) }}
@@ -625,8 +574,8 @@
 
       <!-- Representantes dialog -->
       <div v-if="representantesDialog.show" class="sistemas-dialog" :style="representantesDialog.position">
+        <h3>Selecionar Representante</h3>
         <div class="sistemas-dialog-content">
-          <h3>Selecionar Representante</h3>
           <div class="sistemas-selected">
             <div v-if="editingCell.value" class="sistema-chip">
               {{ getRepresentanteNome(editingCell.value) }}
@@ -648,8 +597,8 @@
 
       <!-- Empresas dialog -->
       <div v-if="empresasDialog.show" class="sistemas-dialog" :style="empresasDialog.position">
+        <h3>Selecionar Empresa</h3>
         <div class="sistemas-dialog-content">
-          <h3>Selecionar Empresa</h3>
           <div class="sistemas-selected">
             <div v-if="editingCell.value" class="sistema-chip">
               {{ getEmpresaNome(editingCell.value) }}
@@ -701,24 +650,20 @@
                 </span>
               </div>
             </div>
-
+            
             <!-- Botões de ação no modal -->
             <div class="confirm-actions">
               <button class="btn-cancel" @click="hideReagendamentoDialog">Cancelar</button>
-              
-              <!-- Adicionar este botão também para demonstração -->
               <button v-if="!reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" 
                 class="btn-secondary" 
                 @click="confirmSemNovaData">
                 Não, apenas alterar o status
               </button>
-              
               <button v-if="!reagendamentoDialog.temNovaData && reagendamentoDialog.status !== 'demonstracao'" 
                 class="btn-confirm" 
                 @click="confirmarTemNovaData">
                 Sim, informar nova data
               </button>
-              
               <button v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" 
                 class="btn-confirm" 
                 @click="confirmarReagendamento" 
@@ -737,23 +682,11 @@
             <h3>Detalhes da Análise</h3>
             <p>Processo: {{ analiseDialog.processo?.numero_processo }}</p>
             
-            <!-- <div class="form-row">
-              <div class="form-group">
-                <label>Código de análise</label>
-                <input 
-                  type="text" 
-                  v-model="analiseDialog.codigoAnalise" 
-                  placeholder="Código de análise"
-                />
-              </div>
-            </div> -->
-            
             <div class="form-row">
               <div class="form-group">
                 <label>Código de análise no GPI</label>
-                <input 
+                <input v-model="analiseDialog.codigoGPI" 
                   type="text" 
-                  v-model="analiseDialog.codigoGPI" 
                   placeholder="Digite o código GPI" 
                   required 
                 />
@@ -763,22 +696,20 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Prazo final para resposta da análise</label>
-                <input 
+                <input v-model="analiseDialog.prazoResposta" 
                   type="date" 
-                  v-model="analiseDialog.prazoResposta" 
                   :min="new Date().toISOString().split('T')[0]" 
                   required 
                 />
               </div>
             </div>
-
+            
             <div class="confirm-actions">
               <button class="btn-cancel" @click="hideAnaliseDialog">Cancelar</button>
               <button 
                 class="btn-confirm" 
-                @click="salvarAnalise" 
                 :disabled="!this.analiseDialog.codigoGPI || !this.analiseDialog.prazoResposta"
-              >
+                @click="salvarAnalise" >
                 Salvar
               </button>
             </div>
@@ -792,16 +723,16 @@
         </div>
       </div>
 
-      <!-- Tour component (movido para o final do template) -->
+      <!-- Tour component -->
       <Shepherd 
-        :steps="tourSteps" 
         ref="tourGuide" 
+        :steps="tourSteps" 
         :showButton="false"
         @complete="onTourComplete"
         @cancel="onTourCancel"
       />
 
-      <!-- Balão de informações de status (posicionado no final do template, antes do fechamento da div main-content) -->
+      <!-- Balão de informações de status -->
       <div v-if="statusInfoBalloon.show" class="status-info-balloon" :style="statusInfoBalloon.position">
         <div class="balloon-arrow"></div>
         <div class="balloon-content">
@@ -813,7 +744,7 @@
         </div>
       </div>
 
-      <!-- Adicione esta parte no final do template, junto aos outros diálogos -->
+      <!-- Sistemas Implantação Dialog -->
       <div 
         v-if="sistemasImplantacaoDialog.show" 
         class="sistemas-implantacao-dialog"
@@ -842,8 +773,8 @@
 import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
-import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue'
-import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
+import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue';
+import AcoesColumn from '@/components/columns/table/AcoesColumn.vue';
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
 
 // Para uso no Vue DevTools ou em um componente temporário
@@ -1010,6 +941,7 @@ export default {
   },
   methods: {
     ...ProcessosViewModel.methods,
+    
     startTour() {
       if (this.$refs.tourGuide) {
         this.$refs.tourGuide.startTour();
@@ -1017,16 +949,19 @@ export default {
         console.error('Tour guide reference not found');
       }
     },
+    
     onTourComplete() {
       if (typeof this.showToast === 'function') {
         this.showToast('Tour concluído! Aproveite o sistema.', 'success');
       }
     },
+    
     onTourCancel() {
       if (typeof this.showToast === 'function') {
         this.showToast('Tour cancelado. Você pode iniciá-lo novamente a qualquer momento.', 'info');
       }
     },
+    
     // Função para salvar os detalhes da análise
     async salvarAnalise() {
       try {
@@ -1062,11 +997,10 @@ export default {
 
         if (error) throw error;
 
-        // 2. Programar notificação para o prazo final - CORREÇÃO AQUI
+        // 2. Programar notificação para o prazo final
         const notificationData = {
           processo_id: this.analiseDialog.processo.id,
           status: 'analise',
-          // Usar o campo message como mostrado nos dados de exemplo
           message: `Prazo final para análise do processo ${this.analiseDialog.processo.numero_processo} (Código GPI: ${this.analiseDialog.codigoGPI})`,
           next_notification: new Date(prazoFormatado).toISOString(),
           last_updated: new Date().toISOString(),
@@ -1112,6 +1046,7 @@ export default {
         this.showToast('Erro ao salvar os detalhes da análise: ' + error.message, 'error');
       }
     },
+    
     // Adicione esta função aos methods
     async logSystemAction(dados) {
       try {
@@ -1124,7 +1059,7 @@ export default {
           tabela: dados.tabela,
           registro_id: dados.registro_id,
           dados_anteriores: dados.dados_anteriores,
-          dados_novos: dados_novos,
+          dados_novos: dados.dados_novos,
           data_hora: new Date().toISOString()
         };
     
@@ -1137,6 +1072,7 @@ export default {
         console.error('Error logging action:', error);
       }
     },
+    
     loadProcessos: async function() {
       try {
         console.log('Recarregando processos...');
@@ -1160,6 +1096,18 @@ export default {
       } catch (err) {
         console.error('Erro ao recarregar processos:', err);
       }
+    },
+    
+    // Função para formatar valores monetários
+    formatarMoeda(valor) {
+      if (!valor || isNaN(parseFloat(valor))) return 'R$ -';
+      
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(parseFloat(valor));
     }
   }
 };
@@ -1167,3 +1115,8 @@ export default {
 
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
+<style scoped>
+.valor-monetario {  
+  white-space: nowrap;  
+}
+</style>
