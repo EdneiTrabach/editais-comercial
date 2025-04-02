@@ -2,20 +2,32 @@
 .btn-filter {
   display: flex;
   align-items: center;
-  background-color: white;
-  border: 1px solid #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.322);
+  border: 1.5px solid #000eff;
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.25s ease;
-  color: #444;
+  color: #0d6efd;
   gap: 8px;
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
 }
+
+.btn-filter.disabled .icon {
+  color: #0d6efd;
+}
+
+.btn-filter.disabled {
+  opacity: 0.7;
+  background-color: rgba(13, 110, 253, 0.1);
+  border-color: #0d6efd;
+  pointer-events: none;
+}
+
 
 .btn-filter::before {
   content: '';
@@ -137,4 +149,22 @@
 .btn-limpar-filtros:hover {
   background-color: rgba(13, 110, 253, 0.1);
   transform: translateY(-1px);
+}
+
+/* Adicione abaixo das regras existentes da classe .filter-badge */
+
+/* Cor azul padrão para o ícone de filtro */
+.icon-filter {
+  filter: invert(39%) sepia(98%) saturate(1900%) hue-rotate(206deg) brightness(99%) contrast(98%);
+  /* Alternativa se o SVG aceitar fill diretamente */
+  /* fill: #0d6efd; */
+}
+
+/* Manter outras regras específicas de hover */
+.btn-filter:hover .icon-filter {
+  filter: invert(13%) sepia(10%) saturate(1847%) hue-rotate(181deg) brightness(96%) contrast(88%);
+}
+
+.btn-filter.active .icon-filter {
+  filter: invert(39%) sepia(98%) saturate(1900%) hue-rotate(206deg) brightness(110%) contrast(98%);
 }
