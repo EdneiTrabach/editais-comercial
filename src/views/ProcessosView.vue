@@ -562,7 +562,7 @@
             <option value="">Sem responsável</option>
             <option v-for="resp in responsaveisProcessos" :key="resp.id" :value="resp.id"
               :selected="editingCell.value === resp.id">
-              {{ resp.nome }} ({{ resp.departamento || 'Sem depto' }})
+              {{ resp.nome }}
             </option>
           </select>
           <div class="sistemas-dialog-actions">
@@ -1108,7 +1108,182 @@ export default {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }).format(parseFloat(valor));
-    }
+    },
+
+    getResponsavelProcessoNome(id) {
+      if (!id) return 'Sem responsável';
+      
+      const responsavel = this.responsaveisProcessos.find(r => r.id === id);
+      return responsavel ? responsavel.nome : 'Responsável desconhecido';
+    },
+    
+    handleResponsavelChange(event) {
+      const responsavelId = event.target.value;
+      console.log('handleResponsavelChange chamado:', { responsavelId });
+      
+      // Quando seleciona "Sem responsável", definimos o valor como null
+      if (!responsavelId || responsavelId === '') {
+        this.editingCell.value = null;
+        console.log('Responsável definido como null (sem responsável)');
+        return;
+      }
+      
+      // Buscar o nome do responsável para exibição no textarea
+      const responsavel = this.responsaveisProcessos.find(r => r.id === responsavelId);
+      console.log('Responsável encontrado:', responsavel);
+      
+      // Vamos apenas armazenar o ID, já que é o que o banco precisa
+      this.editingCell.value = responsavelId;
+    },
+    
+    saveResponsavel() {
+      console.log('saveResponsavel chamado', {
+        editingCell: this.editingCell,
+        editingProcess: this.editingProcess,
+        processos: this.processos ? this.processos.length : 0
+      });
+
+      if (!this.editingCell) {
+        console.error('Erro: editingCell não está definido');
+        this.showToast('Erro ao salvar responsável: dados de célula ausentes', 'error');
+        return;
+      }
+
+      // Encontrar o processo correto usando o ID armazenado em editingCell
+      const processoId = this.editingCell.id;
+      const processo = this.processos.find(p => p.id === processoId);
+      
+      console.log('Buscando processo:', { 
+        processoId, 
+        encontrado: !!processo,
+        detalhes: processo 
+      });
+
+      if (!processo) {
+        console.error('Erro: Processo não encontrado com ID:', processoId);
+        this.showToast('Erro ao salvar responsável: processo não encontrado', 'error');
+        return;
+      }
+      
+      // Criar uma cópia do processo para atualização
+      const updatedProcess = { ...processo };
+      
+      // Atribuir o novo valor do responsável (que pode ser null)
+      updatedProcess.responsavel_id = this.editingCell.value;
+      
+      // Construir uma mensagem apropriada para o log e toast
+      const responsavelNome = this.editingCell.value ? 
+        this.getResponsavelProcessoNome(this.editingCell.value) : 
+        'Sem responsável';
+        
+      console.log('Atualizando responsável:', {
+        processoId: updatedProcess.id,
+        processoNumero: updatedProcess.numero_processo,
+        responsavelIdAntigo: processo.responsavel_id,
+        responsavelIdNovo: updatedProcess.responsavel_id,
+        responsavelNome
+      });
+      
+      // Executar atualização e verificar o resultado
+      this.updateProcesso(updatedProcess)
+        .then(success => {
+          if (success) {
+            // Esconder o diálogo
+            this.hideResponsaveisDialog();
+            
+            // Mostrar mensagem de confirmação com texto correto
+            this.showToast(`Responsável atualizado com sucesso para: ${responsavelNome}`, 'success');
+            
+            // Atualizar a visualização na interface
+            this.$forceUpdate();
+          }
+        })
+        .catch(error => {
+          console.error('Erro na atualização do responsável:', error);
+          this.showToast(`Erro ao atualizar responsável: ${error.message}`, 'error');
+        });
+    },
+    
+    async updateProcesso(processo) {
+      console.log('updateProcesso chamado', { 
+        id: processo.id, 
+        numero: processo.numero_processo,
+        responsavel_id: processo.responsavel_id
+      });
+      
+      try {
+        // Criar uma cópia do objeto para não modificar o original
+        const processToUpdate = { ...processo };
+        
+        // Garantir que campos com valor null sejam enviados explicitamente
+        // para o banco como null e não sejam ignorados na atualização
+        if (processo.responsavel_id === null) {
+          console.log('Enviando responsavel_id como NULL explicitamente');
+          processToUpdate.responsavel_id = null;
+        }
+        
+        // Registrar a atualização para histórico de ações
+        if (this.undoHistory) {
+          const currentProcess = this.processos.find(p => p.id === processo.id);
+          if (currentProcess) {
+            this.undoHistory.push({
+              type: 'update',
+              id: processo.id,
+              oldData: { ...currentProcess },
+              newData: { ...processToUpdate }
+            });
+            // Limpar o redo history quando uma nova ação é executada
+            this.redoHistory = [];
+          }
+        }
+        
+        // Adicionar timestamp e usuário de atualização
+        processToUpdate.updated_at = new Date().toISOString();
+        
+        // Se estiver disponível, adicionar o usuário que fez a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          processToUpdate.updated_by = user.id;
+        }
+        
+        console.log('Enviando dados para atualização:', processToUpdate);
+        
+        // Realizar a atualização no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(processToUpdate)
+          .eq('id', processo.id);
+        
+        if (error) {
+          console.error('Erro na atualização do processo:', error);
+          this.showToast(`Erro ao atualizar o processo: ${error.message}`, 'error');
+          throw error;
+        }
+        
+        console.log('Processo atualizado com sucesso:', processo.id);
+        
+        // Atualizar o processo na lista local
+        const index = this.processos.findIndex(p => p.id === processo.id);
+        if (index !== -1) {
+          this.processos[index] = { ...processToUpdate };
+        }
+        
+        // Registrar a alteração no log do sistema
+        await this.logSystemAction({
+          tipo: 'update',
+          tabela: 'processos',
+          registro_id: processo.id,
+          dados_anteriores: this.processos.find(p => p.id === processo.id),
+          dados_novos: processToUpdate
+        });
+        
+        return true;
+      } catch (error) {
+        console.error('Erro na atualização:', error);
+        this.showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
+        return false;
+      }
+    },
   }
 };
 </script>
