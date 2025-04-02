@@ -44,8 +44,8 @@
 }
 
 .btn-filter:hover {
-  background-color: #fafafa;
-  border-color: #d0d0d0;
+  background-color: #62dfff;
+  border-color: #62dfff;
   color: #193155;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);

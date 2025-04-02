@@ -103,38 +103,6 @@
                         ▼
                       </button>
                     </div>
-
-                    <!-- Filter button for filterable columns -->
-                    <div
-                      v-if="['modalidade', 'estado', 'numero_processo', 'orgao', 'status', 'responsavel_nome', 'site_pregao', 'representante', 'empresa'].includes(coluna.campo)"
-                      class="filtro-container">
-                      <button @click="toggleFiltro(coluna.campo)" class="btn-filtro"
-                        :class="{ active: filtros[coluna.campo]?.length > 0 }">
-                        <img src="/icons/filter.svg" alt="Filtrar" class="icon-filter" />
-                      </button>
-
-                      <!-- Dropdown de filtro para modalidade -->
-                      <div v-if="mostrarFiltro[coluna.campo]" class="filtro-dropdown" :data-campo="coluna.campo">
-                        <div class="dropdown-header">
-                          <input type="search" :placeholder="`Filtrar ${coluna.titulo}`" class="filtro-search"
-                            v-model="filtroModalidadeSearch" @input="filtrarOpcoes(coluna.campo)" />
-                        </div>
-                        <div class="dropdown-list">
-                          <div v-for="opcao in opcoesFiltradasModalidade" :key="opcao.valor" class="filtro-opcao">
-                            <label class="filtro-checkbox">
-                              <input type="checkbox" :checked="filtros[coluna.campo]?.includes(opcao.valor)"
-                                @change="toggleFiltroItem(coluna.campo, opcao.valor)" />
-                              <span class="checkbox-label">{{ opcao.texto }}</span>
-                            </label>
-                          </div>
-                        </div>
-                        <div class="dropdown-footer">
-                          <button @click="limparFiltroColuna(coluna.campo)" class="btn-limpar-filtro">
-                            Limpar filtro
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                   <div class="column-resize-handle" @mousedown.stop="startColumnResize($event, coluna.campo)"></div>
                 </th>
