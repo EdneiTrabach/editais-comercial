@@ -159,15 +159,6 @@
   flex: 1;
 }
 
-/* Grid de duas colunas melhorado */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-  /* Gap solicitado */
-  max-width: 100%;
-}
-
 /* Campos que ocupam largura total */
 .form-group.full-width {
   grid-column: 1 / -1;
@@ -206,12 +197,6 @@
     height: 100%;
     max-height: 100%;
     border-radius: 0;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-    /* Uma coluna em telas menores */
-    gap: 20px;
   }
 
   .modal-body {
@@ -309,18 +294,6 @@ th {
 .actions-buttons {
   display: flex;
   gap: 0.5rem;
-}
-
-.btn-action {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
 .btn-action.edit {

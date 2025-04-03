@@ -232,13 +232,6 @@ th {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Grid de 2 colunas */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  /* 2 colunas */
-  gap: 1.5rem;
-}
 
 /* Campos que ocupam largura total */
 .form-group.full-width,
@@ -293,10 +286,6 @@ th {
     width: calc(100% - 2rem);
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
-    /* Uma coluna em telas menores */
-  }
 }
 
 /* Novo estilo para o container do setor */

@@ -255,12 +255,6 @@
   pointer-events: auto;
 }
 
-/* O resto dos estilos permanece igual */
-.form-grid {
-  position: relative; /* Adiciona posicionamento relativo */
-  z-index: 1; /* Garante que fique acima do backdrop */
-  /* Resto dos estilos do form-grid permanece igual */
-}
 
 /* Previne interação com elementos abaixo do modal */
 .modal-backdrop * {
@@ -270,13 +264,6 @@
 /* Ajuste para elementos dentro do modal */
 .modal-content * {
   pointer-events: auto;
-}
-
-/* O resto dos estilos permanece igual */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.8rem;
 }
 
 .form-group {

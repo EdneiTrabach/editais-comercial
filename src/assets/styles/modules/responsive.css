@@ -20,10 +20,6 @@
     padding: 1rem;
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
   .form-actions {
     flex-direction: column;
   }
