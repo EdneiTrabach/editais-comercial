@@ -134,7 +134,7 @@ th[data-field="objeto_completo"] {
 }
 
 .impugnacoes-cell {
-  max-width: 300px;
+  max-width: 100%;
   white-space: normal;
   line-height: 1.4;
   word-wrap: break-word;
