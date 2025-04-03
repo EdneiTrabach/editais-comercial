@@ -23,6 +23,7 @@
         <table v-else class="excel-table">
           <thead>
             <tr>
+              <th>Cor</th>
               <th>Nome Fantasia</th>
               <th>CNPJ</th>
               <th>Razão Social</th>
@@ -34,6 +35,9 @@
           </thead>
           <tbody>
             <tr v-for="empresa in empresas" :key="empresa.id">
+              <td>
+                <div class="color-indicator" :style="{ backgroundColor: empresa.color || '#FFFFFF' }"></div>
+              </td>
               <td>{{ empresa.nome }}</td>
               <td>{{ formatCNPJ(empresa.cnpj) }}</td>
               <td>{{ empresa.razao_social }}</td>
@@ -81,6 +85,32 @@
                 <div class="form-group-cfg-usuarios">
                   <label>Razão Social</label>
                   <input v-model="formData.razao_social" required class="input-cfg-usuarios">
+                </div>
+                
+                <!-- Adicionando seletor de cor -->
+                <div class="form-group-cfg-usuarios">
+                  <label>Cor de Identificação</label>
+                  <div class="color-selection">
+                    <input 
+                      type="color" 
+                      v-model="formData.color" 
+                      class="color-picker"
+                    >
+                    <span class="color-preview" :style="{ backgroundColor: formData.color }"></span>
+                    <span class="color-hex">{{ formData.color }}</span>
+                  </div>
+                  
+                  <!-- Paleta de cores predefinidas -->
+                  <div class="color-palette">
+                    <div 
+                      v-for="(color, index) in predefinedColors" 
+                      :key="index"
+                      class="color-option"
+                      :style="{ backgroundColor: color }"
+                      @click="formData.color = color"
+                      :class="{ 'selected': formData.color === color }"
+                    ></div>
+                  </div>
                 </div>
               </div>
               

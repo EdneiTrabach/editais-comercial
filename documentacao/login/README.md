@@ -1,6 +1,6 @@
-# Documentação do Sistema de Editais Comerciais
+# Documentação do Controle de Editais Comerciais
 
-Este diretório contém a documentação técnica e de usuário para o Sistema de Editais Comerciais.
+Este diretório contém a documentação técnica e de usuário para o Controle de Editais Comerciais.
 
 ## Índice de Documentos
 

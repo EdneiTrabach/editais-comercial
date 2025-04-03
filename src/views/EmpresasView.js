@@ -29,8 +29,16 @@ export default {
       razao_social: '',
       contato: '',
       telefone: '',
-      email: ''
+      email: '',
+      color: '#FFFFFF' // Valor default para cor
     })
+
+    // Cores predefinidas para seleção rápida
+    const predefinedColors = ref([
+      '#FFFFFF', '#193155', '#4285F4', '#34A853', '#FBBC05', '#EA4335', 
+      '#9C27B0', '#3F51B5', '#00BCD4', '#009688', '#8BC34A', '#FFEB3B', 
+      '#FF9800', '#795548', '#607D8B'
+    ]);
 
     const loadEmpresas = async () => {
       try {
@@ -117,6 +125,7 @@ export default {
           contato: formData.value.contato,
           telefone: formData.value.telefone,
           email: formData.value.email,
+          color: formData.value.color, // Salva a cor selecionada
           updated_at: new Date().toISOString()
         };
 
@@ -209,7 +218,6 @@ export default {
       }
     }
 
-    // Adicione esta função para confirmar a exclusão
     const confirmDelete = async () => {
       if (!empresaToDelete.value) return;
       
@@ -283,15 +291,12 @@ export default {
       isSidebarExpanded.value = expanded
     }
 
-    // Função para recarregar dados quando a conexão for restaurada
     const loadData = async () => {
       await loadEmpresas()
     }
 
-    // Usar o composable para gerenciar reconexões
     useConnectionManager(loadData)
 
-    // Carregar dados quando o componente for montado
     onMounted(() => {
       console.log('Componente montado, carregando empresas...')
       loadEmpresas()
@@ -304,8 +309,6 @@ export default {
       console.log('[DEBUG] empresas.length:', empresas.value?.length)
       console.log('[DEBUG] empresas:', JSON.stringify(empresas.value))
       
-      // Tenta fazer uma consulta direta ao Supabase
-      console.log('[DEBUG] Tentando busca direta no Supabase...')
       supabase
         .from('empresas')
         .select('*')
@@ -324,7 +327,8 @@ export default {
         razao_social: empresa.razao_social,
         contato: empresa.contato || '',
         telefone: empresa.telefone || '',
-        email: empresa.email || ''
+        email: empresa.email || '',
+        color: empresa.color || '#FFFFFF' // Adiciona a cor da empresa
       };
       editingId.value = empresa.id;
       isEditing.value = true;
@@ -338,7 +342,8 @@ export default {
         razao_social: '',
         contato: '',
         telefone: '',
-        email: ''
+        email: '',
+        color: '#FFFFFF'
       };
       editingId.value = null;
       isEditing.value = false;
@@ -346,7 +351,6 @@ export default {
       cnpjError.value = '';
     }
 
-    // Função para formatar telefone
     const formatarTelefone = (e) => {
       let value = e.target.value.replace(/\D/g, '');
       
@@ -368,13 +372,11 @@ export default {
       toastType.value = type;
       showToast.value = true;
       
-      // Esconder o toast após 3 segundos
       setTimeout(() => {
         showToast.value = false;
       }, 3000);
     }
 
-    // Exponha as variáveis e métodos necessários para o template
     return {
       empresas,
       showModal,
@@ -395,14 +397,14 @@ export default {
       handleSidebarToggle,
       resetForm,
       debugEmpresas,
-      // Novos itens
       showDeleteDialog,
       empresaToDelete,
       confirmDelete,
       hideDeleteDialog,
       showToast,
       toastMessage,
-      toastType
+      toastType,
+      predefinedColors // Adicionando as cores predefinidas
     }
   }
 }

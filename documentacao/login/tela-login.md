@@ -1,7 +1,7 @@
 # Documentação da Tela de Login
 
 ## Visão Geral
-A tela de login do Sistema de Editais Comerciais foi projetada para proporcionar uma experiência moderna, intuitiva e emocionalmente conectada com o usuário. O design combina elementos visuais atrativos com funcionalidades práticas para garantir segurança e usabilidade.
+A tela de login do Controle de Editais Comerciais foi projetada para proporcionar uma experiência moderna, intuitiva e emocionalmente conectada com o usuário. O design combina elementos visuais atrativos com funcionalidades práticas para garantir segurança e usabilidade.
 
 ## Componentes Principais
 

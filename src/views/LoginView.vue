@@ -125,7 +125,7 @@ useConnectionManager(loadData)
   <div class="container-login">
     <div class="login-wrapper">
       <div class="login-illustration">
-        <h1 class="titulo-login">Sistema de Editais Comerciais</h1>
+        <h1 class="titulo-login">Controle de Editais</h1>
         <img src="/icons/undraw-login.svg" alt="Login Illustration" class="illustration-image">
       </div>
 
@@ -171,7 +171,7 @@ useConnectionManager(loadData)
         </form>
 
         <div class="login-footer">
-          <p>© 2025 Sistema de Editais Comerciais</p>
+          <p>© 2025 Controle de Editais Comerciais</p>
           <!-- <p></p> -->
         </div>
       </div>
