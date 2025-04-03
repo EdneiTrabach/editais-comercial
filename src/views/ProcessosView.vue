@@ -693,20 +693,20 @@
             <p>{{ reagendamentoDialog.status === 'demonstracao' ? 'Informe a data da demonstração:' : 'Já existe uma nova data para a reabertura deste processo?' }}</p>
             
             <div v-if="reagendamentoDialog.temNovaData || reagendamentoDialog.status === 'demonstracao'" class="form-row">
-              <div class="form-group">
+              <div class="form-group-reagendamento">
                 <label>Nova Data</label>
                 <input type="date" v-model="reagendamentoDialog.novaData" 
-                       :min="reagendamentoDialog.dataOriginal" />
-                <span v-if="reagendamentoDialog.novaData" class="ano-hint">
+                       :min="reagendamentoDialog.dataOriginal" class="input-reagendamento" />
+                <!-- <span v-if="reagendamentoDialog.novaData" class="ano-hint">
                   Ano: {{ new Date(reagendamentoDialog.novaData).getFullYear() }}
-                </span>
+                </span> -->
                 <span v-if="reagendamentoDialog.dataError" class="error-message">
                   {{ reagendamentoDialog.dataError }}
                 </span>
               </div>
-              <div class="form-group">
+              <div class="form-group-reagendamento">
                 <label>Nova Hora</label>
-                <input type="time" v-model="reagendamentoDialog.novaHora" min="08:00" max="18:00" />
+                <input type="time" v-model="reagendamentoDialog.novaHora" min="08:00" max="18:00" class="input-reagendamento" />
                 <span v-if="reagendamentoDialog.horaError" class="error-message">
                   {{ reagendamentoDialog.horaError }}
                 </span>
@@ -1464,6 +1464,24 @@ export default {
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
 <style scoped>
+.form-group-reagendamento {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.input-reagendamento {
+  width: 65% ! important;
+  border: 1.5px solid rgb(116, 116, 116);
+  border-radius: 4px;
+  height: 42px;
+  padding: 10px 7px 10px 12px;
+}
+
 .valor-monetario {  
   white-space: nowrap;  
 }
