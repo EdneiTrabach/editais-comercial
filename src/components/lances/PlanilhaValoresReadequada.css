@@ -250,12 +250,6 @@ tfoot tr {
   transform: translateY(-1px);
 }
 
-/* Layout principal */
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
 .main-content {
   flex: 1;
   padding: 2rem;

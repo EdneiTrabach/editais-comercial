@@ -184,13 +184,6 @@ h2 {
   margin-top: 5px;
 }
 
-.full-width {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
 
 .actions {
   display: flex;

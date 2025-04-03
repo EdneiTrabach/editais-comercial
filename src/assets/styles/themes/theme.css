@@ -72,12 +72,6 @@
   --header-gradient: linear-gradient(135deg, #0a1622 0%, #070d14 100%);
 }
 
-/* ===== LAYOUT ===== */
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
 .main-content {
   flex: 1;
   padding: 2rem;
@@ -172,10 +166,6 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
-}
-
-.full-width {
-  grid-column: 1 / -1;
 }
 
 /* ===== BOTÕES ===== */

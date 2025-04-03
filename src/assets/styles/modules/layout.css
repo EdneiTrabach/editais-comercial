@@ -45,6 +45,10 @@
 
 .full-width {
   grid-column: 1 / -1;
+  width: 100%;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .header-actions {

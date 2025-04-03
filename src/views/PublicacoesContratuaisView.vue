@@ -934,10 +934,6 @@ export default {
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  height: 100vh;
-}
 
 .main-content {
   flex: 1;
@@ -991,14 +987,6 @@ export default {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-}
-
-.full-width {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
 }
 
 textarea.full-width {

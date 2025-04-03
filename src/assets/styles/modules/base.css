@@ -1,11 +1,4 @@
-/* Estilos base da aplicação */
 
-/* Aplicação da fonte no layout */
-.layout {
-  font-family: 'Roboto', sans-serif;
-  display: flex;
-  min-height: 100vh;
-}
 
 /* Garantir que todos os elementos usem a fonte */
 .main-content,
@@ -18,10 +11,6 @@ label,
   font-family: 'Roboto', sans-serif;
 }
 
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
 
 .loading-overlay {
   position: fixed;

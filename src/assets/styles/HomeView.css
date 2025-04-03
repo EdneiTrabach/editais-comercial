@@ -1,11 +1,4 @@
 
-/* Modificar o layout principal */
-.layout {
-  display: flex;
-  min-height: 100vh; /* Altura mínima de 100% da viewport */
-  width: 100%;
-  position: relative; /* Adiciona posicionamento relativo */
-}
 
 /* Ajustar o main-content */
 .main-content {
