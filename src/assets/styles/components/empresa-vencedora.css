@@ -118,11 +118,12 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 500px;
-  max-width: 90%;
+  min-width: 670px;
+  max-width: 50%;
   max-height: 90vh;
   overflow-y: auto;
   z-index: 1051;
+  width: 100%;
 }
 
 .empresa-vencedora-dialog-header {
@@ -190,3 +191,10 @@ input#valor-final {
     grid-template-columns: 1fr;
   }
 }
+
+.sistemas-implantacao-modal {
+  width: 50%;
+  background: white;
+  border-radius: 8px;
+}
+

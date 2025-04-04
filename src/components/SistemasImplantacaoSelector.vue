@@ -1,5 +1,7 @@
 <template>
   <div class="sistemas-implantacao-selector">    
+    <h3 class="selector-title">Sistemas a Implantar</h3>
+    
     <div class="sistemas-implantacao-description">
       <p>Selecione os sistemas que serão implantados neste processo.</p>
       <p v-if="sistemasDisponiveis.length === 0" class="aviso-sem-sistemas">
@@ -19,37 +21,58 @@
         />
       </div>
       
-      <div class="sistemas-list">
+      <!-- Sistemas selecionados -->
+      <div class="sistemas-selected">
         <div 
-          v-for="sistema in sistemasDisponiveisFiltrados" 
-          :key="sistema.id"
-          class="sistema-item"
-          :class="{ 'selected': isSistemaSelected(sistema.id) }"
-          @click="toggleSistema(sistema.id)"
+          v-for="sistemaId in sistemasIdsValue" 
+          :key="sistemaId" 
+          class="sistema-chip"
         >
-          <div class="sistema-checkbox">
-            <input 
-              type="checkbox" 
-              :checked="isSistemaSelected(sistema.id)" 
-              @click.stop
-              @change="toggleSistema(sistema.id)"
-            />
-          </div>
-          <div class="sistema-info">
-            <div class="sistema-nome">{{ sistema.nome }}</div>
-            <div class="sistema-desc" v-if="sistema.descricao">{{ sistema.descricao }}</div>
-          </div>
+          {{ getSistemaNome(sistemaId) }}
+          <span @click="toggleSistema(sistemaId)" class="sistema-remove">×</span>
         </div>
       </div>
       
+      <!-- Lista de sistemas disponíveis -->
+      <select 
+        multiple 
+        class="sistemas-select" 
+        @change="handleMultiSelect($event)"
+      >
+        <option 
+          v-for="sistema in sistemasDisponiveisFiltrados" 
+          :key="sistema.id" 
+          :value="sistema.id"
+          :selected="sistemasIdsValue.includes(sistema.id)"
+        >
+          {{ sistema.nome }}
+        </option>
+      </select>
+      
       <div class="sistemas-summary">
         <span class="sistemas-count">{{ selectedCount }} sistema(s) selecionado(s)</span>
-        <button 
-          class="btn btn-primary save-sistemas" 
-          @click="salvarSistemas"
-        >
-          Salvar
-        </button>
+        <div class="sistemas-actions">
+          <button 
+            v-if="sistemasDisponiveisFiltrados.length > 0 && sistemasDisponiveisFiltrados.length !== selectedCount"
+            class="btn-secondary select-all" 
+            @click="selecionarTodos"
+          >
+            Selecionar Todos
+          </button>
+          <button 
+            v-if="selectedCount > 0" 
+            class="btn-secondary clear" 
+            @click="limparSelecao"
+          >
+            Limpar
+          </button>
+          <button 
+            class="btn-primary save-sistemas" 
+            @click="salvarSistemas"
+          >
+            Salvar
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -256,6 +279,11 @@ export default {
       }
     },
     
+    getSistemaNome(id) {
+      const sistema = this.sistemas.find(s => s.id === id);
+      return sistema ? sistema.nome : 'Sistema desconhecido';
+    },
+    
     isSistemaSelected(id) {
       return this.sistemasIdsValue && this.sistemasIdsValue.includes(id);
     },
@@ -271,6 +299,23 @@ export default {
       } else {
         this.sistemasIdsValue = [...this.sistemasIdsValue, id];
       }
+    },
+    
+    handleMultiSelect(event) {
+      const selectedOptions = Array.from(event.target.selectedOptions);
+      const selectedIds = selectedOptions.map(option => option.value);
+      
+      // Para cada ID selecionado, adicioná-lo se ainda não estiver na lista
+      selectedIds.forEach(id => {
+        if (!this.sistemasIdsValue.includes(id)) {
+          this.sistemasIdsValue.push(id);
+        }
+      });
+      
+      // Para cada ID na lista atual, removê-lo se não estiver na seleção
+      this.sistemasIdsValue = this.sistemasIdsValue.filter(id => 
+        selectedIds.includes(id) || !this.sistemasDisponiveis.some(s => s.id === id)
+      );
     },
     
     selecionarTodos() {
@@ -344,28 +389,29 @@ export default {
 .sistemas-implantacao-selector {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.5rem;
   background-color: #fff;
-  border-radius: 4px;
-  min-width: 400px;
-  max-width: 600px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .selector-title {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
   color: #333;
+  display: none; /* Esconder o título duplicado, pois já está no header do modal */
 }
 
 .sistemas-implantacao-description {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .sistemas-implantacao-description p {
   margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #666;
 }
 
@@ -373,102 +419,206 @@ export default {
   color: #e74c3c;
   font-style: italic;
   margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  border-left: 4px solid #e74c3c;
 }
 
-.sistema-search-container {
+/* Estilos para o container principal */
+.sistemas-implantacao-container {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Barra de pesquisa */
+.sistema-search-container {
+  margin-bottom: 0.5rem;
 }
 
 .sistema-search {
-  flex: 1;
-  padding: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
-.sistemas-list {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  max-height: 300px;
-  overflow-y: auto;
+.sistema-search:focus {
+  border-color: #193155;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
 }
 
-.sistema-item {
+/* Área de chips de sistemas selecionados */
+.sistemas-selected {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
+  padding: 0.75rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  min-height: 3.5rem;
+  max-height: 120px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+.sistema-chip {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background-color: #193155;
+  color: white;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.sistema-remove {
+  margin-left: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
 }
 
-.sistema-item:hover {
-  background-color: #f9f9f9;
+.sistema-remove:hover {
+  opacity: 0.8;
 }
 
-.sistema-item.selected {
+/* Select múltiplo de sistemas */
+.sistemas-select {
+  width: 100%;
+  min-height: 200px;
+  max-height: 300px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.sistemas-select option {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.sistemas-select option:hover {
   background-color: #f0f7ff;
 }
 
-.sistema-checkbox {
-  margin-top: 0.25rem;
+.sistemas-select option:checked {
+  background-color: #193155;
+  color: white;
 }
 
-.sistema-info {
-  flex: 1;
-}
-
-.sistema-nome {
-  font-weight: 500;
-  color: #333;
-}
-
-.sistema-desc {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 0.25rem;
-}
-
+/* Resumo e ações */
 .sistemas-summary {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.75rem;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
 }
 
 .sistemas-count {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #666;
+  font-weight: 500;
 }
 
-.save-sistemas {
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.sistemas-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Botões */
+.btn-primary, .btn-secondary {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-}
-
-.save-sistemas:hover {
-  background-color: #1d4ed8;
-}
-
-.save-sistemas:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
+  transition: all 0.2s;
+  border: none;
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background-color: #193155;
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background-color: #cbd5e0;
+}
+
+.save-sistemas {
+  min-width: 120px;
+}
+
+/* Estilos responsivos */
+@media (min-width: 768px) {
+  .sistemas-summary {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #193155;
+  color: white;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Estilo para quando não há sistemas disponíveis */
+.sem-sistemas {
+  color: #718096;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
 }
 </style>
