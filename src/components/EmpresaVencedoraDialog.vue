@@ -3,55 +3,123 @@
     <div class="empresa-vencedora-dialog-overlay" @click="fechar"></div>
     <div class="empresa-vencedora-dialog-content">
       <div class="empresa-vencedora-dialog-header">
-        <h3>Empresa Vencedora</h3>
+        <h3><img src="/icons/company.svg" alt="Empresa" class="header-icon" /> Empresa Vencedora</h3>
         <button class="close-btn" @click="fechar">&times;</button>
       </div>
       
       <div class="empresa-vencedora-dialog-body">
         <div class="form-group">
-          <label for="nome-empresa">Nome da Empresa</label>
-          <input id="nome-empresa" type="text" class="form-control" v-model="formData.nomeEmpresa" placeholder="Nome da empresa vencedora">
-        </div>
-        
-        <div class="form-group">
-          <label for="cnpj">CNPJ</label>
-          <input id="cnpj" type="text" class="form-control" v-model="formData.cnpj" placeholder="00.000.000/0000-00">
-        </div>
-        
-        <div class="form-group">
-          <label for="contato">Contato</label>
-          <input id="contato" type="text" class="form-control" v-model="formData.contato" placeholder="Nome e telefone do contato">
+          <label for="nome-empresa">
+            <img src="/icons/building.svg" alt="Empresa" class="input-icon" />
+            Nome da Empresa
+          </label>
+          <input 
+            id="nome-empresa" 
+            type="text" 
+            class="form-control" 
+            v-model="formData.nomeEmpresa" 
+            placeholder="Nome da empresa vencedora"
+          >
         </div>
         
         <div class="form-row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="numero-contrato">Número do Contrato</label>
-              <input id="numero-contrato" type="text" class="form-control" v-model="formData.numeroContrato" placeholder="Nº do contrato">
-            </div>
+          <div class="form-group col-md-6">
+            <label for="cnpj">
+              <img src="/icons/document-id.svg" alt="CNPJ" class="input-icon" />
+              CNPJ
+            </label>
+            <input 
+              id="cnpj" 
+              type="text" 
+              class="form-control" 
+              v-model="formData.cnpj" 
+              placeholder="00.000.000/0000-00"
+            >
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="valor-final">Valor Final</label>
-              <input id="valor-final" type="text" class="form-control" v-model="formData.valorFinal" placeholder="R$ 0,00">
+          
+          <div class="form-group col-md-6">
+            <label for="contato">
+              <img src="/icons/user-profile.svg" alt="Contato" class="input-icon" />
+              Contato
+            </label>
+            <input 
+              id="contato" 
+              type="text" 
+              class="form-control" 
+              v-model="formData.contato" 
+              placeholder="Nome e telefone do contato"
+            >
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="numero-contrato">
+              <img src="/icons/file-contract.svg" alt="Contrato" class="input-icon" />
+              Número do Contrato
+            </label>
+            <input 
+              id="numero-contrato" 
+              type="text" 
+              class="form-control" 
+              v-model="formData.numeroContrato" 
+              placeholder="Nº do contrato"
+            >
+          </div>
+          
+          <div class="form-group col-md-6">
+            <label for="valor-final">
+              <img src="/icons/money.svg" alt="Valor" class="input-icon" />
+              Valor Final
+            </label>
+            <div class="valor-input">
+              <span class="valor-prefix">R$</span>
+              <input 
+                id="valor-final" 
+                type="text" 
+                class="form-control valor-field" 
+                v-model="formData.valorFinal" 
+                placeholder="0,00"
+              >
             </div>
           </div>
         </div>
         
         <div class="form-group">
-          <label for="data-assinatura">Data de Assinatura</label>
-          <input id="data-assinatura" type="date" class="form-control" v-model="formData.dataAssinatura">
+          <label for="data-assinatura">
+            <img src="/icons/calendar.svg" alt="Data" class="input-icon" />
+            Data de Assinatura
+          </label>
+          <input 
+            id="data-assinatura" 
+            type="date" 
+            class="form-control" 
+            v-model="formData.dataAssinatura"
+          >
         </div>
         
         <div class="form-group">
-          <label for="observacoes">Observações</label>
-          <textarea id="observacoes" class="form-control" v-model="formData.observacoes" rows="3" placeholder="Observações adicionais"></textarea>
+          <label for="observacoes">
+            <img src="/icons/notes.svg" alt="Observações" class="input-icon" />
+            Observações
+          </label>
+          <textarea 
+            id="observacoes" 
+            class="form-control" 
+            v-model="formData.observacoes" 
+            rows="3" 
+            placeholder="Observações adicionais sobre a empresa ou o contrato"
+          ></textarea>
         </div>
       </div>
       
       <div class="empresa-vencedora-dialog-footer">
-        <button class="btn-cancelar" @click="fechar">Cancelar</button>
+        <button class="btn-cancelar" @click="fechar">
+          <img src="/icons/fechar.svg" alt="Cancelar" class="button-icon" />
+          Cancelar
+        </button>
         <button class="btn-salvar" @click="salvar" :disabled="loading">
+          <img src="/icons/save-fill.svg" alt="Salvar" class="button-icon" />
           {{ loading ? 'Salvando...' : 'Salvar' }}
         </button>
       </div>
@@ -244,6 +312,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .empresa-vencedora-dialog-overlay {
@@ -253,18 +327,20 @@ export default {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
 }
 
 .empresa-vencedora-dialog-content {
   position: relative;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 550px;
   max-width: 90%;
   max-height: 90vh;
   overflow-y: auto;
   z-index: 1051;
+  border: 1px solid #e5e7eb;
 }
 
 .empresa-vencedora-dialog-header {
@@ -273,12 +349,22 @@ export default {
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
+  background-color: #f8fafc;
+  border-radius: 12px 12px 0 0;
 }
 
 .empresa-vencedora-dialog-header h3 {
   margin: 0;
   font-size: 1.25rem;
   color: #1e293b;
+  display: flex;
+  align-items: center;
+}
+
+.header-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
 }
 
 .close-btn {
@@ -287,6 +373,17 @@ export default {
   font-size: 1.5rem;
   cursor: pointer;
   color: #64748b;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #e2e8f0;
 }
 
 .empresa-vencedora-dialog-body {
@@ -299,7 +396,7 @@ export default {
 
 .form-row {
   display: flex;
-  margin: 0 -8px;
+  margin: 0 -8px 16px;
 }
 
 .col-md-6 {
@@ -308,25 +405,57 @@ export default {
 }
 
 label {
-  display: block;
-  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
   font-weight: 500;
   color: #334155;
   font-size: 0.875rem;
 }
 
+.input-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
 .form-control {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  border-radius: 8px;
+  font-size: 0.925rem;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
 }
 
 .form-control:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.valor-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.valor-prefix {
+  position: absolute;
+  left: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.valor-field {
+  padding-left: 32px;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .empresa-vencedora-dialog-footer {
@@ -334,35 +463,61 @@ label {
   justify-content: flex-end;
   padding: 16px 20px;
   border-top: 1px solid #e5e7eb;
-  gap: 8px;
+  gap: 12px;
+  background-color: #f8fafc;
+  border-radius: 0 0 12px 12px;
 }
 
 .btn-cancelar {
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border-radius: 8px;
   color: #475569;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-cancelar:hover {
+  background-color: #e2e8f0;
 }
 
 .btn-salvar {
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
   background-color: #3b82f6;
   border: 1px solid #2563eb;
-  border-radius: 4px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.btn-salvar:hover {
+.btn-salvar:hover:not(:disabled) {
   background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-salvar:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-salvar:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
 }
 </style>

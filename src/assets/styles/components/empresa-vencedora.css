@@ -18,9 +18,9 @@
 }
 
 .empresa-vencedora-info {
-  font-weight: 500;
-  color: #1e293b;
-  overflow: hidden;
+  font-weight: 400;
+  color: #565656;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
@@ -169,6 +169,10 @@
   color: white;
   cursor: pointer;
   font-weight: 500;
+}
+
+input#valor-final {
+  padding-left: 36px;
 }
 
 .btn-salvar:hover {

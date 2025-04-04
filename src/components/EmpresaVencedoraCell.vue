@@ -95,15 +95,6 @@ export default {
   overflow: hidden;
   position: relative;
 }
-
-.empresa-vencedora-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px;
-  position: relative;
-}
-
 .empresa-vencedora-nome {
   font-weight: 600;
   font-size: 0.9rem;
