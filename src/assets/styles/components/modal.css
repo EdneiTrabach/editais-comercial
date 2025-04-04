@@ -1,5 +1,4 @@
-/* Estilos específicos para modais */
-
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -32,17 +31,36 @@
   align-items: center;
   padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--border-color);
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  background-color: white;
+  z-index: 2; /* Ensure header stays on top */
+  position: relative;
 }
 
 .modal-body {
   padding: 2rem;
-  overflow-y: auto;
+  overflow-y: auto; /* Enable vertical scrolling */
   flex: 1;
-  max-height: calc(90vh - 130px); /* Ajuste para garantir que o corpo tenha um tamanho máximo, considerando o header e footer */
+  max-height: calc(90vh - 140px); /* Adjust based on header and footer height */
+  scrollbar-width: thin;
+}
+
+/* Custom scrollbar styling */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color-hover);
 }
 
 .modal-actions {
@@ -51,10 +69,9 @@
   justify-content: flex-end;
   gap: 1rem;
   border-top: 1px solid var(--border-color);
-  background: white;
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  background-color: white;
+  z-index: 2; /* Ensure footer stays on top */
+  position: relative;
 }
 
 .btn-close {
@@ -65,28 +82,28 @@
   cursor: pointer;
 }
 
-/* Modal para sistemas de implantação */
+/* Specific modal types */
 .sistemas-implantacao-modal .modal-content {
-  max-width: 800px; /* Maior largura para este tipo específico de modal */
+  width: 90%;
+  max-width: 800px; /* Larger for this specific modal */
 }
 
 .sistemas-implantacao-modal .modal-body {
-  overflow-y: auto;
-  padding-right: 1.5rem; /* Adiciona padding para evitar que o conteúdo encoste na barra de rolagem */
+  padding: 1.5rem;
 }
 
-/* Responsividade para modais */
+/* Responsive styles for modals */
 @media (max-width: 768px) {
   .modal-content {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-    border-radius: 0;
+    width: 95%;
+    height: 95vh;
+    max-height: 95vh;
+    border-radius: 8px;
   }
   
   .modal-body {
-    padding: 1.5rem;
-    max-height: calc(100vh - 120px); /* Ajuste para mobile */
+    padding: 1rem;
+    max-height: calc(95vh - 120px);
   }
   
   .modal-header,

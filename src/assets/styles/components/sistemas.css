@@ -7,22 +7,6 @@
   position: relative;
 }
 
-.sistemas-selected {
-  display: grid;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  max-height: 80px;
-  overflow-y: auto;
-  padding: 0.25rem;
-  flex-direction: row;
-  align-content: space-between;
-  justify-content: space-between;
-  align-items: stretch;
-  justify-items: center;
-  grid-template-columns: 2fr auto;
-}
-
 .sistema-remove {
   cursor: pointer;
   font-weight: bold;

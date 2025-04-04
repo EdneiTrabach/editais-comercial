@@ -1,0 +1,436 @@
+/* Estilos para o componente SistemasImplantacaoSelector */
+
+.sistemas-implantacao-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.selector-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  display: none; /* Esconder o título duplicado, pois já está no header do modal */
+}
+
+.sistemas-implantacao-description {
+  margin-bottom: 1rem;
+}
+
+.sistemas-implantacao-description p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.aviso-sem-sistemas {
+  color: #e74c3c;
+  font-style: italic;
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  border-left: 4px solid #e74c3c;
+}
+
+/* Estilos para o container principal */
+.sistemas-implantacao-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Barra de pesquisa */
+.sistema-search-container {
+  margin-bottom: 0.5rem;
+}
+
+.sistema-search {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.sistema-search:focus {
+  border-color: #193155;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
+}
+
+/* Área de chips de sistemas selecionados */
+.sistemas-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  min-height: 3.5rem;
+  max-height: 100%;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  min-width: 90%;
+}
+
+.sistema-chip {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background-color: #193155;
+  color: white;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.sistema-remove {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+
+.sistema-remove:hover {
+  opacity: 0.8;
+}
+
+/* Select múltiplo de sistemas */
+.sistemas-select {
+  width: 100%;
+  min-height: 200px;
+  max-height: 300px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.sistemas-select option {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.sistemas-select option:hover {
+  background-color: #f0f7ff;
+}
+
+.sistemas-select option:checked {
+  background-color: #193155;
+  color: white;
+}
+
+/* Resumo e ações */
+.sistemas-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.sistemas-count {
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.sistemas-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Botões */
+.btn-primary, .btn-secondary {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #193155;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #254677;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background-color: #cbd5e0;
+}
+
+.save-sistemas {
+  min-width: 120px;
+}
+
+/* Estilos responsivos */
+@media (min-width: 768px) {
+  .sistemas-summary {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Estilos adicionais para o modal */
+.sistemas-implantacao-modal {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header do modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #193155;
+  color: white;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Corpo do modal com scroll */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  max-height: calc(90vh - 70px); /* Ajuste para garantir que caiba na tela */
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+/* Estilo para quando não há sistemas disponíveis */
+.sem-sistemas {
+  color: #718096;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Estilos para o indicador de sistemas na tabela */
+.sistemas-implantacao-container {
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.sistemas-implantacao-container:hover {
+  background-color: #f0f7ff;
+}
+
+.sistemas-implantacao-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sistemas-implantacao-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #e6f0fd;
+  border: 1px solid #cce3fc;
+  border-radius: 16px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: #2563eb;
+}
+
+.icon-sistemas-implantacao {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.sem-sistemas-implantacao {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-add {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Estilos para o componente de seleção de sistemas a implantar */
+
+.sistemas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sistemas-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.sistemas-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.sistema-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sistema-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.sistema-item.selected {
+  border-color: var(--primary-color);
+  background-color: rgba(25, 49, 85, 0.05);
+}
+
+.sistema-checkbox {
+  margin: 0;
+}
+
+.sistema-label {
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.sistemas-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-sistema {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sistema-cancelar {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-sistema-salvar {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  border: 1px solid var(--primary-color);
+}
+
+.btn-sistema-salvar:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Estilo para o tooltip de informação */
+.sistema-info-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.sistema-info-icon {
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.sistema-info-content {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-primary);
+  padding: 0.75rem;
+  border-radius: 6px;
+  box-shadow: var(--card-shadow);
+  width: 200px;
+  z-index: 100;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  border: 1px solid var(--border-color);
+}
+
+.sistema-info-tooltip:hover .sistema-info-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .sistemas-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .sistemas-actions {
+    flex-direction: column;
+  }
+  
+  .btn-sistema {
+    width: 100%;
+  }
+}
