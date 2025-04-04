@@ -1,7 +1,5 @@
 <template>
-  <div class="sistemas-implantacao-selector">
-    <h3 class="selector-title">Sistemas a Implantar</h3>
-    
+  <div class="sistemas-implantacao-selector">    
     <div class="sistemas-implantacao-description">
       <p>Selecione os sistemas que serão implantados neste processo.</p>
       <p v-if="sistemasDisponiveis.length === 0" class="aviso-sem-sistemas">
@@ -103,6 +101,7 @@ export default {
         this.sistemasAtivosIds.includes(sistema.id)
       );
       
+      console.log('Sistemas disponíveis:', filtrados.length);
       return filtrados;
     },
     
@@ -124,50 +123,85 @@ export default {
   watch: {
     sistemasAtivos: {
       handler(newVal) {
+        console.log('sistemasAtivos alterado:', newVal);
         this.processarSistemasAtivos();
       },
-      immediate: true
+      immediate: true,
+      deep: true
     },
     
     value: {
       handler(newVal) {
+        console.log('value alterado:', newVal);
         this.inicializarValor();
       },
-      immediate: true
+      immediate: true,
+      deep: true
     }
   },
   
   methods: {
     processarSistemasAtivos() {
       try {
+        console.log('Processando sistemasAtivos:', this.sistemasAtivos);
+        
         if (!this.sistemasAtivos) {
+          console.log('sistemasAtivos é nulo ou indefinido');
           this.sistemasAtivosIds = [];
           return;
         }
         
         // Se já for array de ids
         if (Array.isArray(this.sistemasAtivos)) {
+          console.log('sistemasAtivos é um array', this.sistemasAtivos);
           this.sistemasAtivosIds = [...this.sistemasAtivos];
           return;
         }
         
         // Se for string, tentar converter para JSON
         if (typeof this.sistemasAtivos === 'string') {
+          console.log('sistemasAtivos é uma string:', this.sistemasAtivos);
+          
+          // Verificar se a string parece ser um formato PostgreSQL específico como "{id1,id2,id3}"
+          if (this.sistemasAtivos.startsWith('{') && this.sistemasAtivos.endsWith('}')) {
+            try {
+              // Remover as chaves e dividir por vírgulas
+              const idsString = this.sistemasAtivos.substring(1, this.sistemasAtivos.length - 1);
+              // Tratar caso especial para string JSON dentro de string PostgreSQL
+              if (idsString.includes('"')) {
+                // É provavelmente uma representação de array PostgreSQL com UUIDs entre aspas
+                const matches = idsString.match(/"[^"]+"/g) || [];
+                this.sistemasAtivosIds = matches.map(id => id.replace(/"/g, ''));
+              } else {
+                // Array simples sem aspas
+                this.sistemasAtivosIds = idsString.split(',').filter(id => id.trim());
+              }
+              console.log('IDs extraídos do formato PostgreSQL:', this.sistemasAtivosIds);
+              return;
+            } catch (e) {
+              console.error('Erro ao processar formato PostgreSQL:', e);
+            }
+          }
+          
+          // Tentar como JSON padrão
           try {
             const parsed = JSON.parse(this.sistemasAtivos);
+            console.log('sistemasAtivos parseado como JSON:', parsed);
+            
             if (Array.isArray(parsed)) {
               this.sistemasAtivosIds = [...parsed];
             } else {
               this.sistemasAtivosIds = [];
             }
           } catch (e) {
-            console.error('Erro ao parsear sistemasAtivos:', e);
+            console.error('Erro ao parsear sistemasAtivos como JSON:', e);
             this.sistemasAtivosIds = [];
           }
           return;
         }
         
         // Caso não seja array nem string válida
+        console.log('sistemasAtivos não é nem array nem string válida');
         this.sistemasAtivosIds = [];
       } catch (e) {
         console.error('Erro ao processar sistemasAtivos:', e);
@@ -182,10 +216,14 @@ export default {
       }
       
       try {
+        console.log('Inicializando valor:', this.value);
+        
         // Se for uma string JSON, tentar converter
         if (typeof this.value === 'string') {
           try {
             const parsed = JSON.parse(this.value);
+            console.log('Valor parseado:', parsed);
+            
             if (parsed && parsed.sistemas_ids) {
               this.sistemasIdsValue = [...parsed.sistemas_ids];
             } else if (Array.isArray(parsed)) {
@@ -210,6 +248,8 @@ export default {
         } else {
           this.sistemasIdsValue = [];
         }
+        
+        console.log('sistemasIdsValue inicializado:', this.sistemasIdsValue);
       } catch (e) {
         console.error('Erro ao processar valor dos sistemas:', e);
         this.sistemasIdsValue = [];
@@ -244,16 +284,18 @@ export default {
     async carregarSistemas() {
       try {
         this.loading = true;
+        console.log('Carregando sistemas do banco...');
         
+        // Removendo o filtro por ativo que estava causando o erro
         const { data, error } = await supabase
           .from('sistemas')
-          .select('id, nome, descricao, ativo')
-          .eq('ativo', true)
+          .select('id, nome, descricao')
           .order('nome');
           
         if (error) throw error;
         
         this.sistemas = data || [];
+        console.log(`${this.sistemas.length} sistemas carregados do banco`);
       } catch (e) {
         console.error('Erro ao carregar sistemas:', e);
       } finally {
@@ -269,6 +311,8 @@ export default {
           ultima_atualizacao: new Date().toISOString()
         };
         
+        console.log('Salvando sistemas:', dadosSistemas);
+        
         // Emitir evento de conclusão
         this.$emit('save', dadosSistemas);
       } catch (e) {
@@ -282,6 +326,8 @@ export default {
   },
   
   async mounted() {
+    console.log('Componente SistemasImplantacaoSelector montado');
+    
     // Carregar sistemas do banco
     await this.carregarSistemas();
     
