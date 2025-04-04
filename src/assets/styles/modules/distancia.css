@@ -153,9 +153,6 @@ select.cidade-select {
   align-items: center;
   gap: 1rem;
   padding: 0.5rem;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
 }
 
 .distancia-valor {
