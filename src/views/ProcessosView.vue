@@ -501,6 +501,7 @@
                   <AcoesColumn 
                     :processo="processo"
                     @delete="handleDelete"
+                    @duplicate="handleDuplicate"
                   />
                 </td>
                 <!-- Row resize handle -->
@@ -650,7 +651,7 @@
             
             <div class="dialog-footer">
               <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
-                <img src="/icons/cancel.svg" alt="Cancelar" class="icon-small">
+                <img src="/icons/fechar.svg" alt="Cancelar" class="icon-small">
                 Cancelar
               </button>
               <div class="spacer"></div>
@@ -994,6 +995,15 @@
         </div>
       </div>
 
+      <!-- Adicionar o componente de diálogo de duplicação -->
+      <DuplicateProcessDialog
+        :show="duplicateDialog.show"
+        :processo="duplicateDialog.processo || {}"
+        :loading="duplicateDialog.loading"
+        @close="hideDuplicateDialog"
+        @duplicate="executarDuplicacao"
+      />
+
     </div>
   </div>
 </template>
@@ -1006,6 +1016,7 @@ import { supabase } from '@/lib/supabase'; // Adicione esta importação
 import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue';
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue';
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
+import DuplicateProcessDialog from '@/components/dialogs/DuplicateProcessDialog.vue';
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -1039,7 +1050,8 @@ export default {
     Shepherd,
     EmpresaVencedoraColuna,
     AcoesColumn,
-    AdvancedFilterComponent // Adicionar o novo componente
+    AdvancedFilterComponent, // Adicionar o novo componente
+    DuplicateProcessDialog
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 

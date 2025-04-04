@@ -40,13 +40,7 @@ const {
 
 // Sobrescrever função de fechar para verificar se é permitido
 const handleUpdateModalClose = () => {
-  // Se existem notificações, exigir que o usuário as leia
-  if (unreadUpdates.value.length > 0) {
-    alert('Por favor, leia as atualizações importantes do sistema antes de continuar.');
-    return;
-  }
-  
-  // Se não existem ou já foram lidas, fechar normalmente
+  // Se não há atualizações não lidas, pode fechar normalmente
   closeUpdateModal();
 };
 
@@ -135,6 +129,44 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('notifications-count-updated', () => {});
 });
+
+/**
+ * Verifica as atualizações do sistema e mostra o diálogo se necessário
+ */
+async function checkSystemUpdates() {
+  try {
+    const { data: updates } = await supabase
+      .from('system_updates')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    if (updates && updates.length > 0) {
+      // Verifica se há alguma atualização não lida pelo usuário atual
+      const latestUpdateId = updates[0].id;
+      const userLastRead = localStorage.getItem('lastReadUpdateId');
+      
+      if (!userLastRead || userLastRead !== latestUpdateId) {
+        this.systemUpdates = updates;
+        this.showUpdatesDialog = true;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao verificar atualizações do sistema:', error);
+  }
+};
+
+/**
+ * Confirma a leitura das atualizações do sistema
+ */
+function confirmUpdateRead() {
+  if (this.systemUpdates && this.systemUpdates.length > 0) {
+    // Salva o ID da última atualização lida no localStorage
+    localStorage.setItem('lastReadUpdateId', this.systemUpdates[0].id);
+    // Fecha o diálogo
+    this.showUpdatesDialog = false;
+  }
+}
 </script>
 
 <template>

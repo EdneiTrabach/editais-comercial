@@ -70,6 +70,12 @@ export default {
       observacoes: ''
     });
 
+    const duplicateDialog = ref({
+      show: false,
+      processo: null,
+      loading: false
+    });
+
     const editingCell = ref({
       id: null,
       field: null,
@@ -3520,6 +3526,135 @@ export default {
       }
     }
 
+    const showDuplicateDialog = (processo) => {
+      duplicateDialog.value.processo = { ...processo };
+      duplicateDialog.value.show = true;
+    };
+
+    const hideDuplicateDialog = () => {
+      duplicateDialog.value.show = false;
+      duplicateDialog.value.processo = null;
+    };
+
+    /**
+     * Executa a duplicação do processo com base nos dados do diálogo
+     */
+    const executarDuplicacao = async (dadosDuplicacao) => {
+      try {
+        // Inicia o indicador de carregamento
+        duplicateDialog.value.loading = true;
+        
+        const { processoOriginal, novaData, novaHora, opcoes } = dadosDuplicacao;
+        
+        // Criar uma cópia do processo original
+        const novoProcesso = { ...processoOriginal };
+        
+        // Remover o ID para criar um novo registro e qualquer campo virtual que não existe no banco
+        delete novoProcesso.id;
+        delete novoProcesso._distancias; // Removendo campo virtual que não existe no banco de dados
+        
+        // Atualizar data e hora
+        novoProcesso.data_pregao = novaData;
+        novoProcesso.hora_pregao = novaHora;
+        
+        // Definir status com base nas opções
+        if (!opcoes.manterStatus) {
+          novoProcesso.status = 'em_analise'; // Status padrão para novos processos
+        }
+        
+        // Limpar dados que não devem ser copiados
+        if (!opcoes.copiarResponsaveis) {
+          novoProcesso.responsavel_id = null;
+        }
+        
+        if (!opcoes.copiarObservacoes) {
+          novoProcesso.campo_adicional1 = null;
+          novoProcesso.campo_adicional2 = null;
+        }
+        
+        if (!opcoes.copiarImpugnacoes) {
+          novoProcesso.impugnacoes = null;
+          novoProcesso.impugnacao_data_limite = null;
+          novoProcesso.impugnacao_itens = null;
+          novoProcesso.impugnacao_forma_envio = null;
+          novoProcesso.impugnacao_status = 'nao_iniciado';
+        }
+        
+        // Atualizar campos de data de criação e atualização
+        novoProcesso.created_at = new Date().toISOString();
+        novoProcesso.updated_at = new Date().toISOString();
+        
+        // Adicionar o usuário que está criando o duplicado
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          novoProcesso.updated_by = user.id;
+        }
+        
+        // Inserir o novo processo duplicado
+        const { data: novoProcessoInserido, error } = await supabase
+          .from('processos')
+          .insert(novoProcesso)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        // Buscar as distâncias associadas ao processo original para duplicá-las
+        const { data: distanciasOriginais, error: errorDistancias } = await supabase
+          .from('processo_distancias')
+          .select('*')
+          .eq('processo_id', processoOriginal.id);
+        
+        // Se houver distâncias e não houver erro, duplicar as distâncias
+        if (distanciasOriginais && distanciasOriginais.length > 0 && !errorDistancias) {
+          const distanciasNovas = distanciasOriginais.map(distancia => {
+            // Criar uma cópia da distância e associar ao novo processo
+            const novaDistancia = { ...distancia };
+            delete novaDistancia.id; // Remover ID para criar um novo registro
+            novaDistancia.processo_id = novoProcessoInserido.id;
+            novaDistancia.created_at = new Date().toISOString();
+            novaDistancia.updated_at = new Date().toISOString();
+            return novaDistancia;
+          });
+          
+          // Inserir as novas distâncias
+          const { error: distanciasError } = await supabase
+            .from('processo_distancias')
+            .insert(distanciasNovas);
+          
+          if (distanciasError) console.error('Erro ao duplicar distâncias:', distanciasError);
+        }
+        
+        // Registrar no log do sistema
+        await logSystemAction({
+          tipo: 'duplicate',
+          tabela: 'processos',
+          registro_id: novoProcessoInserido.id,
+          dados_anteriores: { id: processoOriginal.id, numero_processo: processoOriginal.numero_processo },
+          dados_novos: novoProcessoInserido
+        });
+        
+        // Recarregar os processos
+        await loadProcessos();
+        
+        // Fechar o diálogo
+        hideDuplicateDialog();
+        
+        // Mostrar mensagem de sucesso
+        showToast(`Processo duplicado com sucesso para ${formatDate(novaData)}`, 'success');
+        
+      } catch (error) {
+        console.error('Erro ao duplicar processo:', error);
+        showToast(`Erro ao duplicar processo: ${error.message}`, 'error');
+      } finally {
+        duplicateDialog.value.loading = false;
+      }
+    };
+
+    const handleDuplicate = (processo) => {
+      showDuplicateDialog(processo);
+    };
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,
@@ -3531,6 +3666,7 @@ export default {
       deleteConfirmDialog,
       sistemasDialog,
       impugnacaoDialog,
+      duplicateDialog,
       editingCell,
       sortConfig,
       selectedRow,
@@ -3705,7 +3841,11 @@ export default {
       hasImpugnacaoData,
       hasRelevantImpugnacaoData,
       formatImpugnacaoStatus,
-      updateProcesso
+      updateProcesso,
+      showDuplicateDialog,
+      hideDuplicateDialog,
+      executarDuplicacao,
+      handleDuplicate
     }
   }
 }
