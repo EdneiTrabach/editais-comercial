@@ -3390,8 +3390,33 @@ export default {
              processo.impugnacoes;
     };
 
+    // Função para verificar se um processo tem dados relevantes de impugnação para exibição
+    const hasRelevantImpugnacaoData = (processo) => {
+      if (!processo) return false;
+      
+      // Verifica se algum dos campos tem valor significativo
+      return (
+        // Tem data limite definida
+        (processo.impugnacao_data_limite && processo.impugnacao_data_limite !== '-') ||
+        
+        // Tem itens a serem impugnados
+        (processo.impugnacao_itens && processo.impugnacao_itens.trim() !== '' && processo.impugnacao_itens !== '-') ||
+        
+        // Tem observações de impugnação 
+        (processo.impugnacoes && processo.impugnacoes.trim() !== '' && processo.impugnacoes !== '-') ||
+        
+        // Tem forma de envio definida
+        (processo.impugnacao_forma_envio && processo.impugnacao_forma_envio !== '-') ||
+        
+        // Status diferente do padrão "não iniciado"
+        (processo.impugnacao_status && processo.impugnacao_status !== 'nao_iniciado')
+      );
+    };
+
     // Função para formatar o status de impugnação
     const formatImpugnacaoStatus = (status) => {
+      if (!status) return 'Não iniciado';
+      
       const statusMap = {
         'nao_iniciado': 'Não iniciado',
         'em_andamento': 'Em andamento',
@@ -3400,7 +3425,8 @@ export default {
         'aprovado': 'Aprovado',
         'rejeitado': 'Rejeitado'
       };
-      return statusMap[status] || 'Não iniciado';
+      
+      return statusMap[status] || status;
     };
 
     async function updateProcesso(processo) {
@@ -3677,6 +3703,7 @@ export default {
       applyAdvancedFilters,
       clearAdvancedFilters,
       hasImpugnacaoData,
+      hasRelevantImpugnacaoData,
       formatImpugnacaoStatus,
       updateProcesso
     }

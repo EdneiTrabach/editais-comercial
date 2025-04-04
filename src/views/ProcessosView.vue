@@ -416,46 +416,65 @@
                     </span>
 
                     <!-- Impugnações field -->
-                    <span v-else-if="coluna.campo === 'impugnacoes'" class="impugnacoes-cell">
-                      <template v-if="hasImpugnacaoData(processo)">
-                        <div class="impugnacao-data-container">
-                          <div class="impugnacao-item">
-                            <span class="impugnacao-label">Data limite:</span>
-                            <span class="impugnacao-value">{{ formatDate(processo.impugnacao_data_limite) || '-' }}</span>
+                    <template v-else-if="coluna.campo === 'impugnacoes'">
+                      <div class="impugnacao-container" @dblclick="showImpugnacaoDialog(processo)">
+                        <!-- Mostra dados apenas se houver alguma informação relevante -->
+                        <template v-if="hasRelevantImpugnacaoData(processo)">
+                          <div class="impugnacao-info">
+                            <template v-if="processo.impugnacao_data_limite">
+                              <div class="impugnacao-item">
+                                <span class="impugnacao-label">Data limite:</span>
+                                <span class="impugnacao-value">{{ formatDate(processo.impugnacao_data_limite) }}</span>
+                              </div>
+                            </template>
+                            
+                            <template v-if="processo.impugnacao_itens">
+                              <div class="impugnacao-item">
+                                <span class="impugnacao-label">Itens:</span>
+                                <span class="impugnacao-value">{{ processo.impugnacao_itens }}</span>
+                              </div>
+                            </template>
+                            
+                            <template v-if="processo.impugnacoes">
+                              <div class="impugnacao-item">
+                                <span class="impugnacao-label">Observações:</span>
+                                <span class="impugnacao-value">{{ processo.impugnacoes }}</span>
+                              </div>
+                            </template>
+                            
+                            <template v-if="processo.impugnacao_forma_envio">
+                              <div class="impugnacao-item">
+                                <span class="impugnacao-label">Forma de envio:</span>
+                                <span class="impugnacao-value">{{ processo.impugnacao_forma_envio }}</span>
+                              </div>
+                            </template>
+                            
+                            <template v-if="processo.impugnacao_status && processo.impugnacao_status !== 'nao_iniciado'">
+                              <div class="impugnacao-item">
+                                <span class="impugnacao-label">Status:</span>
+                                <span class="impugnacao-value">{{ formatImpugnacaoStatus(processo.impugnacao_status) }}</span>
+                              </div>
+                            </template>
                           </div>
                           
-                          
-                          <div v-if="processo.impugnacao_itens" class="impugnacao-item">
-                            <span class="impugnacao-label">Itens:</span>
-                            <span class="impugnacao-value impugnacao-text">{{ processo.impugnacao_itens }}</span>
-                          </div>
-                          
-                          <div v-if="processo.impugnacoes" class="impugnacao-item">
-                            <span class="impugnacao-label">Observações:</span>
-                            <span class="impugnacao-value impugnacao-text">{{ processo.impugnacoes }}</span>
-                          </div>
-
-                          <div class="impugnacao-item">
-                            <span class="impugnacao-label">Forma de envio:</span>
-                            <span class="impugnacao-value">{{ processo.impugnacao_forma_envio || '-' }}</span>
-                          </div>
-                          
-                          <div class="impugnacao-item">
-                            <span class="impugnacao-label">Status:</span>
-                            <span class="impugnacao-value impugnacao-status" :class="`status-imp-${processo.impugnacao_status || 'nao_iniciado'}`">
-                              {{ formatImpugnacaoStatus(processo.impugnacao_status) }}
-                            </span>
-                          </div>
-                          <button class="impugnacao-edit-btn" @click.stop="showImpugnacaoDialog(processo)">
-                            <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
-                          </button>
-                        </div>
-                      </template>
-                      <div v-else class="empty-impugnacao" @click.stop="showImpugnacaoDialog(processo)">
-                        <span class="add-impugnacao">+</span>
-                        <span>Clique para registrar impugnação</span>
+                          <!-- <div class="impugnacao-action">
+                            <button class="btn-edit-small" @click.stop="showImpugnacaoDialog(processo)">
+                              Editar
+                            </button>
+                          </div> -->
+                        </template>
+                        
+                        <!-- Quando não houver dados relevantes, mostra apenas um ícone para adicionar -->
+                        <template v-else>
+                          <!-- <div class="impugnacao-empty">
+                            <button class="btn-add-impugnacao" @click.stop="showImpugnacaoDialog(processo)">
+                              <img src="/icons/add-document.svg" alt="Adicionar impugnação" class="icon-small">
+                              <span>Adicionar impugnação</span>
+                            </button>
+                          </div> -->
+                        </template>
                       </div>
-                    </span>
+                    </template>
 
                     <!-- Default display for other fields -->
                     <template v-else-if="coluna.campo === 'status'">
