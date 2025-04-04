@@ -333,9 +333,8 @@
                         <span 
                           class="empresa-display" 
                           :style="getEmpresaCor(processo.empresa_id) ? 
-                                 { color: getEmpresaCor(processo.empresa_id),
-                                   borderColor: getEmpresaCor(processo.empresa_id),
-                                   backgroundColor: `${getEmpresaCor(processo.empresa_id)}15` } : {}"
+                                 { backgroundColor: getLightColor(getEmpresaCor(processo.empresa_id)),
+                                   color: getEmpresaCor(processo.empresa_id) } : {}"
                         >
                           {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
                         </span>

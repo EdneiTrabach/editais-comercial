@@ -127,9 +127,8 @@ td[data-field="empresa_vencedora"] {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  transition: all 0.3s ease !important;
   font-weight: 500 !important;
+  transition: all 0.3s ease !important;
 }
 
 .responsavel-container {

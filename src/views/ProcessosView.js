@@ -576,6 +576,22 @@ export default {
       return empresa?.color || null;
     };
 
+    const getLightColor = (hexColor) => {
+      if (!hexColor) return "#f5f5f5";
+      
+      // Remove o # se existir
+      hexColor = hexColor.replace('#', '');
+      
+      // Converte para RGB
+      const r = parseInt(hexColor.substr(0, 2), 16);
+      const g = parseInt(hexColor.substr(2, 2), 16);
+      const b = parseInt(hexColor.substr(4, 2), 16);
+      
+      // Calcula a versão mais clara (similar aos status)
+      // Garantindo que a cor seja clara o suficiente para ser usada como fundo
+      return `rgba(${r}, ${g}, ${b}, 0.15)`;
+    };
+
     const getContrastColorForEmpresa = (hexColor) => {
       if (!hexColor || hexColor === '#FFFFFF') return '#000000';
       
@@ -3313,6 +3329,7 @@ export default {
       getPortalName,
       getEmpresaNome,
       getEmpresaCor,
+      getLightColor,
       getContrastColorForEmpresa,
       getRepresentanteNome,
       getSistemaNome,
