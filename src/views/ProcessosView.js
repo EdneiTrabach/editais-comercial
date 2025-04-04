@@ -3091,7 +3091,7 @@ export default {
 
     const sistemasImplantacaoDialog = ref({
       show: false,
-      position: {},
+      position: { top: '50px', left: '50px', maxWidth: '90%' },
       processo: null
     });
 
@@ -3753,6 +3753,22 @@ export default {
       }
     };
 
+    // Função para obter a contagem de sistemas a implantar de um processo
+    const getSistemasImplantacaoCount = (processo) => {
+      if (!processo.sistemas_implantacao) return 0;
+      
+      try {
+        const dadosSistemas = typeof processo.sistemas_implantacao === 'object'
+          ? processo.sistemas_implantacao
+          : JSON.parse(processo.sistemas_implantacao);
+          
+        return dadosSistemas.sistemas_ids ? dadosSistemas.sistemas_ids.length : 0;
+      } catch (error) {
+        console.error('Erro ao obter contagem de sistemas a implantar:', error);
+        return 0;
+      }
+    };
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,
@@ -3950,7 +3966,8 @@ export default {
       saveEmpresaVencedora,
       isJsonObject,
       getEmpresaVencedoraNome,
-      getEmpresaVencedoraContrato
+      getEmpresaVencedoraContrato,
+      getSistemasImplantacaoCount
     }
   }
 }

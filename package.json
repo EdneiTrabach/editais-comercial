@@ -26,6 +26,7 @@
     "maska": "^3.1.0",
     "rate-limiter-flexible": "^5.0.5",
     "redis": "^4.7.0",
+    "remixicon": "^4.6.0",
     "shepherd.js": "^14.5.0",
     "v-money": "^0.8.1",
     "vue": "^3.5.13",

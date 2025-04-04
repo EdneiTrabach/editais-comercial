@@ -264,6 +264,138 @@ td[data-field="empresa_vencedora"] {
   border-bottom: 1px solid #e9ecef;
 }
 
+/* Estilos para sistemas a implantar */
+.sistemas-implantacao-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.sistemas-implantacao-container:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sistemas-implantacao-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sistemas-implantacao-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f8f4ff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #e6d8ff;
+  color: #6200ee;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.icon-sistemas-implantacao {
+  width: 14px;
+  height: 14px;
+}
+
+.sem-sistemas-implantacao {
+  color: #888;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sem-sistemas-implantacao .icon-add {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Modal para sistemas a implantar */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Estilos para o diálogo de sistemas a implantar */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sistemas-implantacao-dialog {
+  position: absolute;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1001;
+  min-width: 450px;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: dialogFadeIn 0.2s ease-out;
+}
+
+.sistemas-implantacao-dialog-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sistemas-implantacao-dialog-actions {
+  padding: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #eee;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação de transição para o diálogo */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 /* Estilos para diálogo de impugnação */
 .impugnacao-dialog {
   max-width: 800px;

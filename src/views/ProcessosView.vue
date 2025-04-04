@@ -128,6 +128,7 @@
                     coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) :
                     coluna.campo === 'empresa_vencedora' ? openEmpresaVencedoraDialog(processo) :
                     coluna.campo === 'distancia_km' || coluna.tipoExibicao === 'distancia' ? abrirDialogDistancia(processo, $event) :
+                    coluna.campo === 'sistemas_implantacao' ? showSistemasImplantacaoDialog(processo, $event) :
                     handleDblClick(coluna.campo, processo, $event)">
                   
                   <!-- Template específico para empresa vencedora -->
@@ -147,6 +148,21 @@
                         </div>
                       </template>
                       <div v-else class="sem-empresa-vencedora">
+                      </div>
+                    </div>
+                  </template>
+                  
+                  <!-- Template específico para sistemas a implantar -->
+                  <template v-else-if="coluna.campo === 'sistemas_implantacao'">
+                    <div class="sistemas-implantacao-container" @click="openSistemasImplantacaoDialog(processo, $event)">
+                      <div v-if="getSistemasImplantacaoCount(processo) > 0" class="sistemas-implantacao-info">
+                        <div class="sistemas-implantacao-badges">
+                          <span>{{ getSistemasImplantacaoCount(processo) }} sistemas</span>
+                          <img src="/icons/pending-icon.svg" alt="A implantar" class="icon-sistemas-implantacao" />
+                        </div>
+                      </div>
+                      <div v-else class="sem-sistemas-implantacao">
+                        <span class="icon-add">+</span> Definir sistemas a implantar
                       </div>
                     </div>
                   </template>
@@ -998,22 +1014,25 @@
         </div>
       </div>
 
-      <!-- Sistemas Implantação Dialog -->
+      <!-- Modal para selecionar sistemas a implantar -->
       <div 
         v-if="sistemasImplantacaoDialog.show" 
-        class="sistemas-implantacao-dialog"
-        :style="sistemasImplantacaoDialog.position"
+        class="modal-overlay"
       >
-        <div class="sistemas-implantacao-dialog-content">
-          <h3>Sistemas a serem Implantados</h3>
-          <SistemasImplantacaoSelector
-            :processo-id="sistemasImplantacaoDialog.processo.id"
-            :sistemas-ativos="sistemasImplantacaoDialog.processo.sistemas_ativos || []"
-            :value="sistemasImplantacaoDialog.processo.sistemas_implantacao"
-            @save="hideSistemasImplantacaoDialog"
-          />
-          <div class="sistemas-implantacao-dialog-actions">
-            <button class="btn-cancel" @click="hideSistemasImplantacaoDialog">Fechar</button>
+        <div class="sistemas-implantacao-modal">
+          <div class="modal-header">
+            <h3>Sistemas a Implantar</h3>
+            <button class="btn-close" @click="hideSistemasImplantacaoDialog">×</button>
+          </div>
+          <div class="modal-body">
+            <SistemasImplantacaoSelector
+              v-if="sistemasImplantacaoDialog.processo"
+              :processo-id="sistemasImplantacaoDialog.processo ? sistemasImplantacaoDialog.processo.id : ''"
+              :sistemas-ativos="sistemasImplantacaoDialog.processo ? getSistemasAtivosDoProcesso(sistemasImplantacaoDialog.processo) : []"
+              :value="sistemasImplantacaoDialog.processo ? getSistemasImplantacaoValue(sistemasImplantacaoDialog.processo) : null"
+              @save="handleSistemaImplantacaoSave"
+              @cancel="hideSistemasImplantacaoDialog"
+            />
           </div>
         </div>
       </div>
@@ -1042,6 +1061,7 @@
 
 <script>
 // Import the component logic from the separate JS file
+import { ref } from 'vue'; // Adicionando importação do ref
 import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
@@ -1050,6 +1070,7 @@ import EmpresaVencedoraDialog from '../components/EmpresaVencedoraDialog.vue';
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue';
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
 import DuplicateProcessDialog from '@/components/dialogs/DuplicateProcessDialog.vue';
+import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue'; // Importando o novo componente
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -1075,6 +1096,13 @@ const showToast = (message, type = 'success', duration = 3000) => {
   }, duration);
 };
 
+// Estado para o diálogo de sistemas a implantar
+const sistemasImplantacaoDialog = ref({
+  show: false,
+  position: {},
+  processo: null
+});
+
 // Export the component with the imported logic
 export default {
   ...ProcessosViewModel,
@@ -1085,7 +1113,8 @@ export default {
     EmpresaVencedoraDialog,
     AcoesColumn,
     AdvancedFilterComponent, // Adicionar o novo componente
-    DuplicateProcessDialog
+    DuplicateProcessDialog,
+    SistemasImplantacaoSelector
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 
@@ -1094,6 +1123,18 @@ export default {
     
     return {
       ...baseData,
+      colunas: [
+        ...baseData.colunas || [],
+        { 
+          name: 'sistemas_implantacao', 
+          label: 'Sistemas a Implantar', 
+          field: 'sistemas_implantacao',
+          sortable: false
+        }
+      ],
+      // Variáveis para controle do modal de sistemas a implantar
+      showSistemasImplantacaoModal: false,
+      processoSelecionadoImplantacao: null,
       tourSteps: [
         {
           id: 'intro',
@@ -1222,6 +1263,110 @@ export default {
   },
   methods: {
     ...ProcessosViewModel.methods,
+    
+    // Método para obter contagem de sistemas a implantar de um processo
+    getSistemasImplantacaoCount(processo) {
+      if (!processo || !processo.sistemas_implantacao) return 0;
+      
+      try {
+        // Se for string mas não for JSON válido, retorna 0
+        if (typeof processo.sistemas_implantacao === 'string') {
+          // Verificar se a string começa com '{' ou '[' antes de tentar parsear
+          if (processo.sistemas_implantacao.trim().startsWith('{') || 
+              processo.sistemas_implantacao.trim().startsWith('[')) {
+            try {
+              const dadosSistemas = JSON.parse(processo.sistemas_implantacao);
+              return dadosSistemas && dadosSistemas.sistemas_ids ? dadosSistemas.sistemas_ids.length : 0;
+            } catch (e) {
+              console.log('Valor não é um JSON válido:', processo.sistemas_implantacao);
+              return 0;
+            }
+          } else {
+            return 0; // Não é uma string JSON
+          }
+        }
+        
+        // Se já for objeto
+        if (typeof processo.sistemas_implantacao === 'object' && processo.sistemas_implantacao !== null) {
+          return processo.sistemas_implantacao.sistemas_ids ? 
+            processo.sistemas_implantacao.sistemas_ids.length : 0;
+        }
+        
+        return 0;
+      } catch (error) {
+        console.error('Erro ao obter contagem de sistemas a implantar:', error);
+        return 0;
+      }
+    },
+    
+    // Método para obter sistemas ativos do processo
+    getSistemasAtivosDoProcesso(processo) {
+      if (!processo || !processo.sistemas_ativos) {
+        return [];
+      }
+    
+      try {
+        // Se for string, tentar parsear
+        if (typeof processo.sistemas_ativos === 'string') {
+          if (processo.sistemas_ativos.trim().startsWith('[') || 
+              processo.sistemas_ativos.trim().startsWith('{')) {
+            try {
+              return JSON.parse(processo.sistemas_ativos);
+            } catch (e) {
+              console.error('Erro ao parsear sistemas_ativos:', e);
+              return [];
+            }
+          } else {
+            return [];
+          }
+        }
+    
+        // Se já for array
+        if (Array.isArray(processo.sistemas_ativos)) {
+          return processo.sistemas_ativos;
+        }
+        
+        return [];
+      } catch (e) {
+        console.error('Erro ao processar sistemas_ativos:', e);
+        return [];
+      }
+    },
+    
+    // Método para obter valor atual de sistemas_implantacao
+    getSistemasImplantacaoValue(processo) {
+      if (!processo || !processo.sistemas_implantacao) {
+        return { sistemas_ids: [], informacoes_adicionais: '' };
+      }
+    
+      try {
+        // Se for string, tentar parsear
+        if (typeof processo.sistemas_implantacao === 'string') {
+          if (processo.sistemas_implantacao.trim().startsWith('{') || 
+              processo.sistemas_implantacao.trim().startsWith('[')) {
+            try {
+              const parsed = JSON.parse(processo.sistemas_implantacao);
+              return parsed;
+            } catch (e) {
+              console.error('Erro ao parsear sistemas_implantacao:', e);
+              return { sistemas_ids: [], informacoes_adicionais: '' };
+            }
+          } else {
+            return { sistemas_ids: [], informacoes_adicionais: '' };
+          }
+        }
+    
+        // Se já for objeto
+        if (processo.sistemas_implantacao && typeof processo.sistemas_implantacao === 'object') {
+          return processo.sistemas_implantacao;
+        }
+        
+        return { sistemas_ids: [], informacoes_adicionais: '' };
+      } catch (e) {
+        console.error('Erro ao processar sistemas_implantacao:', e);
+        return { sistemas_ids: [], informacoes_adicionais: '' };
+      }
+    },
     
     startTour() {
       if (this.$refs.tourGuide) {
@@ -1636,6 +1781,103 @@ export default {
         this.showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
         return false;
       }
+    },
+    
+    // Mostra o diálogo de sistemas a implantar
+    openSistemasImplantacaoDialog(processo) {
+      this.sistemasImplantacaoDialog = {
+        show: true,
+        processo: processo,
+        position: {
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      };
+    },
+    
+    // Esconde o diálogo de sistemas a implantar
+    hideSistemasImplantacaoDialog() {
+      this.sistemasImplantacaoDialog = {
+        show: false,
+        processo: null,
+        position: {}
+      };
+    },
+    
+    // Atualiza os sistemas a implantar de um processo
+    async atualizarSistemasImplantacao(processo, dados) {
+      try {
+        const { error } = await supabase
+          .from('processos')
+          .update({
+            sistemas_implantacao: dados,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', processo.id);
+          
+        if (error) throw error;
+        
+        await this.logSystemAction({
+          tipo: 'atualizacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          campo_alterado: 'sistemas_implantacao',
+          dados_anteriores: JSON.stringify(processo.sistemas_implantacao || {}),
+          dados_novos: JSON.stringify(dados)
+        });
+        
+        await this.loadProcessos();
+        
+        this.hideSistemasImplantacaoDialog();
+        
+        this.showToast('Sistemas a implantar atualizados com sucesso', 'success');
+      } catch (error) {
+        console.error('Erro ao atualizar sistemas a implantar:', error);
+        this.showToast('Erro ao atualizar sistemas a implantar', 'error');
+      }
+    },
+    
+    // Retorna os sistemas disponíveis para implantação (apenas os que já foram selecionados no processo)
+    sistemasDisponiveis(processo) {
+      if (!processo || !processo.sistemas_ativos || processo.sistemas_ativos.length === 0) {
+        return [];
+      }
+      
+      return this.sistemasAtivos.filter(sistema => 
+        processo.sistemas_ativos.includes(sistema.id)
+      );
+    },
+    
+    // Tratar salvamento de sistemas a implantar
+    handleSistemaImplantacaoSave(dados) {
+      if (!this.sistemasImplantacaoDialog.processo) return;
+      
+      this.atualizarSistemasImplantacao(
+        this.sistemasImplantacaoDialog.processo,
+        dados
+      );
+    },
+
+    // Método para abrir o diálogo quando clicado na célula
+    showSistemasImplantacaoDialog(processo, event) {
+      // Evitar propagação do evento para não acionar múltiplas ações
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      
+      console.log('Abrindo modal de sistemas a implantar para processo:', processo.id);
+      
+      this.sistemasImplantacaoDialog = {
+        show: true,
+        processo: processo,
+        position: {
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }
+      };
     },
   }
 };

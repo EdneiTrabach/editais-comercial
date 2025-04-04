@@ -1,134 +1,428 @@
-<!-- filepath: d:\PROJETOS-EL\editais-comercial\src\components\SistemasImplantacaoSelector.vue -->
 <template>
   <div class="sistemas-implantacao-selector">
-    <div v-if="loading" class="loading">
-      Carregando sistemas...
+    <h3 class="selector-title">Sistemas a Implantar</h3>
+    
+    <div class="sistemas-implantacao-description">
+      <p>Selecione os sistemas que serão implantados neste processo.</p>
+      <p v-if="sistemasDisponiveis.length === 0" class="aviso-sem-sistemas">
+        Nenhum sistema disponível para implantação.
+        <br>
+        <small>É necessário primeiro selecionar os sistemas envolvidos no processo.</small>
+      </p>
     </div>
     
-    <div v-else>
-      <h3>Sistemas a serem implantados</h3>
+    <div v-if="sistemasDisponiveis.length > 0" class="sistemas-implantacao-container">
+      <div class="sistema-search-container">
+        <input 
+          type="text" 
+          v-model="search" 
+          placeholder="Buscar sistemas" 
+          class="sistema-search"
+        />
+      </div>
       
       <div class="sistemas-list">
-        <div v-if="sistemasDisponiveis.length === 0" class="no-sistemas">
-          Nenhum sistema disponível. Selecione sistemas ativos primeiro.
-        </div>
-        
-        <div v-else class="sistemas-checkboxes">
-          <div 
-            v-for="sistema in sistemasDisponiveis" 
-            :key="sistema.id"
-            class="sistema-checkbox-item"
-          >
-            <label :class="{'sistema-selected': isSistemaSelecionado(sistema.id)}">
-              <input 
-                type="checkbox"
-                :checked="isSistemaSelecionado(sistema.id)"
-                @change="toggleSistema(sistema.id)"
-              />
-              {{ sistema.nome }}
-            </label>
+        <div 
+          v-for="sistema in sistemasDisponiveisFiltrados" 
+          :key="sistema.id"
+          class="sistema-item"
+          :class="{ 'selected': isSistemaSelected(sistema.id) }"
+          @click="toggleSistema(sistema.id)"
+        >
+          <div class="sistema-checkbox">
+            <input 
+              type="checkbox" 
+              :checked="isSistemaSelected(sistema.id)" 
+              @click.stop
+              @change="toggleSistema(sistema.id)"
+            />
+          </div>
+          <div class="sistema-info">
+            <div class="sistema-nome">{{ sistema.nome }}</div>
+            <div class="sistema-desc" v-if="sistema.descricao">{{ sistema.descricao }}</div>
           </div>
         </div>
       </div>
       
-      <div class="informacoes-adicionais">
-        <h4>Informações adicionais</h4>
-        <textarea 
-          v-model="informacoesAdicionais"
-          placeholder="Insira informações adicionais sobre a implantação..."
-          rows="3"
-        ></textarea>
-      </div>
-      
-      <div class="actions">
-        <button @click="salvar" class="btn-save">Salvar</button>
+      <div class="sistemas-summary">
+        <span class="sistemas-count">{{ selectedCount }} sistema(s) selecionado(s)</span>
+        <button 
+          class="btn btn-primary save-sistemas" 
+          @click="salvarSistemas"
+        >
+          Salvar
+        </button>
       </div>
     </div>
   </div>
 </template>
 
-<style>
+<script>
+import { ref, computed, onMounted, watch } from 'vue';
+import { supabase } from '@/lib/supabase';
+
+export default {
+  name: 'SistemasImplantacaoSelector',
+  props: {
+    processoId: {
+      type: [String, Number],
+      required: true
+    },
+    sistemasAtivos: {
+      type: Array,
+      default: () => []
+    },
+    value: {
+      type: [Object, Array, String],
+      default: null
+    }
+  },
+  
+  emits: ['save', 'cancel'],
+  
+  data() {
+    return {
+      sistemas: [],
+      sistemasIdsValue: [],
+      search: '',
+      loading: false,
+      sistemasAtivosIds: []
+    };
+  },
+  
+  computed: {
+    sistemasDisponiveis() {
+      // Se não houver sistemas ativos, não há nada disponível
+      if (!this.sistemasAtivosIds || this.sistemasAtivosIds.length === 0) {
+        console.log('Nenhum sistema ativo para o processo');
+        return [];
+      }
+      
+      // Filtrar os sistemas disponíveis baseado nos IDs de sistemas ativos
+      const filtrados = this.sistemas.filter(sistema => 
+        this.sistemasAtivosIds.includes(sistema.id)
+      );
+      
+      return filtrados;
+    },
+    
+    sistemasDisponiveisFiltrados() {
+      if (!this.search.trim()) return this.sistemasDisponiveis;
+      
+      const searchLower = this.search.toLowerCase().trim();
+      return this.sistemasDisponiveis.filter(sistema =>
+        sistema.nome.toLowerCase().includes(searchLower) ||
+        (sistema.descricao && sistema.descricao.toLowerCase().includes(searchLower))
+      );
+    },
+    
+    selectedCount() {
+      return this.sistemasIdsValue ? this.sistemasIdsValue.length : 0;
+    }
+  },
+  
+  watch: {
+    sistemasAtivos: {
+      handler(newVal) {
+        this.processarSistemasAtivos();
+      },
+      immediate: true
+    },
+    
+    value: {
+      handler(newVal) {
+        this.inicializarValor();
+      },
+      immediate: true
+    }
+  },
+  
+  methods: {
+    processarSistemasAtivos() {
+      try {
+        if (!this.sistemasAtivos) {
+          this.sistemasAtivosIds = [];
+          return;
+        }
+        
+        // Se já for array de ids
+        if (Array.isArray(this.sistemasAtivos)) {
+          this.sistemasAtivosIds = [...this.sistemasAtivos];
+          return;
+        }
+        
+        // Se for string, tentar converter para JSON
+        if (typeof this.sistemasAtivos === 'string') {
+          try {
+            const parsed = JSON.parse(this.sistemasAtivos);
+            if (Array.isArray(parsed)) {
+              this.sistemasAtivosIds = [...parsed];
+            } else {
+              this.sistemasAtivosIds = [];
+            }
+          } catch (e) {
+            console.error('Erro ao parsear sistemasAtivos:', e);
+            this.sistemasAtivosIds = [];
+          }
+          return;
+        }
+        
+        // Caso não seja array nem string válida
+        this.sistemasAtivosIds = [];
+      } catch (e) {
+        console.error('Erro ao processar sistemasAtivos:', e);
+        this.sistemasAtivosIds = [];
+      }
+    },
+    
+    inicializarValor() {
+      if (!this.value) {
+        this.sistemasIdsValue = [];
+        return;
+      }
+      
+      try {
+        // Se for uma string JSON, tentar converter
+        if (typeof this.value === 'string') {
+          try {
+            const parsed = JSON.parse(this.value);
+            if (parsed && parsed.sistemas_ids) {
+              this.sistemasIdsValue = [...parsed.sistemas_ids];
+            } else if (Array.isArray(parsed)) {
+              this.sistemasIdsValue = [...parsed];
+            } else {
+              this.sistemasIdsValue = [];
+            }
+          } catch (e) {
+            console.log('Erro ao parsear value:', e);
+            this.sistemasIdsValue = [];
+          }
+        } 
+        // Se já for um objeto
+        else if (typeof this.value === 'object') {
+          if (Array.isArray(this.value)) {
+            this.sistemasIdsValue = [...this.value];
+          } else if (this.value && this.value.sistemas_ids) {
+            this.sistemasIdsValue = [...this.value.sistemas_ids];
+          } else {
+            this.sistemasIdsValue = [];
+          }
+        } else {
+          this.sistemasIdsValue = [];
+        }
+      } catch (e) {
+        console.error('Erro ao processar valor dos sistemas:', e);
+        this.sistemasIdsValue = [];
+      }
+    },
+    
+    isSistemaSelected(id) {
+      return this.sistemasIdsValue && this.sistemasIdsValue.includes(id);
+    },
+    
+    toggleSistema(id) {
+      if (!this.sistemasIdsValue) {
+        this.sistemasIdsValue = [id];
+        return;
+      }
+      
+      if (this.isSistemaSelected(id)) {
+        this.sistemasIdsValue = this.sistemasIdsValue.filter(i => i !== id);
+      } else {
+        this.sistemasIdsValue = [...this.sistemasIdsValue, id];
+      }
+    },
+    
+    selecionarTodos() {
+      this.sistemasIdsValue = this.sistemasDisponiveisFiltrados.map(s => s.id);
+    },
+    
+    limparSelecao() {
+      this.sistemasIdsValue = [];
+    },
+    
+    async carregarSistemas() {
+      try {
+        this.loading = true;
+        
+        const { data, error } = await supabase
+          .from('sistemas')
+          .select('id, nome, descricao, ativo')
+          .eq('ativo', true)
+          .order('nome');
+          
+        if (error) throw error;
+        
+        this.sistemas = data || [];
+      } catch (e) {
+        console.error('Erro ao carregar sistemas:', e);
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    salvarSistemas() {
+      try {
+        // Criar objeto de dados para salvar
+        const dadosSistemas = {
+          sistemas_ids: this.sistemasIdsValue,
+          ultima_atualizacao: new Date().toISOString()
+        };
+        
+        // Emitir evento de conclusão
+        this.$emit('save', dadosSistemas);
+      } catch (e) {
+        console.error('Erro ao preparar dados para salvar:', e);
+      }
+    },
+
+    fecharDialogo() {
+      this.$emit('cancel');
+    }
+  },
+  
+  async mounted() {
+    // Carregar sistemas do banco
+    await this.carregarSistemas();
+    
+    // Processar sistemas ativos
+    this.processarSistemasAtivos();
+    
+    // Inicializar valor
+    this.inicializarValor();
+  }
+};
+</script>
+
+<style scoped>
 .sistemas-implantacao-selector {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 4px;
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.selector-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.sistemas-implantacao-description {
+  margin-bottom: 1rem;
+}
+
+.sistemas-implantacao-description p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.aviso-sem-sistemas {
+  color: #e74c3c;
+  font-style: italic;
+  margin-top: 1rem;
+}
+
+.sistema-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.sistema-search {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .sistemas-list {
+  border: 1px solid #ddd;
+  border-radius: 4px;
   max-height: 300px;
   overflow-y: auto;
-  margin-bottom: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 8px;
 }
 
-.sistemas-checkboxes {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.sistema-checkbox-item {
-  padding: 6px;
-}
-
-.sistema-checkbox-item label {
+.sistema-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
-.sistema-checkbox-item label:hover {
-  background-color: #f7fafc;
+.sistema-item:hover {
+  background-color: #f9f9f9;
 }
 
-.sistema-selected {
-  background-color: #ebf8ff;
-  color: #2b6cb0;
+.sistema-item.selected {
+  background-color: #f0f7ff;
 }
 
-.informacoes-adicionais textarea {
-  width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 10px;
-  font-family: inherit;
-  resize: vertical;
+.sistema-checkbox {
+  margin-top: 0.25rem;
 }
 
-.actions {
-  margin-top: -10px;
+.sistema-info {
+  flex: 1;
+}
+
+.sistema-nome {
+  font-weight: 500;
+  color: #333;
+}
+
+.sistema-desc {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.sistemas-summary {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
 }
 
-.btn-save {
-  background-color: #4299e1;
+.sistemas-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.save-sistemas {
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
   color: white;
   border: none;
-  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
 }
 
-.btn-save:hover {
-  background-color: #3182ce;
+.save-sistemas:hover {
+  background-color: #1d4ed8;
 }
 
-.loading {
-  text-align: center;
-  padding: 20px;
-  color: #718096;
+.save-sistemas:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
 
-.no-sistemas {
-  padding: 20px;
-  text-align: center;
-  color: #718096;
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
 }
 </style>
