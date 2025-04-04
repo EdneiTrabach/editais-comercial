@@ -32,30 +32,7 @@
   text-overflow: ellipsis;
 }
 
-.distancia-preview {
-  width: 100%;
-  text-align: center;
-  font-size: 14px;
-}
-
-.distancia-multiple {
-  width: 100%;
-}
-
-.distancia-item {
-  margin-bottom: 4px;
-  font-size: 13px;
-  padding: 3px 4px;
-  border-radius: 3px;
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-.sem-distancia {
-  color: #999;
-  font-style: italic;
-  font-size: 13px;
-  padding: 4px;
-}
+/* Estilos para a visualização e gerenciamento de distâncias */
 
 /* Container de distâncias na célula da tabela */
 .distancia-container {
@@ -65,12 +42,48 @@
   padding: 4px 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  flex-wrap: nowrap;
 }
 
-/* Diálogo de distâncias */
+.distancia-preview {
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+}
+
+.sem-distancia {
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
+  padding: 4px;
+}
+
+.distancia-multiple {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.distancia-item {
+  margin-bottom: 2px;
+  font-size: 13px;
+  padding: 3px 4px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.distancia-text {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Diálogo de edição de distâncias */
 .distancia-dialog {
   position: absolute;
   z-index: 1000;
@@ -222,4 +235,38 @@
   padding: 20px;
   color: #a0aec0;
   font-style: italic;
+}
+
+/* Form Row */
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.form-group input,
+.form-group select {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.5);
 }

@@ -380,17 +380,16 @@
                       <div class="distancia-container">
                         <div v-if="processo._distancias && processo._distancias.length > 0" class="distancia-multiple">
                           <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                            <span v-if="distancia.texto_completo">{{ distancia.texto_completo }}</span>
-                            <span v-else>
-                              {{ distancia.distancia_km }} km 
-                              <span v-if="distancia.ponto_referencia_cidade">
-                                ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
+                            <div class="distancia-text">
+                              <span v-if="distancia.texto_completo">{{ distancia.texto_completo }}</span>
+                              <span v-else>
+                                {{ distancia.distancia_km }} km
+                                <span v-if="distancia.ponto_referencia_cidade">
+                                  ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
+                                </span>
                               </span>
-                            </span>
+                            </div>
                           </div>
-                        </div>
-                        <div v-else-if="processo.distancia_km" class="distancia-preview">
-                          {{ formatarDistancia(processo) }}
                         </div>
                         <div v-else class="sem-distancia">
                           <span>Clique para adicionar</span>
@@ -578,20 +577,22 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id">
-                  <td>{{ distancia.distancia_km }}</td>
-                  <td>{{ distancia.ponto_referencia_cidade }}</td>
-                  <td>{{ distancia.ponto_referencia_uf }}</td>
-                  <td class="distancia-acoes">
-                    <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Editar" class="icon-small" />
-                    </button>
-                    <button class="btn-icon delete" @click="excluirDistancia(distancia, index)">
-                      <img src="/icons/edicao.svg" alt="Excluir" class="icon-small" />
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="distanciaDialog.distancias.length === 0">
+                <template v-if="distanciaDialog.distancias && distanciaDialog.distancias.length > 0">
+                  <tr v-for="(distancia, index) in distanciaDialog.distancias" :key="distancia.id || index">
+                    <td>{{ distancia.distancia_km }}</td>
+                    <td>{{ distancia.ponto_referencia_cidade || distancia.cidade_destino || '-' }}</td>
+                    <td>{{ distancia.ponto_referencia_uf || distancia.uf_destino || '-' }}</td>
+                    <td class="distancia-acoes">
+                      <button class="btn-icon edit" @click="iniciarEdicaoDistancia(distancia, index)" title="Editar">
+                        <img src="/icons/edicao.svg" alt="Editar" class="icon-small">
+                      </button>
+                      <button class="btn-icon delete" @click="excluirDistancia(distancia, index)" title="Excluir">
+                        <img src="/icons/lixeira.svg" alt="Excluir" class="icon-small">
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+                <tr v-else>
                   <td colspan="4" class="no-records">Nenhuma distância cadastrada</td>
                 </tr>
               </tbody>

@@ -672,12 +672,47 @@ export default {
             .eq('processo_id', processo.id)
             .order('created_at');
           
-          // Anexar as distâncias ao objeto do processo
-          processo._distancias = distancias || [];
+          // Se não há distâncias na tabela específica mas existe no formato antigo
+          if ((!distancias || distancias.length === 0) && processo.distancia_km) {
+            // Migrar distância do formato antigo para o novo formato
+            const novaDistancia = {
+              processo_id: processo.id,
+              distancia_km: processo.distancia_km,
+              ponto_referencia_cidade: processo.ponto_referencia_cidade || null,
+              ponto_referencia_uf: processo.ponto_referencia_uf || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            // Inserir a distância na tabela específica
+            const { data: novaDist, error } = await supabase
+              .from('processo_distancias')
+              .insert([novaDistancia])
+              .select();
+              
+            if (error) {
+              console.error(`Erro ao migrar distância para o processo ${processo.id}:`, error);
+            } else {
+              // Anexar a nova distância ao processo
+              processo._distancias = novaDist || [];
+            }
+          } else {
+            // Usar as distâncias já existentes na tabela processo_distancias
+            processo._distancias = distancias || [];
+          }
           
         } catch (err) {
           console.error(`Erro ao carregar distâncias para processo ${processo.id}:`, err);
           processo._distancias = [];
+          
+          // Se ocorreu erro mas tem dados no formato antigo, usar esses dados
+          if (processo.distancia_km) {
+            processo._distancias = [{
+              distancia_km: processo.distancia_km,
+              ponto_referencia_cidade: processo.ponto_referencia_cidade || null,
+              ponto_referencia_uf: processo.ponto_referencia_uf || null
+            }];
+          }
         }
 
         return processo;
