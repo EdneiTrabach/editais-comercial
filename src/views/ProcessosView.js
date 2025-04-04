@@ -570,6 +570,26 @@ export default {
       return empresa ? empresa.nome : '-'
     }
 
+    const getEmpresaCor = (id) => {
+      if (!id) return null;
+      const empresa = empresas.value.find(e => e.id === id);
+      return empresa?.color || null;
+    };
+
+    const getContrastColorForEmpresa = (hexColor) => {
+      if (!hexColor || hexColor === '#FFFFFF') return '#000000';
+      
+      hexColor = hexColor.replace('#', '');
+      
+      const r = parseInt(hexColor.substr(0, 2), 16);
+      const g = parseInt(hexColor.substr(2, 2), 16);
+      const b = parseInt(hexColor.substr(4, 2), 16);
+      
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      
+      return (yiq >= 128) ? '#000000' : '#FFFFFF';
+    };
+
     const getRepresentanteNome = (id) => {
       if (!id) return 'Sem representante';
 
@@ -694,7 +714,7 @@ export default {
       try {
         const { data, error } = await supabase
           .from('empresas')
-          .select('id, nome, cnpj')
+          .select('id, nome, cnpj, color')
           .order('nome')
 
         if (error) throw error
@@ -3292,6 +3312,8 @@ export default {
       getPlataformaNome,
       getPortalName,
       getEmpresaNome,
+      getEmpresaCor,
+      getContrastColorForEmpresa,
       getRepresentanteNome,
       getSistemaNome,
       getSistemasNomesString,

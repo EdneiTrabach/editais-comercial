@@ -3,9 +3,17 @@
     <!-- Modo de edição -->
     <div v-if="isEditing" class="editing-mode">
       <div class="edit-container">
-        <select v-model="selectedEmpresa" class="empresa-select">
+        <select 
+          v-model="selectedEmpresa"
+          class="empresa-select"
+        >
           <option value="">Selecione a empresa vencedora...</option>
-          <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
+          <option 
+            v-for="empresa in empresas" 
+            :key="empresa.id" 
+            :value="empresa.id"
+            :style="{ backgroundColor: empresa.color || '#FFFFFF', color: getContrastColor(empresa.color) }"
+          >
             {{ empresa.nome }}
           </option>
         </select>
@@ -27,7 +35,7 @@
     <!-- Modo de visualização -->
     <div v-else class="display-mode" @dblclick="startEdit">
       <div v-if="empresaNome || numeroContrato" class="info-container">
-        <div v-if="empresaNome" class="empresa-nome">{{ empresaNome }}</div>
+        <div v-if="empresaNome" class="empresa-nome" :style="empresaStyle">{{ empresaNome }}</div>
         <div v-if="numeroContrato" class="contrato-numero">Contrato: {{ numeroContrato }}</div>
         <div v-if="dadosAnalise" class="dados-analise">{{ dadosAnalise }}</div>
       </div>
@@ -97,12 +105,51 @@ export default {
       return empresa ? empresa.nome : 'Empresa não encontrada';
     });
     
+    // Novo computed para o estilo da empresa na visualização
+    const empresaStyle = computed(() => {
+      // Usar o ID da empresa do processo quando estiver no modo visualização
+      const empresaId = isEditing.value ? selectedEmpresa.value : props.processo.empresa_vencedora;
+      
+      if (!empresaId) return {};
+      
+      const empresa = empresas.value.find(e => e.id === empresaId);
+      if (!empresa || !empresa.color) return {};
+      
+      return {
+        color: getContrastColor(empresa.color),
+        backgroundColor: empresa.color,
+        padding: '3px 8px',
+        borderRadius: '4px',
+        display: 'inline-block',
+        width: 'auto'
+      };
+    });
+
+    // Função para determinar se deve usar texto branco ou preto baseado na cor de fundo
+    const getContrastColor = (hexColor) => {
+      if (!hexColor || hexColor === '#FFFFFF') return '#000000';
+      
+      // Remove o # se existir
+      hexColor = hexColor.replace('#', '');
+      
+      // Converte para RGB
+      const r = parseInt(hexColor.substr(0, 2), 16);
+      const g = parseInt(hexColor.substr(2, 2), 16);
+      const b = parseInt(hexColor.substr(4, 2), 16);
+      
+      // Calcula o brilho (fórmula YIQ)
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      
+      // Retorna branco ou preto dependendo do brilho
+      return (yiq >= 128) ? '#000000' : '#FFFFFF';
+    };
+    
     // Carregar lista de empresas do banco
     const loadEmpresas = async () => {
       try {
         const { data, error } = await supabase
           .from('empresas')
-          .select('id, nome')
+          .select('id, nome, color')
           .order('nome');
           
         if (error) throw error;
@@ -247,9 +294,11 @@ export default {
       numeroContrato,
       dadosAnalise,
       empresaNome,
+      empresaStyle,
       startEdit,
       cancelEdit,
-      saveChanges
+      saveChanges,
+      getContrastColor
     };
   }
 }
@@ -333,6 +382,7 @@ export default {
 
 .empresa-nome {
   font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .contrato-numero {
@@ -350,5 +400,19 @@ export default {
 :deep(td) {
   padding: 0 !important;
   vertical-align: middle;
+}
+
+/* Melhora na aparência do dropdown */
+.empresa-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+.empresa-select option {
+  padding: 8px 12px;
+  font-weight: 500;
 }
 </style>

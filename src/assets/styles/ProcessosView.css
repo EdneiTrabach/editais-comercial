@@ -117,6 +117,27 @@ td[data-field="empresa_vencedora"] {
   background-color: inherit;
 }
 
+/* Ajuste para a exibição da empresa participante */
+.empresa-display {
+  display: block !important;
+  width: 100% !important;
+  padding: 6px 8px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
+}
+
+.responsavel-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 /* Dark mode */
 [data-theme="dark"] td[data-field="empresa_vencedora"] {
   border-color: #2d3748;

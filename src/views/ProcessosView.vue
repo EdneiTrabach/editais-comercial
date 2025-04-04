@@ -108,6 +108,9 @@
                 </th>
                 <!-- Coluna de ações separada -->
                 <th class="actions-column">Ações</th>
+                <td class="resize-handle-cell">
+                  <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
+                </td>
               </tr>
             </thead>
             <tbody>
@@ -327,7 +330,13 @@
                     <!-- Company field -->
                     <span v-else-if="coluna.campo === 'empresa_id'">
                       <div class="responsavel-container">
-                        <span class="responsavel-display">
+                        <span 
+                          class="empresa-display" 
+                          :style="getEmpresaCor(processo.empresa_id) ? 
+                                 { color: getEmpresaCor(processo.empresa_id),
+                                   borderColor: getEmpresaCor(processo.empresa_id),
+                                   backgroundColor: `${getEmpresaCor(processo.empresa_id)}15` } : {}"
+                        >
                           {{ getEmpresaNome(processo.empresa_id) || 'Sem empresa' }}
                         </span>
                       </div>
