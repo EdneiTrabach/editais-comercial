@@ -123,14 +123,36 @@
                 <td v-for="coluna in ordenarColunas" :key="coluna.campo" :data-field="coluna.campo" :data-id="processo.id"
                   :class="{ 'selecionada': selectedRow === processo.id }"
                   @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : 
-            coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
-            coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
-            coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) :
-            coluna.campo === 'distancia_km' || coluna.tipoExibicao === 'distancia' ? abrirDialogDistancia(processo, $event) :
-            handleDblClick(coluna.campo, processo, $event)">
+                    coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
+                    coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
+                    coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) :
+                    coluna.campo === 'empresa_vencedora' ? openEmpresaVencedoraDialog(processo) :
+                    coluna.campo === 'distancia_km' || coluna.tipoExibicao === 'distancia' ? abrirDialogDistancia(processo, $event) :
+                    handleDblClick(coluna.campo, processo, $event)">
+                  
+                  <!-- Template específico para empresa vencedora -->
+                  <template v-if="coluna.campo === 'empresa_vencedora'">
+                    <div class="empresa-vencedora-container" 
+                         @click="console.log('Click em empresa vencedora', processo.id); openEmpresaVencedoraDialog(processo)" 
+                         @dblclick.stop="console.log('Double click em empresa vencedora', processo.id); openEmpresaVencedoraDialog(processo)">
+                      <template v-if="processo.empresa_vencedora">
+                        <div class="empresa-vencedora-info" v-if="isJsonObject(processo.empresa_vencedora)">
+                          <div class="empresa-nome">{{ getEmpresaVencedoraNome(processo.empresa_vencedora) }}</div>
+                          <div class="empresa-contrato" v-if="getEmpresaVencedoraContrato(processo.empresa_vencedora)">
+                            Contrato: {{ getEmpresaVencedoraContrato(processo.empresa_vencedora) }}
+                          </div>
+                        </div>
+                        <div class="empresa-vencedora-info" v-else>
+                          {{ processo.empresa_vencedora }}
+                        </div>
+                      </template>
+                      <div v-else class="sem-empresa-vencedora">
+                      </div>
+                    </div>
+                  </template>
                   
                   <!-- Editing Mode -->
-                  <template v-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
+                  <template v-else-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                     <!-- Analysis Code field -->
                     <!-- <input v-if="coluna.campo === 'codigo_analise'" type="text" v-model="editingCell.value"
                       @blur="handleUpdate(processo)" @keyup.enter="handleUpdate(processo)" @keyup.esc="cancelEdit()"
@@ -502,6 +524,7 @@
                     :processo="processo"
                     @delete="handleDelete"
                     @duplicate="handleDuplicate"
+                    @editar-empresa-vencedora="openEmpresaVencedoraDialog"
                   />
                 </td>
                 <!-- Row resize handle -->
@@ -1004,6 +1027,15 @@
         @duplicate="executarDuplicacao"
       />
 
+      <!-- Adicionar o diálogo de empresa vencedora -->
+      <EmpresaVencedoraDialog
+        :show="empresaVencedoraDialog.show"
+        :processoId="empresaVencedoraDialog.processoId"
+        :dadosAtuais="empresaVencedoraDialog.dadosAtuais"
+        @fechar="closeEmpresaVencedoraDialog"
+        @salvar="saveEmpresaVencedora"
+      />
+
     </div>
   </div>
 </template>
@@ -1014,6 +1046,7 @@ import ProcessosViewModel from './ProcessosView.js';
 import Shepherd from '@/components/Shepherd.vue';
 import { supabase } from '@/lib/supabase'; // Adicione esta importação
 import EmpresaVencedoraColuna from '../components/EmpresaVencedoraColuna.vue';
+import EmpresaVencedoraDialog from '../components/EmpresaVencedoraDialog.vue';
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue';
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
 import DuplicateProcessDialog from '@/components/dialogs/DuplicateProcessDialog.vue';
@@ -1049,6 +1082,7 @@ export default {
     ...ProcessosViewModel.components || {},
     Shepherd,
     EmpresaVencedoraColuna,
+    EmpresaVencedoraDialog,
     AcoesColumn,
     AdvancedFilterComponent, // Adicionar o novo componente
     DuplicateProcessDialog
@@ -1178,7 +1212,12 @@ export default {
             }
           ]
         }
-      ]
+      ],
+      empresaVencedoraDialog: {
+        show: false,
+        processoId: null,
+        dadosAtuais: ''
+      }
     };
   },
   methods: {
@@ -1201,6 +1240,78 @@ export default {
     onTourCancel() {
       if (typeof this.showToast === 'function') {
         this.showToast('Tour cancelado. Você pode iniciá-lo novamente a qualquer momento.', 'info');
+      }
+    },
+    
+    /**
+     * Abre o diálogo para editar empresa vencedora
+     */
+    openEmpresaVencedoraDialog(processo) {
+      console.log('openEmpresaVencedoraDialog chamado diretamente', processo);
+      
+      // Importar o emitter global
+      import('@/utils/eventBus').then(module => {
+        const emitter = module.default;
+        
+        // Emitir evento global para abrir o modal
+        emitter.emit('openEmpresaVencedoraModal', {
+          processoId: processo.id,
+          dadosAtuais: processo.empresa_vencedora || ''
+        });
+        
+        console.log('✅ Evento emitido: openEmpresaVencedoraModal');
+      });
+
+      // Manter essa atribuição para compatibilidade com o código existente
+      this.empresaVencedoraDialog = {
+        show: true,
+        processoId: processo.id,
+        dadosAtuais: processo.empresa_vencedora || ''
+      };
+    },
+    
+    /**
+     * Fecha o diálogo de empresa vencedora
+     */
+    closeEmpresaVencedoraDialog() {
+      this.empresaVencedoraDialog.show = false;
+    },
+    
+    /**
+     * Salva os dados da empresa vencedora
+     */
+    async saveEmpresaVencedora({ processoId, empresaVencedora }) {
+      try {
+        this.loading = true;
+        
+        // Atualizar os dados no banco
+        const { error } = await supabase
+          .from('processos')
+          .update({ empresa_vencedora: empresaVencedora })
+          .eq('id', processoId);
+          
+        if (error) throw error;
+        
+        // Registrar no log do sistema
+        await this.logSystemAction({
+          tipo: 'update',
+          tabela: 'processos',
+          registro_id: processoId,
+          campo: 'empresa_vencedora',
+          dados_novos: empresaVencedora
+        });
+        
+        // Atualizar a lista de processos
+        await this.loadProcessos();
+        
+        // Mostrar notificação de sucesso
+        this.showToast('Informações da empresa vencedora atualizadas com sucesso!', 'success');
+        
+      } catch (error) {
+        console.error('Erro ao salvar empresa vencedora:', error);
+        this.showToast(`Erro ao salvar: ${error.message}`, 'error');
+      } finally {
+        this.loading = false;
       }
     },
     
@@ -1590,4 +1701,7 @@ export default {
   font-weight: bold;
   margin-right: 0.5rem;
 }
+</style>
+<style>
+@import '../assets/styles/components/empresa-vencedora.css';
 </style>

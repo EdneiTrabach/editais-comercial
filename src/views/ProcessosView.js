@@ -17,6 +17,7 @@ import SystemUpdateModal from '@/components/SystemUpdateModal.vue';
 import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue';
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'
+import EmpresaVencedoraDialog from '../components/EmpresaVencedoraDialog.vue';
 
 export default {
   name: 'ProcessosView',
@@ -27,7 +28,8 @@ export default {
     SystemUpdateModal,
     SistemasImplantacaoSelector,
     AcoesColumn,
-    AdvancedFilterComponent
+    AdvancedFilterComponent,
+    EmpresaVencedoraDialog
   },
 
   setup() {
@@ -74,6 +76,12 @@ export default {
       show: false,
       processo: null,
       loading: false
+    });
+
+    const empresaVencedoraDialog = ref({
+      show: false,
+      processoId: null,
+      dadosAtuais: ''
     });
 
     const editingCell = ref({
@@ -3655,6 +3663,96 @@ export default {
       showDuplicateDialog(processo);
     };
 
+    /**
+     * Abre o diálogo para editar empresa vencedora
+     */
+    const openEmpresaVencedoraDialog = (processo) => {
+      console.log('Abrindo diálogo de empresa vencedora para processo:', processo.id);
+      // Abre diretamente o modal sem mostrar confirmação
+      empresaVencedoraDialog.value = {
+        show: true,
+        processoId: processo.id,
+        dadosAtuais: processo.empresa_vencedora || ''
+      };
+    };
+
+    const closeEmpresaVencedoraDialog = () => {
+      empresaVencedoraDialog.value.show = false;
+    };
+
+    const saveEmpresaVencedora = async ({ processoId, empresaVencedora }) => {
+      try {
+        loading.value = true;
+
+        const { error } = await supabase
+          .from('processos')
+          .update({ empresa_vencedora: empresaVencedora })
+          .eq('id', processoId);
+
+        if (error) throw error;
+
+        await logSystemAction({
+          tipo: 'update',
+          tabela: 'processos',
+          registro_id: processoId,
+          campo: 'empresa_vencedora',
+          dados_novos: empresaVencedora
+        });
+
+        await loadProcessos();
+
+        showToast('Informações da empresa vencedora atualizadas com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao salvar empresa vencedora:', error);
+        showToast(`Erro ao salvar: ${error.message}`, 'error');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    /**
+     * Verifica se uma string pode ser interpretada como um objeto JSON
+     */
+    const isJsonObject = (str) => {
+      if (!str) return false;
+      if (typeof str === 'object') return true;
+      
+      try {
+        const obj = JSON.parse(str);
+        return typeof obj === 'object' && obj !== null;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    /**
+     * Obtém o nome da empresa vencedora de um valor JSON ou string
+     */
+    const getEmpresaVencedoraNome = (valor) => {
+      if (!valor) return '';
+      
+      try {
+        const dados = typeof valor === 'object' ? valor : JSON.parse(valor);
+        return dados.nomeEmpresa || 'Empresa sem nome';
+      } catch (e) {
+        return valor;
+      }
+    };
+
+    /**
+     * Obtém o número do contrato da empresa vencedora
+     */
+    const getEmpresaVencedoraContrato = (valor) => {
+      if (!valor) return '';
+      
+      try {
+        const dados = typeof valor === 'object' ? valor : JSON.parse(valor);
+        return dados.numeroContrato || '';
+      } catch (e) {
+        return '';
+      }
+    };
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,
@@ -3667,6 +3765,7 @@ export default {
       sistemasDialog,
       impugnacaoDialog,
       duplicateDialog,
+      empresaVencedoraDialog,
       editingCell,
       sortConfig,
       selectedRow,
@@ -3845,7 +3944,13 @@ export default {
       showDuplicateDialog,
       hideDuplicateDialog,
       executarDuplicacao,
-      handleDuplicate
+      handleDuplicate,
+      openEmpresaVencedoraDialog,
+      closeEmpresaVencedoraDialog,
+      saveEmpresaVencedora,
+      isJsonObject,
+      getEmpresaVencedoraNome,
+      getEmpresaVencedoraContrato
     }
   }
 }

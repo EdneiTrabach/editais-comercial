@@ -19,6 +19,10 @@
   grid-template-columns: 1fr;
 }
 
+select.impugnacao-status-select {
+  height: 100%;
+}
+
 .impugnacao-item {
   display: flex;
   flex-direction: column;

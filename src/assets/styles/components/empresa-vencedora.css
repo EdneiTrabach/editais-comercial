@@ -1,0 +1,188 @@
+/* Estilos para a célula de empresa vencedora na tabela de processos */
+
+.empresa-vencedora-container {
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 6px 8px;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.empresa-vencedora-container:hover {
+  background-color: #f3f4f6;
+}
+
+.empresa-vencedora-info {
+  font-weight: 500;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.sem-empresa-vencedora {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* Estilo para exibição em formato tabela */
+.tabela-celula-empresa-vencedora {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Estilos para o modo de visualização em card */
+.card-empresa-vencedora {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background-color: #f8fafc;
+}
+
+.card-empresa-nome {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+}
+
+.card-empresa-detalhes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.card-empresa-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-empresa-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.card-empresa-value {
+  color: #334155;
+}
+
+/* Status de formatação para os valores */
+.valor-monetario {
+  font-family: 'Roboto Mono', monospace;
+  color: #047857;
+}
+
+.valor-destacado {
+  font-weight: 500;
+  color: #0369a1;
+}
+
+/* Estilos para o modal de empresa vencedora */
+.empresa-vencedora-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empresa-vencedora-dialog-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.empresa-vencedora-dialog-content {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1051;
+}
+
+.empresa-vencedora-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.empresa-vencedora-dialog-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.empresa-vencedora-dialog-body {
+  padding: 20px;
+}
+
+.empresa-vencedora-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  gap: 8px;
+}
+
+.btn-cancelar {
+  padding: 8px 16px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #475569;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-salvar {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-salvar:hover {
+  background-color: #2563eb;
+}
+
+.btn-salvar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .card-empresa-detalhes {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 /* Importação dos arquivos CSS desmembrados */
+@import 'components/empresa-vencedora.css';
 @import 'components/impugnacoes.css'; /* Adicionado o novo arquivo de estilos */
 @import 'components/layout.css';
 @import 'components/buttons.css';
@@ -270,10 +271,6 @@ td[data-field="empresa_vencedora"] {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-}
-
-.impugnacao-info {
-  margin-bottom: 20px;
 }
 
 .impugnacao-alert {
