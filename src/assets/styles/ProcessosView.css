@@ -224,6 +224,7 @@ td[data-field="empresa_vencedora"] {
   flex: 1;
   overflow: auto;
   position: relative;
+  width: 102%;
 }
 
 /* Container da tabela */

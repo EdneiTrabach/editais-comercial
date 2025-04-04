@@ -2,15 +2,21 @@
 .distancias-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 4px;
+  width: 100%;
 }
 
 .distancia-chip {
-  font-size: 0.85rem;
-  padding: 0.2rem 0.5rem;
-  background: #f8f9fa;
+  background-color: #e2e8f0;
+  color: #4a5568;
+  padding: 2px 6px;
   border-radius: 4px;
+  font-size: 12px;
+  display: inline-block;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .distancia-badge {
@@ -27,51 +33,63 @@
 }
 
 .distancia-preview {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
 }
 
 .distancia-multiple {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  width: 100%;
 }
 
 .distancia-item {
-  padding: 2px 4px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  padding: 3px 4px;
   border-radius: 3px;
-  background-color: #f3f4f6;
-  font-size: 0.9em;
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .sem-distancia {
-  color: #888;
+  color: #999;
   font-style: italic;
-  font-size: 0.9em;
+  font-size: 13px;
+  padding: 4px;
+}
+
+/* Container de distâncias na célula da tabela */
+.distancia-container {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: nowrap;
 }
 
 /* Diálogo de distâncias */
 .distancia-dialog {
   position: absolute;
   z-index: 1000;
-  min-width: 500px;
-  max-width: 90%;
   background-color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
-  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  width: 580px;
+  max-width: 90vw;
 }
 
 .distancia-dialog-content {
-  padding: 16px;
+  padding: 20px;
 }
 
 .distancia-dialog h3 {
   margin-top: 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
-  font-size: 1.2em;
+  margin-bottom: 15px;
+  color: #2d3748;
+  font-size: 1.2rem;
 }
 
 .distancia-dialog h4 {
@@ -83,7 +101,6 @@
 .distancias-list {
   max-height: 200px;
   overflow-y: auto;
-  margin-bottom: 16px;
 }
 
 .distancias-table {
@@ -91,21 +108,23 @@
   border-collapse: collapse;
 }
 
-.distancias-table th,
-.distancias-table td {
-  padding: 8px;
+.distancias-table th {
   text-align: left;
-  border-bottom: 1px solid #eee;
+  padding: 8px;
+  font-size: 14px;
+  background-color: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.distancias-table th {
-  background-color: #f9fafb;
-  font-weight: 600;
+.distancias-table td {
+  padding: 8px;
+  font-size: 14px;
+  border-bottom: 1px solid #edf2f7;
 }
 
 .distancia-acoes {
-  white-space: nowrap;
-  text-align: right;
+  display: flex;
+  gap: 5px;
 }
 
 .icon-small {
@@ -114,21 +133,93 @@
 }
 
 .distancia-form {
-  background-color: #f9fafb;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 16px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.distancia-form h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #4a5568;
 }
 
 .dialog-footer {
-  text-align: right;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon.edit {
+  color: #3182ce;
+}
+
+.btn-icon.delete {
+  color: #e53e3e;
+}
+
+.btn-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-save,
+.btn-add {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-save {
+  background-color: #4299e1;
+  color: white;
+}
+
+.btn-add {
+  background-color: #48bb78;
+  color: white;
+}
+
+.btn-cancel {
+  background-color: #edf2f7;
+  color: #4a5568;
+}
+
+.btn-close {
+  padding: 8px 16px;
+  background-color: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .no-records {
   text-align: center;
-  color: #888;
+  padding: 20px;
+  color: #a0aec0;
   font-style: italic;
-  padding: 12px 0;
 }

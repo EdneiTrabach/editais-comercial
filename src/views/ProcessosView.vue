@@ -125,7 +125,8 @@
                   @dblclick="coluna.campo === 'codigo_analise' ? handleAnaliseClick(processo) : 
             coluna.campo === 'responsavel_id' ? handleDblClickResponsavel(coluna.campo, processo, $event) :
             coluna.campo === 'representante_id' ? handleDblClickRepresentante(coluna.campo, processo, $event) : 
-            coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) : 
+            coluna.campo === 'empresa_id' ? handleDblClickEmpresa(coluna.campo, processo, $event) :
+            coluna.campo === 'distancia_km' || coluna.tipoExibicao === 'distancia' ? abrirDialogDistancia(processo, $event) :
             handleDblClick(coluna.campo, processo, $event)">
                   
                   <!-- Editing Mode -->
@@ -342,10 +343,24 @@
                     </span>
 
                     <!-- Distances field -->
-                    <span v-else-if="coluna.campo === 'distancias'">
-                      <div class="distancias-stack">
-                        <div v-for="dist in getDistancias(processo.id)" :key="dist.id" class="distancia-chip">
-                          {{ dist.distancia_km }}km ({{ dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }})
+                    <span v-else-if="coluna.campo === 'distancias'" @dblclick="abrirDialogDistancia(processo, $event)">
+                      <div class="distancia-container">
+                        <div v-if="processo._distancias && processo._distancias.length > 0" class="distancia-multiple">
+                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                            <span v-if="distancia.texto_completo">{{ distancia.texto_completo }}</span>
+                            <span v-else>
+                              {{ distancia.distancia_km }} km 
+                              <span v-if="distancia.ponto_referencia_cidade">
+                                ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <div v-else-if="processo.distancia_km" class="distancia-preview">
+                          {{ formatarDistancia(processo) }}
+                        </div>
+                        <div v-else class="sem-distancia">
+                          <span>Clique para adicionar</span>
                         </div>
                       </div>
                     </span>
@@ -361,19 +376,24 @@
                     </span>
 
                     <!-- Distance type display -->
-                    <span v-else-if="coluna.tipoExibicao === 'distancia'">
-                      <div class="distancia-container" @dblclick="abrirDialogDistancia(processo, $event)">
-                        <div v-if="processo.distancia_km || processo.ponto_referencia_cidade" class="distancia-preview">
+                    <span v-else-if="coluna.tipoExibicao === 'distancia'" @dblclick="abrirDialogDistancia(processo, $event)">
+                      <div class="distancia-container">
+                        <div v-if="processo._distancias && processo._distancias.length > 0" class="distancia-multiple">
+                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
+                            <span v-if="distancia.texto_completo">{{ distancia.texto_completo }}</span>
+                            <span v-else>
+                              {{ distancia.distancia_km }} km 
+                              <span v-if="distancia.ponto_referencia_cidade">
+                                ({{ distancia.ponto_referencia_cidade }}/{{ distancia.ponto_referencia_uf }})
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <div v-else-if="processo.distancia_km" class="distancia-preview">
                           {{ formatarDistancia(processo) }}
                         </div>
-                        <div v-else class="distancia-multiple">
-                          <span v-if="Array.isArray(processo._distancias) && processo._distancias.length > 0">
-                            <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                              {{ distancia.distancia_km }} km ({{ distancia.ponto_referencia_cidade }}/{{
-                                distancia.ponto_referencia_uf }})
-                            </div>
-                          </span>
-                          <span v-else class="sem-distancia">Clique para adicionar</span>
+                        <div v-else class="sem-distancia">
+                          <span>Clique para adicionar</span>
                         </div>
                       </div>
                     </span>
