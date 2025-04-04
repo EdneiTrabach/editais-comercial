@@ -173,7 +173,7 @@
                     <textarea 
                       v-else-if="coluna.campo === 'objeto_completo'" 
                       v-model="editingCell.value"
-                      rows="100"
+                      rows="2"
                       @blur="handleUpdate(processo)" 
                       @keyup.enter="handleUpdate(processo)" 
                       @keyup.esc="cancelEdit()"
@@ -268,7 +268,7 @@
                     <textarea 
                       v-else 
                       v-model="editingCell.value" 
-                      rows="100"
+                      rows="2"
                       @blur="handleUpdate(processo)"
                       @keyup.enter="handleUpdate(processo)"
                       @keyup.esc="cancelEdit()"

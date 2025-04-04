@@ -27,7 +27,7 @@
           <label>Descrição (suporta formatação básica)</label>
           <textarea 
             v-model="updateForm.description" 
-            rows="10" 
+            rows="2" 
             required
             placeholder="Descreva as novidades. Use ** para negrito, * para itálico e [texto](url) para links."
           ></textarea>
