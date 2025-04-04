@@ -16,7 +16,7 @@
 @import 'components/distancias.css';
 @import 'components/actions.css';
 @import 'components/dialogs.css'; /* Nova importação para diálogos específicos */
-
+@import 'components/reagendamento.css'; /* Nova importação para reagendamento */
 
 .main-content {
   flex: 1;
@@ -460,6 +460,7 @@ td[data-field="empresa_vencedora"] {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .form-row.single {

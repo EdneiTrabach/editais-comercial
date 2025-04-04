@@ -3194,13 +3194,17 @@ export default {
         const novaData = reagendamentoDialog.value.novaData;
         const novaHora = reagendamentoDialog.value.novaHora;
     
-        const dadosBase = {
-          ...processo,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-    
+        // Criar uma cópia do processo original para o novo processo
+        const dadosBase = { ...processo };
+        
+        // Remover propriedades que não devem ser copiadas/duplicadas
         delete dadosBase.id;
+        delete dadosBase._distancias; // Remover o campo virtual que causa erro
+        delete dadosBase.updated_by;
+        
+        // Definir timestamps para o novo registro
+        dadosBase.created_at = new Date().toISOString();
+        dadosBase.updated_at = new Date().toISOString();
     
         switch (novoStatus.toLowerCase()) {
           case 'adiado':
@@ -3209,13 +3213,20 @@ export default {
               ...dadosBase,
               data_pregao: novaData,
               hora_pregao: novaHora,
-              status: 'em_analise'
+              status: '' // Status em branco por padrão para o novo processo
             };
     
             const updateOriginal = {
               status: novoStatus,
               updated_at: new Date().toISOString()
             };
+    
+            // Adicionar o usuário que está fazendo a alteração
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.id) {
+              updateOriginal.updated_by = user.id;
+              novoProcesso.updated_by = user.id;
+            }
     
             const [insertResult, updateResult] = await Promise.all([
               supabase.from('processos').insert([novoProcesso]).select().single(),
@@ -3240,8 +3251,14 @@ export default {
               ...dadosBase,
               data_pregao: novaData,
               hora_pregao: novaHora,
-              status: 'demonstracao'
+              status: '' // Status em branco por padrão para o novo processo
             };
+    
+            // Adicionar o usuário que está fazendo a alteração
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.id) {
+              novoProcesso.updated_by = user.id;
+            }
     
             const { data, error } = await supabase
               .from('processos')
@@ -3273,8 +3290,7 @@ export default {
     
         await loadProcessos();
         hideReagendamentoDialog();
-        showToast(`Processo ${formatStatus(novoStatus)} registrado com sucesso`, 'success');
-    
+        showToast(`Processo ${formatStatus(novoStatus)} registrado com sucesso. Novo processo criado para ${formatDate(novaData)}`, 'success');
       } catch (error) {
         console.error('Erro ao reagendar processo:', error);
         showToast('Erro ao reagendar processo: ' + error.message, 'error');

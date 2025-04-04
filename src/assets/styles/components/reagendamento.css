@@ -1,0 +1,133 @@
+.reagendamento-dialog {
+  max-width: 500px;
+  width: 95%;
+}
+
+.reagendamento-dialog h3 {
+  font-size: 1.25rem;
+  color: #193155;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.reagendamento-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reagendamento-info {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.reagendamento-info p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9375rem;
+}
+
+.processo-marcado {
+  font-weight: 600;
+  color: #193155;
+}
+
+.reagendamento-status {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Realce para status específicos */
+.reagendamento-status.adiado {
+  color: #f59e0b;
+}
+
+.reagendamento-status.suspenso {
+  color: #8b5cf6;
+}
+
+.reagendamento-status.demonstracao {
+  color: #06b6d4;
+}
+
+.reagendamento-question {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.reagendamento-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.reagendamento-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.reagendamento-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.reagendamento-field input {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+}
+
+.reagendamento-field input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.reagendamento-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.reagendamento-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reagendamento-btn-cancel {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.reagendamento-btn-cancel:hover {
+  background-color: #e5e7eb;
+}
+
+.reagendamento-btn-confirm {
+  background-color: #193155;
+  color: white;
+  border: none;
+}
+
+.reagendamento-btn-confirm:hover:not(:disabled) {
+  background-color: #142641;
+}
+
+.reagendamento-btn-confirm:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
