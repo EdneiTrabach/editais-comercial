@@ -565,7 +565,13 @@
       <!-- Dialog para gerenciar distâncias -->
       <div v-if="distanciaDialog.show" class="distancia-dialog" :style="distanciaDialog.position">
         <div class="distancia-dialog-content">
-          <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
+          <div class="distancia-dialog-header">
+            <h3>{{ distanciaDialog.processo?.numero_processo }} - Distâncias</h3>
+            <button class="btn-icon close-icon" @click="fecharDistanciaDialog" title="Fechar">
+              <img src="/icons/fechar.svg" alt="Fechar" class="icon-small">
+            </button>
+          </div>
+          
           <div class="distancias-list">
             <table class="distancias-table">
               <thead>
@@ -598,21 +604,22 @@
               </tbody>
             </table>
           </div>
+          
           <div class="distancia-form">
             <h4>{{ distanciaDialog.editandoIndex >= 0 ? 'Editar Distância' : 'Nova Distância' }}</h4>
             <div class="form-row">
               <div class="form-group">
-                <label>Distância (km)</label>
+                <label><i class="icon-label route"></i> Distância (km)</label>
                 <input type="number" min="0" step="0.1" v-model="distanciaDialog.novaDistancia.distancia_km"
                   placeholder="Digite a distância" />
               </div>
               <div class="form-group">
-                <label>Cidade</label>
+                <label><i class="icon-label city"></i> Cidade</label>
                 <input type="text" v-model="distanciaDialog.novaDistancia.ponto_referencia_cidade"
                   placeholder="Digite a cidade" />
               </div>
               <div class="form-group">
-                <label>UF</label>
+                <label><i class="icon-label uf"></i> UF</label>
                 <select v-model="distanciaDialog.novaDistancia.ponto_referencia_uf">
                   <option value="">Selecione</option>
                   <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
@@ -621,20 +628,22 @@
                 </select>
               </div>
             </div>
-            <div class="form-actions">
+            
+            <div class="dialog-footer">
+              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
+                <img src="/icons/cancel.svg" alt="Cancelar" class="icon-small">
+                Cancelar
+              </button>
+              <div class="spacer"></div>
               <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-save" @click="salvarEdicaoDistancia">
+                <img src="/icons/save-fill.svg" alt="Salvar" class="icon-small">
                 Salvar Alterações
               </button>
               <button v-else class="btn-add" @click="adicionarDistancia">
+                <img src="/icons/adicao.svg" alt="Adicionar" class="icon-small">
                 Adicionar
               </button>
-              <button v-if="distanciaDialog.editandoIndex >= 0" class="btn-cancel" @click="cancelarEdicaoDistancia">
-                Cancelar Edição
-              </button>
             </div>
-          </div>
-          <div class="dialog-footer">
-            <button class="btn-close" @click="fecharDistanciaDialog">Fechar</button>
           </div>
         </div>
       </div>
