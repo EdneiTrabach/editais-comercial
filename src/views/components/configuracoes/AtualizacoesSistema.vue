@@ -49,6 +49,17 @@
     <div v-else class="no-updates">
       <p>Nenhuma atualização cadastrada.</p>
     </div>
+
+    <div class="atualizacoes-sistema">
+      <div v-for="atualizacao in atualizacoes" :key="atualizacao.id" class="atualizacao-item">
+        <div class="atualizacao-cabecalho">
+          <div class="atualizacao-titulo">{{ atualizacao.titulo }}</div>
+          <div class="atualizacao-data">{{ formatarData(atualizacao.data) }}</div>
+        </div>
+        <!-- Renderiza a descrição com suporte a formatação -->
+        <div class="atualizacao-descricao" v-html="formatarDescricao(atualizacao.descricao)"></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -57,7 +68,8 @@ export default {
   name: 'AtualizacoesSistema',
   props: {
     systemUpdates: Array,
-    loading: Boolean
+    loading: Boolean,
+    atualizacoes: Array
   },
   emits: ['voltar', 'add-update', 'preview-update', 'edit-update'],
   methods: {
@@ -67,6 +79,21 @@ export default {
     formatImportance(importance) {
       return importance === 'alta' ? 'Alta' : 
              importance === 'media' ? 'Média' : 'Baixa';
+    },
+    formatarData(data) {
+      return new Date(data).toLocaleDateString("pt-BR");
+    },
+    formatarDescricao(texto) {
+      if (!texto) return '';
+      // Converter ** para negrito
+      texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // Converter * para itálico
+      texto = texto.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      // Converter [texto](url) para links
+      texto = texto.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+      // Converter quebras de linha
+      texto = texto.replace(/\n/g, '<br>');
+      return texto;
     }
   }
 }
@@ -141,6 +168,38 @@ export default {
   color: #64748b;
 }
 
+.atualizacoes-sistema {
+  margin-top: 2rem;
+}
+
+.atualizacao-item {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.atualizacao-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.atualizacao-titulo {
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.atualizacao-data {
+  color: #64748b;
+}
+
+.atualizacao-descricao {
+  color: #1e293b;
+  line-height: 1.5;
+}
+
 /* Tema escuro */
 [data-theme="dark"] .updates-table {
   background: #1e293b;
@@ -183,5 +242,22 @@ export default {
 
 [data-theme="dark"] .btn-small:first-child:hover {
   background: #1e40af;
+}
+
+[data-theme="dark"] .atualizacao-item {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .atualizacao-titulo {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .atualizacao-data {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .atualizacao-descricao {
+  color: #e2e8f0;
 }
 </style>

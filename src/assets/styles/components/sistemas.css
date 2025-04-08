@@ -164,3 +164,56 @@
 .sem-sistemas {
   color: #6c757d;
 }
+
+/* Estilos para Atualizações do Sistema */
+.atualizacoes-sistema {
+  margin-bottom: 2rem;
+}
+
+.atualizacao-item {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #193155;
+}
+
+.atualizacao-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #193155;
+}
+
+.atualizacao-data {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.atualizacao-descricao {
+  margin-top: 0.75rem;
+  color: #333;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Estilos para formatação dentro da descrição */
+.atualizacao-descricao strong {
+  font-weight: bold;
+  color: #193155;
+}
+
+.atualizacao-descricao em {
+  font-style: italic;
+}
+
+.atualizacao-descricao a {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.atualizacao-descricao a:hover {
+  text-decoration: none;
+}
