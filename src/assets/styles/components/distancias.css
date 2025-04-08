@@ -42,8 +42,10 @@
   padding: 4px 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-content: center;
+  flex-wrap: nowrap;
 }
 
 .distancia-preview {
@@ -296,8 +298,8 @@
   flex: 1;
 }
 
-.btn-add, 
-.btn-save, 
+.btn-add,
+.btn-save,
 .btn-cancel {
   display: flex;
   align-items: center;
@@ -312,19 +314,19 @@
   transition: background-color 0.2s, transform 0.1s;
 }
 
-.btn-add, 
+.btn-add,
 .btn-save {
   background-color: #3182ce;
   color: white;
 }
 
-.btn-add:hover, 
+.btn-add:hover,
 .btn-save:hover {
   background-color: #2b6cb0;
   transform: translateY(-1px);
 }
 
-.btn-add:active, 
+.btn-add:active,
 .btn-save:active {
   transform: translateY(0);
 }

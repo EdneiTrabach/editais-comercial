@@ -81,18 +81,31 @@ export default {
              importance === 'media' ? 'Média' : 'Baixa';
     },
     formatarData(data) {
-      return new Date(data).toLocaleDateString("pt-BR");
+      if (!data) return '';
+      const options = { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      return new Date(data).toLocaleDateString('pt-BR', options);
     },
     formatarDescricao(texto) {
       if (!texto) return '';
-      // Converter ** para negrito
+      
+      // Converte ** para negrito
       texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      // Converter * para itálico
+      
+      // Converte * para itálico 
       texto = texto.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      // Converter [texto](url) para links
+      
+      // Converte [texto](url) para links
       texto = texto.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
-      // Converter quebras de linha
+      
+      // Converte quebras de linha
       texto = texto.replace(/\n/g, '<br>');
+      
       return texto;
     }
   }
