@@ -233,7 +233,6 @@ td[data-field="empresa_vencedora"] {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: auto;
   margin-bottom: 1rem;
   position: relative;
   user-select: text;

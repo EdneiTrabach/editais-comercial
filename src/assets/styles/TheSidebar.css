@@ -202,8 +202,7 @@
 .sidebar-menu-item {
   margin-bottom: 0.5rem;
   list-style-type: none;
-  /* Garante que não haja marcadores */
-
+  font-family: 'Roboto';
 }
 
 .sidebar-menu-link {

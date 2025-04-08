@@ -1212,6 +1212,8 @@ export default {
 
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
       if (field === 'sistemas_ativos') {
         editingCell.value = {
@@ -1223,8 +1225,8 @@ export default {
         sistemasDialog.value = {
           show: true,
           position: {
-            top: `${rect.bottom + 10}px`,
-            left: `${rect.left}px`
+            top: `${rect.bottom + scrollTop + 10}px`,
+            left: `${rect.left + scrollLeft}px`
           },
           processo
         };
@@ -1283,8 +1285,8 @@ export default {
       confirmDialog.value = {
         show: true,
         position: {
-          top: `${rect.bottom + 2}px`,
-          left: `${rect.left}px`
+          top: `${rect.bottom + scrollTop + 10}px`,
+          left: `${rect.left + scrollLeft}px`
         },
         callback: () => {
           editingCell.value = {
@@ -2043,11 +2045,14 @@ export default {
 
         // Posiciona o diálogo próximo ao local do clique
         const rect = event.target.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
         distanciaDialog.value = {
           show: true,
           position: {
-            top: `${rect.bottom + 10}px`,
-            left: `${rect.left}px`
+            top: `${rect.bottom + scrollTop + 10}px`,
+            left: `${rect.left + scrollLeft}px`
           },
           processo: processo,
           distancias: data || [],
@@ -2245,6 +2250,8 @@ export default {
 
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
       editingCell.value = {
         id: processo.id,
@@ -2255,8 +2262,8 @@ export default {
       responsaveisDialog.value = {
         show: true,
         position: {
-          top: `${rect.bottom + 10}px`,
-          left: `${rect.left}px`
+          top: `${rect.bottom + scrollTop + 10}px`,
+          left: `${rect.left + scrollLeft}px`
         },
         processo
       };
@@ -2321,6 +2328,8 @@ export default {
 
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
       editingCell.value = {
         id: processo.id,
@@ -2331,8 +2340,8 @@ export default {
       representantesDialog.value = {
         show: true,
         position: {
-          top: `${rect.bottom + 10}px`,
-          left: `${rect.left}px`
+          top: `${rect.bottom + scrollTop + 10}px`,
+          left: `${rect.left + scrollLeft}px`
         },
         processo
       };
@@ -2402,6 +2411,8 @@ export default {
 
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
       editingCell.value = {
         id: processo.id,
@@ -2412,8 +2423,8 @@ export default {
       empresasDialog.value = {
         show: true,
         position: {
-          top: `${rect.bottom + 10}px`,
-          left: `${rect.left}px`
+          top: `${rect.bottom + scrollTop + 10}px`,
+          left: `${rect.left + scrollLeft}px`
         },
         processo
       };
@@ -2986,7 +2997,7 @@ export default {
             codigo_gpi: analiseDialog.value.processo.codigo_gpi,
             prazo_analise: analiseDialog.value.processo.prazo_analise
           }),
-          dados_novos: JSON.stringify(updateData)
+          dados_novos: updateData
         });
 
         await loadProcessos();
@@ -3133,12 +3144,14 @@ export default {
     const showSistemasImplantacaoDialog = (processo, event) => {
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
       
       sistemasImplantacaoDialog.value = {
         show: true,
         position: {
-          top: `${rect.bottom + 10}px`,
-          left: `${rect.left}px`
+          top: `${rect.bottom + scrollTop + 10}px`,
+          left: `${rect.left + scrollLeft}px`
         },
         processo
       };

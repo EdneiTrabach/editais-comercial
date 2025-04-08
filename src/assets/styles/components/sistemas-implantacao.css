@@ -79,17 +79,6 @@
   min-width: 90%;
 }
 
-.sistema-chip {
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  background-color: #193155;
-  color: white;
-  border-radius: 16px;
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-
 .sistema-remove {
   margin-left: 0.5rem;
   cursor: pointer;
