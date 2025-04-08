@@ -112,6 +112,32 @@ export default {
 
     const colunasOrder = ref([])
 
+    // Valores padrão para largura das colunas
+    const colunasWidthOriginais = {
+      data_pregao: '120px',
+      hora_pregao: '100px',
+      modalidade: '120px',
+      estado: '80px',
+      numero_processo: '180px',
+      objeto_resumido: '300px',
+      objeto_completo: '700px',
+      sistemas_ativos: '200px',
+      codigo_analise: '160px',
+      orgao: '250px',
+      valor_estimado: '150px',
+      status: '150px',
+      responsavel_id: '200px',
+      distancia_km: '200px', 
+      site_pregao: '180px',
+      representante_id: '200px',
+      campo_adicional1: '300px',
+      impugnacoes: '250px',
+      empresa_id: '200px',
+      empresa_vencedora: '200px',
+      sistemas_implantacao: '180px',
+      acoes: '100px'
+    };
+
     const loadColumnsOrder = () => {
       try {
         const savedOrder = localStorage.getItem('table-columns-order');
@@ -126,11 +152,11 @@ export default {
             colunasOrder.value = savedColumns;
           }
         } else {
-          colunasOrder.value = colunas.map(coluna => coluna.campo);
+          resetColumnOrder();
         }
       } catch (error) {
         console.error('Erro ao carregar ordem das colunas:', error);
-        colunasOrder.value = colunas.map(coluna => coluna.campo);
+        resetColumnOrder();
       }
     }
 
@@ -140,6 +166,11 @@ export default {
       } catch (error) {
         console.error('Erro ao salvar ordem das colunas:', error)
       }
+    }
+
+    const resetColumnOrder = () => {
+      colunasOrder.value = colunas.map(coluna => coluna.campo);
+      saveColumnsOrder();
     }
 
     const startColumnDrag = (event, index) => {
@@ -1146,14 +1177,13 @@ export default {
             colunasWidth.value['objeto_completo'] = '700px'
           }
         } else {
-          colunas.forEach(coluna => {
-            colunasWidth.value[coluna.campo] = coluna.campo === 'objeto_completo' ? '700px' : '150px'
-          })
+          resetColumnWidths();
         }
         
         saveColumnWidths()
       } catch (error) {
         console.error('Error loading column widths:', error)
+        resetColumnWidths();
       }
     }
 
@@ -1163,6 +1193,11 @@ export default {
       } catch (error) {
         console.error('Error saving column widths:', error)
       }
+    }
+
+    const resetColumnWidths = () => {
+      colunasWidth.value = { ...colunasWidthOriginais };
+      saveColumnWidths();
     }
 
     const handleDblClick = async (field, processo, event) => {
@@ -3785,6 +3820,21 @@ export default {
       }
     };
 
+    const resetarConfiguracaoTabela = () => {
+      try {
+        // Resetar a ordem das colunas para o padrão
+        resetColumnOrder();
+        
+        // Resetar a largura das colunas para o padrão
+        resetColumnWidths();
+        
+        showToast('Configurações da tabela foram resetadas com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao resetar configurações da tabela:', error);
+        showToast('Erro ao resetar as configurações da tabela.', 'error');
+      }
+    };
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,
@@ -3813,6 +3863,7 @@ export default {
       formData,
       colunas,
       colunasWidth,
+      colunasWidthOriginais, // Exportar os valores originais
       rowsHeight,
       anosDisponiveis,
       estadosFiltrados,
@@ -3983,7 +4034,8 @@ export default {
       isJsonObject,
       getEmpresaVencedoraNome,
       getEmpresaVencedoraContrato,
-      getSistemasImplantacaoCount
+      getSistemasImplantacaoCount,
+      resetarConfiguracaoTabela // Nova função para resetar configurações da tabela
     }
   }
 }

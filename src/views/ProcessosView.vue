@@ -20,6 +20,11 @@
           <button class="btn-tour" @click="startTour" title="Iniciar Tour">
             <img src="/icons/question-circle.svg" alt="Tour" class="icon" />
           </button>
+
+          <!-- Botão para resetar configurações da tabela -->
+          <button class="btn-reset-table" title="Resetar configurações da tabela" @click="resetarConfiguracaoTabela">
+            <img src="/icons/refresh.svg" alt="Resetar tabela" class="icon-reset" /> Resetar tabela
+          </button>
           
           <!-- Botão de filtro avançado -->
           <button 
@@ -1879,6 +1884,23 @@ export default {
         }
       };
     },
+
+    // Método para resetar configurações da tabela
+    resetarConfiguracaoTabela() {
+      try {
+        // Resetar ordem das colunas
+        this.ordenarColunas = [...this.colunasOriginais];
+
+        // Resetar largura das colunas
+        this.colunasWidth = { ...this.colunasWidthOriginais };
+
+        // Mostrar mensagem de sucesso
+        this.showToast('Configurações da tabela resetadas com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao resetar configurações da tabela:', error);
+        this.showToast('Erro ao resetar configurações da tabela.', 'error');
+      }
+    }
   }
 };
 </script>
