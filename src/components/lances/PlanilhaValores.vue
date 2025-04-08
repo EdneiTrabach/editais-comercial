@@ -368,14 +368,6 @@ onBeforeRouteLeave((to, from, next) => {
   text-align: center;
 }
 
-/* Envolver a tabela em um container com scroll */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  margin-bottom: 20px;
-}
-
-
 .controles-planilha {
   display: flex;
   justify-content: space-between;
