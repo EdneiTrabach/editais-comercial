@@ -46,17 +46,21 @@ export function useAnalises() {
     return false
   })
 
-  // Computed para porcentagem geral
+  // Modificação no composable useAnalises.js
   const porcentagemGeralAtendimento = computed(() => {
     if (!sistemasAnalise.value.length) return 0
     
     const totais = sistemasAnalise.value.reduce((acc, sistema) => {
-      acc.atendidos += sistema.atendidos
-      acc.total += sistema.totalItens
+      acc.totalItens += sistema.totalItens
+      acc.naoAtendidos += sistema.naoAtendidos
       return acc
-    }, { atendidos: 0, total: 0 })
+    }, { totalItens: 0, naoAtendidos: 0 })
     
-    return calcularPorcentagem(totais.atendidos, totais.total)
+    if (totais.totalItens === 0) return 0;
+    
+    // Calcula porcentagem de atendimento (complemento do não atendimento)
+    const percentualNaoAtendimento = (totais.naoAtendidos / totais.totalItens) * 100;
+    return 100 - percentualNaoAtendimento;
   })
 
   // Função para selecionar ano
@@ -109,7 +113,7 @@ export function useAnalises() {
       
       console.log('Sistemas ativos no processo:', sistemasAtivos);
       
-      // Buscar registros existentes na tabela analises_itens (incluindo anotações)
+      // Buscar registros existentes na tabela analises_itens (incluindo ordem de exibição)
       const { data: analiseItens, error: analiseError } = await supabase
         .from('analises_itens')
         .select(`
@@ -122,9 +126,11 @@ export function useAnalises() {
           percentual_minimo,
           is_custom_line,
           sistema_nome_personalizado,
+          ordem_exibicao,
           sistemas:sistema_id (id, nome)
         `)
-        .eq('processo_id', selectedProcesso.value);
+        .eq('processo_id', selectedProcesso.value)
+        .order('ordem_exibicao', { ascending: true, nullsLast: true }); // Ordenar por ordem_exibicao
       
       if (analiseError) throw analiseError;
       
@@ -215,38 +221,44 @@ export function useAnalises() {
         
       if (refreshError) throw refreshError;
       
-      // Mapear os resultados para o formato esperado pela UI
+      // Modificar o mapeamento de sistemas para aplicar as classes corretas
       sistemasAnalise.value = dadosAtualizados.map(item => {
         const atendidos = item.total_itens - item.nao_atendidos;
+        const isCustomLine = item.is_custom_line || (item.sistema_nome_personalizado && !item.sistema_id);
         
-        // Se for uma linha personalizada
-        if (item.is_custom_line) {
-          return {
-            id: item.id,
-            nome: item.sistema_nome_personalizado || 'Anotação',
-            isCustomLine: true,
-            sistema_id: null,
-            totalItens: item.total_itens || 0,
-            naoAtendidos: item.nao_atendidos || 0,
-            atendidos: atendidos || 0,
-            obrigatorio: item.obrigatorio || false,
-            percentualMinimo: item.percentual_minimo || 70
-          };
-        }
-        
-        // Se for um sistema normal
-        return {
+        // Base do objeto sistema para ambos os tipos (normal e personalizado)
+        const sistema = {
           id: item.id,
-          sistema_id: item.sistema_id,
-          nome: item.sistemas ? item.sistemas.nome : 'Sistema desconhecido',
-          isCustomLine: false,
+          nome: isCustomLine ? item.sistema_nome_personalizado || 'Anotação' : (item.sistemas ? item.sistemas.nome : 'Sistema desconhecido'),
+          sistema_id: isCustomLine ? null : item.sistema_id,
+          isCustomLine: isCustomLine,
           totalItens: item.total_itens || 0,
           naoAtendidos: item.nao_atendidos || 0,
           atendidos: atendidos || 0,
           obrigatorio: item.obrigatorio || false,
-          percentualMinimo: item.percentual_minimo || 70
+          percentualMinimo: item.percentual_minimo || 70,
+          classeEstilo: '' // Será definido abaixo
         };
+        
+        // Calcular percentual de atendimento
+        if (sistema.totalItens > 0) {
+          const percentualAtendimento = (sistema.atendidos / sistema.totalItens) * 100;
+          
+          // Definir classe com base no atendimento, independente de ser linha personalizada ou não
+          if (percentualAtendimento >= sistema.percentualMinimo) {
+            sistema.classeEstilo = 'atende-status-forte';
+          } else {
+            sistema.classeEstilo = 'nao-atende-status-forte';
+          }
+        } else {
+          sistema.classeEstilo = 'neutro'; // Nem atende nem não atende
+        }
+        
+        return sistema;
       });
+      
+      // Ao final do procedimento, verificar e corrigir ordenação
+      await atualizarOrdemExibicao(dadosAtualizados);
       
       return { 
         adicionados: sistemasNovos.length, 
@@ -258,6 +270,47 @@ export function useAnalises() {
       throw error;
     }
   }
+
+  // Adicione esta função auxiliar para garantir que todos os itens tenham ordem_exibicao
+  const atualizarOrdemExibicao = async (itens) => {
+    try {
+      // Verificar se há itens sem ordem_exibicao
+      const itensSemOrdem = itens.filter(item => item.ordem_exibicao === null);
+      
+      if (itensSemOrdem.length > 0) {
+        // Encontrar o maior valor de ordem_exibicao
+        let maiorOrdem = -1;
+        itens.forEach(item => {
+          if (item.ordem_exibicao !== null && item.ordem_exibicao > maiorOrdem) {
+            maiorOrdem = item.ordem_exibicao;
+          }
+        });
+        
+        // Criar array de promessas para atualização
+        const promises = [];
+        
+        // Para cada item sem ordem, atribuir um valor incremental
+        itensSemOrdem.forEach((item, index) => {
+          const novaOrdem = maiorOrdem + 1 + index;
+          
+          promises.push(
+            supabase
+              .from('analises_itens')
+              .update({ ordem_exibicao: novaOrdem })
+              .eq('id', item.id)
+          );
+        });
+        
+        // Executar atualizações em batch
+        if (promises.length > 0) {
+          await Promise.all(promises);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar ordem de exibição:', error);
+      // Não propagar o erro para não interromper o carregamento principal
+    }
+  };
 
   const criarTabelaAnalises = async () => {
     try {
@@ -330,6 +383,20 @@ export function useAnalises() {
     await loadProcessos()
   })
 
+  // Adicione esta função ao useAnalises.js antes do return
+  const getStatusAtendimento = (sistema) => {
+    if (!sistema.totalItens) return { status: 'neutro', classe: '' };
+    
+    const percentualAtendimento = calcularPorcentagem(sistema.atendidos, sistema.totalItens);
+    const percentualMinimo = sistema.percentualMinimo || 70;
+    
+    if (percentualAtendimento >= percentualMinimo) {
+      return { status: 'atende', classe: 'atende-percentual' };
+    } else {
+      return { status: 'nao-atende', classe: 'nao-atende-percentual' };
+    }
+  };
+
   return {
     step,
     isSidebarExpanded,
@@ -353,6 +420,7 @@ export function useAnalises() {
     carregarAnalisesSistemas,
     alteracoesPendentes,
     showConfirmDialog,
-    acaoAposSalvar
+    acaoAposSalvar,
+    getStatusAtendimento,
   }
 }

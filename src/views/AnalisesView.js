@@ -203,24 +203,31 @@ export default {
       alteracoesPendentes.value = true
     }
 
+    // Função para cálculo do status de atendimento
     const getStatusAtendimento = (sistema) => {
-      const percentualAtendimento = calcularPorcentagem(
-        sistema.totalItens - sistema.naoAtendidos, 
-        sistema.totalItens
-      )
-      
-      // Determinar qual percentual mínimo usar
-      const percentualMinimo = sistema.percentualMinimo || // Personalizado se existir
-        (sistema.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value)
-      
-      const atende = percentualAtendimento >= percentualMinimo
-      
-      return {
-        atende,
-        texto: `${atende ? 'Atende' : 'Não Atende'} (Min: ${percentualMinimo}%)`,
-        class: atende ? 'status-atende' : 'status-nao-atende'
+      if (!sistema.totalItens) {
+        return {
+          texto: `Não Atende (Min: ${sistema.percentualMinimo}%)`,
+          class: 'status-nao-atende'
+        };
       }
-    }
+    
+      // Calcular porcentagens
+      const percentualAtendimento = calcularPorcentagem(sistema.atendidos, sistema.totalItens);
+      
+      // Determinar se atende ao percentual mínimo
+      if (percentualAtendimento >= sistema.percentualMinimo) {
+        return {
+          texto: `Atende (${percentualAtendimento}%)`,
+          class: 'status-atende'
+        };
+      } else {
+        return {
+          texto: `Não Atende (Min: ${sistema.percentualMinimo}%)`,
+          class: 'status-nao-atende'
+        };
+      }
+    };
 
     const salvarObrigatoriedade = async (sistema) => {
       try {

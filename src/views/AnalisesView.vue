@@ -80,6 +80,12 @@
         <div v-else-if="step === 2" class="analise-table-container">
           <div class="table-header">
             <h2>Análise de Atendimento - {{ processoAtual?.numero_processo }}</h2>
+            <div class="ordering-tip">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+              </svg>
+              <span>Você pode arrastar as linhas para reordenar e excluir qualquer sistema</span>
+            </div>
             <div class="analise-config">
               <div class="percentual-container">
                 <div class="percentual-minimo">
@@ -106,13 +112,20 @@
             </div>
           </div>
 
-          <div class="total-geral">
-            <span>Porcentagem Geral de Atendimento: {{ porcentagemGeralAtendimento }}%</span>
+          <div class="copy-hint">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+            </svg>
+            <span>Dica: você pode selecionar e copiar qualquer texto desta tabela 
+              (segure shift e arraste o mouse em cima do que queira copiar)
+            </span>
           </div>
 
           <table class="analise-table">
             <thead>
               <tr>
+                <th class="drag-column"></th>
                 <th>Sistema</th>
                 <th>Total de Itens</th>
                 <th>Não Atendidos</th>
@@ -126,8 +139,23 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="sistema in sistemasAnalise" :key="sistema.id" 
-                  :class="{ 'custom-line': sistema.isCustomLine }">
+              <tr v-for="(sistema, index) in sistemasAnalise" :key="sistema.id" 
+                  :class="[sistema.classeEstilo, { 'custom-line': sistema.isCustomLine, 'dragging': isDragging === sistema.id }]"
+                  :data-id="sistema.id"
+                  draggable="true"
+                  @dragstart="startDrag($event, sistema, index)"
+                  @dragover.prevent
+                  @dragenter.prevent="onDragEnter($event, index)"
+                  @dragleave.prevent="onDragLeave($event)"
+                  @drop.prevent="onDrop($event, index)"
+                  class="user-select-text">
+                <td class="drag-handle-column">
+                  <div class="drag-handle" title="Arrastar para ordenar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                    </svg>
+                  </div>
+                </td>
                 <td @click="sistema.isCustomLine && editarCelula(sistema, 'nome')" 
                     :class="{ 'editable-cell': sistema.isCustomLine }">
                   <div v-if="editando.id === sistema.id && editando.campo === 'nome'">
@@ -155,25 +183,40 @@
                     <span class="edit-indicator"><i class="fas fa-pencil-alt"></i></span>
                   </div>
                 </td>
-                <td @click="editarCelula(sistema, 'naoAtendidos')" class="editable-cell">
+                <td :class="{ 'nao-atendidos': sistema.naoAtendidos > 0 }">
+                  <!-- Se estiver editando esta célula -->
                   <div v-if="editando.id === sistema.id && editando.campo === 'naoAtendidos'">
-                    <input type="number" class="edit-input form-control form-control-sm" 
-                           v-model="editando.valor" 
-                           @blur="salvarEdicao(sistema)"
-                           @keyup.enter="salvarEdicao(sistema)"
-                           @keyup.esc="cancelarEdicao" />
+                    <input 
+                      class="edit-input" 
+                      v-model="editando.valor" 
+                      type="number"
+                      min="0"
+                      :max="sistema.totalItens"
+                      @blur="salvarEdicao(sistema)"
+                      @keyup.enter="salvarEdicao(sistema)"
+                      @keyup.escape="cancelarEdicao"
+                      autofocus
+                    />
                   </div>
-                  <div v-else>
+                  <!-- Visualização normal -->
+                  <div v-else class="editable-cell" @click="editarCelula(sistema, 'naoAtendidos')">
                     {{ sistema.naoAtendidos }}
-                    <span class="edit-indicator"><i class="fas fa-pencil-alt"></i></span>
                   </div>
                 </td>
-                <td class="atendidos">{{ sistema.totalItens - sistema.naoAtendidos }}</td>
+                <td :class="{ 'atendidos': sistema.atendidos > 0 }">
+                  <div v-if="editando.id === sistema.id && editando.campo === 'atendidos'">
+                    <input class="edit-input" v-model="editando.valor" @blur="salvarEdicao(sistema)" />
+                  </div>
+                  <div v-else class="calculated-field user-select-text">
+                    {{ sistema.atendidos }}
+                    <span class="calculated-indicator">(calculado)</span>
+                  </div>
+                </td>
                 <td class="porcentagem-nao-atendimento">
-                  {{ calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens) }}%
+                  {{ formatarPercentual(calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens)) }}%
                 </td>
                 <td class="porcentagem-atendimento">
-                  {{ calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens) }}%
+                  {{ formatarPercentual(100 - calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens)) }}%
                 </td>
                 <td>
                   <label class="checkbox-container">
@@ -202,17 +245,21 @@
                 </td>
                 <!-- Botão de ações -->
                 <td class="text-center">
-                  <button v-if="sistema.isCustomLine" @click="removerAnotacao(sistema)" class="btn btn-sm btn-outline-danger">
-                    <i class="fas fa-trash"></i>
+                  <button @click="removerSistema(sistema)" class="btn btn-sm btn-outline-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                      <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    </svg>
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
 
+          <!-- Adicione esta classe para a div com a porcentagem geral -->
           <div class="analise-resumo">
             <div class="percentual-geral" :class="getStatusGeralClass">
-              <span>Atendimento Geral: {{ porcentagemGeralAtendimento }}%</span>
+              <span>Atendimento Geral: {{ formatarPercentual(porcentagemGeralAtendimento) }}%</span>
               <span class="status-geral">{{ getStatusGeral }}</span>
             </div>
           </div>
@@ -363,24 +410,87 @@ export default {
       }
     }
 
-    // Função para cálculo do status de atendimento
+    // Função para cálculo do status de atendimento corrigida
     const getStatusAtendimento = (sistema) => {
-      const percentualAtendimento = calcularPorcentagem(
-        sistema.totalItens - sistema.naoAtendidos, 
-        sistema.totalItens
-      )
-      
-      const percentualMinimo = sistema.percentualMinimo || 
-        (sistema.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value)
-      
-      const atende = percentualAtendimento >= percentualMinimo
-      
-      return {
-        atende,
-        texto: `${atende ? 'Atende' : 'Não Atende'} (Min: ${percentualMinimo}%)`,
-        class: atende ? 'status-atende' : 'status-nao-atende'
+      if (!sistema.totalItens) {
+        return {
+          texto: `Não Atende (Min: ${sistema.percentualMinimo}%)`,
+          class: 'status-nao-atende',
+          classeEstilo: 'nao-atende-status-forte'
+        };
       }
-    }
+    
+      // Calcular porcentagem de atendimento corretamente
+      const percentualNaoAtendimento = calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens);
+      const percentualAtendimento = 100 - percentualNaoAtendimento;
+      
+      // Determinar se atende ao percentual mínimo
+      if (percentualAtendimento >= Number(sistema.percentualMinimo)) {
+        return {
+          texto: `Atende (${formatarPercentual(percentualAtendimento)}%)`,
+          class: 'status-atende',
+          classeEstilo: 'atende-status-forte'
+        };
+      } else {
+        return {
+          texto: `Não Atende (Min: ${sistema.percentualMinimo}%)`,
+          class: 'status-nao-atende',
+          classeEstilo: 'nao-atende-status-forte'
+        };
+      }
+    };
+
+    // Adicione esta função para cálculo de porcentagem mais precisa
+    const calcularPorcentagemPrecisa = (valor, total) => {
+      if (!total) return 0;
+      
+      // Use precisão de ponto flutuante de alta precisão
+      const percentual = (Number(valor) / Number(total)) * 100;
+      
+      // Garantir que o valor seja representado com alta precisão
+      // mas evitando erros de arredondamento de ponto flutuante
+      return Math.round(percentual * 1000000) / 1000000;
+    };
+
+    // Substitua a função formatarPercentual existente por esta versão melhorada:
+    const formatarPercentual = (valor) => {
+      if (valor === 0) return "0";
+      if (valor === 100) return "100";
+      
+      // Para valores extremamente pequenos (menor que 0.00001%)
+      if (valor < 0.00001) {
+        return valor.toExponential(5); // Notação científica para valores extremamente pequenos
+      }
+      
+      // Para valores muito pequenos, use até 5 casas decimais
+      if (valor < 0.001) {
+        // Remover zeros à direita desnecessários
+        return valor.toFixed(5).replace(/\.?0+$/, '');
+      }
+      
+      // Para valores pequenos mas significativos
+      if (valor < 0.01) {
+        return valor.toFixed(4).replace(/\.?0+$/, '');
+      }
+      
+      // Para valores entre 0.01% e 0.1%
+      if (valor < 0.1) {
+        return valor.toFixed(3).replace(/\.?0+$/, '');
+      }
+      
+      // Para valores entre 0.1% e 1%
+      if (valor < 1) {
+        return valor.toFixed(2).replace(/\.?0+$/, '');
+      }
+      
+      // Para valores próximos de 100%, use mais precisão
+      if (valor > 99 && valor < 100) {
+        return valor.toFixed(4).replace(/\.?0+$/, '');
+      }
+      
+      // Para outros valores, use 2 casas decimais padrão
+      return valor.toFixed(2).replace(/\.?0+$/, '');
+    };
 
     // Status geral da análise
     const getStatusGeralClass = computed(() => {
@@ -396,17 +506,32 @@ export default {
     })
 
     const getStatusGeral = computed(() => {
+      // Verificar sistemas obrigatórios
       const obrigatoriosAtendidos = sistemasAnalise.value
         .filter(s => s.obrigatorio)
-        .every(s => getStatusAtendimento(s).atende)
+        .every(s => {
+          if (!s.totalItens) return false;
+          
+          const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
+          const percentualAtendimento = 100 - percentualNaoAtendimento;
+          return percentualAtendimento >= (s.percentualMinimo || percentualMinimoObrigatorios.value);
+        });
       
-      const percentualGeral = porcentagemGeralAtendimento.value
+      // Calcular totais gerais para todos os sistemas
+      const totalItens = sistemasAnalise.value.reduce((acc, s) => acc + s.totalItens, 0);
+      const totalNaoAtendidos = sistemasAnalise.value.reduce((acc, s) => acc + s.naoAtendidos, 0);
       
-      if (obrigatoriosAtendidos && percentualGeral >= percentualMinimoGeral.value) {
-        return 'Atende Requisitos'
-      }
-      return 'Não Atende Requisitos'
-    })
+      // Calcular percentual geral de forma precisa
+      const percentualGeralNaoAtendimento = totalItens ? (totalNaoAtendidos / totalItens) * 100 : 0;
+      const percentualGeralAtendimento = 100 - percentualGeralNaoAtendimento;
+      
+      const atendeGeral = percentualGeralAtendimento >= percentualMinimoGeral.value;
+    
+      if (obrigatoriosAtendidos && atendeGeral) {
+        return 'Atende Requisitos';
+      } 
+      return 'Não Atende Requisitos';
+    });
 
     // Substitua completamente a função salvarAnalises
     const salvarAnalises = async () => {
@@ -456,23 +581,29 @@ export default {
 
     // Exportações
     const exportarExcel = () => {
-      const dados = sistemasAnalise.value.map(sistema => ({
-        'Sistema': sistema.nome,
-        'Total de Itens': sistema.totalItens,
-        'Não Atendidos': sistema.naoAtendidos,
-        'Atendidos': sistema.totalItens - sistema.naoAtendidos,
-        '% Não Atendimento': calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens),
-        '% Atendimento': calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens),
-        'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não',
-        '% Mínimo': sistema.percentualMinimo || '-',
-        'Status': getStatusAtendimento(sistema).texto
-      }))
-
-      const ws = XLSX.utils.json_to_sheet(dados)
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Análise de Sistemas')
-      XLSX.writeFile(wb, `analise_sistemas_${processoAtual.value?.numero_processo}.xlsx`)
-    }
+      const dados = sistemasAnalise.value.map(sistema => {
+        const percentualNaoAtendimento = calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens);
+        const percentualAtendimento = 100 - percentualNaoAtendimento;
+        
+        return {
+          'Sistema': sistema.nome,
+          'Total de Itens': sistema.totalItens,
+          'Não Atendidos': sistema.naoAtendidos,
+          'Atendidos': sistema.atendidos,
+          '% Não Atendimento': formatarPercentual(percentualNaoAtendimento) + '%',
+          '% Atendimento': formatarPercentual(percentualAtendimento) + '%',
+          'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não',
+          '% Mínimo': sistema.percentualMinimo || '-',
+          'Status': getStatusAtendimento(sistema).texto
+        };
+      });
+    
+      // Resto do código de exportação
+      const ws = XLSX.utils.json_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Análise de Sistemas');
+      XLSX.writeFile(wb, `analise_sistemas_${processoAtual.value?.numero_processo}.xlsx`);
+    };
 
     // Adicione esta função ao setup
     const removerAnotacao = async (anotacao) => {
@@ -504,6 +635,16 @@ export default {
 
     // Função para editar células
     const editarCelula = (sistema, campo) => {
+      // Se já está editando esta célula, não fazer nada
+      if (editando.value.id === sistema.id && editando.value.campo === campo) {
+        return;
+      }
+      
+      // Cancelar edição anterior, se houver
+      if (editando.value.id) {
+        cancelarEdicao();
+      }
+      
       // Permitir edição do nome apenas para linhas personalizadas
       if (campo === 'nome' && !sistema.isCustomLine) {
         return;
@@ -513,19 +654,18 @@ export default {
         id: sistema.id,
         campo: campo,
         valor: sistema[campo]?.toString() || ''
-      }
+      };
       
       nextTick(() => {
-        const input = document.querySelector('.edit-input')
+        const input = document.querySelector('.edit-input');
         if (input) {
-          input.focus()
-          input.select()
+          input.focus();
+          input.select();
         }
-      })
-      alteracoesPendentes.value = true
+      });
     }
 
-    // Substitua completamente a função salvarEdicao
+    // Substitua a função salvarEdicao pelo código abaixo:
     const salvarEdicao = async (sistema) => {
       try {
         let valor;
@@ -540,7 +680,7 @@ export default {
           // Para campos numéricos, validar e converter
           try {
             // Remover caracteres não numéricos e converter para inteiro
-            valor = parseInt(editando.value.valor.toString().replace(/[^\d]/g, ''));
+            valor = parseInt(editando.value.valor.toString().replace(/[^\d]/g, '') || '0');
             
             if (isNaN(valor) || valor < 0) {
               throw new Error('Por favor, insira um número válido maior ou igual a zero');
@@ -551,39 +691,44 @@ export default {
             valor = 0;
           }
           
-          // Validações específicas para campos numéricos
+          // Validações específicas para campos numéricos - MODIFICADO
           if (editando.value.campo === 'totalItens') {
-            if (sistema.naoAtendidos > valor) {
-              throw new Error('O total de itens deve ser maior que os itens não atendidos');
+            // Criar cópia do sistema com o novo valor para totalItens
+            const sistemaAtualizado = {...sistema, totalItens: valor};
+            
+            if (sistemaAtualizado.naoAtendidos > sistemaAtualizado.totalItens) {
+              // Em vez de gerar erro, ajustar naoAtendidos automaticamente
+              await ajustarNaoAtendidos(sistema.id, valor);
             }
           } else if (editando.value.campo === 'naoAtendidos') {
             if (valor > sistema.totalItens) {
-              throw new Error('O número de itens não atendidos não pode ser maior que o total');
+              // Em vez de gerar erro, ajustar totalItens automaticamente
+              await ajustarTotalItens(sistema.id, valor);
             }
           }
         }
-
+    
         // Mapear campos da UI para campos do banco
         const camposBanco = {
           'nome': 'sistema_nome_personalizado', // Campo para salvar nome personalizado
           'totalItens': 'total_itens',
           'naoAtendidos': 'nao_atendidos'
         };
-
+    
         // Preparar objeto de atualização
         const atualizacao = {
           [camposBanco[editando.value.campo] || editando.value.campo]: valor,
           updated_at: new Date().toISOString()
         };
-
+    
         // Atualizar no banco de dados
         const { error } = await supabase
           .from('analises_itens')
           .update(atualizacao)
           .eq('id', sistema.id);
-
+    
         if (error) throw error;
-
+    
         // Atualizar localmente
         sistema[editando.value.campo] = valor;
         
@@ -595,12 +740,69 @@ export default {
         // Marcar que há alterações pendentes
         alteracoesPendentes.value = true;
         showToast('Alteração salva com sucesso', 'success');
-
+    
       } catch (error) {
         console.error('Erro ao salvar:', error);
         showToast(error.message || 'Erro ao salvar alterações', 'error');
       } finally {
         cancelarEdicao();
+      }
+    };
+    
+    // Adicione estas duas funções auxiliares:
+    const ajustarNaoAtendidos = async (sistemaId, novoTotalItens) => {
+      try {
+        // Busca o sistema no array local
+        const sistemaLocal = sistemasAnalise.value.find(s => s.id === sistemaId);
+        if (!sistemaLocal) return;
+        
+        // Ajusta o valor de naoAtendidos para ser igual ao novo totalItens (pior cenário)
+        const novoNaoAtendidos = novoTotalItens;
+        
+        // Atualiza no banco de dados
+        await supabase
+          .from('analises_itens')
+          .update({
+            nao_atendidos: novoNaoAtendidos,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sistemaId);
+        
+        // Atualiza localmente  
+        sistemaLocal.naoAtendidos = novoNaoAtendidos;
+        sistemaLocal.atendidos = sistemaLocal.totalItens - sistemaLocal.naoAtendidos;
+        
+        showToast('Dados não atendidos foram ajustados automaticamente', 'info');
+      } catch (error) {
+        console.error('Erro ao ajustar não atendidos:', error);
+      }
+    };
+    
+    const ajustarTotalItens = async (sistemaId, novoNaoAtendidos) => {
+      try {
+        // Busca o sistema no array local
+        const sistemaLocal = sistemasAnalise.value.find(s => s.id === sistemaId);
+        if (!sistemaLocal) return;
+        
+        // Ajusta o valor de totalItens para ser maior que o novo naoAtendidos
+        const novoTotalItens = novoNaoAtendidos;
+        
+        // Atualiza no banco de dados
+        await supabase
+          .from('analises_itens')
+          .update({
+            total_itens: novoTotalItens,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sistemaId);
+        
+        // Atualiza localmente  
+        sistemaLocal.totalItens = novoTotalItens;
+        sistemaLocal.atendidos = sistemaLocal.totalItens - sistemaLocal.naoAtendidos;
+        
+        showToast('Total de itens foi ajustado automaticamente', 'info');
+      } catch (error) {
+        console.error('Erro ao ajustar total de itens:', error);
       }
     };
 
@@ -733,8 +935,121 @@ export default {
       }
     };
 
-    // Restante do setup...
-    
+    // Funções de arraste e ordenação
+    const isDragging = ref(null);
+    const draggedItem = ref(null);
+    const dragOverIndex = ref(null);
+
+    const startDrag = (event, sistema, index) => {
+      isDragging.value = sistema.id;
+      draggedItem.value = sistema;
+      event.dataTransfer.effectAllowed = 'move';
+      // Armazenar o ID do sistema para identificação durante o drop
+      event.dataTransfer.setData('text/plain', sistema.id);
+    };
+
+    const onDragEnter = (event, index) => {
+      const tr = event.currentTarget;
+      tr.classList.add('drag-over');
+      dragOverIndex.value = index;
+    };
+
+    const onDragLeave = (event) => {
+      event.currentTarget.classList.remove('drag-over');
+    };
+
+    const onDrop = async (event, targetIndex) => {
+      event.currentTarget.classList.remove('drag-over');
+      const sistemaId = event.dataTransfer.getData('text/plain');
+      
+      // Encontrar os índices do item arrastado e do alvo
+      const sourceIndex = sistemasAnalise.value.findIndex(s => s.id === sistemaId);
+      
+      if (sourceIndex === -1 || sourceIndex === targetIndex) return;
+      
+      try {
+        // Criar uma cópia da ordem atual
+        const reorderedSistemas = [...sistemasAnalise.value];
+        
+        // Remover o elemento da posição original
+        const [movedItem] = reorderedSistemas.splice(sourceIndex, 1);
+        
+        // Inserir o elemento na nova posição
+        reorderedSistemas.splice(targetIndex, 0, movedItem);
+        
+        // Atualizar a ordem no estado local
+        sistemasAnalise.value = reorderedSistemas;
+        
+        // Atualizar a ordem no banco de dados
+        await salvarOrdemSistemas(reorderedSistemas);
+        
+        showToast('Ordem atualizada com sucesso', 'success');
+      } catch (error) {
+        console.error('Erro ao reordenar sistemas:', error);
+        showToast('Erro ao reordenar sistemas: ' + error.message, 'error');
+      } finally {
+        isDragging.value = null;
+        draggedItem.value = null;
+        dragOverIndex.value = null;
+      }
+    };
+
+    // Função para salvar a nova ordem no banco de dados
+    const salvarOrdemSistemas = async (sistemas) => {
+      try {
+        // Adicionar índice a cada sistema
+        const promises = sistemas.map((sistema, index) => {
+          return supabase
+            .from('analises_itens')
+            .update({
+              ordem_exibicao: index,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sistema.id);
+        });
+        
+        await Promise.all(promises);
+        alteracoesPendentes.value = true;
+      } catch (error) {
+        console.error('Erro ao salvar ordem dos sistemas:', error);
+        throw error;
+      }
+    };
+
+    // Substituir a função removerAnotacao por removerSistema (mais genérica)
+    const removerSistema = async (sistema) => {
+      try {
+        let mensagemConfirmacao;
+        
+        if (sistema.isCustomLine) {
+          mensagemConfirmacao = 'Tem certeza que deseja remover esta anotação?';
+        } else {
+          mensagemConfirmacao = `Tem certeza que deseja remover o sistema "${sistema.nome}" da análise?\n\nIsso não afetará o vínculo com o processo na tela de processos.`;
+        }
+        
+        // Confirmar antes de remover
+        if (!confirm(mensagemConfirmacao)) return;
+        
+        // Remover do banco de dados
+        const { error } = await supabase
+          .from('analises_itens')
+          .delete()
+          .eq('id', sistema.id);
+          
+        if (error) throw error;
+        
+        // Remover da lista local
+        sistemasAnalise.value = sistemasAnalise.value.filter(s => s.id !== sistema.id);
+        
+        showToast(`${sistema.isCustomLine ? 'Anotação' : 'Sistema'} removido com sucesso`, 'success');
+        alteracoesPendentes.value = true;
+        
+      } catch (error) {
+        console.error('Erro ao remover item:', error);
+        showToast('Erro ao remover: ' + error.message, 'error');
+      }
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -776,7 +1091,17 @@ export default {
       salvarObrigatoriedade,
       sincronizarSistemas,
       removerAnotacao,
-      toasts
+      toasts,
+      isDragging,
+      draggedItem,
+      dragOverIndex,
+      startDrag,
+      onDragEnter,
+      onDragLeave,
+      onDrop,
+      removerSistema,
+      calcularPorcentagemPrecisa,
+      formatarPercentual
     }
   }
 }
@@ -784,11 +1109,6 @@ export default {
 <style src="./AnalisesView.css" scoped></style>
 <!-- Adicione este CSS ao componente dentro da tag style -->
 <style scoped>
-.custom-line {
-  background-color: rgba(255, 255, 200, 0.3);
-  font-style: italic;
-}
-
 .custom-line td:first-child {
   text-align: left;
   font-weight: normal;
@@ -838,10 +1158,6 @@ export default {
 
 .editable-cell:hover {
   background-color: rgba(74, 144, 226, 0.1);
-}
-
-.custom-line {
-  background-color: #fff8e1;
 }
 
 .custom-line td:first-child {
@@ -896,5 +1212,338 @@ export default {
 /* Para garantir que o campo de nome seja editável nos campos personalizados */
 .custom-line td:first-child:hover {
   background-color: rgba(25, 118, 210, 0.1);
+}
+
+/* Estilos para arraste e ordenação */
+.drag-handle-column {
+  cursor: move;
+  text-align: center;
+}
+
+.drag-handle {
+  display: inline-block;
+  padding: 4px;
+  cursor: move;
+}
+
+.dragging {
+  opacity: 0.5;
+}
+
+.drag-over {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Estilos para drag & drop */
+.drag-handle-column {
+  width: 30px;
+  text-align: center;
+  cursor: move;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  height: 100%;
+  transition: color 0.2s ease;
+  cursor: grab;
+}
+
+.drag-handle:hover {
+  color: #343a40;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+tr.dragging {
+  opacity: 0.6;
+  background-color: #fff3cd !important;
+}
+
+tr.drag-over {
+  border-top: 2px solid #007bff;
+}
+
+.ordering-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.ordering-tip svg {
+  color: #0d6efd;
+}
+
+
+.custom-line td:nth-child(2) {
+  font-style: italic;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+.custom-line:hover {
+  background-color: #fff3cd;
+}
+
+/* Outros estilos existentes... */
+
+/* Estilos para linhas por status */
+.atende-percentual {
+  background-color: rgba(13, 148, 76, 0.1) !important;
+}
+
+.atende-percentual:hover {
+  background-color: rgba(13, 148, 76, 0.15) !important;
+}
+
+.atende-percentual td {
+  color: #155724;
+}
+
+.nao-atende-percentual {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.nao-atende-percentual:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.nao-atende-percentual td {
+  color: #721c24;
+}
+
+
+.custom-line:hover {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+}
+
+.custom-line td:first-child {
+  font-style: italic;
+  color: #856404;
+}
+
+/* Estilos para sistemas obrigatórios */
+.sistema-obrigatorio {
+  font-weight: 500;
+}
+
+.sistema-obrigatorio td:nth-child(7) {
+  position: relative;
+}
+
+.sistema-obrigatorio td:nth-child(7)::after {
+  content: "★";
+  position: absolute;
+  font-size: 12px;
+  color: #dc3545;
+  margin-left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Destacar células não atendidas */
+td.nao-atendidos {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Destacar células atendidas */
+td.atendidos {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Estilo do campo de input percentual */
+.percentual-input-small {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* Para garantir que o campo de nome seja editável nos campos personalizados */
+.custom-line td:first-child:hover {
+  background-color: rgba(255, 193, 7, 0.3);
+  cursor: pointer;
+}
+
+.calculated-field {
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: #495057;
+  font-style: italic;
+}
+
+.calculated-indicator {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-left: 3px;
+}
+
+.edit-input {
+  padding: 4px 8px;
+  border: 2px solid #4a90e2;
+  border-radius: 4px;
+  width: 100%;
+  min-width: 40px;
+}
+
+.editable-cell {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.editable-cell:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Correção importante para permitir seleção e cópia de texto */
+.user-select-text {
+  user-select: text !important;
+}
+
+/* Use !important para garantir que essas classes tenham prioridade */
+.atende-status-forte {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.atende-status-forte:hover {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+}
+
+.nao-atende-status-forte {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+.nao-atende-status-forte:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.neutro {
+  background-color: #f8f9fa !important;
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+
+
+/* Apenas manter a estilização do nome para indicar que é editável */
+tr.custom-line td:nth-child(2) {
+  font-style: italic;
+}
+
+/* Remover hover específico de custom-line */
+tr.custom-line:hover {
+  /* Não aplicar estilo específico */
+}
+
+/* Demais estilos existentes... */
+
+/* Use !important para garantir que essas classes tenham prioridade */
+.atende-percentual {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.atende-percentual:hover {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+}
+
+.nao-atende-percentual {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.nao-atende-percentual:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+/* Cores mais vibrantes para status de atendimento (caso prefira) */
+.atende-status-forte {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.nao-atende-status-forte {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+/* Este estilo precisa estar fora do scoped para afetar todos os elementos da tabela */
+.analise-table td, .analise-table th {
+  user-select: text !important;
+}
+
+.analise-table {
+  position: relative;
+  z-index: 1; /* Garantir que a tabela esteja em um contexto de stacking próprio */
+}
+
+.copy-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px solid #dee2e6;
+}
+
+.copy-hint svg {
+  color: #0d6efd;
+}
+
+.porcentagem-nao-atendimento {
+  color: #dc3545;
+  font-variant-numeric: tabular-nums; /* Para alinhar números */
+  min-width: 90px;
+}
+
+.porcentagem-atendimento {
+  color: #28a745;
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+/* Para valores extremamente pequenos */
+.valor-micro {
+  font-size: 0.85em;
+  font-style: italic;
 }
 </style>
