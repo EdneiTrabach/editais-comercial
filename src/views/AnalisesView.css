@@ -501,3 +501,443 @@ td.atendidos {
   border-radius: 4px;
   text-align: center;
 }
+
+
+.custom-line td:first-child {
+  text-align: left;
+  font-weight: normal;
+  color: #666;
+  cursor: pointer;
+}
+
+.editable-cell {
+  cursor: pointer;
+  position: relative;
+}
+
+.editable-cell:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.custom-line .editable-cell:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.edit-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: #007bff;
+  opacity: 0;
+}
+
+.editable-cell:hover .edit-indicator {
+  opacity: 0.7;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #4a90e2;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #f0f8ff;
+}
+
+.editable-cell {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editable-cell:hover {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+
+.custom-line td:first-child {
+  font-style: italic;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+.custom-line:hover {
+  background-color: #fff3cd;
+}
+
+.percentual-input-small {
+  width: 50px;
+  text-align: center;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.btn-sm {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  color: white;
+  background-color: #dc3545;
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Para garantir que o campo de nome seja editável nos campos personalizados */
+.custom-line td:first-child:hover {
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+/* Estilos para arraste e ordenação */
+.drag-handle-column {
+  cursor: move;
+  text-align: center;
+}
+
+.drag-handle {
+  display: inline-block;
+  padding: 4px;
+  cursor: move;
+}
+
+.dragging {
+  opacity: 0.5;
+}
+
+.drag-over {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Estilos para drag & drop */
+.drag-handle-column {
+  width: 30px;
+  text-align: center;
+  cursor: move;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  height: 100%;
+  transition: color 0.2s ease;
+  cursor: grab;
+}
+
+.drag-handle:hover {
+  color: #343a40;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+tr.dragging {
+  opacity: 0.6;
+  background-color: #fff3cd !important;
+}
+
+tr.drag-over {
+  border-top: 2px solid #007bff;
+}
+
+.ordering-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.ordering-tip svg {
+  color: #0d6efd;
+}
+
+
+.custom-line td:nth-child(2) {
+  font-style: italic;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+.custom-line:hover {
+  background-color: #fff3cd;
+}
+
+/* Outros estilos existentes... */
+
+/* Estilos para linhas por status */
+.atende-percentual {
+  background-color: rgba(13, 148, 76, 0.1) !important;
+}
+
+.atende-percentual:hover {
+  background-color: rgba(13, 148, 76, 0.15) !important;
+}
+
+.atende-percentual td {
+  color: #155724;
+}
+
+.nao-atende-percentual {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.nao-atende-percentual:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.nao-atende-percentual td {
+  color: #721c24;
+}
+
+
+.custom-line:hover {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+}
+
+.custom-line td:first-child {
+  font-style: italic;
+  color: #856404;
+}
+
+/* Estilos para sistemas obrigatórios */
+.sistema-obrigatorio {
+  font-weight: 500;
+}
+
+.sistema-obrigatorio td:nth-child(7) {
+  position: relative;
+}
+
+.sistema-obrigatorio td:nth-child(7)::after {
+  content: "★";
+  position: absolute;
+  font-size: 12px;
+  color: #dc3545;
+  margin-left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Destacar células não atendidas */
+td.nao-atendidos {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Destacar células atendidas */
+td.atendidos {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Estilo do campo de input percentual */
+.percentual-input-small {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* Para garantir que o campo de nome seja editável nos campos personalizados */
+.custom-line td:first-child:hover {
+  background-color: rgba(255, 193, 7, 0.3);
+  cursor: pointer;
+}
+
+.calculated-field {
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: #495057;
+  font-style: italic;
+}
+
+.calculated-indicator {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-left: 3px;
+}
+
+.edit-input {
+  padding: 4px 8px;
+  border: 2px solid #4a90e2;
+  border-radius: 4px;
+  width: 100%;
+  min-width: 40px;
+}
+
+.editable-cell {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.editable-cell:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Correção importante para permitir seleção e cópia de texto */
+.user-select-text {
+  user-select: text !important;
+}
+
+/* Use !important para garantir que essas classes tenham prioridade */
+.atende-status-forte {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.atende-status-forte:hover {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+}
+
+.nao-atende-status-forte {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+.nao-atende-status-forte:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.neutro {
+  background-color: #f8f9fa !important;
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+
+
+/* Apenas manter a estilização do nome para indicar que é editável */
+tr.custom-line td:nth-child(2) {
+  font-style: italic;
+}
+
+/* Remover hover específico de custom-line */
+tr.custom-line:hover {
+  /* Não aplicar estilo específico */
+}
+
+/* Demais estilos existentes... */
+
+/* Use !important para garantir que essas classes tenham prioridade */
+.atende-percentual {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.atende-percentual:hover {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+}
+
+.nao-atende-percentual {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.nao-atende-percentual:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+/* Cores mais vibrantes para status de atendimento (caso prefira) */
+.atende-status-forte {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.nao-atende-status-forte {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+/* Este estilo precisa estar fora do scoped para afetar todos os elementos da tabela */
+.analise-table td, .analise-table th {
+  user-select: text !important;
+}
+
+.analise-table {
+  position: relative;
+  z-index: 1; /* Garantir que a tabela esteja em um contexto de stacking próprio */
+}
+
+.copy-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px solid #dee2e6;
+}
+
+.copy-hint svg {
+  color: #0d6efd;
+}
+
+.porcentagem-nao-atendimento {
+  color: #dc3545;
+  font-variant-numeric: tabular-nums; /* Para alinhar números */
+  min-width: 90px;
+}
+
+.porcentagem-atendimento {
+  color: #28a745;
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+/* Para valores extremamente pequenos */
+.valor-micro {
+  font-size: 0.85em;
+  font-style: italic;
+}
+
