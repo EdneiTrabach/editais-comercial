@@ -75,13 +75,6 @@ td:hover {
   position: relative;
 }
 
-td:hover::after {
-  content: '✎';
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
 
 td textarea {
   width: 95%;
@@ -268,22 +261,7 @@ td[data-field="impugnacoes"] {
   position: relative;
 }
 
-.excel-table td:hover:not(.editing-cell):not(.actions-cell):not(.row-number-cell)::after {
-  content: '✎';
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  font-size: 12px;
-  color: #6c757d;
-  opacity: 0.7;
-  background: rgba(255, 255, 255, 0.8);
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+
 
 .saved-success {
   animation: successPulse 1s forwards;

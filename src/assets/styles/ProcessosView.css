@@ -115,7 +115,6 @@ td[data-field="empresa_vencedora"] {
   vertical-align: middle;
   text-align: center;
   border: 1px solid #e9ecef;
-  background-color: inherit;
 }
 
 /* Ajuste para a exibição da empresa participante */
@@ -225,7 +224,7 @@ td[data-field="empresa_vencedora"] {
   flex: 1;
   overflow: auto;
   position: relative;
-  width: 102%;
+  width: 100%; /* Corrigido de 102% para 100% */
 }
 
 /* Container da tabela */
@@ -238,6 +237,14 @@ td[data-field="empresa_vencedora"] {
   user-select: text;
   flex: 1;
   min-height: 300px;
+  overflow-x: auto; /* Adiciona rolagem horizontal para acomodar tabelas largas */
+  width: 100%; /* Garante que o container ocupe toda a largura disponível */
+}
+
+/* Estilo para a tabela dentro do container */
+.table-container .excel-table {
+  width: max-content; /* Permite que a tabela cresça conforme necessário */
+  min-width: 100%; /* Garante que a tabela ocupa pelo menos toda a largura disponível */
 }
 
 /* Filtro avançado */

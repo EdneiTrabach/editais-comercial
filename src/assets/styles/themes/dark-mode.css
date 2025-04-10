@@ -508,7 +508,6 @@
   [data-theme="dark"] .excel-table tbody tr:hover .row-number-cell {
     background-color: #1e293b !important;
     color: #f9fafb;
-    border-right: 1px solid #3b82f6 !important;
   }
 
   /* Estilos para linhas selecionadas com hover */

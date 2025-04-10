@@ -113,9 +113,9 @@
                 </th>
                 <!-- Coluna de ações separada -->
                 <th class="actions-column">Ações</th>
-                <td class="resize-handle-cell">
+                <!-- <td class="resize-handle-cell">
                   <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>
-                </td>
+                </td> -->
               </tr>
             </thead>
             <tbody>
