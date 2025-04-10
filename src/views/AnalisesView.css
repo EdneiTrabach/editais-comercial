@@ -275,7 +275,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-
 .editable:hover::after {
   opacity: 1;
 }
@@ -438,4 +437,67 @@
 
 .nao-atende-personalizado {
   background-color: #fee2e2;
+}
+
+/* Estilos para células editáveis */
+.editable {
+  cursor: pointer;
+  position: relative;
+}
+
+.editable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.editable::after {
+  content: "✎";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 5px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Destacar células não atendidas */
+td.nao-atendidos {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Destacar células atendidas */
+td.atendidos {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Destacar porcentagens */
+.porcentagem-atendimento {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.porcentagem-nao-atendimento {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Estilo do campo de input percentual */
+.percentual-input-small {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
 }

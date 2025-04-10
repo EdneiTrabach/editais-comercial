@@ -152,7 +152,6 @@ select.cidade-select {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem;
 }
 
 .distancia-valor {
@@ -199,7 +198,7 @@ select.cidade-select {
 
 .distancias-lista h4 {
   color: #193155;
-  margin-bottom: 1rem;
+  margin: 0;
   font-size: 1rem;
 }
 

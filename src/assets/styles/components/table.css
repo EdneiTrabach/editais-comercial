@@ -1,6 +1,7 @@
 /* Estilos da tabela */
 .excel-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   border: 1px solid #e9ecef;
   min-width: 1406px;
@@ -8,6 +9,32 @@
   border-collapse: separate;
   border-spacing: 0;
   position: relative;
+}
+
+/* Container da tabela com rolagem horizontal */
+.table-container {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  position: relative;
+  user-select: text;
+  flex: 1;
+  min-height: 300px;
+  overflow-x: auto; /* Habilita rolagem horizontal */
+}
+
+/* Ajustes para responsividade */
+@media (max-width: 1200px) {
+  .table-container {
+    max-width: 100%;
+  }
+}
+
+/* Ajuste para modo escuro */
+[data-theme="dark"] .table-container {
+  background: var(--dark-bg-color, #1e293b);
 }
 
 .excel-table th {
@@ -87,6 +114,7 @@
   /* overflow: hidden; */
   text-overflow: ellipsis;
   vertical-align: middle;
+  padding: 8px 12px;
 }
 
 .resizing {
@@ -201,12 +229,13 @@ tbody tr:hover .row-number-cell {
 
 .column-resize-handle {
   position: absolute;
-  right: -4px;
+  right: 0;
   top: 0;
   bottom: 0;
-  width: 8px;
-  background: transparent;
+  width: 5px;
   cursor: col-resize;
+  user-select: none;
+  background: transparent;
   z-index: 20;
 }
 
@@ -378,4 +407,16 @@ tbody tr:hover .row-number-cell {
 .excel-table tbody tr[data-status="nao_participar"]:hover {
   background-color: rgba(255, 249, 196, 0.6) !important;
   border-left: 1px solid #f9a825 !important;
+}
+
+/* Estilos para cabeçalho da tabela fixo (opcional) */
+.excel-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8f9fa;
+}
+
+[data-theme="dark"] .excel-table thead {
+  background-color: #2d3748;
 }
