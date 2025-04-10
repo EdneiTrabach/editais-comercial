@@ -1,42 +1,32 @@
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 export function useToast() {
-  const toast = ref({
-    show: false,
-    message: '',
-    type: 'success', // success, error, warning, info
-    timeout: 3000 // tempo em milissegundos
-  })
+  const toasts = ref([]);
+  const toastId = ref(0);
 
-  let toastTimeout = null
-
-  const showToast = (message, type = 'success', timeout = 3000) => {
-    // Limpa qualquer toast anterior
-    if (toastTimeout) {
-      clearTimeout(toastTimeout)
-    }
-
-    // Define o novo toast
-    toast.value = {
-      show: true,
+  const showToast = (message, type = 'success', duration = 3000) => {
+    const id = toastId.value++;
+    
+    toasts.value.push({
+      id,
       message,
       type,
-      timeout
-    }
-
-    // Define o timeout para ocultar
-    toastTimeout = setTimeout(() => {
-      hideToast()
-    }, timeout)
-  }
-
-  const hideToast = () => {
-    toast.value.show = false
-  }
+      show: true
+    });
+    
+    setTimeout(() => {
+      const index = toasts.value.findIndex(toast => toast.id === id);
+      if (index > -1) {
+        toasts.value[index].show = false;
+        setTimeout(() => {
+          toasts.value = toasts.value.filter(toast => toast.id !== id);
+        }, 300);
+      }
+    }, duration);
+  };
 
   return {
-    toast,
-    showToast,
-    hideToast
-  }
+    toasts,
+    showToast
+  };
 }

@@ -1696,8 +1696,10 @@ export default {
         }
 
         const processo = sistemasDialog.value.processo;
+        const novosSistemasAtivos = editingCell.value.value;
+        
         const updateData = {
-          sistemas_ativos: editingCell.value.value,
+          sistemas_ativos: novosSistemasAtivos,
           updated_at: new Date().toISOString()
         };
 
@@ -1719,15 +1721,18 @@ export default {
           registro_id: processo.id,
           campo_alterado: 'sistemas_ativos',
           dados_anteriores: processo.sistemas_ativos,
-          dados_novos: editingCell.value.value
+          dados_novos: novosSistemasAtivos
         });
+
+        // NOVO: Atualizar análises se necessário
+        await atualizarAnalisesAposMudancaSistemas(processo.id, novosSistemasAtivos);
 
         await loadProcessos();
 
         hideSistemasDialog();
       } catch (error) {
-        console.error('Error saving systems:', error);
-        alert('Error saving systems');
+        console.error('Erro ao salvar sistemas:', error);
+        showToast('Erro ao salvar sistemas', 'error');
       }
     };
 
@@ -2785,68 +2790,42 @@ export default {
     const handleStatusChange = async (processo, event) => {
       try {
         const newStatus = event.target.value;
-        console.log('Updating status to:', newStatus);
+        console.log('Atualizando status para:', newStatus);
         
         if (newStatus === processo.status) return;
         
-        if (newStatus.toLowerCase() === 'vamos_participar') {
-          let mensagensErro = [];
-          
-          const plataformaInvalida = !processo.site_pregao || 
-              processo.site_pregao === 'https://semurl.com.br' || 
-              processo.site_pregao.toLowerCase().includes('a confirmar') ||
-              processo.site_pregao.toLowerCase().includes('(a confirmar)') ||
-              processo.site_pregao.toLowerCase().includes('a definir') ||
-              processo.site_pregao.toLowerCase().includes('não definido') ||
-              processo.site_pregao.toLowerCase().includes('pendente');
-          
-          const empresaInvalida = !processo.empresa_id;
-          
-          if (plataformaInvalida) {
-            mensagensErro.push('Portal/plataforma inválido ou não definido');
-          }
-          
-          if (empresaInvalida) {
-            mensagensErro.push('Empresa participante não selecionada');
-          }
-          
-          if (mensagensErro.length > 0) {
-            event.target.value = processo.status;
-            
-            showToast(
-              `ATENÇÃO: Para alterar para "Vamos Participar", corrija: ${mensagensErro.join(' e ')}`, 
-              'error', 
-              7000
-            );
-            
-            if (plataformaInvalida) {
-              console.error('VALIDAÇÃO FALHOU: Portal/plataforma precisa ser definido adequadamente');
-            }
-            
-            if (empresaInvalida) {
-              console.error('VALIDAÇÃO FALHOU: Empresa participante precisa ser selecionada');
-            }
-            
-            return;
-          }
+        // Verificar se o status é "em_analise" (considerando variações)
+        const isAnaliseStatus = ['em_analise', 'em analise', 'EM_ANALISE'].includes(newStatus.toLowerCase());
+        
+        // Atualizar status na tabela de processos
+        const updateData = {
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
         }
-        
-        console.log('Passed validations, updating status...');
-        
-        selectedStatusMap.value[processo.id] = newStatus;
-        
-        const result = await updateProcessoStatus(
-          processo.id, 
-          newStatus
-        ).catch(error => {
-          console.error('Erro na atualização de status:', error);
-          return { success: false, message: error.message || 'Erro ao comunicar com o servidor' };
-        });
-        
-        if (result.success) {
-        } else {
+
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', processo.id);
+
+        if (error) throw error;
+
+        // Se o status for "em_analise", verificar e inserir na tabela analises_itens
+        if (isAnaliseStatus) {
+          await registrarProcessoParaAnalise(processo);
         }
+
+        await loadProcessos();
+        
+        showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
       } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        showToast('Erro ao atualizar status do processo', 'error');
       }
     };
     
@@ -3857,9 +3836,195 @@ export default {
       // Sempre aplicar estas ordenações ao final
       query = query.order('created_at', { ascending: true })
                    .order('id', { ascending: true });
-      
+      3
       return query;
     }
+
+    const registrarProcessoParaAnalise = async (processo) => {
+      try {
+        console.log('Registrando processo para análise:', processo.id);
+        
+        // Garantir que temos os dados atualizados do processo
+        const { data: processoAtualizado, error: processoError } = await supabase
+          .from('processos')
+          .select('*')
+          .eq('id', processo.id)
+          .single();
+        
+        if (processoError) throw processoError;
+        
+        // Extrair sistemas_ativos e garantir que é um array
+        const sistemasAtivos = Array.isArray(processoAtualizado.sistemas_ativos) 
+          ? processoAtualizado.sistemas_ativos 
+          : (typeof processoAtualizado.sistemas_ativos === 'string' 
+              ? JSON.parse(processoAtualizado.sistemas_ativos || '[]') 
+              : (processoAtualizado.sistemas_ativos || []));
+        
+        console.log('Sistemas ativos encontrados:', sistemasAtivos);
+        
+        // Verificar registros existentes na tabela analises_itens
+        const { data: existentes, error: existentesError } = await supabase
+          .from('analises_itens')
+          .select('id, sistema_id')
+          .eq('processo_id', processo.id);
+        
+        if (existentesError) throw existentesError;
+        
+        // Mapear sistemas que já estão registrados
+        const sistemasRegistrados = existentes ? existentes.map(item => item.sistema_id) : [];
+        
+        // Encontrar sistemas que precisam ser adicionados (estão em sistemas_ativos mas não em sistemasRegistrados)
+        const sistemasParaAdicionar = sistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
+        
+        console.log('Sistemas para adicionar:', sistemasParaAdicionar);
+        
+        if (sistemasParaAdicionar.length > 0) {
+          // Criar um registro para cada sistema novo
+          const registros = sistemasParaAdicionar.map(sistemaId => ({
+            processo_id: processo.id,
+            sistema_id: sistemaId,
+            total_itens: 0,
+            nao_atendidos: 0,
+            obrigatorio: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }));
+          
+          const { error: insertError } = await supabase
+            .from('analises_itens')
+            .insert(registros);
+          
+          if (insertError) {
+            console.error('Erro ao inserir novos registros:', insertError);
+            throw insertError;
+          }
+          
+          console.log('Registros de sistemas inseridos com sucesso');
+          showToast('Processo registrado para análise com sucesso', 'success');
+        } else if (existentes && existentes.length > 0) {
+          console.log('Processo já está registrado para análise e sistemas estão atualizados');
+          showToast('Processo já registrado para análise', 'info');
+        } else if (sistemasAtivos.length === 0) {
+          // Se não tiver sistemas ativos, criar registro vazio
+          const { error: insertError } = await supabase
+            .from('analises_itens')
+            .insert({
+              processo_id: processo.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error('Erro ao inserir registro vazio:', insertError);
+            throw insertError;
+          }
+          
+          console.log('Registro vazio inserido com sucesso');
+          showToast('Processo registrado para análise', 'success');
+        }
+      } catch (error) {
+        console.error('Erro ao registrar processo para análise:', error);
+        showToast('Erro ao registrar processo para análise', 'error');
+      }
+    };
+
+    // Adicione esta função aos métodos do componente
+    const verificarTabelaAnalises = async (processo) => {
+      try {
+        const { data, error } = await supabase
+          .from('analises_itens')
+          .select('*')
+          .eq('processo_id', processo.id);
+          
+        if (error) throw error;
+        
+        console.log('Registros na tabela analises_itens para o processo:', data);
+        
+        if (!data || data.length === 0) {
+          showToast('Processo não está registrado na tabela de análises', 'warning');
+          
+          if (confirm('Deseja registrar este processo para análise agora?')) {
+            await forcarRegistroAnalise(processo);
+          }
+        } else {
+          showToast(`Processo já possui ${data.length} registros na tabela de análises`, 'info');
+        }
+      } catch (error) {
+        console.error('Erro ao verificar tabela de análises:', error);
+        showToast('Erro ao verificar tabela de análises', 'error');
+      }
+    };
+
+    // Adicione esta função aos seus métodos
+
+    const forcarRegistroAnalise = async (processo) => {
+      try {
+        // Primeiro excluir qualquer registro existente para evitar duplicações
+        await supabase
+          .from('analises_itens')
+          .delete()
+          .eq('processo_id', processo.id);
+          
+        // Agora registrar novamente
+        await registrarProcessoParaAnalise(processo);
+        
+        showToast('Processo forçado para análise com sucesso!', 'success');
+        
+        // Opcionalmente, redirecionar para a tela de análises
+        router.push('/analises');
+      } catch (error) {
+        console.error('Erro ao forçar registro para análise:', error);
+        showToast('Erro ao forçar registro para análise', 'error');
+      }
+    };
+
+    const atualizarAnalisesAposMudancaSistemas = async (processoId, novosSistemasAtivos) => {
+      try {
+        // Verificar se o processo está em análise
+        const { data: processo, error: processoError } = await supabase
+          .from('processos')
+          .select('status')
+          .eq('id', processoId)
+          .single();
+          
+        if (processoError) throw processoError;
+        
+        // Se o status for "Em Análise", atualizar registros de análise
+        if (processo.status === 'em_analise' || processo.status === 'EM_ANALISE') {
+          // Buscar registros existentes
+          const { data: registrosExistentes, error: registrosError } = await supabase
+            .from('analises_itens')
+            .select('sistema_id')
+            .eq('processo_id', processoId);
+            
+          if (registrosError) throw registrosError;
+          
+          // Extrair IDs de sistemas já registrados
+          const sistemasRegistrados = registrosExistentes.map(item => item.sistema_id);
+          
+          // Encontrar sistemas novos para adicionar
+          const sistemasNovos = novosSistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
+          
+          // Se houver sistemas novos, adicionar à tabela analises_itens
+          if (sistemasNovos.length > 0) {
+            const registros = sistemasNovos.map(sistemaId => ({
+              processo_id: processoId,
+              sistema_id: sistemaId,
+              total_itens: 0,
+              nao_atendidos: 0,
+              obrigatorio: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }));
+            
+            await supabase.from('analises_itens').insert(registros);
+            console.log('Novos sistemas adicionados à análise automaticamente');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar análises após mudança de sistemas:', error);
+      }
+    };
 
     return {
       handleStatusUpdate,
@@ -4061,7 +4226,10 @@ export default {
       getEmpresaVencedoraNome,
       getEmpresaVencedoraContrato,
       getSistemasImplantacaoCount,
-      resetarConfiguracaoTabela // Nova função para resetar configurações da tabela
+      resetarConfiguracaoTabela, // Nova função para resetar configurações da tabela
+      forcarRegistroAnalise,
+      verificarTabelaAnalises,
+      atualizarAnalisesAposMudancaSistemas
     }
   }
 }

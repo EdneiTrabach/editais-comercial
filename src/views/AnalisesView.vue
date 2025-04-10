@@ -18,6 +18,15 @@
                 Salvar Análises
               </button>
               
+              <!-- Adicione este botão próximo ao botão "Salvar Análises" -->
+              <button 
+                v-if="processoAtual"
+                class="btn btn-secondary" 
+                @click="sincronizarSistemas"
+                title="Sincroniza os sistemas ativos do processo com a análise">
+                <i class="fas fa-sync"></i> Sincronizar Sistemas
+              </button>
+              
               <div class="dropdown-exportar">
                 <button class="btn-exportar">
                   <i class="fas fa-file-export"></i>
@@ -235,6 +244,7 @@
       </div>
     </div>
   </div>
+  <toast-messages :toasts="toasts" />
 </template>
 
 <script>

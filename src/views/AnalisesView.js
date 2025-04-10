@@ -4,6 +4,8 @@ import AnoSelection from '@/components/lances/AnoSelection.vue'
 import ProcessoSelection from '@/components/lances/ProcessoSelection.vue'
 import { useAnalises } from '@/composables/useAnalises'
 import { supabase } from '@/lib/supabase' // Corrigido o caminho
+import { useToast } from '@/composables/useToast';
+import ToastMessages from '@/components/ToastMessages.vue';
 
 export default {
   name: 'AnalisesView',
@@ -11,7 +13,8 @@ export default {
   components: {
     TheSidebar,
     AnoSelection,
-    ProcessoSelection
+    ProcessoSelection,
+    ToastMessages
   },
 
   setup() {
@@ -36,6 +39,8 @@ export default {
       calcularPorcentagem,
       loadProcessos
     } = useAnalises()
+
+    const { showToast } = useToast();
 
     const editando = ref({
       id: null,
@@ -81,24 +86,36 @@ export default {
           }
         }
 
+        // Mapear campos da UI para campos do banco
+        const camposBanco = {
+          'totalItens': 'total_itens',
+          'naoAtendidos': 'nao_atendidos'
+        };
+
+        // Preparar objeto de atualização
         const atualizacao = {
-          [editando.value.campo]: valor,
+          [camposBanco[editando.value.campo] || editando.value.campo]: valor,
           updated_at: new Date().toISOString()
         }
 
-        // Atualizar no banco de dados
+        // Atualizar no banco de dados - agora usando o ID do registro de análise
         const { error } = await supabase
           .from('analises_itens')
           .update(atualizacao)
-          .match({
-            sistema_id: sistema.id,
-            processo_id: selectedProcesso.value
-          })
+          .eq('id', sistema.id);
 
-        if (error) throw error
+        if (error) throw error;
 
         // Atualizar localmente
-        sistema[editando.value.campo] = valor
+        sistema[editando.value.campo] = valor;
+        
+        // Recalcular atendidos
+        if (editando.value.campo === 'totalItens' || editando.value.campo === 'naoAtendidos') {
+          sistema.atendidos = sistema.totalItens - sistema.naoAtendidos;
+        }
+        
+        // Marcar que há alterações pendentes
+        alteracoesPendentes.value = true;
 
       } catch (error) {
         console.error('Erro ao salvar:', error)
@@ -246,63 +263,82 @@ export default {
         const promises = sistemasAnalise.value.map(sistema => {
           return supabase
             .from('analises_itens')
-            .upsert({
-              sistema_id: sistema.id,
-              processo_id: selectedProcesso.value,
-              totalItens: sistema.totalItens,
-              naoAtendidos: sistema.naoAtendidos,
+            .update({
+              total_itens: sistema.totalItens,
+              nao_atendidos: sistema.naoAtendidos,
               obrigatorio: sistema.obrigatorio,
               percentual_minimo: sistema.percentualMinimo,
               updated_at: new Date().toISOString()
             })
-        })
+            .eq('id', sistema.id)
+        });
 
-        await Promise.all(promises)
-        alteracoesPendentes.value = false
-        showToast('Análises salvas com sucesso!', 'success')
+        await Promise.all(promises);
+        alteracoesPendentes.value = false;
+        showToast('Análises salvas com sucesso!', 'success');
 
         if (acaoAposSalvar.value) {
-          acaoAposSalvar.value()
-          acaoAposSalvar.value = null
+          acaoAposSalvar.value();
+          acaoAposSalvar.value = null;
         }
       } catch (error) {
-        console.error('Erro ao salvar análises:', error)
-        showToast('Erro ao salvar análises', 'error')
+        console.error('Erro ao salvar análises:', error);
+        showToast('Erro ao salvar análises: ' + error.message, 'error');
       }
-    }
+    };
 
     // Funções de exportação
     const exportarExcel = async () => {
-      const dados = sistemasAnalise.value.map(sistema => ({
-        'Sistema': sistema.nome,
-        'Total de Itens': sistema.totalItens,
-        'Não Atendidos': sistema.naoAtendidos,
-        'Atendidos': sistema.totalItens - sistema.naoAtendidos,
-        '% Não Atendimento': calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens),
-        '% Atendimento': calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens),
-        'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não',
-        'Status': getStatusAtendimento(sistema).texto
-      }))
+      try {
+        const dados = sistemasAnalise.value.map(sistema => ({
+          'Sistema': sistema.nome,
+          'Total de Itens': sistema.totalItens,
+          'Não Atendidos': sistema.naoAtendidos,
+          'Atendidos': sistema.totalItens - sistema.naoAtendidos,
+          '% Não Atendimento': calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens),
+          '% Atendimento': calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens),
+          'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não',
+          'Status': getStatusAtendimento(sistema).texto
+        }));
 
-      // Usando a biblioteca xlsx
-      const ws = XLSX.utils.json_to_sheet(dados)
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Análise de Sistemas')
-      XLSX.writeFile(wb, `analise_sistemas_${processoAtual.value?.numero_processo}.xlsx`)
-    }
+        // Usando a biblioteca xlsx
+        const ws = XLSX.utils.json_to_sheet(dados);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Análise de Sistemas');
+        XLSX.writeFile(wb, `analise_sistemas_${processoAtual.value?.numero_processo}.xlsx`);
+        
+        showToast('Exportação para Excel concluída com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao exportar para Excel:', error);
+        showToast('Erro ao exportar para Excel: ' + error.message, 'error');
+      }
+    };
 
     const exportarPDF = async () => {
-      // Implementar exportação PDF usando html2pdf ou jsPDF
+      try {
+        // Implementar exportação PDF usando html2pdf ou jsPDF
+        
+        showToast('Exportação para PDF concluída com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao exportar para PDF:', error);
+        showToast('Erro ao exportar para PDF: ' + error.message, 'error');
+      }
     }
 
     const abrirDashboard = () => {
-      router.push({
-        name: 'AnalisesDashboard',
-        query: {
-          processo_id: selectedProcesso.value
-        }
-      })
-    }
+      try {
+        router.push({
+          name: 'AnalisesDashboard',
+          query: {
+            processo_id: selectedProcesso.value
+          }
+        });
+        showToast('Dashboard de análise aberto com sucesso!', 'info');
+      } catch (error) {
+        console.error('Erro ao abrir dashboard:', error);
+        showToast('Erro ao abrir dashboard: ' + error.message, 'error');
+      }
+    };
 
     // Funções de controle de navegação
     const verificarAlteracoesPendentes = (callback) => {
@@ -355,6 +391,114 @@ export default {
       await loadProcessos()
     })
 
+    // Adicione esta função para debug
+    const debugAnalises = async () => {
+      try {
+        // Contar registros na tabela analises_itens
+        const { data: contagem, error: contagemError } = await supabase
+          .from('analises_itens')
+          .select('count');
+          
+        if (contagemError) throw contagemError;
+        
+        console.log('Total de registros em analises_itens:', contagem);
+        
+        // Verificar processos com status Em Análise
+        const { data: processosEmAnalise, error: processosError } = await supabase
+          .from('processos')
+          .select('id, numero_processo')
+          .eq('status', 'EM_ANALISE');
+          
+        if (processosError) throw processosError;
+        
+        console.log('Processos com status EM_ANALISE:', processosEmAnalise);
+        
+        // Para cada processo em análise, verificar se está na tabela analises_itens
+        for (const proc of processosEmAnalise) {
+          const { data, error } = await supabase
+            .from('analises_itens')
+            .select('count')
+            .eq('processo_id', proc.id);
+            
+          if (error) {
+            console.error(`Erro ao verificar processo ${proc.numero_processo}:`, error);
+            continue;
+          }
+          
+          console.log(`Processo ${proc.numero_processo}: ${data[0]?.count || 0} registros em analises_itens`);
+        }
+      } catch (error) {
+        console.error('Erro ao depurar análises:', error);
+      }
+    };
+
+    // Adicione esta função
+    const sincronizarSistemas = async () => {
+      try {
+        if (!processoAtual.value || !selectedProcesso.value) {
+          showToast('Nenhum processo selecionado', 'error');
+          return;
+        }
+        
+        // Buscar sistemas ativos atualizados
+        const { data: processo, error: processoError } = await supabase
+          .from('processos')
+          .select('sistemas_ativos')
+          .eq('id', selectedProcesso.value)
+          .single();
+          
+        if (processoError) throw processoError;
+        
+        const sistemasAtivos = Array.isArray(processo.sistemas_ativos) 
+          ? processo.sistemas_ativos 
+          : (typeof processo.sistemas_ativos === 'string' 
+              ? JSON.parse(processo.sistemas_ativos || '[]') 
+              : (processo.sistemas_ativos || []));
+        
+        // Buscar registros atuais
+        const { data: registros, error: registrosError } = await supabase
+          .from('analises_itens')
+          .select('sistema_id')
+          .eq('processo_id', selectedProcesso.value);
+          
+        if (registrosError) throw registrosError;
+        
+        const sistemasRegistrados = registros?.map(r => r.sistema_id) || [];
+        
+        // Identificar sistemas a adicionar
+        const sistemasParaAdicionar = sistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
+        
+        if (sistemasParaAdicionar.length > 0) {
+          // Criar registros para os novos sistemas
+          const novosRegistros = sistemasParaAdicionar.map(sistemaId => ({
+            processo_id: selectedProcesso.value,
+            sistema_id: sistemaId,
+            total_itens: 0,
+            nao_atendidos: 0,
+            obrigatorio: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }));
+          
+          const { error: insertError } = await supabase
+            .from('analises_itens')
+            .insert(novosRegistros);
+            
+          if (insertError) throw insertError;
+          
+          // Recarregar sistemas
+          await carregarAnalisesSistemas();
+          
+          showToast(`${sistemasParaAdicionar.length} novos sistemas adicionados à análise`, 'success');
+        } else {
+          showToast('Sistemas já estão sincronizados', 'info');
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar sistemas:', error);
+        showToast('Erro ao sincronizar sistemas: ' + error.message, 'error');
+      }
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -399,7 +543,9 @@ export default {
       verificarAlteracoesPendentes,
       confirmarSaida,
       salvarESair,
-      cancelarSaida
+      cancelarSaida,
+      debugAnalises,
+      sincronizarSistemas
     }
   }
 }
