@@ -109,7 +109,7 @@ export function useAnalises() {
       
       console.log('Sistemas ativos no processo:', sistemasAtivos);
       
-      // Buscar registros existentes na tabela analises_itens, incluindo linhas personalizadas
+      // Buscar registros existentes na tabela analises_itens (incluindo anotações)
       const { data: analiseItens, error: analiseError } = await supabase
         .from('analises_itens')
         .select(`
@@ -128,9 +128,13 @@ export function useAnalises() {
       
       if (analiseError) throw analiseError;
       
-      // Filtrar sistemas regulares (não personalizados)
-      const analiseItensSistemas = analiseItens.filter(item => !item.is_custom_line);
+      // Separar os itens normais e as anotações
+      const analiseItensSistemas = analiseItens ? 
+        analiseItens.filter(item => !item.is_custom_line) : [];
       
+      const analiseItensAnotacoes = analiseItens ? 
+        analiseItens.filter(item => item.is_custom_line) : [];
+        
       // Mapear sistemas_ids já registrados na tabela analises_itens
       const sistemasIdsRegistrados = analiseItensSistemas.map(item => item.sistema_id);
       console.log('Sistemas já registrados:', sistemasIdsRegistrados);
@@ -215,20 +219,39 @@ export function useAnalises() {
       sistemasAnalise.value = dadosAtualizados.map(item => {
         const atendidos = item.total_itens - item.nao_atendidos;
         
+        // Se for uma linha personalizada
+        if (item.is_custom_line) {
+          return {
+            id: item.id,
+            nome: item.sistema_nome_personalizado || 'Anotação',
+            isCustomLine: true,
+            sistema_id: null,
+            totalItens: item.total_itens || 0,
+            naoAtendidos: item.nao_atendidos || 0,
+            atendidos: atendidos || 0,
+            obrigatorio: item.obrigatorio || false,
+            percentualMinimo: item.percentual_minimo || 70
+          };
+        }
+        
+        // Se for um sistema normal
         return {
           id: item.id,
           sistema_id: item.sistema_id,
-          nome: item.is_custom_line ? item.sistema_nome_personalizado : (item.sistemas ? item.sistemas.nome : 'Sistema desconhecido'),
+          nome: item.sistemas ? item.sistemas.nome : 'Sistema desconhecido',
+          isCustomLine: false,
           totalItens: item.total_itens || 0,
           naoAtendidos: item.nao_atendidos || 0,
           atendidos: atendidos || 0,
           obrigatorio: item.obrigatorio || false,
-          percentualMinimo: item.percentual_minimo || 70,
-          isCustomLine: item.is_custom_line || false
+          percentualMinimo: item.percentual_minimo || 70
         };
       });
       
-      return { adicionados: sistemasNovos.length, removidos: sistemasRemovidos.length };
+      return { 
+        adicionados: sistemasNovos.length, 
+        removidos: sistemasRemovidos.length 
+      };
       
     } catch (error) {
       console.error('Erro ao carregar análises dos sistemas:', error);

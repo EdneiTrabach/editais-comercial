@@ -547,13 +547,6 @@
                     @duplicate="handleDuplicate"
                     @editar-empresa-vencedora="openEmpresaVencedoraDialog"
                   />
-                  <button 
-                    v-if="processo.status === 'EM_ANALISE' || processo.status === 'em_analise'"
-                    @click="forcarRegistroAnalise(processo)" 
-                    title="Forçar registro na análise" 
-                    class="btn btn-sm btn-info">
-                    <i class="fas fa-sync"></i> Forçar Análise
-                  </button>
                 </td>
                 <!-- Row resize handle -->
                 <div class="row-resize-handle" @mousedown.stop="startRowResize($event, processo.id)"></div>

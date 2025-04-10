@@ -17,18 +17,24 @@
               </button>
               <!-- Novo botão para adicionar anotação -->
               <button 
-                v-if="step === 2"
                 @click="adicionarAnotacao" 
-                class="btn btn-outline-secondary">
+                class="btn btn-secondary"
+                title="Adicionar uma linha para anotações">
                 <i class="fas fa-plus"></i> Adicionar Anotação
               </button>
-              <!-- Botão de sincronização único com mensagem mais clara -->
+              <!-- Botão de sincronização único com mensagem clara -->
               <button 
                 v-if="processoAtual"
                 @click="sincronizarSistemas" 
                 class="btn btn-secondary" 
                 title="Atualiza sistemas conforme a tela de processos">
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
+              </button>
+              <button 
+                @click="exportarExcel" 
+                class="btn btn-info"
+                title="Exportar análise para Excel">
+                <i class="fas fa-file-export"></i> Exportar
               </button>
             </div>
             <!-- Botões de navegação -->
@@ -257,6 +263,9 @@ export default {
     ProcessoSelection,
     ToastMessages
   },
+  
+  // Adicione esta declaração de emits
+  emits: ['sidebarToggle', 'vnodeUnmounted'],
 
   // Adicionar hook de navegação como propriedade do componente
   beforeRouteLeave(to, from, next) {
@@ -399,36 +408,51 @@ export default {
       return 'Não Atende Requisitos'
     })
 
-    // Função para salvar todas as análises
+    // Substitua completamente a função salvarAnalises
     const salvarAnalises = async () => {
       try {
         const promises = sistemasAnalise.value.map(sistema => {
-          return supabase
-            .from('analises_itens')
-            .upsert({
-              sistema_id: sistema.id,
-              processo_id: selectedProcesso.value,
-              totalItens: sistema.totalItens || 0,
-              naoAtendidos: sistema.naoAtendidos || 0,
-              obrigatorio: sistema.obrigatorio || false,
-              percentual_minimo: sistema.percentualMinimo,
-              updated_at: new Date().toISOString()
-            })
-        })
+          // Para anotações personalizadas
+          if (sistema.isCustomLine) {
+            return supabase
+              .from('analises_itens')
+              .update({
+                sistema_nome_personalizado: sistema.nome,
+                total_itens: sistema.totalItens || 0,
+                nao_atendidos: sistema.naoAtendidos || 0,
+                obrigatorio: sistema.obrigatorio || false,
+                percentual_minimo: sistema.percentualMinimo || 70,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', sistema.id);
+          } else {
+            // Para sistemas normais
+            return supabase
+              .from('analises_itens')
+              .update({
+                total_itens: sistema.totalItens || 0,
+                nao_atendidos: sistema.naoAtendidos || 0,
+                obrigatorio: sistema.obrigatorio || false,
+                percentual_minimo: sistema.percentualMinimo || 70,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', sistema.id);
+          }
+        });
 
-        await Promise.all(promises)
-        alteracoesPendentes.value = false
-        alert('Análises salvas com sucesso!')
+        await Promise.all(promises);
+        alteracoesPendentes.value = false;
+        showToast('Análises salvas com sucesso!', 'success');
 
         if (acaoAposSalvar.value) {
-          acaoAposSalvar.value()
-          acaoAposSalvar.value = null
+          acaoAposSalvar.value();
+          acaoAposSalvar.value = null;
         }
       } catch (error) {
-        console.error('Erro ao salvar análises:', error)
-        alert('Erro ao salvar análises')
+        console.error('Erro ao salvar análises:', error);
+        showToast('Erro ao salvar análises: ' + (error.message || 'Erro desconhecido'), 'error');
       }
-    }
+    };
 
     // Exportações
     const exportarExcel = () => {
@@ -501,33 +525,40 @@ export default {
       alteracoesPendentes.value = true
     }
 
-    // Função para salvar edição
+    // Substitua completamente a função salvarEdicao
     const salvarEdicao = async (sistema) => {
       try {
         let valor;
         
         // Tratar o campo "nome" de forma diferente (como texto)
         if (editando.value.campo === 'nome') {
-          if (!editando.value.valor.trim()) {
-            throw new Error('Nome da anotação não pode estar vazio')
+          if (!editando.value.valor || !editando.value.valor.trim()) {
+            throw new Error('Nome da anotação não pode estar vazio');
           }
           valor = editando.value.valor.trim();
         } else {
-          // Para campos numéricos, converter para inteiro
-          valor = parseInt(editando.value.valor.replace(/\D/g, ''));
-          
-          if (isNaN(valor) || valor < 0) {
-            throw new Error('Por favor, insira um número válido maior ou igual a zero')
+          // Para campos numéricos, validar e converter
+          try {
+            // Remover caracteres não numéricos e converter para inteiro
+            valor = parseInt(editando.value.valor.toString().replace(/[^\d]/g, ''));
+            
+            if (isNaN(valor) || valor < 0) {
+              throw new Error('Por favor, insira um número válido maior ou igual a zero');
+            }
+          } catch (e) {
+            // Se ocorrer um erro na conversão, definir como zero
+            console.warn('Erro ao converter valor numérico:', e);
+            valor = 0;
           }
           
           // Validações específicas para campos numéricos
           if (editando.value.campo === 'totalItens') {
             if (sistema.naoAtendidos > valor) {
-              throw new Error('O total de itens deve ser maior que os itens não atendidos')
+              throw new Error('O total de itens deve ser maior que os itens não atendidos');
             }
           } else if (editando.value.campo === 'naoAtendidos') {
             if (valor > sistema.totalItens) {
-              throw new Error('O número de itens não atendidos não pode ser maior que o total')
+              throw new Error('O número de itens não atendidos não pode ser maior que o total');
             }
           }
         }
@@ -543,7 +574,7 @@ export default {
         const atualizacao = {
           [camposBanco[editando.value.campo] || editando.value.campo]: valor,
           updated_at: new Date().toISOString()
-        }
+        };
 
         // Atualizar no banco de dados
         const { error } = await supabase
@@ -566,12 +597,12 @@ export default {
         showToast('Alteração salva com sucesso', 'success');
 
       } catch (error) {
-        console.error('Erro ao salvar:', error)
-        showToast(error.message || 'Erro ao salvar alterações', 'error')
+        console.error('Erro ao salvar:', error);
+        showToast(error.message || 'Erro ao salvar alterações', 'error');
       } finally {
-        cancelarEdicao()
+        cancelarEdicao();
       }
-    }
+    };
 
     const cancelarEdicao = () => {
       editando.value = {
@@ -636,23 +667,30 @@ export default {
     // Implementar função para salvar obrigatoriedade
     const salvarPercentualPersonalizado = async (sistema) => {
       try {
+        // Guardar valor anterior para caso dê erro
+        sistema.percentualMinimoAnterior = sistema.percentualMinimo;
+        
+        // Garantir que o valor esteja dentro dos limites
+        if (sistema.percentualMinimo < 0) sistema.percentualMinimo = 0;
+        if (sistema.percentualMinimo > 100) sistema.percentualMinimo = 100;
+        
         const { error } = await supabase
           .from('analises_itens')
           .update({
             percentual_minimo: sistema.percentualMinimo,
             updated_at: new Date().toISOString()
           })
-          .eq('id', sistema.id)
-
-        if (error) throw error
-        alteracoesPendentes.value = true
-        showToast('Percentual mínimo atualizado', 'success')
+          .eq('id', sistema.id);
+    
+        if (error) throw error;
+        alteracoesPendentes.value = true;
+        showToast('Percentual mínimo atualizado', 'success');
       } catch (error) {
-        console.error('Erro ao salvar percentual personalizado:', error)
-        sistema.percentualMinimo = sistema.percentualMinimoAnterior || 70
-        showToast('Erro ao salvar percentual', 'error')
+        console.error('Erro ao salvar percentual personalizado:', error);
+        sistema.percentualMinimo = sistema.percentualMinimoAnterior || 70;
+        showToast('Erro ao salvar percentual', 'error');
       }
-    }
+    };
 
     const salvarObrigatoriedade = async (sistema) => {
       try {
@@ -662,17 +700,17 @@ export default {
             obrigatorio: sistema.obrigatorio,
             updated_at: new Date().toISOString()
           })
-          .eq('id', sistema.id)
-
-        if (error) throw error
-        alteracoesPendentes.value = true
-        showToast('Obrigatoriedade atualizada', 'success')
+          .eq('id', sistema.id);
+    
+        if (error) throw error;
+        alteracoesPendentes.value = true;
+        showToast('Obrigatoriedade atualizada', 'success');
       } catch (error) {
-        console.error('Erro ao salvar obrigatoriedade:', error)
-        sistema.obrigatorio = !sistema.obrigatorio // Reverte a mudança em caso de erro
-        showToast('Erro ao salvar obrigatoriedade', 'error')
+        console.error('Erro ao salvar obrigatoriedade:', error);
+        sistema.obrigatorio = !sistema.obrigatorio; // Reverte a mudança em caso de erro
+        showToast('Erro ao salvar obrigatoriedade', 'error');
       }
-    }
+    };
 
     // Função de sincronização de sistemas
     const sincronizarSistemas = async () => {
@@ -782,5 +820,81 @@ export default {
 
 .editable-cell:hover .edit-indicator {
   opacity: 0.7;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #4a90e2;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #f0f8ff;
+}
+
+.editable-cell {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editable-cell:hover {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+
+.custom-line {
+  background-color: #fff8e1;
+}
+
+.custom-line td:first-child {
+  font-style: italic;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+.custom-line:hover {
+  background-color: #fff3cd;
+}
+
+.percentual-input-small {
+  width: 50px;
+  text-align: center;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.btn-sm {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  color: white;
+  background-color: #dc3545;
+}
+
+/* Status styles */
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Para garantir que o campo de nome seja editável nos campos personalizados */
+.custom-line td:first-child:hover {
+  background-color: rgba(25, 118, 210, 0.1);
 }
 </style>
