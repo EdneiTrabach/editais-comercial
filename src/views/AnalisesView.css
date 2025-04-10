@@ -306,19 +306,29 @@
 
 /* Atualizar ordem das colunas */
 .analise-table th:nth-child(2),
-.analise-table td:nth-child(2) { order: 1; }
+.analise-table td:nth-child(2) {
+  order: 1;
+}
 
 .analise-table th:nth-child(3),
-.analise-table td:nth-child(3) { order: 2; }
+.analise-table td:nth-child(3) {
+  order: 2;
+}
 
 .analise-table th:nth-child(4),
-.analise-table td:nth-child(4) { order: 3; }
+.analise-table td:nth-child(4) {
+  order: 3;
+}
 
 .analise-table th:nth-child(5),
-.analise-table td:nth-child(5) { order: 4; }
+.analise-table td:nth-child(5) {
+  order: 4;
+}
 
 .analise-table th:nth-child(6),
-.analise-table td:nth-child(6) { order: 5; }
+.analise-table td:nth-child(6) {
+  order: 5;
+}
 
 .analise-config {
   display: flex;
@@ -330,6 +340,20 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+}
+
+.percentual-obrigatorios {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
 }
 
 .percentual-input {
@@ -897,13 +921,15 @@ tr.custom-line:hover {
 }
 
 /* Este estilo precisa estar fora do scoped para afetar todos os elementos da tabela */
-.analise-table td, .analise-table th {
+.analise-table td,
+.analise-table th {
   user-select: text !important;
 }
 
 .analise-table {
   position: relative;
-  z-index: 1; /* Garantir que a tabela esteja em um contexto de stacking próprio */
+  z-index: 1;
+  /* Garantir que a tabela esteja em um contexto de stacking próprio */
 }
 
 .copy-hint {
@@ -925,7 +951,8 @@ tr.custom-line:hover {
 
 .porcentagem-nao-atendimento {
   color: #dc3545;
-  font-variant-numeric: tabular-nums; /* Para alinhar números */
+  font-variant-numeric: tabular-nums;
+  /* Para alinhar números */
   min-width: 90px;
 }
 
@@ -940,4 +967,3 @@ tr.custom-line:hover {
   font-size: 0.85em;
   font-style: italic;
 }
-
