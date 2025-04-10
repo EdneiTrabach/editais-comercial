@@ -235,9 +235,13 @@ select.cidade-select {
   color: #ffffff;
 }
 
-[data-theme="dark"] .distancia-item {
-  background: #1e293b;
-  border: 1px solid #ffffff79;
+[data-theme="dark"] .confirm-actions {
+  background: transparent;
+  color: white;
+}
+
+[data-theme="dark"] .confirm-dialog p {
+  color: white;
 }
 
 [data-theme="dark"] .distancia-valor {

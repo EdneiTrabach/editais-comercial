@@ -22,9 +22,9 @@
           </button>
 
           <!-- Botão para resetar configurações da tabela -->
-          <button class="btn-reset-table" title="Resetar configurações da tabela" @click="resetarConfiguracaoTabela">
+          <!-- <button class="btn-reset-table" title="Resetar configurações da tabela" @click="resetarConfiguracaoTabela">
             <img src="/icons/refresh.svg" alt="Resetar tabela" class="icon-reset" /> Resetar tabela
-          </button>
+          </button> -->
           
           <!-- Botão de filtro avançado -->
           <button 
