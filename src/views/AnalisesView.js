@@ -73,91 +73,6 @@ export default {
       alteracoesPendentes.value = true
     }
 
-    // Substitua a função salvarEdicao atual
-    const salvarEdicao = async (sistema) => {
-      try {
-        let valor;
-        
-        // Tratar o campo "nome" de forma diferente (como texto)
-        if (editando.value.campo === 'nome') {
-          if (!editando.value.valor || !editando.value.valor.trim()) {
-            throw new Error('Nome da anotação não pode estar vazio');
-          }
-          valor = editando.value.valor.trim();
-        } else {
-          // Para campos numéricos, validar e converter
-          try {
-            // Se for string, limpar e converter para número
-            if (typeof editando.value.valor === 'string') {
-              valor = parseInt(editando.value.valor.replace(/[^\d]/g, '') || '0');
-            } else {
-              valor = parseInt(editando.value.valor || 0);
-            }
-            
-            if (isNaN(valor) || valor < 0) {
-              throw new Error('Por favor, insira um número válido maior ou igual a zero');
-            }
-          } catch (e) {
-            // Se ocorrer um erro na conversão, definir como zero
-            console.warn('Erro ao converter valor numérico:', e);
-            valor = 0;
-          }
-          
-          // Validações específicas para campos numéricos
-          if (editando.value.campo === 'totalItens') {
-            if (sistema.naoAtendidos > valor) {
-              throw new Error('O total de itens deve ser maior que os itens não atendidos');
-            }
-          } else if (editando.value.campo === 'naoAtendidos') {
-            if (valor > sistema.totalItens) {
-              throw new Error('O número de itens não atendidos não pode ser maior que o total');
-            }
-          }
-        }
-    
-        // Mapear campos da UI para campos do banco
-        const camposBanco = {
-          'nome': 'sistema_nome_personalizado', // Campo para salvar nome personalizado
-          'totalItens': 'total_itens',
-          'naoAtendidos': 'nao_atendidos'
-        };
-    
-        // Preparar objeto de atualização
-        const atualizacao = {
-          [camposBanco[editando.value.campo] || editando.value.campo]: valor,
-          updated_at: new Date().toISOString()
-        };
-    
-        console.log('Salvando dados:', atualizacao);
-    
-        // Atualizar no banco de dados
-        const { error } = await supabase
-          .from('analises_itens')
-          .update(atualizacao)
-          .eq('id', sistema.id);
-    
-        if (error) throw error;
-    
-        // Atualizar localmente
-        sistema[editando.value.campo] = valor;
-        
-        // Recalcular atendidos apenas para campos numéricos
-        if (editando.value.campo === 'totalItens' || editando.value.campo === 'naoAtendidos') {
-          sistema.atendidos = sistema.totalItens - sistema.naoAtendidos;
-        }
-        
-        // Marcar que há alterações pendentes
-        alteracoesPendentes.value = true;
-        showToast('Alteração salva com sucesso', 'success');
-    
-      } catch (error) {
-        console.error('Erro ao salvar:', error);
-        showToast(error.message || 'Erro ao salvar alterações', 'error');
-      } finally {
-        cancelarEdicao();
-      }
-    }
-
     const cancelarEdicao = () => {
       editando.value = {
         id: null,
@@ -180,28 +95,6 @@ export default {
     const percentualMinimo = ref(70) // Valor padrão de 70%
     const percentualMinimoGeral = ref(60) // Valor padrão geral
     const percentualMinimoObrigatorios = ref(90) // Valor padrão para obrigatórios
-
-    const salvarPercentualPersonalizado = async (sistema) => {
-      try {
-        const { error } = await supabase
-          .from('analises_itens')
-          .update({
-            percentual_minimo: sistema.percentualMinimo,
-            updated_at: new Date().toISOString()
-          })
-          .match({
-            sistema_id: sistema.id,
-            processo_id: selectedProcesso.value
-          })
-
-        if (error) throw error
-      } catch (error) {
-        console.error('Erro ao salvar percentual personalizado:', error)
-        // Reverter para o valor anterior em caso de erro
-        sistema.percentualMinimo = sistema.percentualMinimoAnterior
-      }
-      alteracoesPendentes.value = true
-    }
 
     // Função para cálculo do status de atendimento
     const getStatusAtendimento = (sistema) => {
@@ -228,26 +121,6 @@ export default {
         };
       }
     };
-
-    const salvarObrigatoriedade = async (sistema) => {
-      try {
-        const { error } = await supabase
-          .from('analises_itens')
-          .update({
-            obrigatorio: sistema.obrigatorio,
-            updated_at: new Date().toISOString()
-          })
-          .match({
-            sistema_id: sistema.id,
-            processo_id: selectedProcesso.value
-          })
-
-        if (error) throw error
-      } catch (error) {
-        console.error('Erro ao salvar obrigatoriedade:', error)
-        sistema.obrigatorio = !sistema.obrigatorio // Reverte a mudança em caso de erro
-      }
-    }
 
     const getStatusGeralClass = computed(() => {
       const obrigatoriosAtendidos = sistemasAnalise.value

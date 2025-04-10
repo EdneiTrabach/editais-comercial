@@ -336,7 +336,9 @@
   align-items: center;
 }
 
-.percentual-minimo {
+.percentual-minimo,
+.percentual-obrigatorios {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -344,24 +346,47 @@
   flex-wrap: nowrap;
   align-content: center;
   justify-content: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.percentual-minimo {
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
 }
 
 .percentual-obrigatorios {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-content: center;
-  justify-content: center;
+  background-color: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.1);
+}
+
+.percentual-minimo:hover,
+.percentual-obrigatorios:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.percentual-minimo label,
+.percentual-obrigatorios label {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: #555;
 }
 
 .percentual-input {
-  width: 80px;
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #ced4da;
   border-radius: 4px;
   text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.percentual-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .sistema-row {

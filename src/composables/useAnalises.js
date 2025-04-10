@@ -236,7 +236,8 @@ export function useAnalises() {
           naoAtendidos: item.nao_atendidos || 0,
           atendidos: atendidos || 0,
           obrigatorio: item.obrigatorio || false,
-          percentualMinimo: item.percentual_minimo || 70,
+          // Use o valor armazenado ou, se não existir, use o valor padrão com base na obrigatoriedade
+          percentualMinimo: item.percentual_minimo || (item.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value),
           classeEstilo: '' // Será definido abaixo
         };
         

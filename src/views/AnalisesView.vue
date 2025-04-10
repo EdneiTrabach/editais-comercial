@@ -88,7 +88,7 @@
             </div>
             <div class="analise-config">
               <div class="percentual-container">
-                <div class="percentual-minimo">
+                <div class="percentual-minimo" title="Valor mínimo de percentual de atendimento para sistemas normais">
                   <label>% Mínimo Geral:</label>
                   <input 
                     type="number" 
@@ -96,9 +96,10 @@
                     min="0" 
                     max="100"
                     class="percentual-input"
+                    @change="atualizarPercentuaisMinimos" 
                   />
                 </div>
-                <div class="percentual-obrigatorios">
+                <div class="percentual-obrigatorios" title="Valor mínimo de percentual de atendimento para sistemas marcados como obrigatórios">
                   <label>% Mínimo Obrigatórios:</label>
                   <input 
                     type="number" 
@@ -106,6 +107,7 @@
                     min="0" 
                     max="100"
                     class="percentual-input"
+                    @change="atualizarPercentuaisObrigatorios" 
                   />
                 </div>
               </div>
@@ -691,26 +693,29 @@ export default {
             valor = 0;
           }
           
-          // Validações específicas para campos numéricos - MODIFICADO
+          // Validações específicas para campos numéricos
           if (editando.value.campo === 'totalItens') {
-            // Criar cópia do sistema com o novo valor para totalItens
-            const sistemaAtualizado = {...sistema, totalItens: valor};
-            
-            if (sistemaAtualizado.naoAtendidos > sistemaAtualizado.totalItens) {
-              // Em vez de gerar erro, ajustar naoAtendidos automaticamente
-              await ajustarNaoAtendidos(sistema.id, valor);
+            if (sistema.naoAtendidos > valor) {
+              sistema.naoAtendidos = valor;
+              // Atualizar também o valor de não atendidos no banco para manter consistência
+              await supabase
+                .from('analises_itens')
+                .update({
+                  nao_atendidos: valor,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', sistema.id);
             }
           } else if (editando.value.campo === 'naoAtendidos') {
             if (valor > sistema.totalItens) {
-              // Em vez de gerar erro, ajustar totalItens automaticamente
-              await ajustarTotalItens(sistema.id, valor);
+              throw new Error('O número de itens não atendidos não pode ser maior que o total');
             }
           }
         }
     
         // Mapear campos da UI para campos do banco
         const camposBanco = {
-          'nome': 'sistema_nome_personalizado', // Campo para salvar nome personalizado
+          'nome': 'sistema_nome_personalizado',
           'totalItens': 'total_itens',
           'naoAtendidos': 'nao_atendidos'
         };
@@ -735,6 +740,9 @@ export default {
         // Recalcular atendidos apenas para campos numéricos
         if (editando.value.campo === 'totalItens' || editando.value.campo === 'naoAtendidos') {
           sistema.atendidos = sistema.totalItens - sistema.naoAtendidos;
+          
+          // Importante: Atualizar a classe de estilo imediatamente após recalcular valores
+          atualizarClasseEstilo(sistema);
         }
         
         // Marcar que há alterações pendentes
@@ -749,6 +757,25 @@ export default {
       }
     };
     
+    // Adicione esta função para recalcular e atualizar a classe de estilo
+    const atualizarClasseEstilo = (sistema) => {
+      if (!sistema.totalItens) {
+        sistema.classeEstilo = 'neutro';
+        return;
+      }
+    
+      // Calcular percentual de atendimento
+      const percentualNaoAtendimento = calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens);
+      const percentualAtendimento = 100 - percentualNaoAtendimento;
+      
+      // Definir classe com base no atendimento
+      if (percentualAtendimento >= Number(sistema.percentualMinimo)) {
+        sistema.classeEstilo = 'atende-status-forte';
+      } else {
+        sistema.classeEstilo = 'nao-atende-status-forte';
+      }
+    };
+
     // Adicione estas duas funções auxiliares:
     const ajustarNaoAtendidos = async (sistemaId, novoTotalItens) => {
       try {
@@ -817,43 +844,43 @@ export default {
     // Adicione esta função para adicionar anotação
     const adicionarAnotacao = async () => {
       try {
-        if (!selectedProcesso.value) {
-          showToast('Selecione um processo primeiro', 'warning');
-          return;
-        }
-        
-        // Criar registro de anotação no banco de dados
+        // Inserir nova linha no banco de dados
         const { data, error } = await supabase
           .from('analises_itens')
           .insert({
             processo_id: selectedProcesso.value,
-            is_custom_line: true,
             sistema_nome_personalizado: 'Nova Anotação',
+            is_custom_line: true,
             total_itens: 0,
             nao_atendidos: 0,
             obrigatorio: false,
+            percentual_minimo: percentualMinimoGeral.value,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .select();
-        
+          .select()
+          .single();
+          
         if (error) throw error;
         
-        // Adicionar à lista local
+        // Criar objeto para adicionar à lista
         const novaAnotacao = {
-          id: data[0].id,
-          nome: data[0].sistema_nome_personalizado,
+          id: data.id,
+          nome: data.sistema_nome_personalizado || 'Nova Anotação',
           isCustomLine: true,
           sistema_id: null,
           totalItens: 0,
           naoAtendidos: 0,
           atendidos: 0,
           obrigatorio: false,
-          percentualMinimo: 70
+          percentualMinimo: percentualMinimoGeral.value,
+          classeEstilo: 'neutro' // Define classe neutra inicial
         };
         
+        // Adicionar ao array de sistemas
         sistemasAnalise.value.push(novaAnotacao);
         showToast('Anotação adicionada com sucesso', 'success');
+        alteracoesPendentes.value = true;
         
         // Iniciar edição do nome da anotação
         nextTick(() => {
@@ -869,10 +896,10 @@ export default {
     // Implementar função para salvar obrigatoriedade
     const salvarPercentualPersonalizado = async (sistema) => {
       try {
-        // Guardar valor anterior para caso dê erro
-        sistema.percentualMinimoAnterior = sistema.percentualMinimo;
+        // Armazenar o valor anterior para restaurar em caso de erro
+        const valorAnterior = sistema.percentualMinimoAnterior;
         
-        // Garantir que o valor esteja dentro dos limites
+        // Validar valor entre 0 e 100
         if (sistema.percentualMinimo < 0) sistema.percentualMinimo = 0;
         if (sistema.percentualMinimo > 100) sistema.percentualMinimo = 100;
         
@@ -885,28 +912,66 @@ export default {
           .eq('id', sistema.id);
     
         if (error) throw error;
+        
+        // Atualizar a classe de estilo imediatamente após salvar o percentual mínimo
+        atualizarClasseEstilo(sistema);
+        
         alteracoesPendentes.value = true;
-        showToast('Percentual mínimo atualizado', 'success');
+        showToast('Percentual mínimo atualizado com sucesso', 'success');
       } catch (error) {
         console.error('Erro ao salvar percentual personalizado:', error);
-        sistema.percentualMinimo = sistema.percentualMinimoAnterior || 70;
-        showToast('Erro ao salvar percentual', 'error');
+        // Reverter para o valor anterior em caso de erro
+        sistema.percentualMinimo = sistema.percentualMinimoAnterior;
+        showToast('Erro ao atualizar percentual mínimo', 'error');
       }
     };
 
+    // Substitua a função salvarObrigatoriedade por esta versão melhorada
     const salvarObrigatoriedade = async (sistema) => {
       try {
+        // Verificar se o status mudou para obrigatório
+        const tornadoObrigatorio = sistema.obrigatorio;
+        
+        // Se acabou de ser marcado como obrigatório, verificar se deve atualizar o percentual mínimo
+        let atualizaPercentual = false;
+        
+        if (tornadoObrigatorio) {
+          // Perguntar se deseja atualizar o percentual mínimo para o valor padrão de obrigatórios
+          atualizaPercentual = confirm(
+            `Atualizar o percentual mínimo deste sistema para ${percentualMinimoObrigatorios.value}% (padrão para sistemas obrigatórios)?`
+          );
+        }
+        
+        // Preparar objeto de atualização
+        const atualizacao = {
+          obrigatorio: sistema.obrigatorio,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Se precisar atualizar o percentual também
+        if (atualizaPercentual) {
+          atualizacao.percentual_minimo = percentualMinimoObrigatorios.value;
+          sistema.percentualMinimo = percentualMinimoObrigatorios.value;
+        }
+        
+        // Enviar para o banco de dados
         const { error } = await supabase
           .from('analises_itens')
-          .update({
-            obrigatorio: sistema.obrigatorio,
-            updated_at: new Date().toISOString()
-          })
+          .update(atualizacao)
           .eq('id', sistema.id);
     
         if (error) throw error;
+        
+        // Atualizar a classe de estilo imediatamente após salvar
+        atualizarClasseEstilo(sistema);
+        
         alteracoesPendentes.value = true;
-        showToast('Obrigatoriedade atualizada', 'success');
+        
+        if (atualizaPercentual) {
+          showToast('Obrigatoriedade e percentual mínimo atualizados', 'success');
+        } else {
+          showToast('Obrigatoriedade atualizada', 'success');
+        }
       } catch (error) {
         console.error('Erro ao salvar obrigatoriedade:', error);
         sistema.obrigatorio = !sistema.obrigatorio; // Reverte a mudança em caso de erro
@@ -1050,6 +1115,94 @@ export default {
       }
     };
 
+    // Adicione essas funções dentro do setup()
+    const atualizarPercentuaisMinimos = async () => {
+      try {
+        // Validar o valor para garantir que esteja entre 0 e 100
+        if (percentualMinimoGeral.value < 0) percentualMinimoGeral.value = 0;
+        if (percentualMinimoGeral.value > 100) percentualMinimoGeral.value = 100;
+        
+        // Perguntar se o usuário deseja aplicar esse percentual para todos os sistemas não obrigatórios
+        if (confirm(`Deseja aplicar o percentual mínimo de ${percentualMinimoGeral.value}% para todos os sistemas não obrigatórios?`)) {
+          // Atualizar apenas sistemas não obrigatórios
+          const promessas = sistemasAnalise.value
+            .filter(sistema => !sistema.obrigatorio)
+            .map(async (sistema) => {
+              // Atualizar localmente
+              sistema.percentualMinimo = percentualMinimoGeral.value;
+              
+              // Atualizar no banco de dados
+              return supabase
+                .from('analises_itens')
+                .update({
+                  percentual_minimo: percentualMinimoGeral.value,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', sistema.id);
+            });
+          
+          await Promise.all(promessas);
+          alteracoesPendentes.value = true;
+          showToast('Percentual mínimo atualizado para todos os sistemas não obrigatórios', 'success');
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar percentuais mínimos:', error);
+        showToast('Erro ao atualizar percentuais mínimos', 'error');
+      }
+    };
+    
+    const atualizarPercentuaisObrigatorios = async () => {
+      try {
+        // Validar o valor para garantir que esteja entre 0 e 100
+        if (percentualMinimoObrigatorios.value < 0) percentualMinimoObrigatorios.value = 0;
+        if (percentualMinimoObrigatorios.value > 100) percentualMinimoObrigatorios.value = 100;
+        
+        // Perguntar se o usuário deseja aplicar esse percentual para todos os sistemas obrigatórios
+        if (confirm(`Deseja aplicar o percentual mínimo de ${percentualMinimoObrigatorios.value}% para todos os sistemas marcados como obrigatórios?`)) {
+          // Atualizar apenas sistemas obrigatórios
+          const promessas = sistemasAnalise.value
+            .filter(sistema => sistema.obrigatorio)
+            .map(async (sistema) => {
+              // Atualizar localmente
+              sistema.percentualMinimo = percentualMinimoObrigatorios.value;
+              
+              // Atualizar no banco de dados
+              return supabase
+                .from('analises_itens')
+                .update({
+                  percentual_minimo: percentualMinimoObrigatorios.value,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', sistema.id);
+            });
+          
+          await Promise.all(promessas);
+          alteracoesPendentes.value = true;
+          showToast('Percentual mínimo atualizado para todos os sistemas obrigatórios', 'success');
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar percentuais mínimos para obrigatórios:', error);
+        showToast('Erro ao atualizar percentuais mínimos para obrigatórios', 'error');
+      }
+    };
+
+    // Função para sincronizar todas as cores da tabela (opcional: para resolver problemas existentes)
+    const sincronizarCores = () => {
+      sistemasAnalise.value.forEach(sistema => {
+        atualizarClasseEstilo(sistema);
+      });
+    };
+
+    // Chame esta função após carregar os dados ou após adicionar uma anotação
+    // Adicione ao mounted ou onde carregar dados iniciais
+    onMounted(() => {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      loadProcessos().then(() => {
+        // Sincronizar cores após o carregamento inicial
+        setTimeout(sincronizarCores, 100);
+      });
+    });
+
     return {
       step,
       isSidebarExpanded,
@@ -1101,7 +1254,11 @@ export default {
       onDrop,
       removerSistema,
       calcularPorcentagemPrecisa,
-      formatarPercentual
+      formatarPercentual,
+      atualizarPercentuaisMinimos,
+      atualizarPercentuaisObrigatorios,
+      atualizarClasseEstilo,
+      sincronizarCores
     }
   }
 }
