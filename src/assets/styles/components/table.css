@@ -332,50 +332,50 @@ tbody tr:hover .row-number-cell {
 /* Hover em linhas com diferentes status */
 .excel-table tbody tr[data-status="em_analise"]:hover {
   background-color: rgba(173, 181, 189, 0.6) !important;
-  border-left: 2px solid #495057 !important;
+  border-left: 1px solid #495057 !important;
 }
 
 .excel-table tbody tr[data-status="em_andamento"]:hover {
   background-color: rgba(255, 224, 178, 0.6) !important;
-  border-left: 2px solid #ef6c00 !important;
+  border-left: 1px solid #ef6c00 !important;
 }
 
 .excel-table tbody tr[data-status="ganhamos"]:hover {
   background-color: rgba(212, 237, 218, 0.6) !important;
-  border-left: 2px solid #155724 !important;
+  border-left: 1px solid #155724 !important;
 }
 
 .excel-table tbody tr[data-status="perdemos"]:hover {
   background-color: rgba(255, 213, 213, 0.6) !important;
-  border-left: 2px solid #c62828 !important;
+  border-left: 1px solid #c62828 !important;
 }
 
 .excel-table tbody tr[data-status="suspenso"]:hover {
   background-color: rgba(227, 242, 253, 0.6) !important;
-  border-left: 2px solid #1976d2 !important;
+  border-left: 1px solid #1976d2 !important;
 }
 
 .excel-table tbody tr[data-status="revogado"]:hover {
   background-color: rgba(187, 222, 251, 0.6) !important;
-  border-left: 2px solid #1565c0 !important;
+  border-left: 1px solid #1565c0 !important;
 }
 
 .excel-table tbody tr[data-status="adiado"]:hover {
   background-color: rgba(225, 245, 254, 0.6) !important;
-  border-left: 2px solid #0288d1 !important;
+  border-left: 1px solid #0288d1 !important;
 }
 
 .excel-table tbody tr[data-status="demonstracao"]:hover {
   background-color: rgba(255, 152, 0, 0.6) !important;
-  border-left: 2px solid #ef6c00 !important;
+  border-left: 1px solid #ef6c00 !important;
 }
 
 .excel-table tbody tr[data-status="cancelado"]:hover {
   background-color: rgba(26, 35, 126, 0.6) !important;
-  border-left: 2px solid #1a237e !important;
+  border-left: 1px solid #1a237e !important;
 }
 
 .excel-table tbody tr[data-status="nao_participar"]:hover {
   background-color: rgba(255, 249, 196, 0.6) !important;
-  border-left: 2px solid #f9a825 !important;
+  border-left: 1px solid #f9a825 !important;
 }

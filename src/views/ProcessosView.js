@@ -3848,6 +3848,19 @@ export default {
       }
     };
 
+    async function buildProcessosQuery() {
+      let query = supabase.from('processos').select('*');
+      
+      // Adicionar filtros conforme necessário
+      // ...
+      
+      // Sempre aplicar estas ordenações ao final
+      query = query.order('created_at', { ascending: true })
+                   .order('id', { ascending: true });
+      
+      return query;
+    }
+
     return {
       handleStatusUpdate,
       getOpcoesParaCampo,

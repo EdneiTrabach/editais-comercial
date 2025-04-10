@@ -235,12 +235,18 @@ select.cidade-select {
   color: #ffffff;
 }
 
-[data-theme="dark"] .confirm-actions {
-  background: transparent;
+
+[data-theme="dark"] .confirm-dialog p {
   color: white;
 }
 
-[data-theme="dark"] .confirm-dialog p {
+
+[data-theme="dark"] .confirm-dialog p, .warning-text {
+  color: white;
+}
+
+[data-theme="dark"]  .confirm-dialog h3 {
+  background: transparent;
   color: white;
 }
 

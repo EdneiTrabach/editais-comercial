@@ -517,6 +517,11 @@ td[data-field="empresa_vencedora"] {
   outline: none;
 }
 
+[data-theme="dark"] .confirm-actions {
+  background: transparent;
+  color: white;
+}
+
 /* Botões do formulário */
 .confirm-actions {
   display: flex;

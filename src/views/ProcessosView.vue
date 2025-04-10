@@ -1576,28 +1576,27 @@ export default {
       }
     },
     
-    loadProcessos: async function() {
+    async loadProcessos() {
       try {
-        console.log('Recarregando processos...');
+        this.loading = true;
+        
+        // Carregar processos do Supabase, ordenados por created_at ou id
         const { data, error } = await supabase
           .from('processos')
           .select('*')
-          .order('data_pregao', { ascending: true })
-          .order('created_at', { ascending: true });
-          
+          .order('created_at', { ascending: true })  // Garante ordem fixa por data de criação
+          .order('id', { ascending: true });         // Ordenação secundária pelo ID
+        
         if (error) throw error;
         
-        // Se você tem isso no seu ProcessosViewModel
-        if (ProcessosViewModel.methods && typeof ProcessosViewModel.methods.processarProcessos === 'function') {
-          await ProcessosViewModel.methods.processarProcessos(data);
-        } else {
-          // Caso contrário, atualize diretamente
-          this.processos = data;
-        }
+        // Processar dados
+        await this.processarProcessos(data);
         
-        console.log('Processos recarregados com sucesso!');
-      } catch (err) {
-        console.error('Erro ao recarregar processos:', err);
+        this.loading = false;
+      } catch (error) {
+        console.error('Erro ao carregar processos:', error);
+        this.showToast('Erro ao carregar processos', 'error');
+        this.loading = false;
       }
     },
     
