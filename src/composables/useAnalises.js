@@ -88,7 +88,7 @@ export function useAnalises() {
     }
   };
 
-  // Função para carregar análises dos sistemas
+  // Modifique a função carregarAnalisesSistemas para incluir linhas personalizadas
   const carregarAnalisesSistemas = async () => {
     try {
       if (!selectedProcesso.value) return;
@@ -109,7 +109,7 @@ export function useAnalises() {
       
       console.log('Sistemas ativos no processo:', sistemasAtivos);
       
-      // Buscar registros existentes na tabela analises_itens
+      // Buscar registros existentes na tabela analises_itens, incluindo linhas personalizadas
       const { data: analiseItens, error: analiseError } = await supabase
         .from('analises_itens')
         .select(`
@@ -120,14 +120,19 @@ export function useAnalises() {
           nao_atendidos, 
           obrigatorio, 
           percentual_minimo,
+          is_custom_line,
+          sistema_nome_personalizado,
           sistemas:sistema_id (id, nome)
         `)
         .eq('processo_id', selectedProcesso.value);
       
       if (analiseError) throw analiseError;
       
+      // Filtrar sistemas regulares (não personalizados)
+      const analiseItensSistemas = analiseItens.filter(item => !item.is_custom_line);
+      
       // Mapear sistemas_ids já registrados na tabela analises_itens
-      const sistemasIdsRegistrados = analiseItens ? analiseItens.map(item => item.sistema_id) : [];
+      const sistemasIdsRegistrados = analiseItensSistemas.map(item => item.sistema_id);
       console.log('Sistemas já registrados:', sistemasIdsRegistrados);
       
       // Verificar se há sistemas novos para adicionar (em sistemas_ativos mas não em analises_itens)
@@ -135,7 +140,8 @@ export function useAnalises() {
       console.log('Sistemas novos para adicionar:', sistemasNovos);
       
       // Verificar sistemas que não estão mais ativos (em analises_itens mas não em sistemas_ativos)
-      const sistemasRemovidos = sistemasIdsRegistrados.filter(id => !sistemasAtivos.includes(id));
+      const sistemasRemovidos = sistemasIdsRegistrados.filter(id => 
+        id !== null && !sistemasAtivos.includes(id));
       console.log('Sistemas removidos:', sistemasRemovidos);
       
       // Processamento em lote: adicionar novos e remover antigos
@@ -157,6 +163,7 @@ export function useAnalises() {
             total_itens: 0,
             nao_atendidos: 0,
             obrigatorio: false,
+            is_custom_line: false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }));
@@ -176,6 +183,7 @@ export function useAnalises() {
             .delete()
             .eq('processo_id', selectedProcesso.value)
             .in('sistema_id', sistemasRemovidos)
+            .eq('is_custom_line', false) // Não remover linhas personalizadas
         );
       }
       
@@ -195,6 +203,8 @@ export function useAnalises() {
           nao_atendidos, 
           obrigatorio, 
           percentual_minimo,
+          is_custom_line,
+          sistema_nome_personalizado,
           sistemas:sistema_id (id, nome)
         `)
         .eq('processo_id', selectedProcesso.value);
@@ -208,12 +218,13 @@ export function useAnalises() {
         return {
           id: item.id,
           sistema_id: item.sistema_id,
-          nome: item.sistemas ? item.sistemas.nome : 'Sistema desconhecido',
+          nome: item.is_custom_line ? item.sistema_nome_personalizado : (item.sistemas ? item.sistemas.nome : 'Sistema desconhecido'),
           totalItens: item.total_itens || 0,
           naoAtendidos: item.nao_atendidos || 0,
           atendidos: atendidos || 0,
           obrigatorio: item.obrigatorio || false,
-          percentualMinimo: item.percentual_minimo || 70
+          percentualMinimo: item.percentual_minimo || 70,
+          isCustomLine: item.is_custom_line || false
         };
       });
       

@@ -50,7 +50,13 @@ export default {
 
     const editInput = ref(null)
 
+    // Modifique a função editarCelula para aceitar edição do campo "nome" para anotações
     const editarCelula = (sistema, campo, event) => {
+      // Permitir edição do nome apenas para linhas personalizadas
+      if (campo === 'nome' && !sistema.isCustomLine) {
+        return;
+      }
+      
       editando.value = {
         id: sistema.id,
         campo: campo,
@@ -67,59 +73,73 @@ export default {
       alteracoesPendentes.value = true
     }
 
+    // Substitua a função salvarEdicao atual
     const salvarEdicao = async (sistema) => {
       try {
-        const valor = parseInt(editando.value.valor.replace(/\D/g, ''))
+        let valor;
         
-        if (isNaN(valor) || valor < 0) {
-          throw new Error('Por favor, insira um número válido maior ou igual a zero')
-        }
-
-        // Validações específicas
-        if (editando.value.campo === 'totalItens') {
-          if (sistema.naoAtendidos > valor) {
-            throw new Error('O total de itens deve ser maior que os itens não atendidos')
+        // Tratar o campo "nome" de forma diferente (como texto)
+        if (editando.value.campo === 'nome') {
+          if (!editando.value.valor.trim()) {
+            throw new Error('Nome da anotação não pode estar vazio')
           }
-        } else if (editando.value.campo === 'naoAtendidos') {
-          if (valor > sistema.totalItens) {
-            throw new Error('O número de itens não atendidos não pode ser maior que o total')
+          valor = editando.value.valor.trim();
+        } else {
+          // Para campos numéricos, converter para inteiro
+          valor = parseInt(editando.value.valor.replace(/\D/g, ''));
+          
+          if (isNaN(valor) || valor < 0) {
+            throw new Error('Por favor, insira um número válido maior ou igual a zero')
+          }
+  
+          // Validações específicas para campos numéricos
+          if (editando.value.campo === 'totalItens') {
+            if (sistema.naoAtendidos > valor) {
+              throw new Error('O total de itens deve ser maior que os itens não atendidos')
+            }
+          } else if (editando.value.campo === 'naoAtendidos') {
+            if (valor > sistema.totalItens) {
+              throw new Error('O número de itens não atendidos não pode ser maior que o total')
+            }
           }
         }
-
+  
         // Mapear campos da UI para campos do banco
         const camposBanco = {
+          'nome': 'sistema_nome_personalizado', // Campo para salvar nome personalizado
           'totalItens': 'total_itens',
           'naoAtendidos': 'nao_atendidos'
         };
-
+  
         // Preparar objeto de atualização
         const atualizacao = {
           [camposBanco[editando.value.campo] || editando.value.campo]: valor,
           updated_at: new Date().toISOString()
         }
-
-        // Atualizar no banco de dados - agora usando o ID do registro de análise
+  
+        // Atualizar no banco de dados
         const { error } = await supabase
           .from('analises_itens')
           .update(atualizacao)
           .eq('id', sistema.id);
-
+  
         if (error) throw error;
-
+  
         // Atualizar localmente
         sistema[editando.value.campo] = valor;
         
-        // Recalcular atendidos
+        // Recalcular atendidos apenas para campos numéricos
         if (editando.value.campo === 'totalItens' || editando.value.campo === 'naoAtendidos') {
           sistema.atendidos = sistema.totalItens - sistema.naoAtendidos;
         }
         
         // Marcar que há alterações pendentes
         alteracoesPendentes.value = true;
-
+        showToast('Alteração salva com sucesso', 'success');
+  
       } catch (error) {
         console.error('Erro ao salvar:', error)
-        alert(error.message || 'Erro ao salvar alterações')
+        showToast(error.message || 'Erro ao salvar alterações', 'error')
       } finally {
         cancelarEdicao()
       }
@@ -453,6 +473,58 @@ export default {
       }
     };
 
+    // Adicione esta função ao setup
+    const adicionarAnotacao = async () => {
+      try {
+        if (!selectedProcesso.value) {
+          showToast('Selecione um processo primeiro', 'warning');
+          return;
+        }
+        
+        // Criar registro de anotação no banco de dados
+        const { data, error } = await supabase
+          .from('analises_itens')
+          .insert({
+            processo_id: selectedProcesso.value,
+            is_custom_line: true,
+            sistema_nome_personalizado: 'Nova Anotação',
+            total_itens: 0,
+            nao_atendidos: 0,
+            obrigatorio: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        // Adicionar à lista local
+        const novaAnotacao = {
+          id: data[0].id,
+          nome: data[0].sistema_nome_personalizado,
+          isCustomLine: true,
+          sistema_id: null,
+          totalItens: 0,
+          naoAtendidos: 0,
+          atendidos: 0,
+          obrigatorio: false,
+          percentualMinimo: 70
+        };
+        
+        sistemasAnalise.value.push(novaAnotacao);
+        showToast('Anotação adicionada com sucesso', 'success');
+        
+        // Iniciar edição do nome da anotação
+        nextTick(() => {
+          editarCelula(novaAnotacao, 'nome');
+        });
+        
+      } catch (error) {
+        console.error('Erro ao adicionar anotação:', error);
+        showToast('Erro ao adicionar anotação: ' + error.message, 'error');
+      }
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -500,6 +572,7 @@ export default {
       cancelarSaida,
       debugAnalises,
       sincronizarSistemas,
+      adicionarAnotacao,
       toasts
     }
   }
