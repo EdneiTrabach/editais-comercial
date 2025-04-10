@@ -81,6 +81,7 @@
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+  max-height: 200px;
 }
 
 

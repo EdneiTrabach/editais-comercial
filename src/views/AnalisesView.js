@@ -40,7 +40,7 @@ export default {
       loadProcessos
     } = useAnalises()
 
-    const { showToast } = useToast();
+    const { toasts, showToast } = useToast();
 
     const editando = ref({
       id: null,
@@ -440,56 +440,10 @@ export default {
           return;
         }
         
-        // Buscar sistemas ativos atualizados
-        const { data: processo, error: processoError } = await supabase
-          .from('processos')
-          .select('sistemas_ativos')
-          .eq('id', selectedProcesso.value)
-          .single();
-          
-        if (processoError) throw processoError;
+        const resultadoSinc = await carregarAnalisesSistemas();
         
-        const sistemasAtivos = Array.isArray(processo.sistemas_ativos) 
-          ? processo.sistemas_ativos 
-          : (typeof processo.sistemas_ativos === 'string' 
-              ? JSON.parse(processo.sistemas_ativos || '[]') 
-              : (processo.sistemas_ativos || []));
-        
-        // Buscar registros atuais
-        const { data: registros, error: registrosError } = await supabase
-          .from('analises_itens')
-          .select('sistema_id')
-          .eq('processo_id', selectedProcesso.value);
-          
-        if (registrosError) throw registrosError;
-        
-        const sistemasRegistrados = registros?.map(r => r.sistema_id) || [];
-        
-        // Identificar sistemas a adicionar
-        const sistemasParaAdicionar = sistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
-        
-        if (sistemasParaAdicionar.length > 0) {
-          // Criar registros para os novos sistemas
-          const novosRegistros = sistemasParaAdicionar.map(sistemaId => ({
-            processo_id: selectedProcesso.value,
-            sistema_id: sistemaId,
-            total_itens: 0,
-            nao_atendidos: 0,
-            obrigatorio: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }));
-          
-          const { error: insertError } = await supabase
-            .from('analises_itens')
-            .insert(novosRegistros);
-            
-          if (insertError) throw insertError;
-          
-          // Recarregar sistemas
-          await carregarAnalisesSistemas();
-          
-          showToast(`${sistemasParaAdicionar.length} novos sistemas adicionados à análise`, 'success');
+        if (resultadoSinc.adicionados > 0 || resultadoSinc.removidos > 0) {
+          showToast(`Sincronização concluída: ${resultadoSinc.adicionados} sistemas adicionados, ${resultadoSinc.removidos} sistemas removidos`, 'success');
         } else {
           showToast('Sistemas já estão sincronizados', 'info');
         }
@@ -545,7 +499,8 @@ export default {
       salvarESair,
       cancelarSaida,
       debugAnalises,
-      sincronizarSistemas
+      sincronizarSistemas,
+      toasts
     }
   }
 }

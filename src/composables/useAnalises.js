@@ -65,16 +65,27 @@ export function useAnalises() {
     step.value = 1
   }
 
-  // Selecionar processo - corrigindo o tipo
+  // Modificar a função selectProcesso para sincronizar automaticamente
   const selectProcesso = async (processo) => {
-    // Garantir que o ID seja tratado como string, já que é um UUID
-    selectedProcesso.value = typeof processo === 'object' ? processo.id : processo;
-    
-    // Carregar sistemas do processo selecionado
-    await carregarAnalisesSistemas();
-    
-    // Avançar para a próxima etapa
-    step.value = 2;
+    try {
+      // Garantir que o ID seja tratado como string, já que é um UUID
+      selectedProcesso.value = typeof processo === 'object' ? processo.id : processo;
+      
+      // Carregar e sincronizar sistemas do processo selecionado
+      const resultadoSinc = await carregarAnalisesSistemas();
+      
+      // Se houve sincronização de sistemas, mostrar feedback
+      if (resultadoSinc && (resultadoSinc.adicionados > 0 || resultadoSinc.removidos > 0)) {
+        console.log(`Sincronização automática: ${resultadoSinc.adicionados} sistemas adicionados, ${resultadoSinc.removidos} sistemas removidos`);
+        showToast(`Sistemas sincronizados automaticamente: ${resultadoSinc.adicionados} adicionados, ${resultadoSinc.removidos} removidos`, 'info');
+      }
+      
+      // Avançar para a próxima etapa
+      step.value = 2;
+    } catch (error) {
+      console.error('Erro ao selecionar processo:', error);
+      showToast('Erro ao carregar dados do processo selecionado', 'error');
+    }
   };
 
   // Função para carregar análises dos sistemas
@@ -108,7 +119,8 @@ export function useAnalises() {
           total_itens, 
           nao_atendidos, 
           obrigatorio, 
-          percentual_minimo
+          percentual_minimo,
+          sistemas:sistema_id (id, nome)
         `)
         .eq('processo_id', selectedProcesso.value);
       
@@ -125,6 +137,9 @@ export function useAnalises() {
       // Verificar sistemas que não estão mais ativos (em analises_itens mas não em sistemas_ativos)
       const sistemasRemovidos = sistemasIdsRegistrados.filter(id => !sistemasAtivos.includes(id));
       console.log('Sistemas removidos:', sistemasRemovidos);
+      
+      // Processamento em lote: adicionar novos e remover antigos
+      const promises = [];
       
       // Se houver novos sistemas, adicioná-los à tabela analises_itens
       if (sistemasNovos.length > 0) {
@@ -146,32 +161,31 @@ export function useAnalises() {
             updated_at: new Date().toISOString()
           }));
           
-          // Inserir novos registros
-          const { error: insertError } = await supabase
-            .from('analises_itens')
-            .insert(novosRegistros);
-            
-          if (insertError) throw insertError;
-          console.log('Novos sistemas adicionados com sucesso!');
+          // Adicionar à lista de promises
+          promises.push(
+            supabase.from('analises_itens').insert(novosRegistros)
+          );
         }
       }
       
-      // Opcional: Remover sistemas que não estão mais ativos
-      // Comentado por segurança - geralmente não apagamos dados
-      /* 
+      // Remover sistemas que não estão mais ativos
       if (sistemasRemovidos.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('analises_itens')
-          .delete()
-          .eq('processo_id', selectedProcesso.value)
-          .in('sistema_id', sistemasRemovidos);
-          
-        if (deleteError) throw deleteError;
+        promises.push(
+          supabase
+            .from('analises_itens')
+            .delete()
+            .eq('processo_id', selectedProcesso.value)
+            .in('sistema_id', sistemasRemovidos)
+        );
       }
-      */
       
-      // Agora buscar todos os sistemas novamente, com nome
-      const { data: sistemasAtualizados, error: sistemasError } = await supabase
+      // Executar todas as operações
+      if (promises.length > 0) {
+        await Promise.all(promises);
+      }
+      
+      // Buscar os dados atualizados após as modificações
+      const { data: dadosAtualizados, error: refreshError } = await supabase
         .from('analises_itens')
         .select(`
           id, 
@@ -184,11 +198,11 @@ export function useAnalises() {
           sistemas:sistema_id (id, nome)
         `)
         .eq('processo_id', selectedProcesso.value);
-      
-      if (sistemasError) throw sistemasError;
+        
+      if (refreshError) throw refreshError;
       
       // Mapear os resultados para o formato esperado pela UI
-      sistemasAnalise.value = sistemasAtualizados.map(item => {
+      sistemasAnalise.value = dadosAtualizados.map(item => {
         const atendidos = item.total_itens - item.nao_atendidos;
         
         return {
@@ -203,8 +217,11 @@ export function useAnalises() {
         };
       });
       
+      return { adicionados: sistemasNovos.length, removidos: sistemasRemovidos.length };
+      
     } catch (error) {
       console.error('Erro ao carregar análises dos sistemas:', error);
+      throw error;
     }
   }
 

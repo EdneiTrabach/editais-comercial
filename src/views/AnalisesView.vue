@@ -11,39 +11,18 @@
             <div class="acoes-principais" v-if="step === 2">
               <button 
                 @click="salvarAnalises" 
-                class="btn-salvar"
-                :disabled="!temAlteracoesPendentes"
-              >
-                <i class="fas fa-save"></i>
-                Salvar Análises
+                class="btn btn-primary"
+                :disabled="!temAlteracoesPendentes">
+                <i class="fas fa-save"></i> Salvar Análises
               </button>
-              
-              <!-- Adicione este botão próximo ao botão "Salvar Análises" -->
+              <!-- Botão de sincronização único com mensagem mais clara -->
               <button 
                 v-if="processoAtual"
+                @click="sincronizarSistemas" 
                 class="btn btn-secondary" 
-                @click="sincronizarSistemas"
-                title="Sincroniza os sistemas ativos do processo com a análise">
+                title="Atualiza sistemas conforme a tela de processos">
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
               </button>
-              
-              <div class="dropdown-exportar">
-                <button class="btn-exportar">
-                  <i class="fas fa-file-export"></i>
-                  Exportar
-                </button>
-                <div class="dropdown-content">
-                  <button @click="exportarExcel">
-                    <i class="fas fa-file-excel"></i> Excel
-                  </button>
-                  <button @click="exportarPDF">
-                    <i class="fas fa-file-pdf"></i> PDF
-                  </button>
-                  <button @click="abrirDashboard">
-                    <i class="fas fa-chart-bar"></i> Dashboard
-                  </button>
-                </div>
-              </div>
             </div>
             <!-- Botões de navegação -->
             <div class="navigation-actions">

@@ -1724,8 +1724,13 @@ export default {
           dados_novos: novosSistemasAtivos
         });
 
-        // NOVO: Atualizar análises se necessário
-        await atualizarAnalisesAposMudancaSistemas(processo.id, novosSistemasAtivos);
+        // Sincronizar com análises e mostrar feedback
+        const resultado = await atualizarAnalisesAposMudancaSistemas(processo.id, novosSistemasAtivos);
+        if (resultado) {
+          showToast(`Sistemas atualizados e sincronizados com análises: ${resultado.adicionados} adicionados, ${resultado.removidos} removidos`, 'success');
+        } else {
+          showToast('Sistemas atualizados com sucesso', 'success');
+        }
 
         await loadProcessos();
 
@@ -2815,7 +2820,7 @@ export default {
 
         if (error) throw error;
 
-        // Se o status for "em_analise", verificar e inserir na tabela analises_itens
+        // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
         if (isAnaliseStatus) {
           await registrarProcessoParaAnalise(processo);
         }
@@ -3994,7 +3999,7 @@ export default {
           // Buscar registros existentes
           const { data: registrosExistentes, error: registrosError } = await supabase
             .from('analises_itens')
-            .select('sistema_id')
+            .select('id, sistema_id')
             .eq('processo_id', processoId);
             
           if (registrosError) throw registrosError;
@@ -4002,12 +4007,15 @@ export default {
           // Extrair IDs de sistemas já registrados
           const sistemasRegistrados = registrosExistentes.map(item => item.sistema_id);
           
-          // Encontrar sistemas novos para adicionar
-          const sistemasNovos = novosSistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
+          // Identificar sistemas para adicionar e remover
+          const sistemasParaAdicionar = novosSistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
+          const sistemasParaRemover = sistemasRegistrados.filter(id => !novosSistemasAtivos.includes(id));
           
-          // Se houver sistemas novos, adicionar à tabela analises_itens
-          if (sistemasNovos.length > 0) {
-            const registros = sistemasNovos.map(sistemaId => ({
+          const promises = [];
+          
+          // Adicionar novos sistemas
+          if (sistemasParaAdicionar.length > 0) {
+            const registros = sistemasParaAdicionar.map(sistemaId => ({
               processo_id: processoId,
               sistema_id: sistemaId,
               total_itens: 0,
@@ -4017,12 +4025,34 @@ export default {
               updated_at: new Date().toISOString()
             }));
             
-            await supabase.from('analises_itens').insert(registros);
-            console.log('Novos sistemas adicionados à análise automaticamente');
+            promises.push(
+              supabase.from('analises_itens').insert(registros)
+            );
+          }
+          
+          // Remover sistemas que não estão mais ativos
+          if (sistemasParaRemover.length > 0) {
+            promises.push(
+              supabase
+                .from('analises_itens')
+                .delete()
+                .eq('processo_id', processoId)
+                .in('sistema_id', sistemasParaRemover)
+            );
+          }
+          
+          // Executar todas as operações
+          if (promises.length > 0) {
+            await Promise.all(promises);
+            console.log(`Sistemas sincronizados: ${sistemasParaAdicionar.length} adicionados, ${sistemasParaRemover.length} removidos`);
+            return { adicionados: sistemasParaAdicionar.length, removidos: sistemasParaRemover.length };
           }
         }
+        
+        return null;
       } catch (error) {
         console.error('Erro ao atualizar análises após mudança de sistemas:', error);
+        throw error;
       }
     };
 
