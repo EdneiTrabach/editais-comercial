@@ -67,20 +67,8 @@ export function useAnalises() {
     return 100 - percentualNaoAtendimento;
   })
 
-  // Adicione esta computed property
+  // Substitua a função getStatusGeral no useAnalises.js por esta versão corrigida:
   const getStatusGeral = computed(() => {
-    // Verificar sistemas obrigatórios
-    const obrigatoriosAtendidos = sistemasAnalise.value
-      .filter(s => s.obrigatorio)
-      .every(s => {
-        if (!s.totalItens) return false;
-        
-        const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
-        const percentualAtendimento = 100 - percentualNaoAtendimento;
-        // Sistemas obrigatórios devem atender ao percentual mínimo de obrigatórios
-        return percentualAtendimento >= percentualMinimoObrigatorios.value;
-      });
-    
     // Calcular totais gerais para todos os sistemas
     const totalItens = sistemasAnalise.value.reduce((acc, s) => acc + s.totalItens, 0);
     const totalNaoAtendidos = sistemasAnalise.value.reduce((acc, s) => acc + s.naoAtendidos, 0);
@@ -89,9 +77,10 @@ export function useAnalises() {
     const percentualGeralNaoAtendimento = totalItens ? (totalNaoAtendidos / totalItens) * 100 : 0;
     const percentualGeralAtendimento = 100 - percentualGeralNaoAtendimento;
     
+    // Determinar o status baseado APENAS no percentual geral
     const atendeGeral = percentualGeralAtendimento >= percentualMinimoGeral.value;
   
-    if (obrigatoriosAtendidos && atendeGeral) {
+    if (atendeGeral) {
       return 'Atende Requisitos';
     } 
     return 'Não Atende Requisitos';
@@ -650,6 +639,20 @@ export function useAnalises() {
     }
   };
 
+  // Adicione esta computed property para verificar sistemas obrigatórios separadamente
+  const temSistemasObrigatoriosNaoAtendidos = computed(() => {
+    return sistemasAnalise.value
+      .filter(s => s.obrigatorio)
+      .some(s => {
+        if (!s.totalItens) return true;
+        
+        const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
+        const percentualAtendimento = 100 - percentualNaoAtendimento;
+        // Verificar se não atende ao percentual mínimo de obrigatórios
+        return percentualAtendimento < percentualMinimoObrigatorios.value;
+      });
+  });
+
   // No return do composable, inclua as novas funções:
   return {
     step,
@@ -685,5 +688,6 @@ export function useAnalises() {
     salvarPercentuaisMinimos,  // Adicionado aqui
     carregarPercentuaisMinimos,  // Adicionado aqui
     atualizarPercentuaisMinimos,  // Adicionado aqui
+    temSistemasObrigatoriosNaoAtendidos,  // Adicionado aqui
   }
 }

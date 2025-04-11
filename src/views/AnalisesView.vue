@@ -265,6 +265,21 @@
               <span class="status-geral">{{ getStatusGeral }}</span>
             </div>
           </div>
+
+          <!-- Em AnalisesView.vue, onde você exibe o status geral -->
+          <div class="status-geral">
+            <!-- Status geral baseado apenas na percentagem geral -->
+            <div :class="[getStatusGeralClass]">
+              <strong>Atendimento Geral: {{ formatarPercentual(porcentagemGeralAtendimento) }}%</strong>
+              <div>{{ getStatusGeral }}</div>
+            </div>
+            
+            <!-- Aviso específico para sistemas obrigatórios não atendidos -->
+            <div v-if="temSistemasObrigatoriosNaoAtendidos" class="aviso-obrigatorios">
+              <i class="fas fa-exclamation-triangle"></i>
+              Atenção: Há sistemas obrigatórios que não atendem ao percentual mínimo exigido
+            </div>
+          </div>
         </div>
 
         <!-- Modal de Confirmação -->
@@ -1145,21 +1160,11 @@ export default {
         
         // Se temos um processo selecionado, salvar no banco
         if (selectedProcesso.value) {
-          console.log('💾 Salvando percentuais no banco para processo:', selectedProcesso.value);
           await salvarPercentuaisMinimos();
-          
-          // Realizar uma nova leitura para confirmar
-          await carregarPercentuaisMinimos(selectedProcesso.value);
-          
-          // Atualizar visualização para refletir os novos valores
-          console.log('🔄 Sincronizando cores após atualização');
-          sincronizarCores();
-        } else {
-          console.warn('⚠️ Nenhum processo selecionado para salvar percentuais');
         }
       } catch (error) {
         console.error('❌ Erro ao atualizar percentuais mínimos:', error);
-        throw error;
+        showToast('Erro ao atualizar percentuais mínimos', 'error');
       }
     };
 
