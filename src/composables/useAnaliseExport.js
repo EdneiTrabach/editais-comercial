@@ -17,7 +17,7 @@ Chart.register({
         meta.data.forEach((element, index) => {
           // Não mostrar rótulos para valores muito pequenos
           const value = dataset.data[index];
-          if (value < 1) return;
+          if (value < 0.001) return;
           
           // Definir estilo de texto com melhor visibilidade
           const fontSize = chart.config.type === 'pie' || chart.config.type === 'doughnut' ? 14 : 12;
@@ -46,8 +46,14 @@ Chart.register({
           // Posicionamento específico baseado no tipo de gráfico
           let position = element.getCenterPoint();
           
-          // Sempre mostrar apenas o valor numérico, sem símbolo de %
+          // Formatar o valor com precisão de até 5 casas decimais quando necessário
           let displayValue = value;
+          if (dataset.label && dataset.label.includes('Percentual')) {
+            // Para percentuais, manter exatamente 5 casas decimais
+            if (value % 1 !== 0) {
+              displayValue = parseFloat(value.toFixed(5));
+            }
+          }
           
           // Posicionamento diferente baseado no tipo de gráfico
           if (chart.config.type === 'bar') {
@@ -288,9 +294,9 @@ export function useAnaliseExport() {
                 return `${context.label}: ${value}`;
               }
               
-              // No tooltip ainda mantemos o % para melhor compreensão
+              // Para percentuais, exibir com até 5 casas decimais se necessário
               if (context.dataset.label && context.dataset.label.includes('Percentual')) {
-                return `${label}: ${value}%`;
+                return `${label}: ${parseFloat(value.toFixed(5))}%`;
               }
               return `${label}: ${value}`;
             }
@@ -315,8 +321,11 @@ export function useAnaliseExport() {
         y: {
           beginAtZero: true,
           ticks: {
-            precision: 0,
-            callback: (value) => Math.floor(value)
+            // Preservar casas decimais quando necessário
+            callback: (value) => {
+              if (value % 1 === 0) return Math.floor(value);
+              return parseFloat(value.toFixed(5));
+            }
           },
           grid: {
             color: 'rgba(0, 0, 0, 0.1)'
@@ -328,7 +337,11 @@ export function useAnaliseExport() {
           beginAtZero: true,
           max: 100,
           ticks: {
-            callback: (value) => `${value}%`
+            // Preservar casas decimais quando necessário
+            callback: (value) => {
+              if (value % 1 === 0) return `${value}%`;
+              return `${parseFloat(value.toFixed(5))}%`;
+            }
           },
           title: {
             display: true,
@@ -693,10 +706,10 @@ export function useAnaliseExport() {
       totals.push(total)
       nonAttended.push(notAttended)
       
-      // Calcular percentual
+      // Calcular percentual com alta precisão, mas limite a 5 casas decimais
       let percentual = 0
       if (total > 0) {
-        percentual = Math.round(((total - notAttended) / total) * 100)
+        percentual = parseFloat(((total - notAttended) / total * 100).toFixed(5));
       }
       percentages.push(percentual)
     })
