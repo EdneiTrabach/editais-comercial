@@ -228,8 +228,21 @@ export function useAnaliseExport() {
   
   // Render chart based on type
   const renderChart = (data, type) => {
+    const isPie = type === 'pie';
+    const isHorizontal = type === 'horizontalBar';
+    
+    // Se for gráfico de pizza, usamos uma lógica diferente para criar múltiplos gráficos
+    if (isPie) {
+      renderMultiplePieCharts(data);
+      return;
+    }
+    
+    // Para outros tipos de gráfico, mantemos a lógica atual
     const canvas = chartRef.value;
     if (!canvas) return;
+    
+    // Garantir que o canvas esteja visível para outros tipos de gráficos
+    canvas.style.display = 'block';
     
     // Prepare data for chart
     const chartData = prepareChartData(data);
@@ -239,9 +252,14 @@ export function useAnaliseExport() {
       canvas.chart.destroy();
     }
     
-    // Configurações extras para barras horizontais
-    const isHorizontal = type === 'horizontalBar';
-    const isPie = type === 'pie';
+    // Limpar qualquer conteúdo de gráficos de pizza anteriores
+    const chartContainer = canvas.closest('.chart-body');
+    if (chartContainer) {
+      const pieChartsContainer = chartContainer.querySelector('.multiple-pie-charts');
+      if (pieChartsContainer) {
+        pieChartsContainer.remove();
+      }
+    }
     
     // Configurar opções específicas de acordo com o tipo de gráfico
     let options = {
@@ -497,6 +515,149 @@ export function useAnaliseExport() {
     }
   }
   
+  // Nova função para renderizar múltiplos gráficos de pizza
+  const renderMultiplePieCharts = (data) => {
+    const canvas = chartRef.value;
+    if (!canvas) return;
+    
+    // Preparar dados para o gráfico
+    const chartData = prepareChartData(data);
+    
+    // Encontrar o container
+    const chartContainer = canvas.closest('.chart-body');
+    if (!chartContainer) return;
+    
+    // Limpar gráficos existentes
+    if (canvas.chart) {
+      canvas.chart.destroy();
+      canvas.chart = null;
+    }
+    
+    // Remover container de múltiplas pizzas se já existir
+    let multipleChartsContainer = chartContainer.querySelector('.multiple-pie-charts');
+    if (multipleChartsContainer) {
+      multipleChartsContainer.remove();
+    }
+    
+    // Esconder o canvas original
+    canvas.style.display = 'none';
+    
+    // Criar container para múltiplos gráficos
+    multipleChartsContainer = document.createElement('div');
+    multipleChartsContainer.className = 'multiple-pie-charts';
+    multipleChartsContainer.style.display = 'flex';
+    multipleChartsContainer.style.flexWrap = 'wrap';
+    multipleChartsContainer.style.justifyContent = 'center';
+    multipleChartsContainer.style.gap = '20px';
+    multipleChartsContainer.style.marginTop = '20px';
+    
+    chartContainer.appendChild(multipleChartsContainer);
+    
+    // Calcular tamanho ideal para os gráficos com base na quantidade
+    const itemsCount = chartData.labels.length;
+    const maxWidth = Math.min(250, Math.max(150, 800 / Math.ceil(Math.sqrt(itemsCount))));
+    
+    // Criar um gráfico para cada sistema
+    chartData.labels.forEach((systemName, index) => {
+      // Criar container para cada gráfico
+      const pieContainer = document.createElement('div');
+      pieContainer.style.width = `${maxWidth}px`;
+      pieContainer.style.height = `${maxWidth + 40}px`;  // Altura adicional para título
+      pieContainer.style.position = 'relative';
+      pieContainer.style.display = 'flex';
+      pieContainer.style.flexDirection = 'column';
+      pieContainer.style.alignItems = 'center';
+      
+      // Criar título para o sistema
+      const titleElement = document.createElement('h4');
+      titleElement.textContent = systemName;
+      titleElement.style.margin = '0 0 10px 0';
+      titleElement.style.fontSize = '14px';
+      titleElement.style.textAlign = 'center';
+      titleElement.style.height = '40px';
+      titleElement.style.overflow = 'hidden';
+      titleElement.style.textOverflow = 'ellipsis';
+      titleElement.style.display = '-webkit-box';
+      titleElement.style.webkitLineClamp = '2';
+      titleElement.style.webkitBoxOrient = 'vertical';
+      titleElement.title = systemName; // Para mostrar tooltip com nome completo
+      
+      // Criar canvas para o gráfico
+      const pieCanvas = document.createElement('canvas');
+      pieCanvas.width = maxWidth;
+      pieCanvas.height = maxWidth;
+      pieCanvas.style.width = '100%';
+      
+      // Adicionar elementos ao container
+      pieContainer.appendChild(titleElement);
+      pieContainer.appendChild(pieCanvas);
+      multipleChartsContainer.appendChild(pieContainer);
+      
+      // Obter valores para este sistema
+      const total = chartData.totals[index];
+      const nonAttended = chartData.nonAttended[index];
+      const attended = total - nonAttended;
+      
+      // Configurar dados do gráfico
+      const pieData = {
+        labels: ['Atendidos', 'Não Atendidos'],
+        datasets: [{
+          data: [attended, nonAttended],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.8)',  // Verde para atendidos
+            'rgba(255, 99, 132, 0.8)'   // Vermelho para não atendidos
+          ],
+          borderColor: [
+            'rgb(75, 192, 192)',
+            'rgb(255, 99, 132)'
+          ],
+          borderWidth: 1
+        }]
+      };
+      
+      // Opções do gráfico
+      const pieOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.raw || 0;
+                const label = context.label || '';
+                return `${label}: ${value}`;
+              }
+            }
+          },
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: {
+                size: 10
+              }
+            }
+          }
+        }
+      };
+      
+      // Criar o gráfico
+      new Chart(pieCanvas, {
+        type: 'doughnut',
+        data: pieData,
+        options: pieOptions
+      });
+      
+      // Adicionar informações de total abaixo do gráfico
+      const infoElement = document.createElement('div');
+      infoElement.style.marginTop = '5px';
+      infoElement.style.fontSize = '12px';
+      infoElement.style.textAlign = 'center';
+      infoElement.innerHTML = `Total: <strong>${total}</strong>`;
+      
+      pieContainer.appendChild(infoElement);
+    });
+  };
+  
   // Prepare data for chart
   const prepareChartData = (data) => {
     // Verificação robusta da existência de dados
@@ -558,20 +719,76 @@ export function useAnaliseExport() {
     
     // Cria o PDF
     const pdf = new jsPDF('landscape', 'mm', 'a4')
-    const imgData = canvas.toDataURL('image/png')
     
     // Adiciona título
     pdf.setFontSize(16)
     pdf.text('Análise de Sistemas', 14, 15)
     
-    // Adiciona a imagem
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
-    const imgWidth = pdfWidth - 30
-    const imgHeight = imgWidth * canvas.height / canvas.width
+    // Verificar se estamos com múltiplos gráficos de pizza
+    const chartContainer = canvas.closest('.chart-body');
+    const multipleChartsContainer = chartContainer?.querySelector('.multiple-pie-charts');
     
-    pdf.addImage(imgData, 'PNG', 15, 25, imgWidth, imgHeight)
-    pdf.save(`grafico_analise_${currentChartType.value}.pdf`)
+    if (currentChartType.value === 'pie' && multipleChartsContainer) {
+      // Para múltiplos gráficos de pizza, capturar uma imagem completa do container
+      
+      // Primeiro obtemos as dimensões do PDF
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Tentamos converter o container em uma imagem usando html2canvas
+      // Note: isto é uma simplificação, uma implementação real pode precisar da biblioteca html2canvas
+      alert('Exportação de múltiplos gráficos de pizza para PDF ainda não implementada completamente.');
+      
+      // Alternativa: capturar cada gráfico individual
+      const pieCanvases = multipleChartsContainer.querySelectorAll('canvas');
+      let currentY = 25; // Começar após o título
+      
+      pieCanvases.forEach((pieCanvas, index) => {
+        if (index > 0 && index % 2 === 0) {
+          // Adicionar nova página a cada dois gráficos
+          pdf.addPage();
+          currentY = 15;
+        }
+        
+        const imgData = pieCanvas.toDataURL('image/png');
+        const title = pieCanvas.previousElementSibling.textContent;
+        
+        // Adicionar título do sistema
+        pdf.setFontSize(12);
+        pdf.text(title, 14, currentY);
+        
+        // Calcular dimensões para a imagem
+        const imgWidth = 80;
+        const imgHeight = imgWidth;
+        
+        // Adicionar a imagem
+        pdf.addImage(imgData, 'PNG', 14, currentY + 5, imgWidth, imgHeight);
+        
+        // Atualizar posição Y para o próximo gráfico
+        if (index % 2 === 0) {
+          // Se for o primeiro de cada página, o próximo vai para a direita
+          currentY += imgHeight + 15;
+        } else {
+          // Se for o segundo, o próximo vai para a linha seguinte
+          currentY += imgHeight + 15;
+        }
+      });
+      
+    } else {
+      // Para gráficos normais, usamos a lógica atual
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Adiciona a imagem
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 30;
+      const imgHeight = imgWidth * canvas.height / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 15, 25, imgWidth, imgHeight);
+    }
+    
+    // Salvar o PDF
+    pdf.save(`grafico_analise_${currentChartType.value}.pdf`);
   }
   
   // Exportar dados do gráfico para Excel

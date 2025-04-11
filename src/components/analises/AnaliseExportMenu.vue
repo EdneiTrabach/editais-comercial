@@ -200,7 +200,6 @@ onUnmounted(() => {
 
 .dropdown-item {
   display: block;
-  width: 100%;
   padding: 0.25rem 1.5rem;
   clear: both;
   font-weight: 400;
