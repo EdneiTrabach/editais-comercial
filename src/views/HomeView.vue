@@ -1,8 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Chart } from 'chart.js/auto'
+import { ref, onMounted, nextTick } from 'vue'
+import { Chart, registerables } from 'chart.js'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
+
+// Registrar todos os componentes necessários do Chart.js
+Chart.register(...registerables)
 
 const isSidebarExpanded = ref(true)
 const currentDate = new Date().toLocaleDateString('pt-BR', {
@@ -26,6 +29,7 @@ const ultimosEditais = ref([
 const lineChartRef = ref(null)
 const pieChartRef = ref(null)
 const barChartRef = ref(null)
+const chartInstances = ref([])
 
 const loadData = async () => {
   await loadProcessos() // ou qualquer outra função que carregue seus dados
@@ -34,56 +38,114 @@ const loadData = async () => {
 // Use o composable
 useConnectionManager(loadData)
 
+const initCharts = () => {
+  // Limpar gráficos existentes para evitar vazamentos de memória
+  chartInstances.value.forEach(chart => chart.destroy())
+  chartInstances.value = []
+  
+  // Certifique-se de que os elementos canvas existem
+  if (lineChartRef.value) {
+    const lineChart = new Chart(lineChartRef.value, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+        datasets: [{
+          label: 'Editais Publicados',
+          data: [12, 19, 15, 25, 22, 30],
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.2)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true
+          }
+        }
+      }
+    })
+    chartInstances.value.push(lineChart)
+  }
+
+  if (pieChartRef.value) {
+    const pieChart = new Chart(pieChartRef.value, {
+      type: 'pie',
+      data: {
+        labels: ['Obras', 'Serviços', 'Materiais', 'Outros'],
+        datasets: [{
+          data: [30, 25, 35, 10],
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    })
+    chartInstances.value.push(pieChart)
+  }
+
+  if (barChartRef.value) {
+    const barChart = new Chart(barChartRef.value, {
+      type: 'bar',
+      data: {
+        labels: ['Em Análise', 'Em Andamento', 'Concluídos', 'Cancelados'],
+        datasets: [
+          {
+            label: 'Atendidas',
+            data: [45, 39, 60, 10],
+            backgroundColor: '#4CAF50', // Verde para atendidas
+            order: 2
+          },
+          {
+            label: 'Não Atendidas',
+            data: [20, 20, 20, 5],
+            backgroundColor: '#FF5252', // Vermelho para não atendidas
+            order: 3
+          },
+          {
+            label: 'Total',
+            data: [65, 59, 80, 15],
+            backgroundColor: '#36A2EB', // Azul para total
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: false
+          },
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        }
+      }
+    })
+    chartInstances.value.push(barChart)
+  }
+}
+
 onMounted(() => {
-  // Gráfico de Linha
-  const lineChart = new Chart(lineChartRef.value, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-      datasets: [{
-        label: 'Editais Publicados',
-        data: [12, 19, 15, 25, 22, 30],
-        borderColor: '#4CAF50',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  })
-
-  // Gráfico de Pizza
-  const pieChart = new Chart(pieChartRef.value, {
-    type: 'pie',
-    data: {
-      labels: ['Obras', 'Serviços', 'Materiais', 'Outros'],
-      datasets: [{
-        data: [30, 25, 35, 10],
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  })
-
-  // Gráfico de Barras
-  const barChart = new Chart(barChartRef.value, {
-    type: 'bar',
-    data: {
-      labels: ['Em Análise', 'Em Andamento', 'Concluídos', 'Cancelados'],
-      datasets: [{
-        label: 'Quantidade',
-        data: [65, 59, 80, 15],
-        backgroundColor: '#36A2EB'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
+  // Usar nextTick para garantir que os elementos DOM estejam prontos
+  nextTick(() => {
+    initCharts()
   })
 })
 </script>

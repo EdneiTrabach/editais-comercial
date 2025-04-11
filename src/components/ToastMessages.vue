@@ -11,6 +11,9 @@
           <i :class="getIconClass(toast.type)"></i>
         </div>
         <div class="toast-message">{{ toast.message }}</div>
+        <button type="button" class="toast-close" @click="$emit('remove-toast', toast.id)">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
     </transition-group>
   </div>
@@ -25,6 +28,7 @@ export default {
       required: true
     }
   },
+  emits: ['remove-toast'],
   methods: {
     getIconClass(type) {
       switch (type) {
@@ -53,67 +57,115 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 350px;
+  max-width: 400px;
+  pointer-events: none;
 }
 
 .toast {
-  padding: 12px 15px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 14px 16px;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
-  min-width: 250px;
-  max-width: 350px;
-  transition: all 0.3s;
+  min-width: 280px;
+  max-width: 400px;
+  transition: all 0.3s ease;
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateX(30px);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  margin-bottom: 4px;
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .toast-icon {
-  margin-right: 12px;
-  font-size: 20px;
+  margin-right: 14px;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
 .toast-message {
   font-size: 14px;
   flex: 1;
+  line-height: 1.4;
+  padding-right: 10px;
+  word-break: break-word;
+  font-weight: 500;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  margin-left: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .toast-success {
-  background-color: #d4edda;
-  color: #155724;
-  border-left: 4px solid #28a745;
+  background-color: rgba(46, 204, 113, 0.95);
+  color: white;
+  border-left: 5px solid #27ae60;
 }
 
 .toast-error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-left: 4px solid #dc3545;
+  background-color: rgba(231, 76, 60, 0.95);
+  color: white;
+  border-left: 5px solid #c0392b;
 }
 
 .toast-warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border-left: 4px solid #ffc107;
+  background-color: rgba(241, 196, 15, 0.95);
+  color: #795014;
+  border-left: 5px solid #f39c12;
 }
 
 .toast-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border-left: 4px solid #17a2b8;
+  background-color: rgba(52, 152, 219, 0.95);
+  color: white;
+  border-left: 5px solid #2980b9;
 }
 
 .toast-enter-active, .toast-leave-active {
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.toast-enter-from, .toast-leave-to {
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.toast-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+@media (max-width: 768px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+  
+  .toast {
+    min-width: auto;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 </style>
