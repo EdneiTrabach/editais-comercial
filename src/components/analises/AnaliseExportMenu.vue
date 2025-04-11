@@ -30,9 +30,9 @@
       <a class="dropdown-item" href="#" @click.prevent="showChartSafe('pie')">
         <i class="fas fa-chart-pie"></i> Gráfico de Pizza
       </a>
-      <a class="dropdown-item" href="#" @click.prevent="showChartSafe('bar')">
+      <!-- <a class="dropdown-item" href="#" @click.prevent="showChartSafe('horizontalBar')">
         <i class="fas fa-bars"></i> Barras Horizontais
-      </a>
+      </a> -->
     </div>
     
     <!-- Chart dialog -->
@@ -40,9 +40,20 @@
       <div class="chart-container">
         <div class="chart-header">
           <h3>Visualização de Dados</h3>
-          <button class="close-btn" @click="closeChart">
-            <i class="fas fa-times"></i>
-          </button>
+          <div class="chart-actions">
+            <button class="btn btn-sm btn-outline-secondary" @click="exportChartToPDF" title="Exportar como PDF">
+              <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" @click="exportChartToExcel" title="Exportar como Excel">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" @click="exportChartToTXT" title="Exportar como Texto">
+              <i class="fas fa-file-alt"></i> TXT
+            </button>
+            <button class="close-btn" @click="closeChart">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
         <div class="chart-body">
           <canvas ref="chartRef" width="800" height="400"></canvas>
@@ -62,11 +73,6 @@
                   :class="{ 'active': currentChartType === 'pie' }"
                   @click="changeChartType('pie')">
             <i class="fas fa-chart-pie"></i> Pizza
-          </button>
-          <button class="btn btn-sm btn-outline-secondary"
-                  :class="{ 'active': currentChartType === 'horizontalBar' }"
-                  @click="changeChartType('bar')">
-            <i class="fas fa-bars"></i> Barras Horizontais
           </button>
         </div>
       </div>
@@ -93,7 +99,10 @@ const {
   showChart,
   chartRef,
   chartDialog,
-  currentChartType
+  currentChartType,
+  exportChartToPDF,
+  exportChartToExcel,
+  exportChartToTXT
 } = useAnaliseExport()
 
 const isOpen = ref(false)
@@ -259,15 +268,22 @@ onUnmounted(() => {
   font-size: 1.25rem;
 }
 
+.chart-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .close-btn {
   background: none;
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
   color: #6c757d;
+  margin-left: 8px;
 }
 
-close-btn:hover {
+.close-btn:hover {
   color: #343a40;
 }
 
