@@ -667,6 +667,7 @@ td.atendidos {
   display: inline-block;
   padding: 4px;
   cursor: move;
+  background: none;
 }
 
 .dragging {
@@ -833,7 +834,6 @@ td.atendidos {
 }
 
 .calculated-field {
-  background-color: #f8f9fa;
   padding: 2px 4px;
   border-radius: 3px;
   color: #495057;

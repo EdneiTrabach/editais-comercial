@@ -30,12 +30,7 @@
                 title="Atualiza sistemas conforme a tela de processos">
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
               </button>
-              <button 
-                @click="exportarExcel" 
-                class="btn btn-info"
-                title="Exportar análise para Excel">
-                <i class="fas fa-file-export"></i> Exportar
-              </button>
+              <AnaliseExportMenu :data="analiseItems" />
             </div>
             <!-- Botões de navegação -->
             <div class="navigation-actions">
@@ -302,6 +297,7 @@ import { useAnalises } from '@/composables/useAnalises'
 import * as XLSX from 'xlsx'
 import ToastMessages from '@/components/ToastMessages.vue'
 import { useToast } from '@/composables/useToast'
+import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
 
 export default {
   name: 'AnalisesView',
@@ -310,7 +306,8 @@ export default {
     TheSidebar,
     AnoSelection,
     ProcessoSelection,
-    ToastMessages
+    ToastMessages,
+    AnaliseExportMenu
   },
   
   // Adicione esta declaração de emits
@@ -1564,6 +1561,28 @@ export default {
     // Por exemplo, ao montar o componente, selecionar processo, salvar percentuais
 
     // Adicione-a ao objeto retornado para poder ser chamada manualmente se necessário
+    const analiseItems = computed(() => {
+      // Se não há sistemas para analisar, retornar array vazio
+      if (!sistemasAnalise.value || sistemasAnalise.value.length === 0) {
+        return [];
+      }
+      
+      // Mapear sistemas para o formato esperado pelo componente de exportação
+      return sistemasAnalise.value.map(sistema => ({
+        id: sistema.id,
+        sistema_id: sistema.sistema_id,
+        sistema_nome_personalizado: sistema.isCustomLine ? sistema.nome : null,
+        sistemas: { nome: sistema.nome },
+        total_itens: sistema.totalItens || 0,
+        nao_atendidos: sistema.naoAtendidos || 0,
+        atendidos: sistema.atendidos || 0,
+        obrigatorio: sistema.obrigatorio || false,
+        percentual_minimo: sistema.percentualMinimo || percentualMinimoGeral.value,
+        percentual_atendimento: sistema.totalItens ? 
+          ((sistema.totalItens - sistema.naoAtendidos) / sistema.totalItens * 100) : 0
+      }));
+    });
+
     return {
       // Outras propriedades e métodos...
       step,
@@ -1625,6 +1644,7 @@ export default {
       salvarPercentuaisMinimos,
       salvarPercentuaisMinimosLocal,
       debugEstadoPercentuais,
+      analiseItems,
     }
   }
 }

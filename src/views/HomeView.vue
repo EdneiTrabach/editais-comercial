@@ -199,21 +199,21 @@ onMounted(() => {
         <!-- Gráficos -->
         <div class="chart-card wide">
           <h3>Editais por Mês</h3>
-          <div class="chart-container">
+          <div class="chart-container-home">
             <canvas ref="lineChartRef"></canvas>
           </div>
         </div>
 
         <div class="chart-card">
           <h3>Distribuição por Categoria</h3>
-          <div class="chart-container">
+          <div class="chart-container-home">
             <canvas ref="pieChartRef"></canvas>
           </div>
         </div>
 
         <div class="chart-card">
           <h3>Status dos Editais</h3>
-          <div class="chart-container">
+          <div class="chart-container-home">
             <canvas ref="barChartRef"></canvas>
           </div>
         </div>
@@ -250,3 +250,10 @@ onMounted(() => {
 </template>
 
 <style src="../assets/styles/HomeView.css"></style>
+
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
