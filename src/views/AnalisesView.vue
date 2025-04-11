@@ -265,21 +265,6 @@
               <span class="status-geral">{{ getStatusGeral }}</span>
             </div>
           </div>
-
-          <!-- Em AnalisesView.vue, onde você exibe o status geral -->
-          <div class="status-geral">
-            <!-- Status geral baseado apenas na percentagem geral -->
-            <div :class="[getStatusGeralClass]">
-              <strong>Atendimento Geral: {{ formatarPercentual(porcentagemGeralAtendimento) }}%</strong>
-              <div>{{ getStatusGeral }}</div>
-            </div>
-            
-            <!-- Aviso específico para sistemas obrigatórios não atendidos -->
-            <div v-if="temSistemasObrigatoriosNaoAtendidos" class="aviso-obrigatorios">
-              <i class="fas fa-exclamation-triangle"></i>
-              Atenção: Há sistemas obrigatórios que não atendem ao percentual mínimo exigido
-            </div>
-          </div>
         </div>
 
         <!-- Modal de Confirmação -->
