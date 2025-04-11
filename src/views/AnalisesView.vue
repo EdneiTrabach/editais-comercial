@@ -516,30 +516,17 @@ export default {
 
     // Status geral da análise
     const getStatusGeralClass = computed(() => {
-      const obrigatoriosAtendidos = sistemasAnalise.value
-        .filter(s => s.obrigatorio)
-        .every(s => getStatusAtendimento(s).atende)
+      // Calcular percentual geral
+      const percentualGeral = porcentagemGeralAtendimento.value;
       
-      const percentualGeral = porcentagemGeralAtendimento.value
+      // Status baseado apenas no percentual geral comparado ao mínimo geral
       return {
-        'status-geral-atende': obrigatoriosAtendidos && percentualGeral >= percentualMinimoGeral.value,
-        'status-geral-nao-atende': !obrigatoriosAtendidos || percentualGeral < percentualMinimoGeral.value
+        'status-geral-atende': percentualGeral >= percentualMinimoGeral.value,
+        'status-geral-nao-atende': percentualGeral < percentualMinimoGeral.value
       }
     })
 
     const getStatusGeral = computed(() => {
-      // Verificar sistemas obrigatórios
-      const obrigatoriosAtendidos = sistemasAnalise.value
-        .filter(s => s.obrigatorio)
-        .every(s => {
-          if (!s.totalItens) return false;
-          
-          const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
-          const percentualAtendimento = 100 - percentualNaoAtendimento;
-          // Sistemas obrigatórios devem atender ao percentual mínimo de obrigatórios
-          return percentualAtendimento >= percentualMinimoObrigatorios.value;
-        });
-      
       // Calcular totais gerais para todos os sistemas
       const totalItens = sistemasAnalise.value.reduce((acc, s) => acc + s.totalItens, 0);
       const totalNaoAtendidos = sistemasAnalise.value.reduce((acc, s) => acc + s.naoAtendidos, 0);
@@ -548,12 +535,27 @@ export default {
       const percentualGeralNaoAtendimento = totalItens ? (totalNaoAtendidos / totalItens) * 100 : 0;
       const percentualGeralAtendimento = 100 - percentualGeralNaoAtendimento;
       
+      // Determinar o status baseado APENAS no percentual geral
       const atendeGeral = percentualGeralAtendimento >= percentualMinimoGeral.value;
     
-      if (obrigatoriosAtendidos && atendeGeral) {
+      if (atendeGeral) {
         return 'Atende Requisitos';
       } 
       return 'Não Atende Requisitos';
+    });
+    
+    // Adicione esta computed property para verificar sistemas obrigatórios separadamente
+    const temSistemasObrigatoriosNaoAtendidos = computed(() => {
+      return sistemasAnalise.value
+        .filter(s => s.obrigatorio)
+        .some(s => {
+          if (!s.totalItens) return false;
+          
+          const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
+          const percentualAtendimento = 100 - percentualNaoAtendimento;
+          // Verificar se não atende ao percentual mínimo de obrigatórios
+          return percentualAtendimento < percentualMinimoObrigatorios.value;
+        });
     });
 
     // Substitua completamente a função salvarAnalises
