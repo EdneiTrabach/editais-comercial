@@ -39,23 +39,15 @@ Chart.register({
               const alpha = parseFloat(dataset.backgroundColor.split(',')[3]);
               textColor = alpha < 0.5 ? '#333' : 'white';
             }
-            
-            // Para percentuais, sempre usar preto para melhor visibilidade
-            if (dataset.label && dataset.label.includes('Percentual')) {
-              textColor = '#000';
-            }
           }
           
           ctx.fillStyle = textColor;
           
           // Posicionamento específico baseado no tipo de gráfico
           let position = element.getCenterPoint();
-          let displayValue = value;
           
-          // Formatar valor para percentuais
-          if (dataset.label && dataset.label.includes('Percentual')) {
-            displayValue = value + '%';
-          }
+          // Sempre mostrar apenas o valor numérico, sem símbolo de %
+          let displayValue = value;
           
           // Posicionamento diferente baseado no tipo de gráfico
           if (chart.config.type === 'bar') {
@@ -278,6 +270,7 @@ export function useAnaliseExport() {
                 return `${context.label}: ${value}`;
               }
               
+              // No tooltip ainda mantemos o % para melhor compreensão
               if (context.dataset.label && context.dataset.label.includes('Percentual')) {
                 return `${label}: ${value}%`;
               }
@@ -290,8 +283,12 @@ export function useAnaliseExport() {
         x: {
           beginAtZero: true,
           ticks: {
-            precision: 0,
-            callback: (value) => Math.floor(value)
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 45,
+            font: {
+              size: 10
+            }
           },
           grid: {
             color: 'rgba(0, 0, 0, 0.1)'
