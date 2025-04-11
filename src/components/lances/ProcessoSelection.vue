@@ -102,7 +102,7 @@ import { useProcessos } from '@/composables/useProcessos'
 
 const props = defineProps({
   processos: Array,
-  selectedProcesso: Number
+  selectedProcesso: [Number, String, Object] // Aceita qualquer tipo que possa ser um ID de processo
 })
 
 const emit = defineEmits(['select-processo'])

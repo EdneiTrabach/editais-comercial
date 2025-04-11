@@ -134,33 +134,6 @@ export default {
       }
     })
 
-    const getStatusGeral = computed(() => {
-      // Verificar sistemas obrigatórios
-      const obrigatoriosAtendidos = sistemasAnalise.value
-        .filter(s => s.obrigatorio)
-        .every(s => {
-          const percentual = calcularPorcentagem(
-            s.totalItens - s.naoAtendidos, 
-            s.totalItens
-          )
-          return percentual >= (s.percentualMinimo || percentualMinimoObrigatorios.value)
-        })
-      
-      // Verificar percentual geral
-      const percentualGeral = porcentagemGeralAtendimento.value
-      const atendeGeral = percentualGeral >= percentualMinimoGeral.value
-
-      if (obrigatoriosAtendidos && atendeGeral) {
-        return 'Atende Todos os Requisitos'
-      } else if (!obrigatoriosAtendidos && !atendeGeral) {
-        return 'Não Atende Requisitos Mínimos'
-      } else if (!obrigatoriosAtendidos) {
-        return 'Não Atende Requisitos Obrigatórios'
-      } else {
-        return 'Não Atende Percentual Geral'
-      }
-    })
-
     const alteracoesPendentes = ref(false)
     const showConfirmDialog = ref(false)
     const acaoAposSalvar = ref(null)

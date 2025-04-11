@@ -13,6 +13,10 @@ export function useAnalises() {
   const acaoAposSalvar = ref(null)
   const anoSelecionado = ref(new Date().getFullYear())
 
+  // Adicione estas definições no início do composable
+  const percentualMinimoGeral = ref(60);
+  const percentualMinimoObrigatorios = ref(90);
+
   // Computed para processo atual
   const processoAtual = computed(() => {
     if (!selectedProcesso.value || !processos.value) return null
@@ -63,17 +67,57 @@ export function useAnalises() {
     return 100 - percentualNaoAtendimento;
   })
 
+  // Adicione esta computed property
+  const getStatusGeral = computed(() => {
+    // Verificar sistemas obrigatórios
+    const obrigatoriosAtendidos = sistemasAnalise.value
+      .filter(s => s.obrigatorio)
+      .every(s => {
+        if (!s.totalItens) return false;
+        
+        const percentualNaoAtendimento = calcularPorcentagemPrecisa(s.naoAtendidos, s.totalItens);
+        const percentualAtendimento = 100 - percentualNaoAtendimento;
+        // Sistemas obrigatórios devem atender ao percentual mínimo de obrigatórios
+        return percentualAtendimento >= percentualMinimoObrigatorios.value;
+      });
+    
+    // Calcular totais gerais para todos os sistemas
+    const totalItens = sistemasAnalise.value.reduce((acc, s) => acc + s.totalItens, 0);
+    const totalNaoAtendidos = sistemasAnalise.value.reduce((acc, s) => acc + s.naoAtendidos, 0);
+    
+    // Calcular percentual geral de forma precisa
+    const percentualGeralNaoAtendimento = totalItens ? (totalNaoAtendidos / totalItens) * 100 : 0;
+    const percentualGeralAtendimento = 100 - percentualGeralNaoAtendimento;
+    
+    const atendeGeral = percentualGeralAtendimento >= percentualMinimoGeral.value;
+  
+    if (obrigatoriosAtendidos && atendeGeral) {
+      return 'Atende Requisitos';
+    } 
+    return 'Não Atende Requisitos';
+  });
+
+  // Adicione esta computed property
+  const getStatusGeralClass = computed(() => {
+    return getStatusGeral.value === 'Atende Requisitos' 
+      ? 'status-atende' 
+      : 'status-nao-atende';
+  });
+
   // Função para selecionar ano
   const selecionarAno = (ano) => {
     anoSelecionado.value = ano
     step.value = 1
   }
 
-  // Modificar a função selectProcesso para sincronizar automaticamente
+  // Modifique a função selectProcesso para carregar os percentuais ao selecionar um processo
   const selectProcesso = async (processo) => {
     try {
       // Garantir que o ID seja tratado como string, já que é um UUID
       selectedProcesso.value = typeof processo === 'object' ? processo.id : processo;
+      
+      // Carregar percentuais mínimos específicos do processo antes de carregar análises
+      await carregarPercentuaisMinimos(selectedProcesso.value);
       
       // Carregar e sincronizar sistemas do processo selecionado
       const resultadoSinc = await carregarAnalisesSistemas();
@@ -236,7 +280,6 @@ export function useAnalises() {
           naoAtendidos: item.nao_atendidos || 0,
           atendidos: atendidos || 0,
           obrigatorio: item.obrigatorio || false,
-          // Use o valor armazenado ou, se não existir, use o valor padrão com base na obrigatoriedade
           percentualMinimo: item.percentual_minimo || (item.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value),
           classeEstilo: '' // Será definido abaixo
         };
@@ -245,8 +288,13 @@ export function useAnalises() {
         if (sistema.totalItens > 0) {
           const percentualAtendimento = (sistema.atendidos / sistema.totalItens) * 100;
           
-          // Definir classe com base no atendimento, independente de ser linha personalizada ou não
-          if (percentualAtendimento >= sistema.percentualMinimo) {
+          // Determinar o percentual mínimo com base na obrigatoriedade
+          const percentualMinimo = sistema.obrigatorio 
+            ? percentualMinimoObrigatorios.value 
+            : percentualMinimoGeral.value;
+          
+          // Definir classe com base no atendimento
+          if (percentualAtendimento >= percentualMinimo) {
             sistema.classeEstilo = 'atende-status-forte';
           } else {
             sistema.classeEstilo = 'nao-atende-status-forte';
@@ -384,20 +432,225 @@ export function useAnalises() {
     await loadProcessos()
   })
 
-  // Adicione esta função ao useAnalises.js antes do return
+  // Adicione esta função dentro da função useAnalises, antes do return
   const getStatusAtendimento = (sistema) => {
-    if (!sistema.totalItens) return { status: 'neutro', classe: '' };
+    if (!sistema.totalItens) {
+      return {
+        texto: `Não Atende (Min: ${sistema.percentualMinimo}%)`,
+        class: 'status-nao-atende',
+        classeEstilo: 'nao-atende-status-forte'
+      };
+    }
+  
+    // Calcular porcentagem de atendimento corretamente
+    const percentualNaoAtendimento = calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens);
+    const percentualAtendimento = 100 - percentualNaoAtendimento;
     
-    const percentualAtendimento = calcularPorcentagem(sistema.atendidos, sistema.totalItens);
-    const percentualMinimo = sistema.percentualMinimo || 70;
+    // Determinar o percentual mínimo com base na obrigatoriedade
+    const percentualMinimo = sistema.obrigatorio 
+      ? percentualMinimoObrigatorios.value 
+      : percentualMinimoGeral.value;
     
+    // Determinar se atende ao percentual mínimo
     if (percentualAtendimento >= percentualMinimo) {
-      return { status: 'atende', classe: 'atende-percentual' };
+      return {
+        texto: `Atende (${formatarPercentual(percentualAtendimento)}%)`,
+        class: 'status-atende',
+        classeEstilo: 'atende-status-forte'
+      };
     } else {
-      return { status: 'nao-atende', classe: 'nao-atende-percentual' };
+      return {
+        texto: `Não Atende (Min: ${percentualMinimo}%)`,
+        class: 'status-nao-atende',
+        classeEstilo: 'nao-atende-status-forte'
+      };
+    }
+  };
+  
+  // Adicione também a função formatarPercentual
+  const formatarPercentual = (valor) => {
+    if (valor === 0) return "0";
+    if (valor === 100) return "100";
+    
+    // Para valores extremamente pequenos (menor que 0.00001%)
+    if (valor < 0.00001) {
+      return valor.toExponential(5); // Notação científica para valores extremamente pequenos
+    }
+    
+    // Para valores muito pequenos, use até 5 casas decimais
+    if (valor < 0.001) {
+      // Remover zeros à direita desnecessários
+      return valor.toFixed(5).replace(/\.?0+$/, '');
+    }
+    
+    // Para valores pequenos mas significativos
+    if (valor < 0.01) {
+      return valor.toFixed(4).replace(/\.?0+$/, '');
+    }
+    
+    // Para valores entre 0.01% e 0.1%
+    if (valor < 0.1) {
+      return valor.toFixed(3).replace(/\.?0+$/, '');
+    }
+    
+    // Para valores entre 0.1% e 1%
+    if (valor < 1) {
+      return valor.toFixed(2).replace(/\.?0+$/, '');
+    }
+    
+    // Para valores próximos de 100%, use mais precisão
+    if (valor > 99 && valor < 100) {
+      return valor.toFixed(4).replace(/\.?0+$/, '');
+    }
+    
+    // Para outros valores, use 2 casas decimais padrão
+    return valor.toFixed(2).replace(/\.?0+$/, '');
+  };
+  
+  // E a função calcularPorcentagemPrecisa
+  const calcularPorcentagemPrecisa = (valor, total) => {
+    if (!total) return 0;
+    
+    // Use precisão de ponto flutuante de alta precisão
+    const percentual = (Number(valor) / Number(total)) * 100;
+    
+    // Garantir que o valor seja representado com alta precisão
+    // mas evitando erros de arredondamento de ponto flutuante
+    return Math.round(percentual * 1000000) / 1000000;
+  };
+
+  // Adicione estas funções no arquivo useAnalises.js antes do return
+
+  // Função para salvar os percentuais mínimos no banco
+  const salvarPercentuaisMinimos = async (processoId) => {
+    try {
+      if (!processoId) {
+        console.warn("ID de processo não fornecido para salvar percentuais");
+        return;
+      }
+  
+      // Validar valores
+      percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
+      percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
+  
+      // Criar a chave de configuração específica para o processo
+      const chave = `percentual_minimo_processo_${processoId}`;
+      
+      const valores = {
+        geral: percentualMinimoGeral.value,
+        obrigatorios: percentualMinimoObrigatorios.value
+      };
+  
+      // Verificar se a configuração já existe
+      const { data: configExistente, error: queryError } = await supabase
+        .from('configuracoes')
+        .select('id')
+        .eq('chave', chave)
+        .single();
+  
+      // Se ocorrer erro que não seja "registro não encontrado", lançá-lo
+      if (queryError && queryError.code !== 'PGRST116') {
+        throw queryError;
+      }
+  
+      if (configExistente) {
+        // Atualizar configuração existente
+        const { error: updateError } = await supabase
+          .from('configuracoes')
+          .update({
+            valor: JSON.stringify(valores),
+            ultima_atualizacao: new Date().toISOString()
+          })
+          .eq('id', configExistente.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Criar nova configuração
+        const { error: insertError } = await supabase
+          .from('configuracoes')
+          .insert({
+            chave: chave,
+            valor: JSON.stringify(valores),
+            descricao: `Percentuais mínimos para o processo ${processoId}`,
+            tipo: 'json',
+            ultima_atualizacao: new Date().toISOString()
+          });
+          
+        if (insertError) throw insertError;
+      }
+  
+      console.log('Percentuais mínimos salvos:', valores);
+      return true;
+    } catch (error) {
+      console.error('Erro ao salvar percentuais mínimos:', error);
+      return false;
+    }
+  };
+  
+  // Função para carregar os percentuais mínimos do banco
+  const carregarPercentuaisMinimos = async (processoId) => {
+    try {
+      if (!processoId) {
+        console.warn("ID de processo não fornecido para carregar percentuais");
+        return;
+      }
+  
+      // Criar a chave de configuração
+      const chave = `percentual_minimo_processo_${processoId}`;
+      
+      const { data, error } = await supabase
+        .from('configuracoes')
+        .select('*')
+        .eq('chave', chave)
+        .single();
+        
+      if (error) {
+        if (error.code === 'PGRST116') { // Registro não encontrado
+          console.log('Nenhuma configuração encontrada, usando valores padrão');
+          return;
+        }
+        throw error;
+      }
+      
+      if (data && data.valor) {
+        try {
+          const valores = JSON.parse(data.valor);
+          
+          // Garantir que valores numéricos sejam atribuídos
+          if (typeof valores.geral === 'number' && !isNaN(valores.geral)) {
+            percentualMinimoGeral.value = valores.geral;
+          }
+          
+          if (typeof valores.obrigatorios === 'number' && !isNaN(valores.obrigatorios)) {
+            percentualMinimoObrigatorios.value = valores.obrigatorios;
+          }
+          
+          console.log('Percentuais carregados:', valores);
+        } catch (e) {
+          console.error('Erro ao processar valores de percentuais:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar percentuais mínimos:', error);
     }
   };
 
+  // Adicione esta função para atualizar percentuais em tempo real
+  const atualizarPercentuaisMinimos = async (general, obrigatorios) => {
+    // Atualizar valores locais
+    if (general !== undefined) percentualMinimoGeral.value = general;
+    if (obrigatorios !== undefined) percentualMinimoObrigatorios.value = obrigatorios;
+    
+    // Se temos um processo selecionado, salvar no banco
+    if (selectedProcesso.value) {
+      await salvarPercentuaisMinimos(selectedProcesso.value);
+      
+      // Atualizar visualização para refletir os novos valores
+      await carregarAnalisesSistemas();
+    }
+  };
+
+  // No return do composable, inclua as novas funções:
   return {
     step,
     isSidebarExpanded,
@@ -422,6 +675,15 @@ export function useAnalises() {
     alteracoesPendentes,
     showConfirmDialog,
     acaoAposSalvar,
-    getStatusAtendimento,
+    getStatusAtendimento,  // Adicionado aqui
+    formatarPercentual,    // Adicionado aqui
+    calcularPorcentagemPrecisa,  // Adicionado aqui
+    percentualMinimoGeral,  // Adicionado aqui
+    percentualMinimoObrigatorios,  // Adicionado aqui
+    getStatusGeral,  // Adicionado aqui
+    getStatusGeralClass,  // Adicionado aqui
+    salvarPercentuaisMinimos,  // Adicionado aqui
+    carregarPercentuaisMinimos,  // Adicionado aqui
+    atualizarPercentuaisMinimos,  // Adicionado aqui
   }
 }
