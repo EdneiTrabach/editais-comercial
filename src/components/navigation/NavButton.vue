@@ -46,17 +46,17 @@ export default {
 <style scoped>
 .cta {
   display: flex;
-  padding: 11px 33px;
+  padding: 11px 10px 5px 25px;
   text-decoration: none;
-  font-family: "Poppins", sans-serif;
   font-size: 16px;
   color: white;
   background: #2768b3;
   transition: 1s;
-  box-shadow: 6px 6px 0 black;
-  transform: skewX(-15deg);
+  box-shadow: 6px 6px 0 #d5d5d5;
+  /* transform: skewX(-15deg); */
   border: none;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .cta:disabled {
@@ -85,14 +85,14 @@ export default {
 }
 
 .span {
-  transform: skewX(15deg);
+  /* transform: skewX(15deg); */
 }
 
 .second {
   width: 20px;
   margin-left: 30px;
   position: relative;
-  top: 12%;
+  /* top: 12%; */
 }
 
 .prev .second {
