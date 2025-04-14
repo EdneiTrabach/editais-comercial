@@ -93,7 +93,6 @@ export default {
     // Composables de dados
     const { 
       plataformas, 
-      showPlataformaModal, 
       novaPlatforma, 
       loadPlataformas, 
       handleAddPlataforma 
@@ -101,7 +100,6 @@ export default {
     
     const {
       representantes,
-      showRepresentanteModal,
       novoRepresentante,
       loadRepresentantes,
       handleAddRepresentante,
@@ -147,7 +145,6 @@ export default {
     } = useDistanceCalculator()
     
     const {
-      showImportModal,
       publicacaoText,
       camposNaoEncontrados,
       progressoExtracao,
@@ -155,10 +152,7 @@ export default {
       processarPublicacao,
       closeImportModal
     } = usePublicationProcessing()
-    
-    // Composables de interface e validação
-    const { toast, showToast } = useToast()
-    
+        
     const { isVisible, isReconnecting } = useVisibilityHandler(async (visible) => {
       if (visible) {
         await loadPageData(loadPlataformas, loadRepresentantes, loadSistemas)
@@ -207,6 +201,32 @@ export default {
     
     // No arquivo EditaisView.js, dentro do setup(), antes de onUnmounted:
     const refreshInterval = ref(null)
+
+    // Outras importações e código existente...
+    
+    // Adicionar refs necessários
+    const toast = ref({
+      show: false,
+      message: '',
+      type: 'info'
+    });
+
+    const showImportModal = ref(false);
+    const showPlataformaModal = ref(false);
+    const showRepresentanteModal = ref(false);
+
+    // Função para exibir toast
+    const showToast = (message, type = 'info') => {
+      toast.value = {
+        show: true,
+        message,
+        type
+      };
+      
+      setTimeout(() => {
+        toast.value.show = false;
+      }, 3000);
+    };
 
     // === FUNÇÕES BÁSICAS DE INTERAÇÃO ===
     
