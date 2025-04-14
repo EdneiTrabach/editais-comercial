@@ -5,6 +5,13 @@ import autoTable from 'jspdf-autotable'
 import Chart from 'chart.js/auto'
 import 'chart.js/auto'
 
+// Importar as novas funções de exportação avançadas
+import { 
+  exportToTXT as exportToTXTAdvanced, 
+  exportToPDF as exportToPDFAdvanced, 
+  exportToExcel as exportToExcelAdvanced 
+} from '@/utils/exportAnalises'
+
 // Registrar plugin aprimorado para exibir rótulos nas barras
 Chart.register({
   id: 'datalabels',
@@ -101,118 +108,183 @@ export function useAnaliseExport() {
   const currentChartType = ref('bar')
   
   // Função para exportar para Excel
-  const exportToExcel = (data) => {
+  const exportToExcel = (data, processo = {}, parametros = { percentualMinimoGeral: 92, percentualMinimoObrigatorio: 100 }) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       alert('Sem dados para exportar')
       return
     }
     
-    // Formatar os dados para o Excel
-    const formattedData = data.map(item => {
+    // Converter dados para o formato esperado pela função avançada
+    const sistemasNormalizados = data.map(item => {
       return {
-        'Sistema': item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
-        'Total de Itens': item.total_itens || 0,
-        'Itens Atendidos': (item.total_itens || 0) - (item.nao_atendidos || 0),
-        'Itens Não Atendidos': item.nao_atendidos || 0,
-        'Percentual Atendido': `${Math.round(((item.total_itens - item.nao_atendidos) / item.total_itens || 0) * 100)}%`
+        nome: item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+        totalItens: item.total_itens || 0,
+        naoAtendidos: item.nao_atendidos || 0,
+        obrigatorio: item.obrigatorio || false,
+        percentual_minimo: item.percentual_minimo || parametros.percentualMinimoObrigatorio
       }
     })
     
-    const workbook = utils.book_new()
-    const worksheet = utils.json_to_sheet(formattedData)
-    
-    // Ajustar a largura das colunas
-    const columnWidths = [
-      { wch: 30 }, // Sistema
-      { wch: 15 }, // Total de Itens
-      { wch: 15 }, // Itens Atendidos
-      { wch: 20 }, // Itens Não Atendidos
-      { wch: 18 }  // Percentual Atendido
-    ]
-    worksheet['!cols'] = columnWidths
-    
-    utils.book_append_sheet(workbook, worksheet, 'Análise de Sistemas')
-    writeFileXLSX(workbook, 'analise_sistemas.xlsx')
+    try {
+      // Usar a exportação avançada
+      exportToExcelAdvanced(sistemasNormalizados, processo, {
+        percentualMinimoGeral: parametros.percentualMinimoGeral,
+        percentualMinimoObrigatorio: parametros.percentualMinimoObrigatorio
+      })
+    } catch (error) {
+      console.error("Erro ao exportar Excel avançado:", error)
+      
+      // Fallback para formato básico em caso de erro
+      const formattedData = data.map(item => {
+        return {
+          'Sistema': item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+          'Total de Itens': item.total_itens || 0,
+          'Itens Atendidos': (item.total_itens || 0) - (item.nao_atendidos || 0),
+          'Itens Não Atendidos': item.nao_atendidos || 0,
+          'Percentual Atendido': `${Math.round(((item.total_itens - item.nao_atendidos) / item.total_itens || 0) * 100)}%`
+        }
+      })
+      
+      const workbook = utils.book_new()
+      const worksheet = utils.json_to_sheet(formattedData)
+      
+      // Ajustar a largura das colunas
+      const columnWidths = [
+        { wch: 30 }, // Sistema
+        { wch: 15 }, // Total de Itens
+        { wch: 15 }, // Itens Atendidos
+        { wch: 20 }, // Itens Não Atendidos
+        { wch: 18 }  // Percentual Atendido
+      ]
+      worksheet['!cols'] = columnWidths
+      
+      utils.book_append_sheet(workbook, worksheet, 'Análise de Sistemas')
+      writeFileXLSX(workbook, 'analise_sistemas.xlsx')
+    }
   }
   
   // Função para exportar para PDF
-  const exportToPDF = (data) => {
+  const exportToPDF = (data, processo = {}, parametros = { percentualMinimoGeral: 92, percentualMinimoObrigatorio: 100 }) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       alert('Sem dados para exportar')
       return
     }
     
-    const doc = new jsPDF()
-    
-    // Título
-    doc.setFontSize(16)
-    doc.text('Análise de Sistemas', 14, 20)
-    
-    // Data atual
-    doc.setFontSize(10)
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 26)
-    
-    // Preparar os dados para a tabela
-    const tableData = data.map(item => [
-      item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
-      item.total_itens || 0,
-      (item.total_itens || 0) - (item.nao_atendidos || 0),
-      item.nao_atendidos || 0,
-      `${Math.round(((item.total_itens - item.nao_atendidos) / item.total_itens || 0) * 100)}%`
-    ])
-    
-    // Adicionar a tabela
-    autoTable(doc, {
-      head: [['Sistema', 'Total de Itens', 'Itens Atendidos', 'Itens Não Atendidos', 'Percentual Atendido']],
-      body: tableData,
-      startY: 30,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] }
+    // Converter dados para o formato esperado pela função avançada
+    const sistemasNormalizados = data.map(item => {
+      return {
+        nome: item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+        totalItens: item.total_itens || 0,
+        naoAtendidos: item.nao_atendidos || 0,
+        obrigatorio: item.obrigatorio || false,
+        percentual_minimo: item.percentual_minimo || parametros.percentualMinimoObrigatorio
+      }
     })
     
-    // Salvar
-    doc.save('analise_sistemas.pdf')
+    try {
+      // Usar a exportação avançada
+      exportToPDFAdvanced(sistemasNormalizados, processo, {
+        percentualMinimoGeral: parametros.percentualMinimoGeral,
+        percentualMinimoObrigatorio: parametros.percentualMinimoObrigatorio
+      })
+    } catch (error) {
+      console.error("Erro ao exportar PDF avançado:", error)
+      
+      // Fallback para formato básico em caso de erro
+      const doc = new jsPDF()
+      
+      // Título
+      doc.setFontSize(16)
+      doc.text('Análise de Sistemas', 14, 20)
+      
+      // Data atual
+      doc.setFontSize(10)
+      doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 26)
+      
+      // Preparar os dados para a tabela
+      const tableData = data.map(item => [
+        item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+        item.total_itens || 0,
+        (item.total_itens || 0) - (item.nao_atendidos || 0),
+        item.nao_atendidos || 0,
+        `${Math.round(((item.total_itens - item.nao_atendidos) / item.total_itens || 0) * 100)}%`
+      ])
+      
+      // Adicionar a tabela
+      autoTable(doc, {
+        head: [['Sistema', 'Total de Itens', 'Itens Atendidos', 'Itens Não Atendidos', 'Percentual Atendido']],
+        body: tableData,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
+      })
+      
+      // Salvar
+      doc.save('analise_sistemas.pdf')
+    }
   }
   
   // Função para exportar para TXT
-  const exportToTXT = (data) => {
+  const exportToTXT = (data, processo = {}, parametros = { percentualMinimoGeral: 92, percentualMinimoObrigatorio: 100 }) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       alert('Sem dados para exportar')
       return
     }
     
-    // Criar conteúdo do arquivo de texto
-    let content = "ANÁLISE DE SISTEMAS\n"
-    content += "=".repeat(50) + "\n"
-    content += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`
-    
-    // Adicionar dados
-    data.forEach(item => {
-      const systemName = item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome')
-      const total = item.total_itens || 0
-      const atendidos = total - (item.nao_atendidos || 0)
-      const naoAtendidos = item.nao_atendidos || 0
-      const percentual = Math.round(((total - naoAtendidos) / total || 0) * 100)
-      
-      content += `Sistema: ${systemName}\n`
-      content += `Total de Itens: ${total}\n`
-      content += `Itens Atendidos: ${atendidos}\n`
-      content += `Itens Não Atendidos: ${naoAtendidos}\n`
-      content += `Percentual Atendido: ${percentual}%\n`
-      content += "-".repeat(50) + "\n"
+    // Converter dados para o formato esperado pela função avançada
+    const sistemasNormalizados = data.map(item => {
+      return {
+        nome: item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+        totalItens: item.total_itens || 0,
+        naoAtendidos: item.nao_atendidos || 0,
+        obrigatorio: item.obrigatorio || false,
+        percentual_minimo: item.percentual_minimo || parametros.percentualMinimoObrigatorio
+      }
     })
     
-    // Criar blob e link para download
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'analise_sistemas.txt'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      // Usar a exportação avançada
+      exportToTXTAdvanced(sistemasNormalizados, processo, {
+        percentualMinimoGeral: parametros.percentualMinimoGeral,
+        percentualMinimoObrigatorio: parametros.percentualMinimoObrigatorio
+      })
+    } catch (error) {
+      console.error("Erro ao exportar TXT avançado:", error)
+      
+      // Fallback para formato básico em caso de erro
+      // Criar conteúdo do arquivo de texto
+      let content = "ANÁLISE DE SISTEMAS\n"
+      content += "=".repeat(50) + "\n"
+      content += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`
+      
+      // Adicionar dados
+      data.forEach(item => {
+        const systemName = item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome')
+        const total = item.total_itens || 0
+        const atendidos = total - (item.nao_atendidos || 0)
+        const naoAtendidos = item.nao_atendidos || 0
+        const percentual = Math.round(((total - naoAtendidos) / total || 0) * 100)
+        
+        content += `Sistema: ${systemName}\n`
+        content += `Total de Itens: ${total}\n`
+        content += `Itens Atendidos: ${atendidos}\n`
+        content += `Itens Não Atendidos: ${naoAtendidos}\n`
+        content += `Percentual Atendido: ${percentual}%\n`
+        content += "-".repeat(50) + "\n"
+      })
+      
+      // Criar blob e link para download
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'analise_sistemas.txt'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
   
   // Show chart visualization
