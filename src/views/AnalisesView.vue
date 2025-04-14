@@ -34,21 +34,19 @@
             </div>
             <!-- Botões de navegação -->
             <div class="navigation-actions">
-              <button 
+              <nav-button 
                 v-if="step > 0" 
-                @click="voltarEtapa" 
-                class="btn-voltar"
-              >
-                Voltar
-              </button>
-              <button 
+                direction="prev"
+                text="ANTERIOR"
+                @click="voltarEtapa"
+              />
+              <nav-button
                 v-if="step < 2" 
-                @click="avancarEtapa" 
-                class="btn-avancar"
+                direction="next"
+                text="PRÓXIMO"
                 :disabled="!podeAvancar"
-              >
-                Avançar
-              </button>
+                @click="avancarEtapa"
+              />
             </div>
           </div>
         </div>
@@ -298,6 +296,8 @@ import * as XLSX from 'xlsx'
 import ToastMessages from '@/components/ToastMessages.vue'
 import { useToast } from '@/composables/useToast'
 import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
+import NavButton from '@/components/navigation/NavButton.vue'
+
 
 export default {
   name: 'AnalisesView',
@@ -307,7 +307,9 @@ export default {
     AnoSelection,
     ProcessoSelection,
     ToastMessages,
-    AnaliseExportMenu
+    AnaliseExportMenu,
+    NavButton,
+    
   },
   
   // Adicione esta declaração de emits
