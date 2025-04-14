@@ -98,7 +98,7 @@ const initCharts = () => {
           {
             label: 'Atendidas',
             data: [45, 39, 60, 10],
-            backgroundColor: '#4CAF50', // Verde para atendidas
+            backgroundColor: 'rgba(144, 238, 144, 0.8)', // Verde suave para atendidas
             order: 2
           },
           {

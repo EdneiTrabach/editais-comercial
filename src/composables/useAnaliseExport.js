@@ -412,13 +412,13 @@ export function useAnaliseExport() {
       }
     );
 
-    // Dataset para itens atendidos com cores condicionais (verde ou laranja)
+    // Dataset para itens atendidos com cores condicionais (verde mais forte ou verde claro)
     const attendedColors = chartData.conformStatus.map(isConform => 
-      isConform ? 'rgba(75, 192, 192, 0.8)' : 'rgba(255, 159, 64, 0.8)' // Verde se conforme, laranja se não
+      isConform ? 'rgba(40, 167, 69, 0.8)' : 'rgba(144, 238, 144, 0.6)' // Verde forte se conforme, verde claro se não
     );
 
     const attendedBorders = chartData.conformStatus.map(isConform => 
-      isConform ? 'rgb(75, 192, 192)' : 'rgb(255, 159, 64)' // Verde se conforme, laranja se não
+      isConform ? 'rgb(40, 167, 69)' : 'rgb(144, 238, 144)' // Borda correspondente
     );
 
     // Adicionar dataset para itens atendidos
