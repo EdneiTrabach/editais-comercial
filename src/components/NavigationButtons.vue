@@ -2,41 +2,173 @@
   <div class="navigation-buttons" 
        v-if="shouldShowNavigation"
        :class="{ 'sidebar-expanded': isSidebarExpanded, 'sidebar-collapsed': !isSidebarExpanded }">
+    
     <!-- Modo especial: botão voltar quando estiver em rota de edição/criação -->
     <template v-if="isSpecialRoute">
-      <button 
+      <nav-button 
+        direction="prev"
+        text="VOLTAR PARA LISTA"
         @click="router.push(getBackRoute)"
-        class="nav-btn prev-btn"
-      >
-        <i class="fa fa-chevron-left icon-white"></i>
-        Voltar para Lista
-      </button>
+      />
     </template>
     
     <!-- Navegação padrão para rotas normais -->
     <template v-else>
-      <button 
-        @click="goToPrevious" 
+      <nav-button 
+        direction="prev"
+        text="ANTERIOR"
         :disabled="!hasPrevious"
-        class="nav-btn prev-btn"
-      >
-        <i class="fa fa-chevron-left icon-white"></i>
-        Anterior
-      </button>
+        @click="goToPrevious"
+      />
+
       <div class="current-page" v-if="!isSpecialRoute">
         {{ navigationRoutes[currentIndex]?.name || 'Página Atual' }}
       </div>
-      <button 
-        @click="goToNext" 
+
+      <nav-button
+        direction="next" 
+        text="PRÓXIMO"
         :disabled="!hasNext"
-        class="nav-btn"
-      >
-        Próximo
-        <i class="fa fa-chevron-right icon-white"></i>
-      </button>
+        @click="goToNext"
+      />
     </template>
   </div>
 </template>
 
-<script src="../components/NavigationButtons.js"></script>
-<style src="../assets/styles/NavigationButtons.css"></style>
+<script>
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import NavButton from './navigation/NavButton.vue'
+
+export default {
+  name: 'NavigationButtons',
+  
+  components: {
+    NavButton
+  },
+
+  props: {
+    isSidebarExpanded: {
+      type: Boolean,
+      default: true
+    }
+  },
+
+  setup(props) {
+    const router = useRouter()
+    const route = useRoute()
+
+    // Define rotas de navegação
+    const navigationRoutes = [
+      { path: '/processos', name: 'Processos' },
+      { path: '/editais', name: 'Editais' },
+      { path: '/lances', name: 'Lances' },
+      { path: '/sistemas', name: 'Sistemas' },
+      { path: '/empresas', name: 'Empresas' },
+      { path: '/representantes', name: 'Representantes' },
+      { path: '/configuracoes', name: 'Admin. de Usuários' }
+    ]
+
+    const currentIndex = computed(() => {
+      return navigationRoutes.findIndex(r => r.path === route.path)
+    })
+
+    const hasPrevious = computed(() => currentIndex.value > 0)
+    const hasNext = computed(() => currentIndex.value < navigationRoutes.length - 1)
+
+    // Rotas onde não devemos mostrar a navegação
+    const hideNavigationRoutes = ['/login', '/reset-password', '/forgot-password']
+
+    const isSpecialRoute = computed(() => {
+      return route.path.includes('/edit') || 
+             route.path.includes('/new') || 
+             route.path.includes('/create') || 
+             (route.path.includes('/') && route.params.id)
+    })
+
+    const shouldShowNavigation = computed(() => {
+      return !hideNavigationRoutes.includes(route.path)
+    })
+
+    const getBackRoute = computed(() => {
+      const basePath = '/' + route.path.split('/')[1]
+      return basePath
+    })
+
+    const goToPrevious = () => {
+      if (hasPrevious.value) {
+        router.push(navigationRoutes[currentIndex.value - 1].path)
+      }
+    }
+
+    const goToNext = () => {
+      if (hasNext.value) {
+        router.push(navigationRoutes[currentIndex.value + 1].path)
+      }
+    }
+
+    return {
+      navigationRoutes,
+      currentIndex,
+      hasPrevious,
+      hasNext,
+      isSpecialRoute,
+      shouldShowNavigation,
+      getBackRoute,
+      goToPrevious,
+      goToNext,
+      router
+    }
+  }
+}
+</script>
+
+<style scoped>
+.navigation-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 20px;
+  margin-bottom: 1rem;
+  background-color: #00000000;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.current-page {
+  font-family: 'Poppins', sans-serif;
+  color: #193155;
+  font-weight: 500;
+  min-width: 120px;
+  text-align: center;
+  padding: 0.75rem 1.5rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Ajustes para o modo expanded/collapsed */
+.navigation-buttons.sidebar-expanded {
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+}
+
+.navigation-buttons.sidebar-collapsed {
+  margin-left: 70px;
+  transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .navigation-buttons {
+    padding: 15px;
+    flex-direction: column;
+  }
+
+  .current-page {
+    order: -1;
+    margin-bottom: 1rem;
+  }
+}
+</style>
