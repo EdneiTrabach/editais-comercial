@@ -258,12 +258,18 @@ export function useAnaliseExport() {
       canvas.chart.destroy();
     }
     
-    // Limpar qualquer conteúdo de gráficos de pizza anteriores
+    // Limpar qualquer conteúdo anterior
     const chartContainer = canvas.closest('.chart-body');
     if (chartContainer) {
       const pieChartsContainer = chartContainer.querySelector('.multiple-pie-charts');
       if (pieChartsContainer) {
         pieChartsContainer.remove();
+      }
+      
+      // Remover tabela de resumo se existir
+      const summaryTable = chartContainer.querySelector('.non-conform-summary');
+      if (summaryTable) {
+        summaryTable.remove();
       }
     }
     
@@ -289,18 +295,33 @@ export function useAnaliseExport() {
             label: function(context) {
               const label = context.dataset.label || '';
               const value = context.raw || 0;
+              const dataIndex = context.dataIndex;
               
               if (isPie) {
                 return `${context.label}: ${value}`;
               }
-              
-              // Para percentuais, exibir com até 5 casas decimais se necessário
-              if (context.dataset.label && context.dataset.label.includes('Percentual')) {
-                return `${label}: ${parseFloat(value.toFixed(5))}%`;
+
+              // Adicionar informações do percentual e requisito mínimo apenas no tooltip
+              if (context.dataset.label === 'Itens Atendidos') {
+                const percentual = chartData.percentages[dataIndex].toFixed(5);
+                const minRequirement = chartData.minRequirements[dataIndex];
+                const isConform = chartData.conformStatus[dataIndex];
+                const status = isConform ? 'Atende ✓' : 'Não Atende ✗';
+                
+                return [
+                  `${label}: ${value}`,
+                  `Percentual: ${percentual}%`,
+                  `Mínimo Exigido: ${minRequirement}%`,
+                  `Status: ${status}`
+                ];
               }
+              
               return `${label}: ${value}`;
             }
           }
+        },
+        annotation: {
+          annotations: {}
         }
       },
       scales: {
@@ -365,167 +386,85 @@ export function useAnaliseExport() {
           hitRadius: 10
         }
       };
-    } else if (isPie) {
-      delete options.scales;
-      
-      options.cutout = '40%'; // Tornamos o gráfico um donut para visualização em camadas
-      
-      options.plugins.tooltip = {
-        callbacks: {
-          label: function(context) {
-            let label = '';
-            if (context.dataset.category) {
-              label = context.dataset.category + ': ';
-            }
-            return label + context.raw;
-          },
-          title: function(context) {
-            return context[0].label;
-          }
-        }
-      };
-    }
+    } 
 
     // Preparar datasets para diferentes tipos de gráfico
     const datasets = [];
-    
-    if (isPie) {
-      // Nova implementação de gráfico em camadas para pizza
-      // Usamos círculos concêntricos para representar total, atendidos e não atendidos
-      
-      // A lógica aqui é criar três datasets:
-      // - Dataset 1: Total (círculo exterior) 
-      // - Dataset 2: Atendidos (círculo intermediário)
-      // - Dataset 3: Não atendidos (círculo interno)
-      
-      // Calculando somas totais para melhor visualização
-      const totalSum = chartData.totals.reduce((sum, value) => sum + value, 0);
-      const attendedSum = totalSum - chartData.nonAttended.reduce((sum, value) => sum + value, 0);
-      const nonAttendedSum = chartData.nonAttended.reduce((sum, value) => sum + value, 0);
-      
-      // Dataset para o total (camada exterior)
-      datasets.push({
-        label: 'Total',
-        data: [totalSum],
+
+    // Calcular itens atendidos para exibição
+    const attendedItems = chartData.totals.map((total, idx) => total - chartData.nonAttended[idx]);
+        
+    // Para gráficos de barra e linha, mostrar todas as métricas
+    datasets.push(
+      {
+        label: 'Total de Itens',
+        data: chartData.totals,
         backgroundColor: 'rgba(54, 162, 235, 0.8)',
         borderColor: 'rgb(54, 162, 235)',
-        borderWidth: 1,
-        category: 'Total',
-        weight: 0.5
-      });
-      
-      // Dataset para atendidos (camada intermediária)
-      datasets.push({
-        label: 'Atendidos',
-        data: [attendedSum],
-        backgroundColor: 'rgba(75, 192, 192, 0.8)',
-        borderColor: 'rgb(75, 192, 192)',
-        borderWidth: 1,
-        category: 'Atendidos',
-        weight: 0.7
-      });
-      
-      // Dataset para não atendidos (camada interna)
-      datasets.push({
-        label: 'Não Atendidos',
-        data: [nonAttendedSum],
+        borderWidth: 1
+      },
+      {
+        label: 'Itens Não Atendidos',
+        data: chartData.nonAttended,
         backgroundColor: 'rgba(255, 99, 132, 0.8)',
         borderColor: 'rgb(255, 99, 132)',
-        borderWidth: 1,
-        category: 'Não Atendidos',
-        weight: 0.9
-      });
-      
-    } else {
-      // Para outros tipos de gráfico, mostrar todas as métricas
-      datasets.push(
-        {
-          label: 'Total de Itens',
-          data: chartData.totals,
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 1
-        },
-        {
-          label: 'Itens Não Atendidos',
-          data: chartData.nonAttended,
-          backgroundColor: 'rgba(255, 99, 132, 0.8)',
-          borderColor: 'rgb(255, 99, 132)',
-          borderWidth: 1
-        },
-        {
-          label: 'Percentual Atendido',
-          data: chartData.percentages,
-          backgroundColor: 'rgba(75, 192, 192, 0.8)',
-          borderColor: 'rgb(75, 192, 192)',
-          borderWidth: 1,
-          yAxisID: 'percentage'
-        }
-      );
-      
-      if (type === 'line') {
-        datasets.forEach(dataset => {
-          dataset.fill = false;
-          dataset.pointBackgroundColor = dataset.borderColor;
-        });
+        borderWidth: 1
       }
+    );
+
+    // Dataset para itens atendidos com cores condicionais (verde ou laranja)
+    const attendedColors = chartData.conformStatus.map(isConform => 
+      isConform ? 'rgba(75, 192, 192, 0.8)' : 'rgba(255, 159, 64, 0.8)' // Verde se conforme, laranja se não
+    );
+
+    const attendedBorders = chartData.conformStatus.map(isConform => 
+      isConform ? 'rgb(75, 192, 192)' : 'rgb(255, 159, 64)' // Verde se conforme, laranja se não
+    );
+
+    // Adicionar dataset para itens atendidos
+    datasets.push({
+      label: 'Itens Atendidos',
+      data: attendedItems,
+      backgroundColor: attendedColors,
+      borderColor: attendedBorders,
+      borderWidth: 1.5
+    });
+
+    if (type === 'line') {
+      datasets.forEach(dataset => {
+        dataset.fill = false;
+        dataset.pointBackgroundColor = dataset.borderColor;
+        
+        // Para o dataset de percentual, usar símbolos diferentes para conformes/não conformes
+        if (dataset.label === 'Percentual Atendido') {
+          dataset.pointStyle = chartData.conformStatus.map(isConform => 
+            isConform ? 'circle' : 'triangle'
+          );
+          dataset.pointRadius = chartData.conformStatus.map(isConform => 
+            isConform ? 5 : 7
+          );
+        }
+      });
     }
     
     // Tipo de gráfico específico para pie
-    const chartType = isPie ? 'doughnut' : (isHorizontal ? 'bar' : type || 'bar');
+    const chartType = isHorizontal ? 'bar' : type || 'bar';
     
     // Create new chart with improved visibility
     canvas.chart = new Chart(canvas, {
       type: chartType,
       data: {
-        labels: isPie ? ['Análise de Sistemas'] : chartData.labels,
+        labels: chartData.labels,
         datasets: datasets
       },
-      options: options
-    });
-    
-    // Se for gráfico de pizza, adicionar legendas personalizadas abaixo
-    if (isPie && canvas.chart) {
-      const chartContainer = canvas.closest('.chart-body');
-      if (chartContainer) {
-        // Remover legenda anterior se existir
-        const oldLegend = chartContainer.querySelector('.custom-pie-legend');
-        if (oldLegend) {
-          oldLegend.remove();
+      options: options,
+      plugins: [{
+        id: 'clearMinRequirementLines', // Novo plugin vazio para substituir o anterior
+        afterDraw: function(chart) {
+          // Não desenhar mais as linhas vermelhas
         }
-        
-        // Criar nova legenda
-        const legend = document.createElement('div');
-        legend.className = 'custom-pie-legend';
-        legend.style.marginTop = '20px';
-        legend.style.textAlign = 'center';
-        
-        // Dados para a legenda
-        const legendItems = [
-          { label: 'Total de Itens', color: 'rgb(54, 162, 235)', value: totalSum },
-          { label: 'Itens Atendidos', color: 'rgb(75, 192, 192)', value: attendedSum },
-          { label: 'Itens Não Atendidos', color: 'rgb(255, 99, 132)', value: nonAttendedSum }
-        ];
-        
-        // Construir HTML da legenda
-        legendItems.forEach(item => {
-          const itemDiv = document.createElement('div');
-          itemDiv.style.display = 'inline-block';
-          itemDiv.style.margin = '0 15px';
-          
-          itemDiv.innerHTML = `
-            <div style="display: flex; align-items: center;">
-              <div style="width: 15px; height: 15px; background-color: ${item.color}; margin-right: 5px;"></div>
-              <span>${item.label}: ${item.value}</span>
-            </div>
-          `;
-          
-          legend.appendChild(itemDiv);
-        });
-        
-        chartContainer.appendChild(legend);
-      }
-    }
+      }]
+    });
   }
   
   // Nova função para renderizar múltiplos gráficos de pizza
@@ -552,6 +491,12 @@ export function useAnaliseExport() {
       multipleChartsContainer.remove();
     }
     
+    // Remover tabela de resumo anterior se existir
+    const summaryTable = chartContainer.querySelector('.non-conform-summary');
+    if (summaryTable) {
+      summaryTable.remove();
+    }
+    
     // Esconder o canvas original
     canvas.style.display = 'none';
     
@@ -575,16 +520,27 @@ export function useAnaliseExport() {
       // Criar container para cada gráfico
       const pieContainer = document.createElement('div');
       pieContainer.style.width = `${maxWidth}px`;
-      pieContainer.style.height = `${maxWidth + 40}px`;  // Altura adicional para título
+      pieContainer.style.height = `${maxWidth + 60}px`;  // Altura adicional para título e status
       pieContainer.style.position = 'relative';
       pieContainer.style.display = 'flex';
       pieContainer.style.flexDirection = 'column';
       pieContainer.style.alignItems = 'center';
       
+      // Verificar se está em conformidade
+      const isConform = chartData.conformStatus[index];
+      
+      // Adicionar borda vermelha para itens não conformes
+      if (!isConform) {
+        pieContainer.style.border = '2px solid #d9534f';
+        pieContainer.style.borderRadius = '5px';
+        pieContainer.style.padding = '5px';
+        pieContainer.style.backgroundColor = 'rgba(255, 99, 132, 0.05)';
+      }
+      
       // Criar título para o sistema
       const titleElement = document.createElement('h4');
       titleElement.textContent = systemName;
-      titleElement.style.margin = '0 0 10px 0';
+      titleElement.style.margin = '0 0 5px 0';
       titleElement.style.fontSize = '14px';
       titleElement.style.textAlign = 'center';
       titleElement.style.height = '40px';
@@ -610,6 +566,8 @@ export function useAnaliseExport() {
       const total = chartData.totals[index];
       const nonAttended = chartData.nonAttended[index];
       const attended = total - nonAttended;
+      const percentAtendido = chartData.percentages[index];
+      const minRequirement = chartData.minRequirements[index];
       
       // Configurar dados do gráfico
       const pieData = {
@@ -639,6 +597,13 @@ export function useAnaliseExport() {
                 const value = context.raw || 0;
                 const label = context.label || '';
                 return `${label}: ${value}`;
+              },
+              afterBody: function(context) {
+                return [
+                  `Percentual Atendido: ${percentAtendido.toFixed(5)}%`,
+                  `Mínimo Exigido: ${minRequirement}%`,
+                  `Status: ${isConform ? 'Atende ✓' : 'Não Atende ✗'}`
+                ];
               }
             }
           },
@@ -660,16 +625,35 @@ export function useAnaliseExport() {
         options: pieOptions
       });
       
-      // Adicionar informações de total abaixo do gráfico
+      // Adicionar informações de total e status abaixo do gráfico
       const infoElement = document.createElement('div');
       infoElement.style.marginTop = '5px';
       infoElement.style.fontSize = '12px';
       infoElement.style.textAlign = 'center';
-      infoElement.innerHTML = `Total: <strong>${total}</strong>`;
+      
+      // Status de conformidade
+      const statusBadge = document.createElement('span');
+      statusBadge.style.padding = '2px 5px';
+      statusBadge.style.borderRadius = '3px';
+      statusBadge.style.fontWeight = 'bold';
+      statusBadge.style.marginLeft = '5px';
+      
+      if (isConform) {
+        statusBadge.textContent = '✓ Atende';
+        statusBadge.style.backgroundColor = 'rgba(75, 192, 192, 0.2)';
+        statusBadge.style.color = 'rgb(75, 192, 192)';
+      } else {
+        statusBadge.textContent = `✗ Não Atende (Min: ${minRequirement}%)`;
+        statusBadge.style.backgroundColor = 'rgba(255, 99, 132, 0.2)';
+        statusBadge.style.color = 'rgb(255, 99, 132)';
+      }
+      
+      infoElement.innerHTML = `Total: <strong>${total}</strong> `;
+      infoElement.appendChild(statusBadge);
       
       pieContainer.appendChild(infoElement);
     });
-  };
+  }
   
   // Prepare data for chart
   const prepareChartData = (data) => {
@@ -680,7 +664,9 @@ export function useAnaliseExport() {
         labels: [],
         totals: [],
         nonAttended: [],
-        percentages: []
+        percentages: [],
+        minRequirements: [],
+        conformStatus: []
       }
     }
     
@@ -688,6 +674,8 @@ export function useAnaliseExport() {
     const totals = []
     const nonAttended = []
     const percentages = []
+    const minRequirements = []
+    const conformStatus = []
     
     data.forEach(item => {
       // Skip invalid items
@@ -706,19 +694,37 @@ export function useAnaliseExport() {
       totals.push(total)
       nonAttended.push(notAttended)
       
-      // Calcular percentual com alta precisão, mas limite a 5 casas decimais
+      // Calcular percentual como valor numérico puro, sem converter para string primeiro
       let percentual = 0
       if (total > 0) {
-        percentual = parseFloat(((total - notAttended) / total * 100).toFixed(5));
+        percentual = ((total - notAttended) / total) * 100;
       }
       percentages.push(percentual)
+      
+      // Adicionar requisito mínimo como número puro
+      const minRequirement = Number(item.percentual_minimo || 80)
+      minRequirements.push(minRequirement)
+      
+      // Determinar conformidade com uma comparação direta de números
+      const isConform = percentual >= minRequirement;
+      conformStatus.push(isConform)
+      
+      // Debug para TESOURARIA
+      if (systemName.includes('TESOURARIA')) {
+        console.log(`DEPURAÇÃO - ${systemName}: 
+          Percentual: ${percentual} 
+          MinReq: ${minRequirement} 
+          isConform: ${isConform}`)
+      }
     })
     
     return {
       labels,
       totals,
       nonAttended,
-      percentages
+      percentages,
+      minRequirements,
+      conformStatus
     }
   }
   
