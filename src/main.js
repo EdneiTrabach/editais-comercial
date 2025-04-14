@@ -7,6 +7,7 @@ import './assets/styles/themes/dark-mode.css'
 import './assets/styles/components/colored-dropdown.css'
 import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
 import '@/assets/sharedStyles.css'
+import '@fortawesome/fontawesome-free/css/all.css'
 
 // Não precisamos mais da configuração CSP via meta tag
 // import { configurarCSP } from './services/cspConfig'
