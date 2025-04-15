@@ -265,9 +265,9 @@ export function useAnalises() {
           nome: isCustomLine ? item.sistema_nome_personalizado || 'Anotação' : (item.sistemas ? item.sistemas.nome : 'Sistema desconhecido'),
           sistema_id: isCustomLine ? null : item.sistema_id,
           isCustomLine: isCustomLine,
-          totalItens: item.total_itens || 0,
-          naoAtendidos: item.nao_atendidos || 0,
-          atendidos: atendidos || 0,
+          totalItens: item.total_itens === 0 ? '' : item.total_itens || '', // Inicializando vazio quando é 0
+          naoAtendidos: item.nao_atendidos === 0 ? '' : item.nao_atendidos || '', // Inicializando vazio quando é 0
+          atendidos: (item.total_itens || 0) - (item.nao_atendidos || 0),
           obrigatorio: item.obrigatorio || false,
           percentualMinimo: item.percentual_minimo || (item.obrigatorio ? percentualMinimoObrigatorios.value : percentualMinimoGeral.value),
           classeEstilo: '' // Será definido abaixo
@@ -653,6 +653,31 @@ export function useAnalises() {
       });
   });
 
+  // Adicionar esta função ao composable useAnalises - coloque antes do return
+
+  const calcularClasseEstilo = (sistema) => {
+    // Se tem valor no Total de Itens mas Não Atendidos está vazio ou é zero
+    if (sistema.totalItens > 0 && (!sistema.naoAtendidos && sistema.naoAtendidos !== 0)) {
+      return 'validacao-pendente';
+    }
+    
+    // Se não tem Total de Itens, é neutro
+    if (!sistema.totalItens) {
+      return 'neutro';
+    }
+    
+    // Calcular percentual de atendimento
+    const percentualAtendimento = (sistema.totalItens - sistema.naoAtendidos) / sistema.totalItens * 100;
+    
+    // Determinar percentual mínimo baseado na obrigatoriedade
+    const percentualMinimo = sistema.obrigatorio 
+      ? percentualMinimoObrigatorios.value 
+      : percentualMinimoGeral.value;
+    
+    // Retornar classe com base no atendimento
+    return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
+  };
+
   // No return do composable, inclua as novas funções:
   return {
     step,
@@ -689,5 +714,6 @@ export function useAnalises() {
     carregarPercentuaisMinimos,  // Adicionado aqui
     atualizarPercentuaisMinimos,  // Adicionado aqui
     temSistemasObrigatoriosNaoAtendidos,  // Adicionado aqui
+    calcularClasseEstilo,  // Adicione esta linha
   }
 }

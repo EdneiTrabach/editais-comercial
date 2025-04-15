@@ -144,7 +144,7 @@
             </thead>
             <tbody>
               <tr v-for="(sistema, index) in sistemasAnalise" :key="sistema.id" 
-                  :class="[sistema.classeEstilo, { 'custom-line': sistema.isCustomLine, 'dragging': isDragging === sistema.id }]"
+                  :class="[calcularClasseEstilo(sistema), { 'custom-line': sistema.isCustomLine, 'dragging': isDragging === sistema.id }]"
                   :data-id="sistema.id"
                   draggable="true"
                   @dragstart="startDrag($event, sistema, index)"
@@ -174,21 +174,25 @@
                     <span v-if="sistema.isCustomLine" class="edit-indicator"><i class="fas fa-pencil-alt"></i></span>
                   </div>
                 </td>
-                <td @click="editarCelula(sistema, 'totalItens')" class="editable-cell">
+                <td @click="editarCelula(sistema, 'totalItens')">
                   <div v-if="editando.id === sistema.id && editando.campo === 'totalItens'">
-                    <input type="number" class="edit-input form-control form-control-sm" 
-                           v-model="editando.valor" 
-                           @blur="salvarEdicao(sistema)"
-                           @keyup.enter="salvarEdicao(sistema)"
-                           @keyup.esc="cancelarEdicao" />
+                    <input 
+                      class="edit-input" 
+                      v-model="editando.valor" 
+                      type="number"
+                      min="0"
+                      @blur="salvarEdicao(sistema)"
+                      @keyup.enter="salvarEdicao(sistema)"
+                      @keyup.tab="handleTabNavigation($event, sistema, 'totalItens', 'naoAtendidos')"
+                      @keyup.escape="cancelarEdicao"
+                      autofocus
+                    />
                   </div>
-                  <div v-else>
-                    {{ sistema.totalItens }}
-                    <span class="edit-indicator"><i class="fas fa-pencil-alt"></i></span>
+                  <div v-else class="editable-cell">
+                    {{ sistema.totalItens || '' }}
                   </div>
                 </td>
                 <td :class="{ 'nao-atendidos': sistema.naoAtendidos > 0 }">
-                  <!-- Se estiver editando esta célula -->
                   <div v-if="editando.id === sistema.id && editando.campo === 'naoAtendidos'">
                     <input 
                       class="edit-input" 
@@ -202,9 +206,8 @@
                       autofocus
                     />
                   </div>
-                  <!-- Visualização normal -->
                   <div v-else class="editable-cell" @click="editarCelula(sistema, 'naoAtendidos')">
-                    {{ sistema.naoAtendidos }}
+                    {{ sistema.naoAtendidos || '' }}
                   </div>
                 </td>
                 <td :class="{ 'atendidos': sistema.atendidos > 0 }">
@@ -1684,6 +1687,32 @@ export default {
       }
     };
 
+    // Adicione esta função dentro do setup(), antes do return
+
+    // Função para calcular a classe de estilo com validação pendente
+    const calcularClasseEstilo = (sistema) => {
+      // Verificar se tem Total de Itens mas Não Atendidos está em branco
+      if (sistema.totalItens > 0 && (!sistema.naoAtendidos && sistema.naoAtendidos !== 0)) {
+        return 'validacao-pendente';
+      }
+      
+      // Se não tem Total de Itens, é neutro
+      if (!sistema.totalItens) {
+        return 'neutro';
+      }
+      
+      // Calcular percentual de atendimento
+      const percentualAtendimento = calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens);
+      
+      // Determinar percentual mínimo baseado na obrigatoriedade
+      const percentualMinimo = sistema.obrigatorio 
+        ? percentualMinimoObrigatorios.value 
+        : percentualMinimoGeral.value;
+      
+      // Retornar classe com base no atendimento
+      return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
+    };
+
     // Adicione esta função para redefinir todos os percentuais
     const redefinirTodosPercentuais = async () => {
       try {
@@ -1720,6 +1749,20 @@ export default {
         console.error('Erro ao redefinir percentuais:', error);
         showToast('Erro ao redefinir percentuais: ' + error.message, 'error');
       }
+    };
+
+    // Adicione esta função dentro do setup() do componente
+
+    const handleTabNavigation = (event, sistema, campoAtual, proximoCampo) => {
+      event.preventDefault(); // Prevenir o comportamento padrão do tab
+      
+      // Salvar o valor atual
+      salvarEdicao(sistema);
+      
+      // Depois de salvar, editar o próximo campo
+      nextTick(() => {
+        editarCelula(sistema, proximoCampo);
+      });
     };
 
     return {
@@ -1787,6 +1830,8 @@ export default {
       preencherPercentuaisMinimosDefault,
       carregarAnalisesSistemasExtended,
       redefinirTodosPercentuais,
+      handleTabNavigation,
+      calcularClasseEstilo,
     }
   }
 }

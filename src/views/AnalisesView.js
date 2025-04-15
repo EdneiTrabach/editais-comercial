@@ -474,6 +474,37 @@ export default {
       }
     };
 
+    // Adicionar esta nova função para navegação por Tab
+    const handleTabNavigation = (sistema, campoAtual, proximoCampo, event) => {
+      event.preventDefault(); // Prevenir o comportamento padrão do tab
+      // Salvar o valor atual
+      salvarEdicao(sistema);
+      // Depois de salvar, editar o próximo campo
+      nextTick(() => {
+        editarCelula(sistema, proximoCampo);
+      });
+    };
+
+    // Modificar a função que calcula a classe de estilo da linha para incluir a validação
+    const calcularClasseEstilo = (sistema) => {
+      // Se tem um valor em totalItens mas naoAtendidos está vazio ou é zero
+      if (sistema.totalItens > 0 && (!sistema.naoAtendidos && sistema.naoAtendidos !== 0)) {
+        return 'validacao-pendente';
+      }
+      
+      // Restante da lógica existente para outras classes
+      if (!sistema.totalItens) {
+        return 'neutro';
+      }
+      
+      const percentualAtendimento = calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens);
+      const percentualMinimo = sistema.obrigatorio 
+        ? percentualMinimoObrigatorios.value 
+        : percentualMinimoGeral.value;
+        
+      return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -524,7 +555,9 @@ export default {
       adicionarAnotacao,
       removerAnotacao,
       salvarPercentuaisMinimosLocal,
-      toasts
+      toasts,
+      handleTabNavigation,
+      calcularClasseEstilo
     }
   }
 }
