@@ -8,13 +8,13 @@
     
     <div class="dropdown-menu" :class="{ 'show': isOpen }">
       <div class="dropdown-header">Formatos de Arquivo</div>
-      <a class="dropdown-item" href="#" @click.prevent="exportToExcel(data)">
+      <a class="dropdown-item" href="#" @click.prevent="handleExportToExcel">
         <i class="fas fa-file-excel"></i> Excel
       </a>
-      <a class="dropdown-item" href="#" @click.prevent="exportToPDF(data)">
+      <a class="dropdown-item" href="#" @click.prevent="handleExportToPDF">
         <i class="fas fa-file-pdf"></i> PDF
       </a>
-      <a class="dropdown-item" href="#" @click.prevent="exportToTXT(data)">
+      <a class="dropdown-item" href="#" @click.prevent="handleExportToTXT">
         <i class="fas fa-file-alt"></i> TXT
       </a>
       
@@ -89,6 +89,14 @@ const props = defineProps({
     type: Array,
     required: true,
     default: () => []
+  },
+  percentualMinimoGeral: {
+    type: Number,
+    default: () => 92
+  },
+  percentualMinimoObrigatorio: {
+    type: Number,
+    default: () => 100
   }
 })
 
@@ -154,6 +162,27 @@ watch(() => props.data, (newData) => {
     showChartSafe(currentChartType.value)
   }
 }, { deep: true })
+
+const handleExportToExcel = () => {
+  exportToExcel(props.data, {}, {
+    percentualMinimoGeral: props.percentualMinimoGeral,
+    percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
+  });
+};
+
+const handleExportToPDF = () => {
+  exportToPDF(props.data, {}, {
+    percentualMinimoGeral: props.percentualMinimoGeral,
+    percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
+  });
+};
+
+const handleExportToTXT = () => {
+  exportToTXT(props.data, {}, {
+    percentualMinimoGeral: props.percentualMinimoGeral,
+    percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
+  });
+};
 
 onMounted(() => {
   document.addEventListener('click', closeDropdown)
@@ -282,7 +311,7 @@ onUnmounted(() => {
   margin-left: 8px;
 }
 
-.close-btn:hover {
+close-btn:hover {
   color: #343a40;
 }
 

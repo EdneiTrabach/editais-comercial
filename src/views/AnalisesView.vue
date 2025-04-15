@@ -30,7 +30,11 @@
                 title="Atualiza sistemas conforme a tela de processos">
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
               </button>
-              <AnaliseExportMenu :data="analiseItems" />
+              <AnaliseExportMenu 
+                :data="analiseItems" 
+                :percentualMinimoGeral="percentualMinimoGeral"
+                :percentualMinimoObrigatorio="percentualMinimoObrigatorios"
+              />
             </div>
             <!-- Botões de navegação -->
             <div class="navigation-actions">
