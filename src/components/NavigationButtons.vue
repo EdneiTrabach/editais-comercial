@@ -128,7 +128,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding: 20px;
   margin-bottom: 1rem;
   background-color: #00000000;
@@ -147,6 +147,44 @@ export default {
   border-radius: 10px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.current-page:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajustes para os botões de navegação */
+:deep(.cta) {
+  transition: all 0.3s ease;
+}
+
+:deep(.cta:hover) {
+  transform: scale(1.05);
+}
+
+:deep(.cta .second) {
+  margin: 0 10px;
+  transition: all 0.3s ease;
+}
+
+:deep(.prev .second) {
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+:deep(.next .second) {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+:deep(.cta:not(:disabled):hover.prev .second) {
+  transform: translateX(-5px);
+}
+
+:deep(.cta:not(:disabled):hover.next .second) {
+  transform: translateX(5px);
 }
 
 /* Ajustes para o modo expanded/collapsed */
