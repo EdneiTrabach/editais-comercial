@@ -756,21 +756,31 @@ export default {
         } else {
           // Para campos numéricos, validar e converter
           try {
-            // Remover caracteres não numéricos e converter para inteiro
-            valor = parseInt(editando.value.valor.toString().replace(/[^\d]/g, '') || '0');
-            
-            if (isNaN(valor) || valor < 0) {
-              throw new Error('Por favor, insira um número válido maior ou igual a zero');
+            // Verificar se existe valor antes de chamar toString
+            const inputValue = editando.value.valor !== null && editando.value.valor !== undefined 
+              ? editando.value.valor.toString().trim() 
+              : '';
+              
+            // Se o valor for vazio - manter vazio para indicar não analisado
+            if (inputValue === '') {
+              valor = null; // Null representa "não analisado"
+            } else {
+              // Caso contrário, converter para número, permitindo explicitamente 0
+              valor = parseInt(inputValue.replace(/[^\d]/g, '') || '0');
+              
+              if (isNaN(valor) || valor < 0) {
+                throw new Error('Por favor, insira um número válido maior ou igual a zero');
+              }
             }
           } catch (e) {
-            // Se ocorrer um erro na conversão, definir como zero
             console.warn('Erro ao converter valor numérico:', e);
-            valor = 0;
+            showToast(e.message || 'Erro ao processar o valor', 'error');
+            return; // Impede que continue o salvamento com valor inválido
           }
           
           // Validações específicas para campos numéricos
           if (editando.value.campo === 'totalItens') {
-            if (sistema.naoAtendidos > valor) {
+            if (sistema.naoAtendidos > valor && valor !== null) {
               sistema.naoAtendidos = valor;
               // Atualizar também o valor de não atendidos no banco para manter consistência
               await supabase
@@ -782,7 +792,7 @@ export default {
                 .eq('id', sistema.id);
             }
           } else if (editando.value.campo === 'naoAtendidos') {
-            if (valor > sistema.totalItens) {
+            if (valor !== null && valor > sistema.totalItens && sistema.totalItens !== null) {
               throw new Error('O número de itens não atendidos não pode ser maior que o total');
             }
           }
@@ -795,26 +805,33 @@ export default {
           'naoAtendidos': 'nao_atendidos'
         };
     
-        // Preparar objeto de atualização
-        const atualizacao = {
-          [camposBanco[editando.value.campo] || editando.value.campo]: valor,
-          updated_at: new Date().toISOString()
-        };
+        // Usar operador ternário para garantir que não tente acessar uma key undefined
+        const campoBanco = camposBanco[editando.value.campo] || editando.value.campo;
     
-        // Atualizar no banco de dados
-        const { error } = await supabase
-          .from('analises_itens')
-          .update(atualizacao)
-          .eq('id', sistema.id);
-    
-        if (error) throw error;
+        // Preparar objeto de atualização apenas se o campo for válido
+        if (campoBanco) {
+          const atualizacao = {
+            [campoBanco]: valor,
+            updated_at: new Date().toISOString()
+          };
+          
+          // Atualizar no banco de dados
+          const { error } = await supabase
+            .from('analises_itens')
+            .update(atualizacao)
+            .eq('id', sistema.id);
+      
+          if (error) throw error;
+        }
     
         // Atualizar localmente
         sistema[editando.value.campo] = valor;
         
         // Recalcular atendidos apenas para campos numéricos
         if (editando.value.campo === 'totalItens' || editando.value.campo === 'naoAtendidos') {
-          sistema.atendidos = sistema.totalItens - sistema.naoAtendidos;
+          sistema.atendidos = (sistema.totalItens !== null && sistema.naoAtendidos !== null) 
+            ? sistema.totalItens - sistema.naoAtendidos 
+            : null;
           
           // Importante: Atualizar a classe de estilo imediatamente após recalcular valores
           atualizarClasseEstilo(sistema);

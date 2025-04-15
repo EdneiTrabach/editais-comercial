@@ -11,8 +11,11 @@
  * @returns {Object} - Objeto com status de conformidade
  */
 export const validarConformidadeSistema = (sistema, percentualMinimoObrigatorio, percentualMinimoGeral) => {
-  // Se o sistema não tem itens, não pode ser validado
-  if (!sistema.totalItens) {
+  // Verificar se o sistema tem dados para análise
+  // A diferença importante é que agora verificamos se naoAtendidos === '' (string vazia)
+  // mas não consideramos 0 como "não analisado"
+  if (!sistema.totalItens || sistema.naoAtendidos === undefined || 
+      sistema.naoAtendidos === null || sistema.naoAtendidos === '') {
     return {
       atende: false,
       percentualAtingido: 0,

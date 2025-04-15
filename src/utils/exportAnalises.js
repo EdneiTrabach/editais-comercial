@@ -243,8 +243,13 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     const nome = sistema.nome || (sistema.sistemas?.nome || "Sistema sem nome");
     const total = sistema.totalItens || 0;
     
-    // Verificar se o sistema foi analisado
-    const naoAtendidos = sistema.naoAtendidos !== undefined && sistema.naoAtendidos !== null ? sistema.naoAtendidos : '';
+    // Verificar se o sistema foi analisado - modificar esta verificação
+    const naoAtendidos = sistema.naoAtendidos !== undefined && 
+                         sistema.naoAtendidos !== null && 
+                         sistema.naoAtendidos !== '' ? 
+                         sistema.naoAtendidos : '';
+                         
+    // Importante: string vazia significa não analisado
     const hasValidNaoAtendidos = naoAtendidos !== '';
     
     // Calcular valores apenas se tiver sido analisado
