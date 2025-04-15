@@ -505,6 +505,27 @@ export default {
       return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
     };
 
+    // Para campos numéricos, validar e converter
+    try {
+      // Remover caracteres não numéricos e converter para inteiro
+      const inputValue = editando.value.valor.toString().trim();
+      // Se o valor for vazio e o usuário quiser explicitamente deixar não analisado
+      if (inputValue === '') {
+        valor = '';
+      } else {
+        // Caso contrário, converter para número, permitindo explicitamente 0
+        valor = parseInt(inputValue.replace(/[^\d]/g, '') || '0');
+        
+        if (isNaN(valor) || valor < 0) {
+          throw new Error('Por favor, insira um número válido maior ou igual a zero');
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao converter valor numérico:', e);
+      showToast(e.message || 'Erro ao processar o valor', 'error');
+      return; // Impede que continue o salvamento com valor inválido
+    }
+
     return {
       step,
       isSidebarExpanded,

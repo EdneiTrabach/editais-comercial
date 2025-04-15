@@ -1,4 +1,9 @@
-/* Import component-specific CSS files */
-@import '../assets/styles/analises/analises-main.css';
-
-/* Any additional styles specific to AnalisesView that don't fit in component files can go here */
+@import '../assets/styles/analises/buttons.css';
+@import '../assets/styles/analises/drag-drop.css';
+@import '../assets/styles/analises/editable.css';
+@import '../assets/styles/analises/forms.css';
+@import '../assets/styles/analises/header.css';
+@import '../assets/styles/analises/layout.css';
+@import '../assets/styles/analises/modal.css';
+@import '../assets/styles/analises/status.css';
+@import '../assets/styles/analises/table.css';

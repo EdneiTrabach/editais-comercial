@@ -137,8 +137,7 @@
                 <th class="drag-column"></th>
                 <th>Sistema</th>
                 <th>Total de Itens</th>
-                <th>Não Atendidos</th>
-                <th>Atendidos</th>
+                <th title="Insira 0 para sistemas que atendem 100%, ou deixe vazio para 'Não analisado'">Não Atendidos</th>                <th>Atendidos</th>
                 <th>% Não Atendimento</th>
                 <th>% Atendimento</th>
                 <th>Obrigatório</th>
@@ -569,7 +568,7 @@ export default {
     })
 
     const getStatusGeral = computed(() => {
-      // Filtrar apenas sistemas que foram analisados (têm valor em naoAtendidos)
+      // Filtrar apenas sistemas que foram analisados (têm valor em naoAtendidos, incluindo 0)
       const sistemasAnalisados = sistemasAnalise.value.filter(s => 
         s.naoAtendidos !== undefined && s.naoAtendidos !== null && 
         s.naoAtendidos !== '' && s.totalItens > 0
@@ -1930,4 +1929,4 @@ const verificarConexaoBanco = async () => {
 };
 </script>
 <style src="./AnalisesView.css" scoped></style>
-<style src="@/assets/styles/analises/buttons.css"></style>
+<style src="../assets/styles/analises/buttons.css"></style>

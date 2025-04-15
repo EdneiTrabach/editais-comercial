@@ -130,17 +130,41 @@
 .status-geral-atende {
   color: #166534;
   background-color: #dcfce7;
+  height: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  padding: 1rem;
 }
 
 .status-geral-nao-atende {
   color: #991b1b;
   background-color: #fee2e2;
+  height: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  padding: 1rem;
 }
 
 .status-geral-neutro {
   background-color: rgba(150, 150, 150, 0.15);
   color: #666;
   border-left: 4px solid #999;
+  height: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  padding: 1rem;
 }
 
 .status-geral .status-nao-analisado {

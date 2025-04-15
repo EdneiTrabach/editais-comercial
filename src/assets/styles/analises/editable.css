@@ -4,6 +4,9 @@
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
+  height: 20px;
+  width: 100%;
+
 }
 
 .editable:hover,
