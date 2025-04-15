@@ -167,12 +167,63 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   let yPos = 45; // Aumentado para dar mais espaço após a logo
   const lineHeight = 7;
   
+  // Adicione este log para depuração
+  console.log('processo recebido para exportação:', processo);
+
+  // Função robusta para extrair campos do processo
+  const getProcessField = (field, fallback = 'Não informado') => {
+    if (!processo) return fallback;
+
+    // Permitir que processo seja string, objeto simples ou objeto aninhado
+    const safe = (val) => (val !== undefined && val !== null && val !== '') ? val : fallback;
+
+    switch (field) {
+      case 'numero':
+        return safe(
+          processo.numero_processo ||
+          processo.numero ||
+          processo.processo ||
+          (typeof processo === 'string' ? processo : undefined)
+        );
+      case 'orgao':
+        return safe(
+          (processo.orgao && (processo.orgao.nome || processo.orgao)) ||
+          processo.orgao_nome
+        );
+      case 'data':
+        const data =
+          processo.data_pregao ||
+          processo.data ||
+          processo.data_sessao ||
+          undefined;
+        if (!data) return 'Data não informada';
+        try {
+          return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch {
+          return 'Data inválida';
+        }
+      case 'responsavel':
+        return safe(
+          (processo.responsavel && processo.responsavel.nome) ||
+          processo.responsavel_nome ||
+          processo.responsavel
+        );
+      case 'codigo':
+        return safe(
+          processo.codigo_analise ||
+          processo.codigo
+        );
+      default:
+        return fallback;
+    }
+  };
+
   const infoProcesso = [
-    `Processo: ${processo.numero_processo || 'N/A'}`,
-    `Órgão: ${processo.orgao || 'N/A'}`,
-    `Data: ${new Date(processo.data_pregao).toLocaleDateString('pt-BR') || 'N/A'}`,
-    `Responsável: ${processo.responsavel?.nome || 'N/A'}`,
-    `Código: ${processo.codigo_analise || 'N/A'}`
+    `Processo: ${getProcessField('numero')}`,
+    `Órgão: ${getProcessField('orgao')}`,
+    `Data: ${getProcessField('data')}`,
+    `Responsável: ${getProcessField('responsavel')}`,
+    `Código: ${getProcessField('codigo')}`
   ];
 
   infoProcesso.forEach(info => {
@@ -263,8 +314,14 @@ export const exportToPDF = (sistemas, processo, parametros) => {
 
   addFooter();
   
-  // Salvar o arquivo
-  const fileName = `analise_sistemas_${processo.numero_processo || 'relatorio'}.pdf`;
+  // Corrigir nome do arquivo para garantir que nunca fique "sem-numero"
+  const numeroProcessoLimpo = getProcessField('numero', 'relatorio')
+    .toString()
+    .replace(/[\/\\:*?"<>|]/g, '-')
+    .replace(/\s+/g, '_')
+    .substring(0, 40) || 'relatorio';
+
+  const fileName = `RelatorioAnalises-${numeroProcessoLimpo}.pdf`;
   doc.save(fileName);
 };
 
@@ -279,6 +336,8 @@ export const exportToExcel = (sistemas, processo, parametros) => {
     alert('Sem dados para exportar');
     return;
   }
+  
+  console.log('processo recebido para exportação:', processo);
   
   const { percentualMinimoGeral, percentualMinimoObrigatorio } = parametros;
   

@@ -103,6 +103,15 @@
                     @change="salvarPercentuaisMinimosLocal"
                   />
                 </div>
+                <!-- Novo botão para redefinir todos os percentuais -->
+                <div class="percentual-reset">
+                  <button 
+                    @click="redefinirTodosPercentuais" 
+                    class="btn-reset-percentuais" 
+                    title="Redefinir todas as porcentagens individuais para os valores padrão definidos acima">
+                    <i class="fas fa-sync-alt"></i> Redefinir Todos Percentuais
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -919,17 +928,21 @@ export default {
           .from('analises_itens')
           .update({
             percentual_minimo: sistema.percentualMinimo,
+            percentual_minimo_personalizado: true, // Marcar como personalizado
             updated_at: new Date().toISOString()
           })
           .eq('id', sistema.id);
     
         if (error) throw error;
         
-        // Atualizar a classe de estilo imediatamente após salvar o percentual mínimo
+        // Marcar localmente como personalizado
+        sistema.percentualMinimoPersonalizado = true;
+        
+        // Atualizar a classe de estilo
         atualizarClasseEstilo(sistema);
         
         alteracoesPendentes.value = true;
-        showToast('Percentual mínimo atualizado com sucesso', 'success');
+        showToast('Percentual mínimo personalizado salvo', 'success');
       } catch (error) {
         console.error('Erro ao salvar percentual personalizado:', error);
         // Reverter para o valor anterior em caso de erro
@@ -963,7 +976,17 @@ export default {
         // Se precisar atualizar o percentual também
         if (atualizaPercentual) {
           atualizacao.percentual_minimo = percentualMinimoObrigatorios.value;
+          atualizacao.percentual_minimo_personalizado = true; // Marcar como personalizado
           sistema.percentualMinimo = percentualMinimoObrigatorios.value;
+          sistema.percentualMinimoPersonalizado = true;
+        } else if (!sistema.percentualMinimoPersonalizado) {
+          // Se não é personalizado, atualizar para o padrão correto conforme obrigatoriedade
+          const percentualPadrao = sistema.obrigatorio 
+            ? percentualMinimoObrigatorios.value 
+            : percentualMinimoGeral.value;
+            
+          atualizacao.percentual_minimo = percentualPadrao;
+          sistema.percentualMinimo = percentualPadrao;
         }
         
         // Enviar para o banco de dados
@@ -1442,47 +1465,6 @@ export default {
       }
     };
 
-    // Adicione dentro do seu script de setup
-    const salvarPercentuaisMinimosLocal = async () => {
-      try {
-        console.log('🔄 Salvando percentuais mínimos da UI');
-        console.log('📊 Valores atuais - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
-        
-        // Validar valores antes de salvar (garante que não sejam undefined ou NaN)
-        if (typeof percentualMinimoGeral.value !== 'number' || isNaN(percentualMinimoGeral.value)) {
-          console.warn('⚠️ Percentual geral inválido, usando valor padrão');
-          percentualMinimoGeral.value = 60; // Valor padrão
-        }
-        
-        if (typeof percentualMinimoObrigatorios.value !== 'number' || isNaN(percentualMinimoObrigatorios.value)) {
-          console.warn('⚠️ Percentual obrigatórios inválido, usando valor padrão');
-          percentualMinimoObrigatorios.value = 90; // Valor padrão
-        }
-        
-        // Garantir que os valores estão dentro dos limites
-        percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
-        percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
-        
-        console.log('📊 Valores ajustados - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
-        
-        // Salvar diretamente no banco sem passar pelo método atualizarPercentuaisMinimos
-        const resultado = await salvarPercentuaisMinimos();
-        
-        if (resultado) {
-          // Recalcular status e classes após alteração
-          sincronizarCores();
-          showToast('Percentuais mínimos atualizados com sucesso', 'success');
-          console.log('✅ Percentuais salvos com sucesso');
-        } else {
-          showToast('Erro ao atualizar percentuais mínimos', 'error');
-          console.error('❌ Falha ao salvar percentuais');
-        }
-      } catch (error) {
-        console.error('❌ Erro ao salvar percentuais mínimos:', error);
-        showToast('Erro ao atualizar percentuais mínimos: ' + error.message, 'error');
-      }
-    };
-
     // Modifique a função selectProcesso para garantir que carregue os percentuais corretamente
     const selectProcesso = async (processo) => {
       try {
@@ -1495,7 +1477,7 @@ export default {
         await carregarPercentuaisMinimos(selectedProcesso.value);
         
         console.log('📋 Carregando análises de sistemas');
-        const resultadoSinc = await carregarAnalisesSistemas();
+        const resultadoSinc = await carregarAnalisesSistemasExtended();
         
         // Se houve sincronização de sistemas, mostrar feedback
         if (resultadoSinc && (resultadoSinc.adicionados > 0 || resultadoSinc.removidos > 0)) {
@@ -1585,6 +1567,161 @@ export default {
       }));
     });
 
+    // Adicione esta função para preencher valores padrão nos itens da tabela
+    const preencherPercentuaisMinimosDefault = () => {
+      console.log('🔄 Preenchendo percentuais mínimos padrão nos itens');
+      if (!sistemasAnalise.value || sistemasAnalise.value.length === 0) return;
+      
+      let atualizacoesBanco = [];
+      let alterados = 0;
+      
+      sistemasAnalise.value.forEach(sistema => {
+        // Determinar qual percentual mínimo deve ser usado com base na obrigatoriedade
+        const percentualPadrao = sistema.obrigatorio 
+          ? percentualMinimoObrigatorios.value 
+          : percentualMinimoGeral.value;
+        
+        // Se o percentual ainda não foi definido manualmente, aplicar o padrão
+        if (!sistema.percentualMinimoPersonalizado) {
+          const valorAntigo = sistema.percentualMinimo;
+          sistema.percentualMinimo = percentualPadrao;
+          
+          if (valorAntigo !== percentualPadrao) {
+            alterados++;
+            
+            // Preparar atualização no banco
+            atualizacoesBanco.push(
+              supabase
+                .from('analises_itens')
+                .update({
+                  percentual_minimo: percentualPadrao,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', sistema.id)
+            );
+          }
+        }
+      });
+      
+      // Executar as atualizações no banco se houver
+      if (atualizacoesBanco.length > 0) {
+        Promise.all(atualizacoesBanco)
+          .then(() => {
+            console.log(`✅ ${alterados} itens atualizados com percentuais padrão`);
+            sincronizarCores();
+          })
+          .catch(error => {
+            console.error('❌ Erro ao atualizar percentuais padrão:', error);
+          });
+      }
+    };
+
+    // Modifique a função salvarPercentuaisMinimosLocal para aplicar os padrões após salvar
+    const salvarPercentuaisMinimosLocal = async () => {
+      try {
+        console.log('🔄 Salvando percentuais mínimos da UI');
+        console.log('📊 Valores atuais - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
+        
+        // Validações...
+        percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
+        percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
+        
+        console.log('📊 Valores ajustados - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
+        
+        // Salvar diretamente no banco
+        const resultado = await salvarPercentuaisMinimos();
+        
+        if (resultado) {
+          // Aplicar os novos percentuais padrão aos itens da tabela
+          preencherPercentuaisMinimosDefault();
+          
+          showToast('Percentuais mínimos atualizados com sucesso', 'success');
+          console.log('✅ Percentuais salvos com sucesso');
+        } else {
+          showToast('Erro ao atualizar percentuais mínimos', 'error');
+          console.error('❌ Falha ao salvar percentuais');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao salvar percentuais mínimos:', error);
+        showToast('Erro ao atualizar percentuais mínimos: ' + error.message, 'error');
+      }
+    };
+
+    // Modifique o método carregarAnalisesSistemas para incluir o campo percentual_minimo_personalizado
+    const carregarAnalisesSistemasExtended = async () => {
+      try {
+        // Chamar a função original primeiro
+        const resultado = await carregarAnalisesSistemas();
+        
+        // Para cada sistema carregado, verificar e ajustar o percentual mínimo
+        for (const sistema of sistemasAnalise.value) {
+          // Buscar especificamente se o percentual mínimo foi personalizado
+          const { data, error } = await supabase
+            .from('analises_itens')
+            .select('percentual_minimo_personalizado')
+            .eq('id', sistema.id)
+            .single();
+            
+          if (!error && data) {
+            sistema.percentualMinimoPersonalizado = data.percentual_minimo_personalizado || false;
+            
+            // Se não for personalizado, ajustar para o valor padrão conforme obrigatoriedade
+            if (!sistema.percentualMinimoPersonalizado) {
+              sistema.percentualMinimo = sistema.obrigatorio 
+                ? percentualMinimoObrigatorios.value 
+                : percentualMinimoGeral.value;
+            }
+          }
+        }
+        
+        // Atualizar as classes de estilo
+        nextTick(() => sincronizarCores());
+        
+        return resultado;
+      } catch (error) {
+        console.error('Erro ao carregar análises com dados estendidos:', error);
+        throw error;
+      }
+    };
+
+    // Adicione esta função para redefinir todos os percentuais
+    const redefinirTodosPercentuais = async () => {
+      try {
+        // Confirmar antes de redefinir
+        if (!confirm('Tem certeza que deseja redefinir todas as porcentagens individuais para os valores padrão definidos acima?')) return;
+        
+        // Atualizar localmente e no banco de dados
+        const promessas = sistemasAnalise.value.map(async (sistema) => {
+          const percentualPadrao = sistema.obrigatorio 
+            ? percentualMinimoObrigatorios.value 
+            : percentualMinimoGeral.value;
+            
+          sistema.percentualMinimo = percentualPadrao;
+          sistema.percentualMinimoPersonalizado = false; // Marcar como não personalizado
+          
+          return supabase
+            .from('analises_itens')
+            .update({
+              percentual_minimo: percentualPadrao,
+              percentual_minimo_personalizado: false, // Marcar como não personalizado
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sistema.id);
+        });
+        
+        await Promise.all(promessas);
+        alteracoesPendentes.value = true;
+        
+        // Atualizar as classes de estilo
+        sincronizarCores();
+        
+        showToast('Todos os percentuais foram redefinidos para os valores padrão', 'success');
+      } catch (error) {
+        console.error('Erro ao redefinir percentuais:', error);
+        showToast('Erro ao redefinir percentuais: ' + error.message, 'error');
+      }
+    };
+
     return {
       // Outras propriedades e métodos...
       step,
@@ -1647,6 +1784,9 @@ export default {
       salvarPercentuaisMinimosLocal,
       debugEstadoPercentuais,
       analiseItems,
+      preencherPercentuaisMinimosDefault,
+      carregarAnalisesSistemasExtended,
+      redefinirTodosPercentuais,
     }
   }
 }

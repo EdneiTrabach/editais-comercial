@@ -37,7 +37,16 @@ export default {
       voltarEtapa,
       avancarEtapa,
       calcularPorcentagem,
-      loadProcessos
+      loadProcessos,
+      carregarAnalisesSistemas,
+      formatarPercentual,
+      calcularPorcentagemPrecisa,
+      percentualMinimoGeral,
+      percentualMinimoObrigatorios,
+      getStatusGeral,
+      getStatusGeralClass,
+      salvarPercentuaisMinimos,
+      carregarPercentuaisMinimos
     } = useAnalises()
 
     const { toasts, showToast } = useToast();
@@ -92,10 +101,6 @@ export default {
       sistemasAnalise.value.push(novaSistema)
     }
 
-    const percentualMinimo = ref(70) // Valor padrão de 70%
-    const percentualMinimoGeral = ref(60) // Valor padrão geral
-    const percentualMinimoObrigatorios = ref(90) // Valor padrão para obrigatórios
-
     // Função para cálculo do status de atendimento
     const getStatusAtendimento = (sistema) => {
       if (!sistema.totalItens) {
@@ -121,18 +126,6 @@ export default {
         };
       }
     };
-
-    const getStatusGeralClass = computed(() => {
-      const obrigatoriosAtendidos = sistemasAnalise.value
-        .filter(s => s.obrigatorio)
-        .every(s => getStatusAtendimento(s).atende)
-      
-      const percentualGeral = porcentagemGeralAtendimento.value
-      return {
-        'status-geral-atende': obrigatoriosAtendidos && percentualGeral >= percentualMinimo.value,
-        'status-geral-nao-atende': !obrigatoriosAtendidos || percentualGeral < percentualMinimo.value
-      }
-    })
 
     const alteracoesPendentes = ref(false)
     const showConfirmDialog = ref(false)
@@ -379,7 +372,7 @@ export default {
           naoAtendidos: 0,
           atendidos: 0,
           obrigatorio: false,
-          percentualMinimo: 70
+          percentualMinimo: 10
         };
         
         // Adicionar ao array de sistemas
@@ -424,6 +417,63 @@ export default {
       }
     };
 
+    // Substitua ou adicione esta função
+    const salvarPercentuaisMinimosLocal = async () => {
+      try {
+        console.log('🔄 Salvando percentuais mínimos locais');
+        console.log('📊 Valores atuais - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
+        
+        // Validar valores antes de salvar
+        percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
+        percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
+        
+        if (!selectedProcesso.value) {
+          showToast('Selecione um processo primeiro para salvar os percentuais mínimos', 'warning');
+          return;
+        }
+        
+        // Salvar no banco usando a função do composable
+        const resultado = await salvarPercentuaisMinimos(selectedProcesso.value);
+        
+        if (resultado) {
+          showToast('Percentuais mínimos salvos com sucesso', 'success');
+          
+          // Atualizar a visualização dos sistemas
+          await carregarAnalisesSistemas();
+          
+          // Marcar que há alterações pendentes para salvar os sistemas também
+          alteracoesPendentes.value = true;
+        } else {
+          showToast('Erro ao salvar percentuais mínimos', 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar percentuais mínimos:', error);
+        showToast('Erro ao salvar percentuais mínimos: ' + (error.message || 'Erro desconhecido'), 'error');
+      }
+    };
+
+    // No hook onMounted, carregue os percentuais ao selecionar um processo
+    onMounted(async () => {
+      await loadProcessos();
+      
+      // Se já tem um processo selecionado, carregar seus percentuais
+      if (selectedProcesso.value) {
+        await carregarPercentuaisMinimos(selectedProcesso.value);
+      }
+    });
+    
+    // Modificação na função selectProcesso
+    const selectProcessoOriginal = selectProcesso;
+    const selectProcessoModificado = async (processo) => {
+      // Chamar a versão original
+      await selectProcessoOriginal(processo);
+      
+      // Carregar os percentuais para este processo
+      if (selectedProcesso.value) {
+        await carregarPercentuaisMinimos(selectedProcesso.value);
+      }
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -439,7 +489,7 @@ export default {
       porcentagemGeralAtendimento,
       handleSidebarToggle,
       selecionarAno,
-      selectProcesso,
+      selectProcesso: selectProcessoModificado,
       voltarEtapa,
       avancarEtapa,
       calcularPorcentagem,
@@ -473,6 +523,7 @@ export default {
       sincronizarSistemas,
       adicionarAnotacao,
       removerAnotacao,
+      salvarPercentuaisMinimosLocal,
       toasts
     }
   }
