@@ -1,0 +1,150 @@
+.btn-voltar,
+.btn-avancar,
+.btn-salvar,
+.btn-exportar,
+.btn-adicionar,
+.btn-reset-percentuais {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-voltar {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+}
+
+.btn-avancar {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+
+.btn-salvar {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+
+.btn-exportar {
+  background: #059669;
+  color: white;
+  border: none;
+}
+
+.btn-adicionar {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+
+.btn-reset-percentuais {
+  background-color: #f0f4f8;
+  border: 1px solid #cbd5e0;
+  color: #2d3748;
+  font-size: 0.875rem;
+}
+
+/* Hover states */
+.btn-voltar:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.btn-avancar:hover:not(:disabled),
+.btn-salvar:hover:not(:disabled),
+.btn-adicionar:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-exportar:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.btn-reset-percentuais:hover {
+  background-color: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Estado desabilitado */
+.btn-avancar:disabled,
+.btn-salvar:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Estilos modernos para ações principais */
+.acoes-principais .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Botão primário com gradiente */
+.acoes-principais .btn-primary {
+  background: linear-gradient(135deg, #193155 0%, #254677 100%);
+  color: white;
+}
+
+.acoes-principais .btn-primary:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(25, 49, 85, 0.15);
+}
+
+/* Botão secundário com gradiente sutil */
+.acoes-principais .btn-secondary {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}
+
+.acoes-principais .btn-secondary:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+}
+
+/* Botão info (exportação) com gradiente em tons de azul */
+.acoes-principais .btn-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.acoes-principais .btn-info:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+/* Estilo para botão desabilitado */
+.acoes-principais .btn:disabled {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* Botões pequenos */
+.btn-sm {
+  padding: 2px 6px;
+  font-size: 12px;
+}

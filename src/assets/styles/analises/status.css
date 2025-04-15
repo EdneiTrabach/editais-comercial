@@ -1,0 +1,149 @@
+/* Status indicators */
+.atendidos {
+  color: #059669;
+  font-weight: 500;
+}
+
+.nao-atendidos {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.porcentagem-atendimento {
+  color: #059669;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+.porcentagem-nao-atendimento {
+  color: #dc2626;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+.valor-micro {
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+/* Status de linha */
+.atende-percentual {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.atende-percentual:hover {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+}
+
+.atende-percentual td {
+  color: #155724;
+}
+
+.nao-atende-percentual {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.nao-atende-percentual:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+.nao-atende-percentual td {
+  color: #721c24;
+}
+
+/* Status mais visíveis */
+.atende-status-forte {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border-left: 4px solid #28a745 !important;
+}
+
+.atende-status-forte:hover {
+  background-color: rgba(40, 167, 69, 0.25) !important;
+}
+
+.nao-atende-status-forte {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+.nao-atende-status-forte:hover {
+  background-color: rgba(220, 53, 69, 0.25) !important;
+}
+
+.neutro {
+  background-color: #f8f9fa !important;
+}
+
+/* Validação pendente */
+.validacao-pendente {
+  background-color: rgba(255, 152, 0, 0.15) !important;
+  border-left: 4px solid #ff9800 !important;
+}
+
+.validacao-pendente:hover {
+  background-color: rgba(255, 152, 0, 0.25) !important;
+}
+
+.validacao-pendente .nao-atendidos:after {
+  content: "!";
+  position: absolute;
+  right: 8px;
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Status badges */
+.status-column span {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-atende {
+  color: #28a745;
+  font-weight: 500;
+  background-color: #dcfce7;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: 500;
+  background-color: #fee2e2;
+}
+
+.status-nao-analisado {
+  color: #f59e0b;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Status geral */
+.status-geral {
+  padding: 0.25rem 1rem;
+  border-radius: 999px;
+}
+
+.status-geral-atende {
+  color: #166534;
+  background-color: #dcfce7;
+}
+
+.status-geral-nao-atende {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+
+.status-geral-neutro {
+  background-color: rgba(150, 150, 150, 0.15);
+  color: #666;
+  border-left: 4px solid #999;
+}
+
+.status-geral .status-nao-analisado {
+  color: #999;
+  font-style: italic;
+}

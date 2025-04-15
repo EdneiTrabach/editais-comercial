@@ -1,0 +1,64 @@
+/* Elementos editáveis */
+.editable, 
+.editable-cell {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.editable:hover,
+.editable-cell:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.editable.atendidos:hover {
+  background-color: #f0fdf4;
+}
+
+.editable.nao-atendidos:hover {
+  background-color: #fef2f2;
+}
+
+.editable::after,
+.editable-cell .edit-indicator {
+  content: "✎";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  color: #007bff;
+}
+
+.editable:hover::after,
+.editable-cell:hover .edit-indicator {
+  opacity: 0.7;
+}
+
+.edit-input {
+  width: calc(100% - 4px);
+  height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid #2563eb;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: white;
+  outline: none;
+  margin: -1px;
+}
+
+.edit-input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.user-select-text {
+  user-select: text !important;
+}
+
+/* Campo de nome/título editável nos campos personalizados */
+.custom-line td:first-child:hover {
+  background-color: rgba(255, 193, 7, 0.3);
+}

@@ -1,0 +1,52 @@
+.analises-container {
+  padding: 0 2rem;
+}
+
+/* Layout principal com flexbox */
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.percentual-container {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.analise-table-container {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.analise-resumo {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .percentual-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .percentual-reset {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .btn-reset-percentuais {
+    width: 100%;
+    justify-content: center;
+  }
+}

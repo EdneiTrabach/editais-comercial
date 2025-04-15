@@ -1,0 +1,89 @@
+/* Estilo dos controles de formulário */
+.analise-config {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.percentual-minimo,
+.percentual-obrigatorios {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.percentual-minimo {
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.percentual-obrigatorios {
+  background-color: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.1);
+}
+
+.percentual-minimo:hover,
+.percentual-obrigatorios:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.percentual-minimo label,
+.percentual-obrigatorios label {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.percentual-input,
+.percentual-input-small {
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.percentual-input {
+  width: 60px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.percentual-input-small {
+  width: 50px;
+  font-size: 0.875rem;
+}
+
+.percentual-input:focus,
+.percentual-input-small:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.aviso-obrigatorios {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 0.9em;
+}
+
+.aviso-obrigatorios i {
+  margin-right: 4px;
+}
