@@ -34,16 +34,16 @@
             </div>
             <!-- Botões de navegação -->
             <div class="navigation-actions">
-              <nav-button 
+              <simple-nav-button 
                 v-if="step > 0" 
                 direction="prev"
-                text="ANTERIOR"
+                text="Anterior"
                 @click="voltarEtapa"
               />
-              <nav-button
+              <simple-nav-button
                 v-if="step < 2" 
                 direction="next"
-                text="PRÓXIMO"
+                text="Próximo"
                 :disabled="!podeAvancar"
                 @click="avancarEtapa"
               />
@@ -296,7 +296,7 @@ import * as XLSX from 'xlsx'
 import ToastMessages from '@/components/ToastMessages.vue'
 import { useToast } from '@/composables/useToast'
 import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
-import NavButton from '@/components/navigation/NavButton.vue'
+import SimpleNavButton from '@/components/navigation/SimpleNavButton.vue'
 
 
 export default {
@@ -308,7 +308,7 @@ export default {
     ProcessoSelection,
     ToastMessages,
     AnaliseExportMenu,
-    NavButton,
+    SimpleNavButton,
     
   },
   

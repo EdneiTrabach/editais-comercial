@@ -32,7 +32,9 @@
 
 .navigation-actions {
   display: flex;
-  gap: 1rem;
+  gap: 16px;
+  justify-content: center;
+  padding: 10px;
 }
 
 /* Remove os estilos antigos de navigation-buttons já que não é mais necessário */
@@ -1052,12 +1054,6 @@ tr.custom-line:hover {
   background: #f8fafc;
   transform: translateY(-2px);
   border-color: #cbd5e1;
-}
-
-/* Botões de navegação */
-.navigation-actions {
-  display: flex;
-  gap: 1rem;
 }
 
 .btn-voltar, 
