@@ -18,7 +18,7 @@
               <!-- Novo botão para adicionar anotação -->
               <button 
                 @click="adicionarAnotacao" 
-                class="btn btn-secondary"
+                class="btn btn-adicionar-anotacao"
                 title="Adicionar uma linha para anotações">
                 <i class="fas fa-plus"></i> Adicionar Anotação
               </button>
@@ -1930,3 +1930,4 @@ const verificarConexaoBanco = async () => {
 };
 </script>
 <style src="./AnalisesView.css" scoped></style>
+<style src="@/assets/styles/analises/buttons.css"></style>

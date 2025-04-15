@@ -14,36 +14,42 @@
   transition: all 0.2s ease;
 }
 
+/* Botão voltar */
 .btn-voltar {
   background: #f1f5f9;
   color: #475569;
   border: none;
 }
 
+/* Botão avançar */
 .btn-avancar {
   background: #2563eb;
   color: white;
   border: none;
 }
 
+/* Botão salvar */
 .btn-salvar {
   background: #2563eb;
   color: white;
   border: none;
 }
 
+/* Botão exportar */
 .btn-exportar {
   background: #059669;
   color: white;
   border: none;
 }
 
+/* Botão adicionar */
 .btn-adicionar {
   background: #2563eb;
   color: white;
   border: none;
 }
 
+/* Botão reset percentuais */
 .btn-reset-percentuais {
   background-color: #f0f4f8;
   border: 1px solid #cbd5e0;
@@ -147,4 +153,126 @@
 .btn-sm {
   padding: 2px 6px;
   font-size: 12px;
+}
+
+/* ------ NOVOS ESTILOS PERSONALIZADOS PARA ACOES-PRINCIPAIS ------ */
+
+.acoes-principais {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Botão Salvar Análises - Estilo premium */
+.acoes-principais .btn-salvar {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+  font-weight: 600;
+  padding: 0.8rem 1.6rem;
+  transition: all 0.3s ease;
+}
+
+.acoes-principais .btn-salvar:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e4dca 0%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.acoes-principais .btn-salvar:disabled {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Botão Adicionar Anotação - Estilo criativo */
+.acoes-principais .btn-adicionar-anotacao {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+  transition: all 0.3s ease;
+}
+
+.acoes-principais .btn-adicionar-anotacao:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* Botão Sincronizar Sistemas - Estilo tech */
+.acoes-principais .btn-sincronizar {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+  transition: all 0.3s ease;
+}
+
+.acoes-principais .btn-sincronizar:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+}
+
+/* Botão Exportar - Estilo elegante */
+.acoes-principais .export-dropdown .btn-exportar {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
+  transition: all 0.3s ease;
+}
+
+.acoes-principais .export-dropdown .btn-exportar:hover {
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(234, 88, 12, 0.3);
+}
+
+/* Melhorias no dropdown */
+.export-dropdown .dropdown-menu {
+  border: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem 0;
+  margin-top: 0.6rem;
+}
+
+.export-dropdown .dropdown-header {
+  color: #475569;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+}
+
+.export-dropdown .dropdown-item {
+  padding: 0.6rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.export-dropdown .dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.export-dropdown .dropdown-item i {
+  color: #64748b;
+  width: 1rem;
+  text-align: center;
+}
+
+.export-dropdown .dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: #e2e8f0;
+}
+
+/* Efeitos de foco */
+.acoes-principais .btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
