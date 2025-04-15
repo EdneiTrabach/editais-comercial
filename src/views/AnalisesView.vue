@@ -216,7 +216,7 @@
                 </td>
                 <td>
                   <span v-if="sistema.naoAtendidos > 0">
-                    {{ sistema.totalItens - sistema.naoAtendidos }} (calculado)
+                    {{ sistema.totalItens - sistema.naoAtendidos }}
                   </span>
                 </td>
                 <td>
