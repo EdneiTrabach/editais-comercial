@@ -135,174 +135,137 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     return;
   }
 
-  const { percentualMinimoGeral, percentualMinimoObrigatorio } = parametros;
-
-  // Validar conformidade geral
-  const resultadoConformidade = validarConformidadeGeral(
-    sistemas, 
-    percentualMinimoGeral, 
-    percentualMinimoObrigatorio
-  );
-
-  // Criar o documento PDF
+  // Configurar documento
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Adicionar título
-  doc.setFontSize(18);
-  doc.text('RELATÓRIO DE ANÁLISE DE SISTEMAS', 14, 20);
+  // Estilo base
+  const corPrimaria = [37, 99, 235]; // Azul corporativo
+  const corSecundaria = [100, 100, 100]; // Cinza para textos
+  const corDestaque = [220, 53, 69]; // Vermelho para alertas
   
-  // Adicionar informações do processo
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  
-  let yPos = 30;
-  const lineHeight = 6;
-  
-  doc.text(`PROCESSO: ${processo.numero_processo || 'N/A'}`, 14, yPos); yPos += lineHeight;
-  doc.text(`ÓRGÃO: ${truncateText(processo.orgao || 'N/A', 70)}`, 14, yPos); yPos += lineHeight;
-  doc.text(`DATA: ${formatDate(processo.data_pregao || new Date())}`, 14, yPos); yPos += lineHeight;
-  doc.text(`CÓDIGO: ${processo.codigo_analise || 'N/A'}`, 14, yPos); yPos += lineHeight;
-  doc.text(`% Mínimo Geral: ${percentualMinimoGeral}%`, 14, yPos); yPos += lineHeight;
-  doc.text(`% Mínimo Obrigatórios: ${percentualMinimoObrigatorio}%`, 14, yPos); yPos += lineHeight * 1.5;
-  
-  // Calcular totais
-  const totalItens = sistemas.reduce((acc, sistema) => acc + (sistema.totalItens || 0), 0);
-  const totalNaoAtendidos = sistemas.reduce((acc, sistema) => acc + (sistema.naoAtendidos || 0), 0);
-  const totalAtendidos = totalItens - totalNaoAtendidos;
-  const percentualGeralAtendimento = calcularPercentualGeralAtendimento(sistemas);
-  
-  // Resumo da análise
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 140);  // Azul escuro
-  doc.text('RESUMO DA ANÁLISE', 14, yPos); yPos += lineHeight;
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  doc.text(`Total de Itens Avaliados: ${totalItens}`, 14, yPos); yPos += lineHeight;
-  doc.text(`Itens Atendidos: ${totalAtendidos}`, 14, yPos); yPos += lineHeight;
-  doc.text(`Itens Não Atendidos: ${totalNaoAtendidos}`, 14, yPos); yPos += lineHeight;
-  doc.text(`Percentual Geral de Atendimento: ${formatPercent(percentualGeralAtendimento)}`, 14, yPos); yPos += lineHeight;
-  
-  // Status geral com cores
-  doc.text('Status Geral: ', 14, yPos);
-  doc.setTextColor(resultadoConformidade.atendePercentualMinimo ? 0x00 : 0xff, 
-                   resultadoConformidade.atendePercentualMinimo ? 0x80 : 0x00, 0x00);
-  doc.text(`${resultadoConformidade.atendePercentualMinimo ? 'Atende' : 'Não atende'} ao percentual mínimo geral (≥ ${percentualMinimoGeral}%)`,
-           50, yPos);
-  yPos += lineHeight * 1.5;
-  doc.setTextColor(0);
-
-  // Detalhes dos sistemas (tabela)
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 140);
-  doc.text('DETALHES DOS SISTEMAS', 14, yPos); yPos += lineHeight;
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  
-  // Preparar dados para a tabela de sistemas
-  const tableData = sistemas.map(sistema => {
-    const validacao = validarConformidadeSistema(
-      sistema, 
-      percentualMinimoObrigatorio, 
-      percentualMinimoGeral
-    );
+  // Adicionar logo
+  try {
+    const logoUrl = '/icons/logo-licitacao.png'; // Caminho relativo à pasta public
+    doc.addImage(logoUrl, 'PNG', 15, 15, 30, 20); // Ajustado altura para 20 para manter proporção
     
-    const nome = sistema.nome || (sistema.sistemas?.nome || "Sistema sem nome");
+    // Ajustar posição do título para ficar ao lado da logo
+    doc.setFontSize(22);
+    doc.setTextColor(...corPrimaria);
+    doc.text('Análise de Sistemas', pageWidth / 2 + 15, 25, { align: 'center' });
+  } catch (error) {
+    console.warn('Erro ao carregar logo:', error);
+    // Se houver erro, centraliza o título
+    doc.setFontSize(22);
+    doc.setTextColor(...corPrimaria);
+    doc.text('Análise de Sistemas', pageWidth / 2, 20, { align: 'center' });
+  }
+  
+  // Informações do processo (ajustado yPos inicial para não sobrepor a logo)
+  doc.setFontSize(11);
+  doc.setTextColor(...corSecundaria);
+  let yPos = 45; // Aumentado para dar mais espaço após a logo
+  const lineHeight = 7;
+  
+  const infoProcesso = [
+    `Processo: ${processo.numero_processo || 'N/A'}`,
+    `Órgão: ${processo.orgao || 'N/A'}`,
+    `Data: ${new Date(processo.data_pregao).toLocaleDateString('pt-BR') || 'N/A'}`,
+    `Responsável: ${processo.responsavel?.nome || 'N/A'}`,
+    `Código: ${processo.codigo_analise || 'N/A'}`
+  ];
+
+  infoProcesso.forEach(info => {
+    doc.text(info, 15, yPos);
+    yPos += lineHeight;
+  });
+
+  // Tabela de sistemas
+  const tableData = sistemas.map(sistema => {
     const total = sistema.totalItens || 0;
     const naoAtendidos = sistema.naoAtendidos || 0;
     const atendidos = total - naoAtendidos;
-    const percentualAtendimento = validacao.percentualAtingido;
-    const status = validacao.atende ? 'Atende ✓' : `Não Atende ✗ (Min: ${validacao.percentualMinimo}%)`;
+    const percentual = total > 0 ? ((atendidos / total) * 100).toFixed(2) : '0.00';
     
     return [
-      nome,
-      total,
-      atendidos,
-      naoAtendidos,
-      formatPercent(percentualAtendimento),
-      status
+      sistema.nome || 'Sistema sem nome',
+      total.toString(),
+      atendidos.toString(),
+      naoAtendidos.toString(),
+      `${percentual}%`,
+      sistema.obrigatorio ? 'Sim' : 'Não',
+      sistema.percentual_minimo ? `${sistema.percentual_minimo}%` : 'N/A'
     ];
   });
 
-  // Adicionar a tabela de sistemas
   autoTable(doc, {
-    startY: yPos,
-    head: [['Sistema', 'Total Itens', 'Atendidos', 'Não Atendidos', 'Percentual', 'Status']],
+    startY: yPos + 10,
+    head: [[
+      'Sistema',
+      'Total',
+      'Atendidos',
+      'Não Atendidos',
+      '% Atendido',
+      'Obrigatório',
+      'Mínimo Exigido'
+    ]],
     body: tableData,
-    theme: 'striped',
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1,
+    },
     headStyles: {
-      fillColor: [0, 51, 102],
+      fillColor: [...corPrimaria],
       textColor: 255,
-      fontStyle: 'bold'
+      fontSize: 10,
+      fontStyle: 'bold',
     },
     columnStyles: {
-      0: { cellWidth: 60 },
+      0: { cellWidth: 50 },
       1: { cellWidth: 20, halign: 'center' },
-      2: { cellWidth: 20, halign: 'center' },
+      2: { cellWidth: 25, halign: 'center' },
       3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 23, halign: 'center' },
-      5: { cellWidth: 42 }
+      4: { cellWidth: 25, halign: 'center' },
+      5: { cellWidth: 20, halign: 'center' },
+      6: { cellWidth: 25, halign: 'center' }
     },
-    styles: {
-      fontSize: 8,
-      cellPadding: 3
-    },
-    // Colorir linhas com base no status de conformidade
-    didDrawCell: function(data) {
-      if (data.section === 'body' && data.column.index === 5) {
-        // Verificar se o texto contém "Não Atende"
-        if (data.cell.text && data.cell.text.toString().includes('Não Atende')) {
-          doc.setFillColor(255, 240, 240); // Vermelho claro
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-          doc.setTextColor(200, 0, 0); // Vermelho para o texto
-          doc.text(data.cell.text.toString(), data.cell.x + data.cell.padding, data.cell.y + data.cell.height/2);
-          doc.setTextColor(0); // Voltar para preto
-          return false; // Para prevenir o desenho default do texto
+    didDrawCell: (data) => {
+      // Destacar células de sistemas obrigatórios
+      if (data.row.index >= 0 && data.column.index === 5) {
+        if (data.cell.text[0] === 'Sim') {
+          doc.setTextColor(...corDestaque);
         }
       }
     }
   });
-  
-  // Atualizar a posição Y após a tabela
-  yPos = doc.lastAutoTable.finalY + 10;
-  
-  // Recomendação
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 140);
-  doc.text('RECOMENDAÇÃO', 14, yPos); yPos += lineHeight;
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  
-  // Dividir o texto da recomendação em linhas para caber no PDF
-  const recomendacao = gerarRecomendacao(resultadoConformidade, percentualMinimoGeral, percentualMinimoObrigatorio);
-  const splitRecomendacao = doc.splitTextToSize(recomendacao, 180);
-  
-  // Se a recomendação for muito extensa e não couber na página atual, adicione uma nova página
-  if (yPos + splitRecomendacao.length * 5 > 280) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  // Colorir a recomendação baseado no resultado
-  doc.setTextColor(...(resultadoConformidade.aprovado ? [0, 100, 0] : [200, 0, 0]));
-  doc.text(splitRecomendacao, 14, yPos);
-  doc.setTextColor(0);
-  
+
   // Rodapé
-  doc.setFontSize(8);
-  doc.setTextColor(100);
-  doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`,
-           14, 285);
+  const addFooter = () => {
+    const pageCount = doc.internal.getNumberOfPages();
+    
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(...corSecundaria);
+      
+      // Nome do sistema e data/hora
+      const dataHora = new Date().toLocaleString('pt-BR');
+      doc.text('Sistema de Análise de Editais', 15, 280);
+      doc.text(`Emitido em: ${dataHora}`, pageWidth - 15, 280, { align: 'right' });
+      
+      // Numeração de páginas
+      doc.text(`Página ${i} de ${pageCount}`, pageWidth / 2, 280, { align: 'center' });
+    }
+  };
+
+  addFooter();
   
-  // Adicionar número de página no rodapé
-  const pageCount = doc.internal.getNumberOfPages();
-  for(let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
-  }
-  
-  // Salvar o PDF
-  doc.save(`analise_sistemas_${processo.numero_processo || 'relatorio'}.pdf`);
+  // Salvar o arquivo
+  const fileName = `analise_sistemas_${processo.numero_processo || 'relatorio'}.pdf`;
+  doc.save(fileName);
 };
 
 /**
