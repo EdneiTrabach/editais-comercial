@@ -26,7 +26,7 @@
               <button 
                 v-if="processoAtual"
                 @click="sincronizarSistemas" 
-                class="btn btn-secondary" 
+                class="btn btn-sincronizar" 
                 title="Atualiza sistemas conforme a tela de processos">
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
               </button>
