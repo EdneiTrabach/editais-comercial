@@ -168,62 +168,34 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   const lineHeight = 7;
   
   // Adicione este log para depuração
-  console.log('processo recebido para exportação:', processo);
+  console.log('Processo recebido para exportação:', processo);
 
-  // Função robusta para extrair campos do processo
-  const getProcessField = (field, fallback = 'Não informado') => {
-    if (!processo) return fallback;
+  // CORREÇÃO: Usar os dados do processo diretamente, sem depender da função getProcessField
+  // Garantir que temos dados válidos ou usar fallbacks
+  const numeroProcesso = processo.numero_processo || processo.numero || 'Não informado';
+  
+  const orgao = (processo.orgao && typeof processo.orgao === 'object') 
+    ? (processo.orgao.nome || 'Não informado')
+    : (processo.orgao || processo.orgao_nome || 'Não informado');
+  
+  const data = processo.data_pregao || processo.data || processo.data_sessao;
+  const dataFormatada = data 
+    ? new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : 'Não informada';
+  
+  const responsavel = (processo.responsavel && processo.responsavel.nome) 
+    || processo.responsavel_nome 
+    || (typeof processo.responsavel === 'string' ? processo.responsavel : 'Não informado');
+  
+  const codigo = processo.codigo_analise || processo.codigo || 'Não informado';
 
-    // Permitir que processo seja string, objeto simples ou objeto aninhado
-    const safe = (val) => (val !== undefined && val !== null && val !== '') ? val : fallback;
-
-    switch (field) {
-      case 'numero':
-        return safe(
-          processo.numero_processo ||
-          processo.numero ||
-          processo.processo ||
-          (typeof processo === 'string' ? processo : undefined)
-        );
-      case 'orgao':
-        return safe(
-          (processo.orgao && (processo.orgao.nome || processo.orgao)) ||
-          processo.orgao_nome
-        );
-      case 'data':
-        const data =
-          processo.data_pregao ||
-          processo.data ||
-          processo.data_sessao ||
-          undefined;
-        if (!data) return 'Data não informada';
-        try {
-          return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        } catch {
-          return 'Data inválida';
-        }
-      case 'responsavel':
-        return safe(
-          (processo.responsavel && processo.responsavel.nome) ||
-          processo.responsavel_nome ||
-          processo.responsavel
-        );
-      case 'codigo':
-        return safe(
-          processo.codigo_analise ||
-          processo.codigo
-        );
-      default:
-        return fallback;
-    }
-  };
-
+  // Adicionar informações do processo no PDF
   const infoProcesso = [
-    `Processo: ${getProcessField('numero')}`,
-    `Órgão: ${getProcessField('orgao')}`,
-    `Data: ${getProcessField('data')}`,
-    `Responsável: ${getProcessField('responsavel')}`,
-    `Código: ${getProcessField('codigo')}`
+    `Processo: ${numeroProcesso}`,
+    `Órgão: ${orgao}`,
+    `Data: ${dataFormatada}`,
+    `Responsável: ${responsavel}`,
+    `Código: ${codigo}`
   ];
 
   infoProcesso.forEach(info => {
@@ -275,14 +247,16 @@ export const exportToPDF = (sistemas, processo, parametros) => {
       fontStyle: 'bold',
     },
     columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 20, halign: 'center' },
-      2: { cellWidth: 25, halign: 'center' },
-      3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 25, halign: 'center' },
-      5: { cellWidth: 20, halign: 'center' },
-      6: { cellWidth: 25, halign: 'center' }
+      0: { halign: 'left' },     // Coluna Sistema alinhada à esquerda
+      1: { halign: 'center' },   // Demais colunas centralizadas
+      2: { halign: 'center' },
+      3: { halign: 'center' },
+      4: { halign: 'center' },
+      5: { halign: 'center' },
+      6: { halign: 'center' }
     },
+    margin: { left: 10, right: 10 },
+    tableWidth: 'auto',
     didDrawCell: (data) => {
       // Destacar células de sistemas obrigatórios
       if (data.row.index >= 0 && data.column.index === 5) {
@@ -315,7 +289,7 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   addFooter();
   
   // Corrigir nome do arquivo para garantir que nunca fique "sem-numero"
-  const numeroProcessoLimpo = getProcessField('numero', 'relatorio')
+  const numeroProcessoLimpo = numeroProcesso
     .toString()
     .replace(/[\/\\:*?"<>|]/g, '-')
     .replace(/\s+/g, '_')
