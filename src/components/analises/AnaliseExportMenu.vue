@@ -90,6 +90,10 @@ const props = defineProps({
     required: true,
     default: () => []
   },
+  processo: {
+    type: Object,
+    default: () => ({})
+  },
   percentualMinimoGeral: {
     type: Number,
     default: () => 92
@@ -164,21 +168,21 @@ watch(() => props.data, (newData) => {
 }, { deep: true })
 
 const handleExportToExcel = () => {
-  exportToExcel(props.data, {}, {
+  exportToExcel(props.data, props.processo, {
     percentualMinimoGeral: props.percentualMinimoGeral,
     percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
   });
 };
 
 const handleExportToPDF = () => {
-  exportToPDF(props.data, {}, {
+  exportToPDF(props.data, props.processo, {
     percentualMinimoGeral: props.percentualMinimoGeral,
     percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
   });
 };
 
 const handleExportToTXT = () => {
-  exportToTXT(props.data, {}, {
+  exportToTXT(props.data, props.processo, {
     percentualMinimoGeral: props.percentualMinimoGeral,
     percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
   });

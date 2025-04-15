@@ -175,6 +175,9 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   const corPrimaria = [37, 99, 235]; // Azul corporativo
   const corSecundaria = [100, 100, 100]; // Cinza para textos
   const corDestaque = [220, 53, 69]; // Vermelho para alertas
+  const corAtende = [40, 167, 69]; // Verde para sistemas que atendem
+  const corNaoAtende = [220, 53, 69]; // Vermelho para sistemas que não atendem
+  const corNaoAnalisado = [255, 152, 0]; // Laranja para sistemas não analisados
   
   // Adicionar logo
   try {
@@ -237,42 +240,43 @@ export const exportToPDF = (sistemas, processo, parametros) => {
 
   // Tabela de sistemas
   const tableData = sistemas.map(sistema => {
+    const nome = sistema.nome || (sistema.sistemas?.nome || "Sistema sem nome");
     const total = sistema.totalItens || 0;
     
-    // Importante: preservar campos vazios como vazios
-    // Considerar explicitamente valores undefined, null, '' e 0 como "não analisado"
-    const naoAtendidos = (sistema.naoAtendidos !== undefined && 
-                          sistema.naoAtendidos !== null && 
-                          sistema.naoAtendidos !== 0 && 
-                          sistema.naoAtendidos !== '') 
-      ? sistema.naoAtendidos 
-      : '';
-    
-    // Calcular apenas se tivermos valores válidos
+    // Verificar se o sistema foi analisado
+    const naoAtendidos = sistema.naoAtendidos !== undefined && sistema.naoAtendidos !== null ? sistema.naoAtendidos : '';
     const hasValidNaoAtendidos = naoAtendidos !== '';
     
-    // Calcular atendidos apenas se tivermos valor válido para naoAtendidos
+    // Calcular valores apenas se tiver sido analisado
     const atendidos = hasValidNaoAtendidos ? (total - naoAtendidos) : '';
-    
-    // Calcular percentual apenas se tivermos valores válidos
-    const percentual = hasValidNaoAtendidos && total > 0 
+    const percentual = hasValidNaoAtendidos && total > 0
       ? ((total - naoAtendidos) / total * 100).toFixed(2) 
       : '';
     
-    // Status baseado em se foi analisado ou não
-    const status = hasValidNaoAtendidos 
-      ? (sistema.obrigatorio ? 'Sim' : 'Não')
-      : 'NÃO ANALISADO';
+    // Determinar status e cor
+    let status;
+    let statusColor;
     
-    return [
-      sistema.nome || 'Sistema sem nome',
-      total.toString(),
-      atendidos.toString(),
-      naoAtendidos.toString(), // Manterá vazio se for vazio
-      percentual !== '' ? `${percentual}%` : '',
+    if (hasValidNaoAtendidos) {
+      const validacao = validarConformidadeSistema(sistema, parametros.percentualMinimoObrigatorio, parametros.percentualMinimoGeral);
+      status = validacao.atende ? 'Atende' : `Não Atende (Min: ${validacao.percentualMinimo}%)`;
+      statusColor = validacao.atende ? corAtende : corNaoAtende;
+    } else {
+      status = 'NÃO ANALISADO';
+      statusColor = corNaoAnalisado;
+    }
+    
+    return {
+      nome,
+      total: total.toString(),
+      atendidos: atendidos.toString(),
+      naoAtendidos: naoAtendidos.toString(),
+      percentual: percentual !== '' ? `${percentual}%` : '',
       status,
-      sistema.percentual_minimo ? `${sistema.percentual_minimo}%` : 'N/A'
-    ];
+      statusColor,
+      obrigatorio: sistema.obrigatorio ? 'Sim' : 'Não',
+      minimo: sistema.percentual_minimo ? `${sistema.percentual_minimo}%` : 'N/A'
+    };
   });
 
   autoTable(doc, {
@@ -284,38 +288,50 @@ export const exportToPDF = (sistemas, processo, parametros) => {
       'Não Atendidos',
       '% Atendido',
       'Obrigatório',
-      'Mínimo Exigido'
+      'Mínimo Exigido',
+      'Status'
     ]],
-    body: tableData,
-    theme: 'grid',
+    body: tableData.map(sistema => [
+      sistema.nome,
+      sistema.total,
+      sistema.atendidos,
+      sistema.naoAtendidos,
+      sistema.percentual,
+      sistema.obrigatorio,
+      sistema.minimo,
+      sistema.status
+    ]),
     styles: {
       fontSize: 9,
-      cellPadding: 3,
-      lineColor: [200, 200, 200],
-      lineWidth: 0.1,
+      cellPadding: 4
     },
-    headStyles: {
-      fillColor: [...corPrimaria],
-      textColor: 255,
-      fontSize: 10,
-      fontStyle: 'bold',
+    rowPageBreak: 'auto',
+    bodyStyles: {
+      valign: 'middle'
     },
-    columnStyles: {
-      0: { halign: 'left' },     // Coluna Sistema alinhada à esquerda
-      1: { halign: 'center' },   // Demais colunas centralizadas
-      2: { halign: 'center' },
-      3: { halign: 'center' },
-      4: { halign: 'center' },
-      5: { halign: 'center' },
-      6: { halign: 'center' }
-    },
-    margin: { left: 10, right: 10 },
-    tableWidth: 'auto',
-    didDrawCell: (data) => {
-      // Destacar células de sistemas obrigatórios
-      if (data.row.index >= 0 && data.column.index === 5) {
-        if (data.cell.text[0] === 'Sim') {
-          doc.setTextColor(...corDestaque);
+    // Substituir rowStyles por didParseCell para garantir aplicação correta das cores
+    didParseCell: function(data) {
+      // Aplicar cores apenas às células do corpo da tabela
+      if (data.section === 'body') {
+        const rowIndex = data.row.index;
+        const sistema = tableData[rowIndex];
+        
+        if (!sistema) return;
+        
+        const isAtende = sistema.status.includes('Atende') && !sistema.status.includes('Não Atende');
+        const isNaoAtende = sistema.status.includes('Não Atende');
+        const isNaoAnalisado = sistema.status.includes('NÃO ANALISADO');
+        
+        // Definir as cores com base no status
+        if (isAtende) {
+          data.cell.styles.fillColor = [229, 252, 235];
+          data.cell.styles.textColor = [21, 87, 36];
+        } else if (isNaoAtende) {
+          data.cell.styles.fillColor = [254, 226, 226];
+          data.cell.styles.textColor = [153, 27, 27];
+        } else if (isNaoAnalisado) {
+          data.cell.styles.fillColor = [255, 243, 226];
+          data.cell.styles.textColor = [180, 83, 9];
         }
       }
     }

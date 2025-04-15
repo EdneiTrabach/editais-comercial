@@ -31,7 +31,8 @@
                 <i class="fas fa-sync"></i> Sincronizar Sistemas
               </button>
               <AnaliseExportMenu 
-                :data="analiseItems" 
+                :data="analiseItems"
+                :processo="processoAtual"  
                 :percentualMinimoGeral="percentualMinimoGeral"
                 :percentualMinimoObrigatorio="percentualMinimoObrigatorios"
               />
