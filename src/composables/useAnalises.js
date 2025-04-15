@@ -656,8 +656,12 @@ export function useAnalises() {
   // Adicionar esta função ao composable useAnalises - coloque antes do return
 
   const calcularClasseEstilo = (sistema) => {
-    // Se tem valor no Total de Itens mas Não Atendidos está vazio ou é zero
-    if (sistema.totalItens > 0 && (!sistema.naoAtendidos && sistema.naoAtendidos !== 0)) {
+    // Se tem um valor em totalItens mas naoAtendidos está vazio (incluindo zero)
+    if (sistema.totalItens > 0 && 
+       (sistema.naoAtendidos === undefined || 
+        sistema.naoAtendidos === null || 
+        sistema.naoAtendidos === '' || 
+        sistema.naoAtendidos === 0)) {
       return 'validacao-pendente';
     }
     
@@ -666,15 +670,12 @@ export function useAnalises() {
       return 'neutro';
     }
     
-    // Calcular percentual de atendimento
-    const percentualAtendimento = (sistema.totalItens - sistema.naoAtendidos) / sistema.totalItens * 100;
-    
-    // Determinar percentual mínimo baseado na obrigatoriedade
+    // O resto da função permanece igual
+    const percentualAtendimento = calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens);
     const percentualMinimo = sistema.obrigatorio 
       ? percentualMinimoObrigatorios.value 
       : percentualMinimoGeral.value;
     
-    // Retornar classe com base no atendimento
     return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
   };
 

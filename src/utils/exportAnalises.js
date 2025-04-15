@@ -49,42 +49,74 @@ export const exportToTXT = (sistemas, processo, parametros) => {
   // Gerar cabeçalho
   let content = gerarCabecalho(processo, parametros);
 
+  // Verificar se há sistemas analisados
+  const sistemasAnalisados = sistemas.filter(s => 
+    s.naoAtendidos !== undefined && 
+    s.naoAtendidos !== null && 
+    s.naoAtendidos !== '' && 
+    s.naoAtendidos !== 0
+  );
+
   // Gerar resumo da análise
   content += "RESUMO DA ANÁLISE\n";
   content += "----------------\n";
-  content += `Total de Itens Avaliados: ${totalItens}\n`;
-  content += `Itens Atendidos: ${totalAtendidos}\n`;
-  content += `Itens Não Atendidos: ${totalNaoAtendidos}\n`;
-  content += `Percentual Geral de Atendimento: ${formatPercent(percentualGeralAtendimento)}\n`;
-  content += `Status Geral: ${resultadoConformidade.atendePercentualMinimo ? 
-    '✅ Atende ao percentual mínimo geral' : 
-    '❌ Não atende ao percentual mínimo geral'} (≥ ${percentualMinimoGeral}%)\n\n`;
+
+  if (sistemasAnalisados.length === 0) {
+    content += "Nenhum sistema foi analisado completamente.\n";
+    content += "Status Geral: Não Analisado\n\n";
+  } else {
+    content += `Total de Itens Avaliados: ${totalItens}\n`;
+    content += `Itens Atendidos: ${totalAtendidos}\n`;
+    content += `Itens Não Atendidos: ${totalNaoAtendidos}\n`;
+    content += `Percentual Geral de Atendimento: ${formatPercent(percentualGeralAtendimento)}\n`;
+    content += `Status Geral: ${resultadoConformidade.atendePercentualMinimo ? 
+      '✅ Atende ao percentual mínimo geral' : 
+      '❌ Não atende ao percentual mínimo geral'} (≥ ${percentualMinimoGeral}%)\n\n`;
+  }
 
   // Gerar detalhes dos sistemas
   content += "DETALHES DOS SISTEMAS\n";
   content += "--------------------\n";
   
   sistemas.forEach(sistema => {
-    const validacao = validarConformidadeSistema(
-      sistema, 
-      percentualMinimoObrigatorio, 
-      percentualMinimoGeral
-    );
-    
-    const percentualAtendimento = validacao.percentualAtingido;
     const nome = sistema.nome || (sistema.sistemas?.nome || "Sistema sem nome");
     const total = sistema.totalItens || 0;
-    const naoAtendidos = sistema.naoAtendidos || 0;
-    const atendidos = total - naoAtendidos;
+    
+    // Verificar se o sistema foi analisado - considerar 0 como não analisado
+    const naoAtendidos = (sistema.naoAtendidos !== undefined && 
+                          sistema.naoAtendidos !== null && 
+                          sistema.naoAtendidos !== 0 && 
+                          sistema.naoAtendidos !== '') 
+      ? sistema.naoAtendidos 
+      : '';
+    
+    const hasValidNaoAtendidos = naoAtendidos !== '';
+    
+    // Calcular valores apenas se tiver sido analisado
+    const atendidos = hasValidNaoAtendidos ? (total - naoAtendidos) : '';
     
     content += `Sistema: ${nome}\n`;
     content += `  Total de Itens: ${total}\n`;
-    content += `  Atendidos: ${atendidos}\n`;
-    content += `  Não Atendidos: ${naoAtendidos}\n`;
-    content += `  Percentual: ${formatPercent(percentualAtendimento)}\n`;
-    content += `  Status: ${validacao.atende ? 
-      '✅ Atende' : 
-      `❌ Não Atende (Min: ${validacao.percentualMinimo}%)`}\n\n`;
+    content += `  Atendidos: ${atendidos !== '' ? atendidos : 'Não analisado'}\n`;
+    content += `  Não Atendidos: ${naoAtendidos !== '' ? naoAtendidos : 'Não analisado'}\n`;
+    
+    if (hasValidNaoAtendidos) {
+      const percentualAtendimento = (total - naoAtendidos) / total * 100;
+      content += `  Percentual: ${formatPercent(percentualAtendimento)}\n`;
+      
+      // Status baseado na validação
+      const validacao = validarConformidadeSistema(
+        sistema, 
+        percentualMinimoObrigatorio, 
+        percentualMinimoGeral
+      );
+      content += `  Status: ${validacao.atende ? 
+        '✅ Atende' : 
+        `❌ Não Atende (Min: ${validacao.percentualMinimo}%)`}\n\n`;
+    } else {
+      content += `  Percentual: Não analisado\n`;
+      content += `  Status: ⚠️ NÃO ANALISADO\n\n`;
+    }
   });
 
   // Resumo dos sistemas
@@ -206,17 +238,39 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   // Tabela de sistemas
   const tableData = sistemas.map(sistema => {
     const total = sistema.totalItens || 0;
-    const naoAtendidos = sistema.naoAtendidos || 0;
-    const atendidos = total - naoAtendidos;
-    const percentual = total > 0 ? ((atendidos / total) * 100).toFixed(2) : '0.00';
+    
+    // Importante: preservar campos vazios como vazios
+    // Considerar explicitamente valores undefined, null, '' e 0 como "não analisado"
+    const naoAtendidos = (sistema.naoAtendidos !== undefined && 
+                          sistema.naoAtendidos !== null && 
+                          sistema.naoAtendidos !== 0 && 
+                          sistema.naoAtendidos !== '') 
+      ? sistema.naoAtendidos 
+      : '';
+    
+    // Calcular apenas se tivermos valores válidos
+    const hasValidNaoAtendidos = naoAtendidos !== '';
+    
+    // Calcular atendidos apenas se tivermos valor válido para naoAtendidos
+    const atendidos = hasValidNaoAtendidos ? (total - naoAtendidos) : '';
+    
+    // Calcular percentual apenas se tivermos valores válidos
+    const percentual = hasValidNaoAtendidos && total > 0 
+      ? ((total - naoAtendidos) / total * 100).toFixed(2) 
+      : '';
+    
+    // Status baseado em se foi analisado ou não
+    const status = hasValidNaoAtendidos 
+      ? (sistema.obrigatorio ? 'Sim' : 'Não')
+      : 'NÃO ANALISADO';
     
     return [
       sistema.nome || 'Sistema sem nome',
       total.toString(),
       atendidos.toString(),
-      naoAtendidos.toString(),
-      `${percentual}%`,
-      sistema.obrigatorio ? 'Sim' : 'Não',
+      naoAtendidos.toString(), // Manterá vazio se for vazio
+      percentual !== '' ? `${percentual}%` : '',
+      status,
       sistema.percentual_minimo ? `${sistema.percentual_minimo}%` : 'N/A'
     ];
   });
@@ -327,26 +381,33 @@ export const exportToExcel = (sistemas, processo, parametros) => {
   
   // Aba 1: Detalhes dos Sistemas
   const detalhesData = sistemas.map(sistema => {
-    const validacao = validarConformidadeSistema(
-      sistema,
-      percentualMinimoObrigatorio,
-      percentualMinimoGeral
-    );
-    
     const nome = sistema.nome || (sistema.sistemas?.nome || "Sistema sem nome");
     const total = sistema.totalItens || 0;
-    const naoAtendidos = sistema.naoAtendidos || 0;
-    const atendidos = total - naoAtendidos;
-    const percentualAtendimento = validacao.percentualAtingido;
+    
+    // Verificar se o sistema foi analisado
+    const naoAtendidos = sistema.naoAtendidos !== undefined && sistema.naoAtendidos !== null ? sistema.naoAtendidos : '';
+    const hasValidNaoAtendidos = naoAtendidos !== '';
+    
+    // Calcular valores apenas se tiver sido analisado
+    const atendidos = hasValidNaoAtendidos ? (total - naoAtendidos) : '';
+    const percentualAtendimento = hasValidNaoAtendidos && total > 0
+      ? ((total - naoAtendidos) / total * 100)
+      : '';
+    
+    const status = hasValidNaoAtendidos 
+      ? (validarConformidadeSistema(sistema, percentualMinimoObrigatorio, percentualMinimoGeral).atende 
+          ? 'Atende' 
+          : 'Não Atende')
+      : 'NÃO ANALISADO';
     
     return {
       'Sistema': nome,
-      'Total de Itens': total,
-      'Atendidos': atendidos,
-      'Não Atendidos': naoAtendidos,
-      'Percentual de Atendimento': percentualAtendimento / 100, // Para formatação como percentual no Excel
-      'Mínimo Exigido': validacao.percentualMinimo / 100, // Para formatação como percentual no Excel
-      'Status': validacao.atende ? 'Atende' : 'Não Atende',
+      'Total de Itens': total || '',
+      'Atendidos': atendidos !== '' ? atendidos : 'N/A',
+      'Não Atendidos': naoAtendidos !== '' ? naoAtendidos : 'N/A',
+      'Percentual de Atendimento': percentualAtendimento !== '' ? percentualAtendimento / 100 : 'N/A',
+      'Mínimo Exigido': sistema.percentual_minimo ? sistema.percentual_minimo / 100 : 'N/A',
+      'Status': status,
       'Obrigatório': sistema.obrigatorio ? 'Sim' : 'Não'
     };
   });

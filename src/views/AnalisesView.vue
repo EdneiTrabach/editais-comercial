@@ -89,7 +89,7 @@
                     max="100" 
                     class="percentual-input"
                     v-model.number="percentualMinimoGeral"
-                    @change="salvarPercentuaisMinimosLocal"
+                    @change="aplicarPercentualGeralTodasLinhas"
                   />
                 </div>
                 <div class="percentual-obrigatorios" title="Valor mínimo de percentual de atendimento para sistemas marcados como obrigatórios">
@@ -100,7 +100,7 @@
                     max="100" 
                     class="percentual-input"
                     v-model.number="percentualMinimoObrigatorios"
-                    @change="salvarPercentuaisMinimosLocal"
+                    @change="aplicarPercentualObrigatoriosTodasLinhas"
                   />
                 </div>
                 <!-- Novo botão para redefinir todos os percentuais -->
@@ -156,7 +156,7 @@
                 <td class="drag-handle-column">
                   <div class="drag-handle" title="Arrastar para ordenar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                      <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                     </svg>
                   </div>
                 </td>
@@ -210,20 +210,20 @@
                     {{ sistema.naoAtendidos || '' }}
                   </div>
                 </td>
-                <td :class="{ 'atendidos': sistema.atendidos > 0 }">
-                  <div v-if="editando.id === sistema.id && editando.campo === 'atendidos'">
-                    <input class="edit-input" v-model="editando.valor" @blur="salvarEdicao(sistema)" />
-                  </div>
-                  <div v-else class="calculated-field user-select-text">
-                    {{ sistema.atendidos }}
-                    <span class="calculated-indicator">(calculado)</span>
-                  </div>
+                <td>
+                  <span v-if="sistema.naoAtendidos > 0">
+                    {{ sistema.totalItens - sistema.naoAtendidos }} (calculado)
+                  </span>
                 </td>
-                <td class="porcentagem-nao-atendimento">
-                  {{ formatarPercentual(calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens)) }}%
+                <td>
+                  <span v-if="sistema.naoAtendidos > 0" class="porcentagem-nao-atendimento">
+                    {{ formatarPercentual(calcularPorcentagem(sistema.naoAtendidos, sistema.totalItens)) }}%
+                  </span>
                 </td>
-                <td class="porcentagem-atendimento">
-                  {{ formatarPercentual(100 - calcularPorcentagemPrecisa(sistema.naoAtendidos, sistema.totalItens)) }}%
+                <td>
+                  <span v-if="sistema.naoAtendidos > 0" class="porcentagem-atendimento">
+                    {{ formatarPercentual(calcularPorcentagem(sistema.totalItens - sistema.naoAtendidos, sistema.totalItens)) }}%
+                  </span>
                 </td>
                 <td>
                   <label class="checkbox-container">
@@ -238,16 +238,23 @@
                 <td class="percentual-personalizado">
                   <input 
                     type="number"
-                    v-model="sistema.percentualMinimo"
-                    @change="salvarPercentualPersonalizado(sistema)"
+                    :value="sistema.percentualMinimoPersonalizado ? sistema.percentualMinimo : ''"
+                    @input="e => { 
+                      sistema.percentualMinimo = e.target.value ? Number(e.target.value) : ''; 
+                      salvarPercentualPersonalizado(sistema);
+                    }"
                     class="percentual-input-small"
                     min="0"
                     max="100"
+                    placeholder="Mínimo"
                   />
                 </td>
-                <td class="status-column">
-                  <span :class="getStatusAtendimento(sistema).class">
+                <td>
+                  <span v-if="sistema.naoAtendidos > 0" :class="getStatusAtendimento(sistema).class">
                     {{ getStatusAtendimento(sistema).texto }}
+                  </span>
+                  <span v-else class="status-nao-analisado">
+                    Não analisado
                   </span>
                 </td>
                 <!-- Botão de ações -->
@@ -266,8 +273,17 @@
           <!-- Adicione esta classe para a div com a porcentagem geral -->
           <div class="analise-resumo">
             <div class="percentual-geral" :class="getStatusGeralClass">
-              <span>Atendimento Geral: {{ formatarPercentual(porcentagemGeralAtendimento) }}%</span>
-              <span class="status-geral">{{ getStatusGeral }}</span>
+              <span>
+                <template v-if="getStatusGeral !== 'Não Analisado'">
+                  Atendimento Geral: {{ formatarPercentual(porcentagemGeralAtendimento) }}%
+                </template>
+                <template v-else>
+                  Nenhum sistema analisado
+                </template>
+              </span>
+              <span class="status-geral" :class="{'status-nao-analisado': getStatusGeral === 'Não Analisado'}">
+                {{ getStatusGeral }}
+              </span>
             </div>
           </div>
         </div>
@@ -347,8 +363,8 @@ export default {
     const showConfirmDialog = ref(false)
     const acaoAposSalvar = ref(null)
     const editando = ref({ id: null, campo: null, valor: null })
-    const percentualMinimoGeral = ref(60)
-    const percentualMinimoObrigatorios = ref(90)
+    const percentualMinimoGeral = ref(''); // Antes era ref(60)
+    const percentualMinimoObrigatorios = ref(''); // Antes era ref(90)
     
     // Adicione o Toast
     const { toasts, showToast } = useToast();
@@ -423,6 +439,31 @@ export default {
       }
     }
 
+    // Adicione a função que está faltando:
+    const carregarAnalisesSistemasExtended = async () => {
+      try {
+        console.log('🔄 Carregando análise de sistemas com recursos estendidos');
+        
+        // Primeiro, carregar os sistemas básicos
+        const resultado = await carregarAnalisesSistemas();
+        
+        // Verificar se os percentuais mínimos estão definidos
+        if (!percentualMinimoGeral.value || !percentualMinimoObrigatorios.value) {
+          console.log('📊 Definindo percentuais padrão pois estão vazios');
+          await preencherPercentuaisMinimosDefault();
+        }
+        
+        // Sincronizar as cores após o carregamento
+        setTimeout(sincronizarCores, 100);
+        
+        return resultado;
+      } catch (error) {
+        console.error('❌ Erro ao carregar análises com recursos estendidos:', error);
+        showToast('Erro ao carregar sistemas de análise', 'error');
+        throw error;
+      }
+    };
+    
     // Função para cálculo do status de atendimento corrigida
     const getStatusAtendimento = (sistema) => {
       if (!sistema.totalItens) {
@@ -523,9 +564,20 @@ export default {
     })
 
     const getStatusGeral = computed(() => {
-      // Calcular totais gerais para todos os sistemas
-      const totalItens = sistemasAnalise.value.reduce((acc, s) => acc + s.totalItens, 0);
-      const totalNaoAtendidos = sistemasAnalise.value.reduce((acc, s) => acc + s.naoAtendidos, 0);
+      // Filtrar apenas sistemas que foram analisados (têm valor em naoAtendidos)
+      const sistemasAnalisados = sistemasAnalise.value.filter(s => 
+        s.naoAtendidos !== undefined && s.naoAtendidos !== null && 
+        s.naoAtendidos !== '' && s.totalItens > 0
+      );
+      
+      // Se não temos sistemas analisados, retornar mensagem específica
+      if (sistemasAnalisados.length === 0) {
+        return 'Não Analisado';
+      }
+      
+      // Calcular totais apenas para os sistemas analisados
+      const totalItens = sistemasAnalisados.reduce((acc, s) => acc + s.totalItens, 0);
+      const totalNaoAtendidos = sistemasAnalisados.reduce((acc, s) => acc + s.naoAtendidos, 0);
       
       // Calcular percentual geral de forma precisa
       const percentualGeralNaoAtendimento = totalItens ? (totalNaoAtendidos / totalItens) * 100 : 0;
@@ -1499,6 +1551,30 @@ export default {
       }
     };
 
+    // Adicione a função que está faltando
+    const salvarPercentuaisMinimosLocal = async () => {
+      try {
+        // Validar valores entre 0 e 100
+        percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
+        percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
+        
+        console.log('📊 Percentuais validados localmente - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
+        
+        // Se temos um processo selecionado, salvar no banco
+        if (selectedProcesso.value) {
+          return await salvarPercentuaisMinimos();
+        } else {
+          console.warn('⚠️ Nenhum processo selecionado para salvar percentuais');
+          showToast('Selecione um processo antes de salvar os percentuais', 'warning');
+        }
+        return false;
+      } catch (error) {
+        console.error('❌ Erro ao salvar percentuais mínimos localmente:', error);
+        showToast('Erro ao salvar configurações de percentuais', 'error');
+        return false;
+      }
+    };
+
     // Modifique o hook onMounted para garantir o carregamento correto dos percentuais
     onMounted(async () => {
       console.log('🚀 Componente montado');
@@ -1570,124 +1646,7 @@ export default {
       }));
     });
 
-    // Adicione esta função para preencher valores padrão nos itens da tabela
-    const preencherPercentuaisMinimosDefault = () => {
-      console.log('🔄 Preenchendo percentuais mínimos padrão nos itens');
-      if (!sistemasAnalise.value || sistemasAnalise.value.length === 0) return;
-      
-      let atualizacoesBanco = [];
-      let alterados = 0;
-      
-      sistemasAnalise.value.forEach(sistema => {
-        // Determinar qual percentual mínimo deve ser usado com base na obrigatoriedade
-        const percentualPadrao = sistema.obrigatorio 
-          ? percentualMinimoObrigatorios.value 
-          : percentualMinimoGeral.value;
-        
-        // Se o percentual ainda não foi definido manualmente, aplicar o padrão
-        if (!sistema.percentualMinimoPersonalizado) {
-          const valorAntigo = sistema.percentualMinimo;
-          sistema.percentualMinimo = percentualPadrao;
-          
-          if (valorAntigo !== percentualPadrao) {
-            alterados++;
-            
-            // Preparar atualização no banco
-            atualizacoesBanco.push(
-              supabase
-                .from('analises_itens')
-                .update({
-                  percentual_minimo: percentualPadrao,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', sistema.id)
-            );
-          }
-        }
-      });
-      
-      // Executar as atualizações no banco se houver
-      if (atualizacoesBanco.length > 0) {
-        Promise.all(atualizacoesBanco)
-          .then(() => {
-            console.log(`✅ ${alterados} itens atualizados com percentuais padrão`);
-            sincronizarCores();
-          })
-          .catch(error => {
-            console.error('❌ Erro ao atualizar percentuais padrão:', error);
-          });
-      }
-    };
-
-    // Modifique a função salvarPercentuaisMinimosLocal para aplicar os padrões após salvar
-    const salvarPercentuaisMinimosLocal = async () => {
-      try {
-        console.log('🔄 Salvando percentuais mínimos da UI');
-        console.log('📊 Valores atuais - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
-        
-        // Validações...
-        percentualMinimoGeral.value = Math.min(100, Math.max(0, percentualMinimoGeral.value));
-        percentualMinimoObrigatorios.value = Math.min(100, Math.max(0, percentualMinimoObrigatorios.value));
-        
-        console.log('📊 Valores ajustados - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
-        
-        // Salvar diretamente no banco
-        const resultado = await salvarPercentuaisMinimos();
-        
-        if (resultado) {
-          // Aplicar os novos percentuais padrão aos itens da tabela
-          preencherPercentuaisMinimosDefault();
-          
-          showToast('Percentuais mínimos atualizados com sucesso', 'success');
-          console.log('✅ Percentuais salvos com sucesso');
-        } else {
-          showToast('Erro ao atualizar percentuais mínimos', 'error');
-          console.error('❌ Falha ao salvar percentuais');
-        }
-      } catch (error) {
-        console.error('❌ Erro ao salvar percentuais mínimos:', error);
-        showToast('Erro ao atualizar percentuais mínimos: ' + error.message, 'error');
-      }
-    };
-
-    // Modifique o método carregarAnalisesSistemas para incluir o campo percentual_minimo_personalizado
-    const carregarAnalisesSistemasExtended = async () => {
-      try {
-        // Chamar a função original primeiro
-        const resultado = await carregarAnalisesSistemas();
-        
-        // Para cada sistema carregado, verificar e ajustar o percentual mínimo
-        for (const sistema of sistemasAnalise.value) {
-          // Buscar especificamente se o percentual mínimo foi personalizado
-          const { data, error } = await supabase
-            .from('analises_itens')
-            .select('percentual_minimo_personalizado')
-            .eq('id', sistema.id)
-            .single();
-            
-          if (!error && data) {
-            sistema.percentualMinimoPersonalizado = data.percentual_minimo_personalizado || false;
-            
-            // Se não for personalizado, ajustar para o valor padrão conforme obrigatoriedade
-            if (!sistema.percentualMinimoPersonalizado) {
-              sistema.percentualMinimo = sistema.obrigatorio 
-                ? percentualMinimoObrigatorios.value 
-                : percentualMinimoGeral.value;
-            }
-          }
-        }
-        
-        // Atualizar as classes de estilo
-        nextTick(() => sincronizarCores());
-        
-        return resultado;
-      } catch (error) {
-        console.error('Erro ao carregar análises com dados estendidos:', error);
-        throw error;
-      }
-    };
-
-    // Adicione esta função dentro do setup(), antes do return
+    // Adicione esta função dentro do setup()
 
     // Função para calcular a classe de estilo com validação pendente
     const calcularClasseEstilo = (sistema) => {
@@ -1713,21 +1672,29 @@ export default {
       return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
     };
 
-    // Adicione esta função para redefinir todos os percentuais
+    // Substitua a função redefinirTodosPercentuais existente
     const redefinirTodosPercentuais = async () => {
       try {
         // Confirmar antes de redefinir
         if (!confirm('Tem certeza que deseja redefinir todas as porcentagens individuais para os valores padrão definidos acima?')) return;
         
+        if (!percentualMinimoGeral.value) {
+          showToast('Por favor, defina o valor do percentual mínimo geral antes de redefinir', 'warning');
+          return;
+        }
+        
         // Atualizar localmente e no banco de dados
         const promessas = sistemasAnalise.value.map(async (sistema) => {
+          // Determinar qual percentual padrão aplicar com base na obrigatoriedade
           const percentualPadrao = sistema.obrigatorio 
             ? percentualMinimoObrigatorios.value 
             : percentualMinimoGeral.value;
             
+          // Atualizar valores locais
           sistema.percentualMinimo = percentualPadrao;
           sistema.percentualMinimoPersonalizado = false; // Marcar como não personalizado
           
+          // Atualizar no banco
           return supabase
             .from('analises_itens')
             .update({
@@ -1751,8 +1718,6 @@ export default {
       }
     };
 
-    // Adicione esta função dentro do setup() do componente
-
     const handleTabNavigation = (event, sistema, campoAtual, proximoCampo) => {
       event.preventDefault(); // Prevenir o comportamento padrão do tab
       
@@ -1763,6 +1728,102 @@ export default {
       nextTick(() => {
         editarCelula(sistema, proximoCampo);
       });
+    };
+
+    // Adicione esta função dentro do setup()
+    const aplicarPercentualGeralTodasLinhas = async () => {
+      try {
+        // Primeiro, salvar o percentual geral atualizado
+        await salvarPercentuaisMinimosLocal();
+        
+        // Em seguida, aplicar a todas as linhas não obrigatórias
+        if (percentualMinimoGeral.value) {
+          const promessas = sistemasAnalise.value
+            .filter(sistema => !sistema.obrigatorio) // Aplica apenas aos sistemas não obrigatórios
+            .map(async (sistema) => {
+              // Atualizar o valor local
+              sistema.percentualMinimo = percentualMinimoGeral.value;
+              sistema.percentualMinimoPersonalizado = false; // Desmarcar como personalizado
+              
+              // Atualizar no banco de dados
+              return supabase
+                .from('analises_itens')
+                .update({
+                  percentual_minimo: percentualMinimoGeral.value,
+                  percentual_minimo_personalizado: false,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', sistema.id);
+            });
+          
+          await Promise.all(promessas);
+          
+          // Atualizar as cores e estados visuais
+          alteracoesPendentes.value = true;
+          sincronizarCores();
+          showToast('Percentual mínimo aplicado a todos os sistemas não obrigatórios', 'success');
+        }
+      } catch (error) {
+        console.error('Erro ao aplicar percentual geral:', error);
+        showToast('Erro ao aplicar percentual geral a todos os sistemas', 'error');
+      }
+    };
+
+    // Adicione esta função dentro do setup()
+const aplicarPercentualObrigatoriosTodasLinhas = async () => {
+  try {
+    // Primeiro, salvar o percentual obrigatórios atualizado
+    await salvarPercentuaisMinimosLocal();
+    
+    // Em seguida, aplicar a todas as linhas obrigatórias
+    if (percentualMinimoObrigatorios.value) {
+      const promessas = sistemasAnalise.value
+        .filter(sistema => sistema.obrigatorio) // Aplica apenas aos sistemas obrigatórios
+        .map(async (sistema) => {
+          // Atualizar o valor local
+          sistema.percentualMinimo = percentualMinimoObrigatorios.value;
+          sistema.percentualMinimoPersonalizado = false; // Desmarcar como personalizado
+          
+          // Atualizar no banco de dados
+          return supabase
+            .from('analises_itens')
+            .update({
+              percentual_minimo: percentualMinimoObrigatorios.value,
+              percentual_minimo_personalizado: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sistema.id);
+        });
+      
+      await Promise.all(promessas);
+      
+      // Atualizar as cores e estados visuais
+      alteracoesPendentes.value = true;
+      sincronizarCores();
+      showToast('Percentual mínimo aplicado a todos os sistemas obrigatórios', 'success');
+    }
+  } catch (error) {
+    console.error('Erro ao aplicar percentual para obrigatórios:', error);
+    showToast('Erro ao aplicar percentual a todos os sistemas obrigatórios', 'error');
+  }
+};
+
+    // Adicione esta função para preencher valores padrão para os percentuais
+    const preencherPercentuaisMinimosDefault = () => {
+      console.log('🔄 Preenchendo percentuais mínimos com valores padrão');
+      
+      // Definir valores padrão se estiverem vazios
+      if (!percentualMinimoGeral.value) percentualMinimoGeral.value = 60;
+      if (!percentualMinimoObrigatorios.value) percentualMinimoObrigatorios.value = 90;
+      
+      console.log('📊 Percentuais padrão definidos - Geral:', percentualMinimoGeral.value, 'Obrigatórios:', percentualMinimoObrigatorios.value);
+      
+      // Se houver um processo selecionado, podemos salvar esses valores padrão
+      if (selectedProcesso.value) {
+        return salvarPercentuaisMinimos();
+      }
+      
+      return Promise.resolve(true);
     };
 
     return {
@@ -1832,6 +1893,7 @@ export default {
       redefinirTodosPercentuais,
       handleTabNavigation,
       calcularClasseEstilo,
+      aplicarPercentualGeralTodasLinhas,
     }
   }
 }
