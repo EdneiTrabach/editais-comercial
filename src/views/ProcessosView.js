@@ -258,6 +258,12 @@ export default {
         campoExibicao: 'nome',
         tipoEdicao: 'select'
       },
+      {
+        titulo: 'Atual Prestador',
+        campo: 'empresa_atual_prestadora',
+        tipoExibicao: 'componente',
+        componente: 'AtualPrestadorColuna'
+      },
       { titulo: 'Observações', campo: 'campo_adicional1' },
       { titulo: 'Impugnações', campo: 'impugnacoes' },
       {
@@ -266,12 +272,6 @@ export default {
         tabelaRelacionada: 'empresas',
         campoExibicao: 'nome',
         tipoEdicao: 'select'
-      },
-      {
-        titulo: 'Atual Prestador',
-        campo: 'empresa_atual_prestadora',
-        tipoExibicao: 'componente',
-        componente: 'AtualPrestadorColuna'
       },
       {
         titulo: 'Empresa Vencedora',

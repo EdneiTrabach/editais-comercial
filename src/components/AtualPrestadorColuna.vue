@@ -46,18 +46,19 @@ export default {
   setup(props, ctx) {
     console.log('Inicializando AtualPrestadorColuna para processo:', props.processo.id);
     
+    // Use apenas o que precisamos do composable
     const {
-      processoId,
-      selectedEmpresa,
-      numeroContrato,
-      valorFinal,
-      dataAssinatura,
-      observacoes,
-      empresas,
       isEditing,
       startEdit,
       cancelEdit
     } = useEmpresaVencedora(props, ctx.emit, 'empresa_atual_prestadora')
+    
+    // Criar nossas próprias refs em vez de usar as do composable
+    const selectedEmpresa = ref('');
+    const numeroContrato = ref('');
+    const valorFinal = ref(null);
+    const dataAssinatura = ref(null);
+    const observacoes = ref(null);
     
     // Dados que serão exibidos na célula
     const dadosAtualPrestador = ref(null);
@@ -105,6 +106,9 @@ export default {
         if (data) {
           selectedEmpresa.value = data.empresa_id || '';
           numeroContrato.value = data.numero_contrato || '';
+          valorFinal.value = data.valor_final;
+          dataAssinatura.value = data.data_assinatura;
+          observacoes.value = data.observacoes;
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -127,6 +131,8 @@ export default {
           updated_at: new Date().toISOString(),
           updated_by: user?.id || null
         };
+        
+        console.log("Salvando payload:", payload);
         
         const { error } = await supabase
           .from('processos_empresa_atual_prestadora')
