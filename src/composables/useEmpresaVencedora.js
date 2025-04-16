@@ -1,11 +1,11 @@
 import { ref, computed, watch } from 'vue';
 import { supabase } from '@/lib/supabase';
 
-export function useEmpresaVencedora(props, emit) {
+export function useEmpresaVencedora(props, emit, campoAlvo = 'empresa_vencedora') {
   const empresas = ref([]);
   const isEditing = ref(false);
-  const selectedEmpresa = ref(props.processo.empresa_vencedora || '');
-  const numeroContrato = ref(props.processo.numero_contrato || '');
+  const selectedEmpresa = ref(props.processo[campoAlvo] || '');
+  const numeroContrato = ref(props.processo[`${campoAlvo}_contrato`] || '');
   const dadosAnalise = ref('');
   
   // Computed property para o nome da empresa
@@ -17,8 +17,8 @@ export function useEmpresaVencedora(props, emit) {
   
   // Watch para atualizar os valores quando o processo mudar
   watch(() => props.processo, (newProcesso) => {
-    selectedEmpresa.value = newProcesso.empresa_vencedora || '';
-    numeroContrato.value = newProcesso.numero_contrato || '';
+    selectedEmpresa.value = newProcesso[campoAlvo] || '';
+    numeroContrato.value = newProcesso[`${campoAlvo}_contrato`] || '';
     checkDadosAnaliseAutomatica();
   });
   
@@ -54,14 +54,14 @@ export function useEmpresaVencedora(props, emit) {
   // Cancelar edição
   const cancelEdit = () => {
     isEditing.value = false;
-    selectedEmpresa.value = props.processo.empresa_vencedora || '';
-    numeroContrato.value = props.processo.numero_contrato || '';
+    selectedEmpresa.value = props.processo[campoAlvo] || '';
+    numeroContrato.value = props.processo[`${campoAlvo}_contrato`] || '';
   };
   
   // Salvar alterações
   const saveChanges = async () => {
-    const empresaChanged = selectedEmpresa.value !== props.processo.empresa_vencedora;
-    const contratoChanged = numeroContrato.value !== props.processo.numero_contrato;
+    const empresaChanged = selectedEmpresa.value !== props.processo[campoAlvo];
+    const contratoChanged = numeroContrato.value !== props.processo[`${campoAlvo}_contrato`];
     
     if (!empresaChanged && !contratoChanged) {
       isEditing.value = false;
@@ -70,8 +70,8 @@ export function useEmpresaVencedora(props, emit) {
     
     try {
       const updateData = {
-        empresa_vencedora: selectedEmpresa.value,
-        numero_contrato: numeroContrato.value,
+        [campoAlvo]: selectedEmpresa.value,
+        [`${campoAlvo}_contrato`]: numeroContrato.value,
         updated_at: new Date().toISOString()
       };
       
@@ -94,17 +94,17 @@ export function useEmpresaVencedora(props, emit) {
         tabela: 'processos',
         registro_id: props.processo.id,
         campo_alterado: empresaChanged && contratoChanged 
-          ? 'empresa_vencedora e numero_contrato' 
+          ? `${campoAlvo} e ${campoAlvo}_contrato` 
           : empresaChanged 
-            ? 'empresa_vencedora' 
-            : 'numero_contrato',
+            ? campoAlvo 
+            : `${campoAlvo}_contrato`,
         dados_anteriores: JSON.stringify({
-          empresa_vencedora: props.processo.empresa_vencedora,
-          numero_contrato: props.processo.numero_contrato
+          [campoAlvo]: props.processo[campoAlvo],
+          [`${campoAlvo}_contrato`]: props.processo[`${campoAlvo}_contrato`]
         }),
         dados_novos: JSON.stringify({
-          empresa_vencedora: selectedEmpresa.value,
-          numero_contrato: numeroContrato.value
+          [campoAlvo]: selectedEmpresa.value,
+          [`${campoAlvo}_contrato`]: numeroContrato.value
         })
       });
       
@@ -112,8 +112,8 @@ export function useEmpresaVencedora(props, emit) {
       emit('update', {
         id: props.processo.id,
         fields: {
-          empresa_vencedora: selectedEmpresa.value,
-          numero_contrato: numeroContrato.value
+          [campoAlvo]: selectedEmpresa.value,
+          [`${campoAlvo}_contrato`]: numeroContrato.value
         }
       });
       
