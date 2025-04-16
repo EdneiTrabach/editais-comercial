@@ -401,26 +401,17 @@
                     </span>
 
                     <!-- Distances field -->
-                    <span v-else-if="coluna.campo === 'distancias'" @dblclick="abrirDialogDistancia(processo, $event)">
+                    <span v-else-if="coluna.campo === 'distancia_km'">
                       <div class="distancia-container">
                         <div v-if="processo._distancias && processo._distancias.length > 0" class="distancia-multiple custom-cursor-on-hover">
-                          <div v-for="(distancia, idx) in processo._distancias" :key="idx" class="distancia-item">
-                            <div class="distancia-text">
-                              <span>
-                                {{ distancia.distancia_km }} km 
-                                <span>
-                                  de {{ (distancia.ponto_referencia_cidade || distancia.cidade_destino) }}/{{ (distancia.ponto_referencia_uf || distancia.uf_destino) }}
-                                </span>
-                              </span>
-                            </div>
+                          <div v-for="(d, idx) in processo._distancias" :key="idx" class="distancia-item">
+                            {{ d.distancia_km }} km de {{ d.ponto_referencia_cidade || d.cidade_destino }}/{{ d.ponto_referencia_uf || d.uf_destino }}
                           </div>
                         </div>
-                        <div v-else-if="processo.distancia_km" class="distancia-preview">
-                          {{ formatarDistancia(processo) }}
+                        <div v-else-if="processo.distancia_km" class="distancia-item">
+                          {{ processo.distancia_km }} km de {{ processo.ponto_referencia_cidade }}/{{ processo.ponto_referencia_uf }}
                         </div>
-                        <div v-else class="sem-distancia">
-                          <span>Clique para adicionar</span>
-                        </div>
+                        <div v-else class="sem-distancia">-</div>
                       </div>
                     </span>
 
@@ -556,20 +547,6 @@
                       {{ coluna.campo === 'distancia_km' ? getDistancias(processo) : processo[coluna.campo] }}
                     </span>
                     <!-- No template, onde as distâncias são renderizadas -->
-                    <template v-if="coluna.campo === 'distancia_km'">
-                      <div class="distancia-container">
-                        <div v-if="processo._distancias && processo._distancias.length > 0" class="distancia-multiple">
-                          <div v-for="(d, idx) in processo._distancias" :key="idx" class="distancia-item">
-                            <!-- Novo formato simplificado -->
-                            {{ d.distancia_km }} km de {{ d.ponto_referencia_cidade || d.cidade_destino }}/{{ d.ponto_referencia_uf || d.uf_destino }}
-                          </div>
-                        </div>
-                        <div v-else-if="processo.distancia_km" class="distancia-item">
-                          {{ processo.distancia_km }} km de {{ processo.ponto_referencia_cidade }}/{{ processo.ponto_referencia_uf }}
-                        </div>
-                        <div v-else class="sem-distancia">-</div>
-                      </div>
-                    </template>
                   </template>
                 </td>
                 <!-- Célula de ações separada -->
