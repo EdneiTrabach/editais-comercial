@@ -58,8 +58,11 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
       return;
     }
 
+    // Extrair só o valor numérico da distância
+    const kmValue = parseFloat(distanciaCalculada.value.replace(' km', '').replace('(aproximado)', '').trim());
+    
     const novaDistancia = {
-      distancia_km: parseFloat(distanciaCalculada.value.replace(' km', '').replace('(aproximado)', '').trim()),
+      distancia_km: kmValue,
       // A cidade de origem (órgão) é agora o ponto de partida
       cidade_origem: cidadeOrgao.value.nome,
       uf_origem: estadoDestino.value,
@@ -68,7 +71,8 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
       ponto_referencia_uf: pontoReferencia.value.uf,
       cidade_destino: pontoReferencia.value.cidade,
       uf_destino: pontoReferencia.value.uf,
-      texto_completo: `de ${cidadeOrgao.value.nome}/${estadoDestino.value} para ${pontoReferencia.value.cidade}/${pontoReferencia.value.uf}`
+      // Texto completo no formato solicitado
+      texto_completo: `de ${pontoReferencia.value.cidade}/${pontoReferencia.value.uf}`
     };
 
     distanciasSalvas.value.push(novaDistancia);

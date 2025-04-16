@@ -904,33 +904,32 @@ export default {
       // Verifica se há múltiplas distâncias
       if (processo._distancias && processo._distancias.length > 0) {
         return processo._distancias.map(d => {
-          // Se tiver texto completo, usar ele como está
-          if (d.texto_completo) {
-            return `${d.distancia_km} km (${d.texto_completo})`;
-          } 
-          // Se for distância manual, formatar de modo simples
-          else if (d.isManual) {
-            return `${d.distancia_km} km`;
-          } 
-          // Caso contrário, formatar com origem e destino
+          // Primeiro verificamos se há valor de distância
+          const distanciaValor = d.distancia_km ? `${d.distancia_km} km` : '';
+          
+          if (d.texto_completo && d.texto_completo.includes('km')) {
+            // Se o texto_completo já contém "km", retornamos ele diretamente
+            return d.texto_completo;
+          }
+          else if (d.texto_completo) {
+            // Se existe texto_completo, mas não tem "km", adicionamos no início
+            return `${distanciaValor} ${d.texto_completo}`;
+          }
+          else if (d.ponto_referencia_cidade && d.ponto_referencia_uf) {
+            // Formato padrão: "100 km de Destino/UF"
+            return `${distanciaValor} de ${d.ponto_referencia_cidade}/${d.ponto_referencia_uf}`;
+          }
           else {
-            const origem = d.cidade_origem && d.uf_origem ? 
-              `${d.cidade_origem}/${d.uf_origem}` : '';
-              
-            const destino = d.ponto_referencia_cidade && d.ponto_referencia_uf ? 
-              `${d.ponto_referencia_cidade}/${d.ponto_referencia_uf}` : 
-              (d.cidade_destino && d.uf_destino ? 
-                `${d.cidade_destino}/${d.uf_destino}` : '');
-                
-            return `${d.distancia_km} km (${origem} → ${destino})`;
+            // Caso não tenha referências, retornar só a distância
+            return distanciaValor || '-';
           }
         }).join('\n');
       }
     
       // Caso tenha apenas uma distância no formato antigo
       if (processo.distancia_km) {
-        return `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
-          ` (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})` : ''}`;
+        return `${processo.distancia_km} km ${processo.ponto_referencia_cidade ? 
+          `de ${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf}` : ''}`;
       }
     
       return '-';

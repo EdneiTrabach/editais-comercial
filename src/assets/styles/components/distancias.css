@@ -69,7 +69,21 @@
 }
 
 .distancia-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 4px;
   font-size: 13px;
+}
+
+.distancia-text {
+  display: block;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.distancia-value {
+  font-weight: 500;
+  margin-right: 5px;
 }
 
 .distancia-text {
