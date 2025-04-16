@@ -229,7 +229,7 @@
                       <!-- Para entradas calculadas, mantém a formatação original -->
                       <template v-else>
                         <span class="distancia-valor">{{ dist.distancia_km }} km</span>
-                        <span class="distancia-rota">de {{ dist.cidade_origem }}/{{ dist.uf_origem }} para {{
+                        <span class="distancia-rota"> de {{ dist.cidade_origem }}/{{ dist.uf_origem }} para {{
                           dist.ponto_referencia_cidade }}/{{ dist.ponto_referencia_uf }}</span>
                       </template>
                     </div>
