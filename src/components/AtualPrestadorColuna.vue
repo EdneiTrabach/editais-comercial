@@ -196,11 +196,6 @@ export default {
   gap: 4px;
 }
 
-.empresa-nome {
-  font-weight: 500;
-  color: #1e293b;
-}
-
 .contrato-numero {
   font-size: 0.8em;
   color: #64748b;
