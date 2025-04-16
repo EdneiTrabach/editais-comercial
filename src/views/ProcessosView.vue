@@ -1076,6 +1076,7 @@ import AcoesColumn from '@/components/columns/table/AcoesColumn.vue';
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'; // Importação do componente
 import DuplicateProcessDialog from '@/components/dialogs/DuplicateProcessDialog.vue';
 import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelector.vue'; // Importando o novo componente
+import AtualPrestadorColuna from '@/components/AtualPrestadorColuna.vue'
 
 // Para uso no Vue DevTools ou em um componente temporário
 async function checkTableStructure() {
@@ -1119,7 +1120,8 @@ export default {
     AcoesColumn,
     AdvancedFilterComponent, // Adicionar o novo componente
     DuplicateProcessDialog,
-    SistemasImplantacaoSelector
+    SistemasImplantacaoSelector,
+    AtualPrestadorColuna,
   },
   data() {
     const baseData = typeof ProcessosViewModel.data === 'function' 

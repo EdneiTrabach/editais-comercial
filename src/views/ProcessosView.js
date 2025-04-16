@@ -266,6 +266,12 @@ export default {
         tipoEdicao: 'select'
       },
       {
+        titulo: 'Atual Prestador',
+        campo: 'empresa_atual_prestadora',
+        tipoExibicao: 'componente',
+        componente: 'AtualPrestadorColuna'
+      },
+      {
         titulo: 'Empresa Vencedora',
         campo: 'empresa_vencedora',
         tipoExibicao: 'componente',
@@ -283,7 +289,7 @@ export default {
         tipoExibicao: 'componente',
         componente: 'AcoesColumn',
         fixedRight: true
-      }
+      },
     ]
 
     const estados = ref([
@@ -1541,7 +1547,7 @@ export default {
             updateValue = ensureValidEmpresaId(updateValue);
 
             console.log(`Atualizando empresa para: ${updateValue === null ? 'vazio' : updateValue} (validado)`);
-            break;
+            break
 
           case 'distancia_km':
             const distanciaNum = parseFloat(editingCell.value.value.replace(/[^\d.,]/g, '').replace(',', '.'));
@@ -1582,6 +1588,41 @@ export default {
           
             updateValue = distanciaNum;
             break;
+        }
+
+        // Adicione essa condição especial no método handleUpdate, aproximadamente na linha 1590 
+        // após verificar qual o valor a atualizar e antes de tentar atualizar o banco
+
+        if (editingCell.value.field === 'empresa_atual_prestadora') {
+          try {
+            // Para empresa atual prestadora, salvar na tabela específica em vez da tabela processos
+            const { data: { user } } = await supabase.auth.getUser()
+            
+            // Preparar payload para salvar na tabela específica
+            const payload = {
+              processo_id: processo.id,
+              empresa_id: updateValue, // assumindo que updateValue é o ID da empresa
+              updated_at: new Date().toISOString(),
+              updated_by: user?.id || null
+            }
+            
+            // Usar upsert para inserir ou atualizar
+            const { error } = await supabase
+              .from('processos_empresa_atual_prestadora')
+              .upsert(payload, { onConflict: 'processo_id' });
+              
+            if (error) throw error;
+            
+            await loadProcessos();
+            console.log('Atual Prestador atualizado com sucesso');
+            cancelEdit();
+            return; // Importante: retornar para evitar a execução do código abaixo
+          } catch (error) {
+            console.error('Error updating atual prestador:', error);
+            alert(`Error updating atual prestador: ${error.message}`);
+            cancelEdit();
+            return;
+          }
         }
 
         if (updateValue === processo[editingCell.value.field]) {
