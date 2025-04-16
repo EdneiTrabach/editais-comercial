@@ -174,10 +174,17 @@
                   
                   <!-- Template específico para empresa atual prestadora -->
                   <template v-else-if="coluna.campo === 'empresa_atual_prestadora'">
-                    <AtualPrestadorColuna 
-                      :processo="processo" 
-                      @update="handleUpdate(processo)"
-                    />
+                    <Suspense>
+                      <template #default>
+                        <AtualPrestadorColuna 
+                          :processo="processo" 
+                          @update="handleUpdate(processo)"
+                        />
+                      </template>
+                      <template #fallback>
+                        <div class="loading-placeholder">Carregando...</div>
+                      </template>
+                    </Suspense>
                   </template>
                   
                   <!-- Editing Mode -->
