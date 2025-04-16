@@ -175,7 +175,8 @@ export default {
       validarCidade,
       salvarDistanciaManual,
       adicionarDistanciaLista,
-      removerDaLista
+      removerDaLista,
+      salvarTodasDistancias // Adicionar esta linha
     } = useDistanceHandling(
       formData, 
       pontoReferencia, 
@@ -423,6 +424,13 @@ export default {
           return;
         }
 
+        // Adicione esta verificação antes de salvar no banco de dados
+        if (!validarModalidade(formData.value.modalidade)) {
+          showToast(`Erro: Modalidade '${formData.value.modalidade}' inválida. Escolha uma modalidade válida.`, 'error');
+          loading.value = false;
+          return;
+        }
+
         // Número do processo no formato padrão
         const numero_processo = `${formData.value.numero}/${formData.value.ano}`;
 
@@ -486,17 +494,44 @@ export default {
         console.log('Salvando dados:', processoData);
           
         // Salvar dados diretamente
-        const { data, error } = await supabase
-          .from('processos')
-          .insert(processoData)
-          .select();
+        // Trecho onde você salva o processo e depois tenta salvar as distâncias
+        try {
+          loading.value = true
           
-        if (error) throw error;
+          // Salvar dados do processo
+          const { data, error } = await supabase
+            .from('processos')
+            .insert(processoData)
+            .select();
+            
+          if (error) throw error;
           
-        showToast('Processo salvo com sucesso!', 'success');
-        setTimeout(() => {
-          router.push('/funcionalidades');
-        }, 1500);
+          // Agora use o ID do processo para salvar as distâncias
+          if (data && data[0] && data[0].id) {
+            const processoId = data[0].id;
+            
+            // Adicione verificação de console para debug
+            console.log(`Processo salvo com ID: ${processoId}, salvando ${distanciasSalvas.value.length} distâncias`);
+            
+            // Verificar se a função existe antes de chamá-la
+            if (typeof salvarTodasDistancias !== 'function') {
+              console.error('ERRO: função salvarTodasDistancias não definida!');
+              throw new Error('Função salvarTodasDistancias não está definida');
+            }
+            
+            await salvarTodasDistancias(processoId);
+          }
+          
+          showToast('Processo salvo com sucesso!', 'success');
+          setTimeout(() => {
+            router.push('/funcionalidades');
+          }, 1500);
+        } catch (error) {
+          console.error('Erro ao salvar processo:', error);
+          showToast(`Erro ao salvar: ${error.message || 'Verifique os dados e tente novamente'}`, 'error');
+        } finally {
+          loading.value = false;
+        }
       } catch (error) {
         console.error('Erro ao salvar processo:', error);
         showToast(`Erro ao salvar: ${error.message || 'Verifique os dados e tente novamente'}`, 'error');
@@ -607,6 +642,35 @@ export default {
       cleanupTourElements();
     };
 
+    // Adicione esta constante no setup, antes da função validarModalidade
+
+    // No início do setup() ou logo após a definição das variáveis básicas
+    const opcoesModalidade = [
+      { valor: 'pregao_eletronico', texto: 'Pregão Eletrônico' },
+      { valor: 'pregao_presencial', texto: 'Pregão Presencial' },
+      { valor: 'credenciamento', texto: 'Credenciamento' },
+      { valor: 'concorrencia', texto: 'Concorrência' },
+      { valor: 'concurso', texto: 'Concurso' },
+      { valor: 'leilao', texto: 'Leilão' },
+      { valor: 'dispensa_eletronica', texto: 'Dispensa Eletrônica' },
+      { valor: 'dispensa_por_email', texto: 'Dispensa por E-mail' },
+      { valor: 'dialogo_competitivo', texto: 'Diálogo Competitivo' },
+      { valor: 'tomada_precos', texto: 'Tomada de Preços' },
+      { valor: 'chamamento_publico', texto: 'Chamamento Público' },
+      { valor: 'rdc', texto: 'RDC' },
+      { valor: 'rdc_eletronico', texto: 'RDC Eletrônico' },
+      { valor: 'srp', texto: 'SRP' },
+      { valor: 'srp_eletronico', texto: 'SRP Eletrônico' },
+      { valor: 'srp_internacional', texto: 'SRP Internacional' },
+      { valor: 'chamada_publica', texto: 'Chamada Pública' }
+    ];
+
+    // E então modifique a implementação da função validarModalidade
+    const validarModalidade = (modalidade) => {
+      const modalidadesValidas = opcoesModalidade.map(opcao => opcao.valor);
+      return modalidadesValidas.includes(modalidade);
+    };
+
     // === RETORNO DE VALORES E FUNÇÕES PARA O TEMPLATE ===
     
     return {
@@ -617,6 +681,9 @@ export default {
       currentYear,
       toast,
       showTimeoutMessage,
+      
+      // Adicione a opcoesModalidade aqui
+      opcoesModalidade, 
       
       // Dados do formulário
       formData,

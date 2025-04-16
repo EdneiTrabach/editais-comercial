@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useToast } from './useToast'
+import { supabase } from '@/lib/supabase'  // Corrigido o caminho da importação
 
 export function useDistanceHandling(formData, pontoReferencia, distanciaCalculada, cidadeOrgao, distanciaManualValue, estadoDestino) {
   const distanciasSalvas = ref([])
@@ -62,8 +63,9 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
       // O ponto de referência é agora o destino
       ponto_referencia_cidade: pontoReferencia.value.cidade,
       ponto_referencia_uf: pontoReferencia.value.uf,
-      cidade_destino: cidadeOrgao.value.nome,
-      uf_destino: estadoDestino.value
+      cidade_destino: pontoReferencia.value.cidade,
+      uf_destino: pontoReferencia.value.uf,
+      texto_completo: `de ${cidadeOrgao.value.nome}/${estadoDestino.value} para ${pontoReferencia.value.cidade}/${pontoReferencia.value.uf}`
     }
 
     distanciasSalvas.value.push(novaDistancia)
@@ -76,12 +78,82 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
     showToast('Distância removida da lista', 'success')
   }
 
+  // Melhore a função salvarTodasDistancias para validar melhor os dados
+
+  const salvarTodasDistancias = async (processoId) => {
+    if (!processoId) {
+      showToast('ID do processo não disponível', 'error')
+      return false
+    }
+  
+    if (distanciasSalvas.value.length === 0) {
+      console.log('Nenhuma distância para salvar');
+      return true // Não há nada para salvar, mas não é um erro
+    }
+  
+    try {
+      // Log para debug
+      console.log(`Preparando ${distanciasSalvas.value.length} distâncias para salvar`);
+      console.log('Distâncias a salvar:', JSON.stringify(distanciasSalvas.value));
+      
+      // Preparar os registros para inserção com maior validação
+      const distanciasParaSalvar = distanciasSalvas.value.map(distancia => {
+        // Converter string para número se necessário
+        let distanciaKm = distancia.distancia_km;
+        
+        if (typeof distanciaKm === 'string') {
+          // Remover texto e deixar apenas números e ponto/vírgula
+          distanciaKm = distanciaKm.replace(/[^\d.,]/g, '').replace(',', '.');
+          distanciaKm = parseFloat(distanciaKm) || 0;
+        }
+        
+        return {
+          processo_id: processoId,
+          distancia_km: distanciaKm,
+          ponto_referencia_cidade: distancia.ponto_referencia_cidade || null,
+          ponto_referencia_uf: distancia.ponto_referencia_uf || null,
+          cidade_destino: distancia.cidade_destino || null,
+          uf_destino: distancia.uf_destino || null,
+          cidade_origem: distancia.cidade_origem || null,
+          uf_origem: distancia.uf_origem || null,
+          texto_completo: distancia.texto_completo || 
+            (distancia.isManual ? `${distanciaKm} km` : 
+              `de ${distancia.cidade_origem || ''}/${distancia.uf_origem || ''} para ${distancia.ponto_referencia_cidade || ''}/${distancia.ponto_referencia_uf || ''}`),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      });
+      
+      // Log antes da inserção
+      console.log('Dados preparados para inserção:', JSON.stringify(distanciasParaSalvar));
+      
+      // Inserir todas as distâncias de uma vez
+      const { data, error } = await supabase
+        .from('processo_distancias')
+        .insert(distanciasParaSalvar);
+
+      if (error) {
+        console.error('Erro na inserção:', error);
+        throw error;
+      }
+  
+      console.log('Distâncias salvas com sucesso:', data);
+      showToast(`${distanciasParaSalvar.length} distâncias salvas com sucesso!`, 'success')
+      return true
+    } catch (error) {
+      console.error('Erro detalhado ao salvar distâncias:', error)
+      showToast(`Erro ao salvar distâncias: ${error.message}`, 'error')
+      return false
+    }
+  }
+
   return {
     distanciasSalvas,
     salvarDistancia,
     validarCidade,
     salvarDistanciaManual,
     adicionarDistanciaLista,
-    removerDaLista
+    removerDaLista,
+    salvarTodasDistancias  // Esta linha é essencial!
   }
 }

@@ -549,8 +549,8 @@
                     </template>
                     
                     <!-- Default display for other fields -->
-                    <span v-else>
-                      {{ processo[coluna.campo] || '-' }}
+                    <span v-else :class="{'distancia-col': coluna.campo === 'distancia_km'}">
+                      {{ coluna.campo === 'distancia_km' ? getDistancias(processo) : processo[coluna.campo] }}
                     </span>
                   </template>
                 </td>
@@ -1606,8 +1606,11 @@ export default {
         
         if (error) throw error;
         
-        // Processar dados
-        await this.processarProcessos(data);
+        // Abordagem simplificada: apenas atribuir dados
+        this.processos = data || [];
+        
+        // Se você realmente precisar carregar as distâncias, faça isso separadamente
+        // para cada processo quando necessário, como quando for exibir detalhes
         
         this.loading = false;
       } catch (error) {
@@ -1919,11 +1922,53 @@ export default {
     }
   }
 };
+
+const processarProcessos = async (data) => {
+  if (!data || !Array.isArray(data)) {
+    console.error('Dados inválidos para processamento');
+    return;
+  }
+
+  const processosPromises = data.map(async (processo) => {
+    // Carregar distâncias para cada processo
+    try {
+      const { data: distancias } = await supabase
+        .from('processo_distancias')
+        .select('*')
+        .eq('processo_id', processo.id)
+        .order('created_at');
+      
+      // Se houver distâncias, anexá-las ao processo
+      if (distancias && distancias.length > 0) {
+        processo._distancias = distancias;
+      } else if (processo.distancia_km) {
+        // Usar dados no formato antigo se não houver distâncias na nova tabela
+        processo._distancias = [{
+          distancia_km: processo.distancia_km,
+          ponto_referencia_cidade: processo.ponto_referencia_cidade || null,
+          ponto_referencia_uf: processo.ponto_referencia_uf || null
+        }];
+      } else {
+        processo._distancias = [];
+      }
+    } catch (err) {
+      console.error(`Erro ao carregar distâncias para processo ${processo.id}:`, err);
+      processo._distancias = [];
+    }
+
+    return processo;
+  });
+
+  this.processos = await Promise.all(processosPromises);
+};
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>
 <style src="/src/assets/styles/modules/toast.css"></style>
 <style scoped>
+@import '../assets/styles/components/empresa-vencedora.css';
+
+
 .form-group-reagendamento {
   display: flex;
   gap: 1rem;
@@ -1981,7 +2026,12 @@ export default {
   font-weight: bold;
   margin-right: 0.5rem;
 }
-</style>
-<style>
-@import '../assets/styles/components/empresa-vencedora.css';
+
+.table td.distancia-col {
+  white-space: pre-line;
+  vertical-align: top;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
 </style>

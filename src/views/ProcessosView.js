@@ -898,15 +898,29 @@ export default {
       }
     }
 
-    const getDistancias = async (processoId) => {
-      const { data } = await supabase
-        .from('processo_distancias')
-        .select('*')
-        .eq('processo_id', processoId)
-        .order('created_at', { ascending: true })
-
-      return data || []
-    }
+    const getDistancias = (processo) => {
+      if (!processo) return '-';
+      
+      // Verifica se há múltiplas distâncias
+      if (processo._distancias && processo._distancias.length > 0) {
+        return processo._distancias.map(d => {
+          if (d.texto_completo) {
+            return `${d.distancia_km} km (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})`;
+          } else {
+            return `${d.distancia_km} km${d.ponto_referencia_cidade ? 
+              ` (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})` : ''}`;
+          }
+        }).join('\n');
+      }
+    
+      // Caso tenha apenas uma distância no formato antigo
+      if (processo.distancia_km) {
+        return `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
+          ` (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})` : ''}`;
+      }
+    
+      return '-';
+    };
 
     const handleSidebarToggle = (expanded) => {
       isSidebarExpanded.value = expanded
@@ -2651,6 +2665,8 @@ export default {
       { valor: 'concorrencia', texto: 'Concorrência' },
       { valor: 'concurso', texto: 'Concurso' },
       { valor: 'leilao', texto: 'Leilão' },
+      { valor: 'dispensa_eletronica', texto: 'Dispensa Eletrônica' },
+      { valor: 'dispensa_por_email', texto: 'Dispensa por E-mail' },
       { valor: 'dialogo_competitivo', texto: 'Diálogo Competitivo' },
       { valor: 'tomada_precos', texto: 'Tomada de Preços' },
       { valor: 'chamamento_publico', texto: 'Chamamento Público' },
@@ -2661,6 +2677,14 @@ export default {
       { valor: 'srp_internacional', texto: 'SRP Internacional' }
     ];
 
+    // Código alternativo sem usar validarModalidade
+    const modalidadesValidas = opcoesModalidade.map(opcao => opcao.valor);
+    if (formData.value.modalidade && !modalidadesValidas.includes(formData.value.modalidade)) {
+      showToast(`Erro: Modalidade '${formData.value.modalidade}' inválida. Escolha uma modalidade válida.`, 'error');
+      loading.value = false;
+      return;
+    }
+    
     const limparFiltroColuna = (coluna) => {
       if (filtros.value[coluna]) {
         filtros.value[coluna] = [];
