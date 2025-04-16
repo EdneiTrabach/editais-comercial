@@ -172,6 +172,14 @@
                     </div>
                   </template>
                   
+                  <!-- Template específico para empresa atual prestadora -->
+                  <template v-else-if="coluna.campo === 'empresa_atual_prestadora'">
+                    <AtualPrestadorColuna 
+                      :processo="processo" 
+                      @update="handleUpdate(processo)"
+                    />
+                  </template>
+                  
                   <!-- Editing Mode -->
                   <template v-else-if="editingCell.id === processo.id && editingCell.field === coluna.campo">
                     <!-- Analysis Code field -->
@@ -613,7 +621,7 @@
               <span @click.stop="removerSistema(id)" class="sistema-remove">×</span>
             </div>
           </div>
-          <select multiple class="sistemas-select" @change="handleSistemasChange($event)">
+          <select multiple class="sistemas-select" id="sistemas-select-sistemas" @change="handleSistemasChange($event)">
             <option v-for="sistema in sistemasAtivos" :key="sistema.id" :value="sistema.id"
               :selected="editingCell.value && editingCell.value.includes(sistema.id)">
               {{ sistema.nome }}

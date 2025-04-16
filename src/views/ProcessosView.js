@@ -18,6 +18,7 @@ import SistemasImplantacaoSelector from '@/components/SistemasImplantacaoSelecto
 import AcoesColumn from '@/components/columns/table/AcoesColumn.vue'
 import AdvancedFilterComponent from '@/components/filters/AdvancedFilterComponent.vue'
 import EmpresaVencedoraDialog from '../components/EmpresaVencedoraDialog.vue';
+import AtualPrestadorColuna from '@/components/AtualPrestadorColuna.vue';
 
 export default {
   name: 'ProcessosView',
@@ -29,7 +30,8 @@ export default {
     SistemasImplantacaoSelector,
     AcoesColumn,
     AdvancedFilterComponent,
-    EmpresaVencedoraDialog
+    EmpresaVencedoraDialog,
+    AtualPrestadorColuna
   },
 
   setup() {
@@ -3971,6 +3973,55 @@ export default {
       } catch (error) {
         console.error('Erro ao registrar processo para análise:', error);
         showToast('Erro ao registrar processo para análise', 'error');
+      }
+    };
+
+    // Adicione esta função ao ProcessosView.js ou ajuste a existente
+    // para ser chamada quando for necessário atualizar o campo empresa_atual_prestadora
+
+    const handleEmpresaAtualChange = async (processo, novoValor) => {
+      try {
+        // Validação para garantir que é um UUID válido ou null
+        // Se não for um UUID válido, defina como null
+        let empresaId = null;
+        
+        if (novoValor) {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (uuidRegex.test(novoValor)) {
+            empresaId = novoValor;
+          } else {
+            // Tentar encontrar a empresa pelo nome
+            const empresa = empresas.value.find(e => e.nome === novoValor);
+            if (empresa && empresa.id) {
+              empresaId = empresa.id;
+            } else {
+              throw new Error("ID da empresa inválido ou empresa não encontrada");
+            }
+          }
+        }
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const payload = {
+          processo_id: processo.id,
+          empresa_id: empresaId,  // Agora garante que é null ou UUID válido
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id || null
+        };
+        
+        console.log("Enviando payload para atualização:", payload);
+        
+        const { error } = await supabase
+          .from('processos_empresa_atual_prestadora')
+          .upsert(payload, { onConflict: 'processo_id' });
+          
+        if (error) throw error;
+        
+        return true;
+      } catch (error) {
+        console.error('Erro ao atualizar empresa atual:', error);
+        showToast(`Erro ao atualizar empresa atual: ${error.message}`, 'error');
+        return false;
       }
     };
 
