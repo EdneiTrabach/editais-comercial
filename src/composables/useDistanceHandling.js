@@ -27,32 +27,35 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
   // Função para salvar distância manual
   const salvarDistanciaManual = () => {
     if (!distanciaManualValue.value) {
-      showToast('Digite um valor para a distância', 'error')
-      return
+      showToast('Digite um valor para a distância', 'error');
+      return;
     }
 
-    // Cria um objeto simplificado apenas com o texto digitado
+    // Cria um objeto com todos os campos necessários
     const novaDistancia = {
       distancia_km: distanciaManualValue.value, // Texto exato digitado
       isManual: true, // Flag para identificar entrada manual
       
-      // Campos obrigatórios para o banco de dados, mas não exibidos
+      // Campos obrigatórios para o banco de dados
       ponto_referencia_cidade: pontoReferencia.value?.cidade || '',
       ponto_referencia_uf: pontoReferencia.value?.uf || '',
       cidade_origem: cidadeOrgao.value?.nome || '',
-      uf_origem: estadoDestino.value || ''
-    }
+      uf_origem: estadoDestino.value || '',
+      texto_completo: `${distanciaManualValue.value}${pontoReferencia.value ? 
+        ` de ${cidadeOrgao.value?.nome || ''}/${estadoDestino.value || ''} para ${pontoReferencia.value.cidade}/${pontoReferencia.value.uf}` : 
+        ''}`
+    };
     
-    distanciasSalvas.value.push(novaDistancia)
-    distanciaManualValue.value = '' // Limpa o campo após salvar
-    showToast('Distância adicionada com sucesso!', 'success')
+    distanciasSalvas.value.push(novaDistancia);
+    distanciaManualValue.value = ''; // Limpa o campo após salvar
+    showToast('Distância adicionada com sucesso!', 'success');
   }
 
   // Funções relacionadas a distância e municípios
   const adicionarDistanciaLista = () => {
     if (!distanciaCalculada.value || !pontoReferencia.value || !cidadeOrgao.value) {
-      showToast('Selecione os pontos e calcule a distância primeiro', 'warning')
-      return
+      showToast('Selecione os pontos e calcule a distância primeiro', 'warning');
+      return;
     }
 
     const novaDistancia = {
@@ -66,11 +69,11 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
       cidade_destino: pontoReferencia.value.cidade,
       uf_destino: pontoReferencia.value.uf,
       texto_completo: `de ${cidadeOrgao.value.nome}/${estadoDestino.value} para ${pontoReferencia.value.cidade}/${pontoReferencia.value.uf}`
-    }
+    };
 
-    distanciasSalvas.value.push(novaDistancia)
-    distanciaCalculada.value = null
-    showToast('Distância adicionada à lista', 'success')
+    distanciasSalvas.value.push(novaDistancia);
+    distanciaCalculada.value = null; // Limpar após adicionar
+    showToast('Distância adicionada à lista', 'success');
   }
 
   const removerDaLista = (index) => {
@@ -82,13 +85,13 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
 
   const salvarTodasDistancias = async (processoId) => {
     if (!processoId) {
-      showToast('ID do processo não disponível', 'error')
-      return false
+      showToast('ID do processo não disponível', 'error');
+      return false;
     }
   
     if (distanciasSalvas.value.length === 0) {
       console.log('Nenhuma distância para salvar');
-      return true // Não há nada para salvar, mas não é um erro
+      return true; // Não há nada para salvar, mas não é um erro
     }
   
     try {
@@ -107,6 +110,7 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
           distanciaKm = parseFloat(distanciaKm) || 0;
         }
         
+        // Criar objeto com todos os campos necessários
         return {
           processo_id: processoId,
           distancia_km: distanciaKm,
@@ -114,11 +118,15 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
           ponto_referencia_uf: distancia.ponto_referencia_uf || null,
           cidade_destino: distancia.cidade_destino || null,
           uf_destino: distancia.uf_destino || null,
-          cidade_origem: distancia.cidade_origem || null,
-          uf_origem: distancia.uf_origem || null,
+          cidade_origem: distancia.cidade_origem || cidadeOrgao.value?.nome || null,
+          uf_origem: distancia.uf_origem || estadoDestino.value || null,
           texto_completo: distancia.texto_completo || 
-            (distancia.isManual ? `${distanciaKm} km` : 
-              `de ${distancia.cidade_origem || ''}/${distancia.uf_origem || ''} para ${distancia.ponto_referencia_cidade || ''}/${distancia.ponto_referencia_uf || ''}`),
+            (distancia.isManual ? 
+              `${distanciaKm} km` : 
+              `de ${distancia.cidade_origem || cidadeOrgao.value?.nome || ''}/
+               ${distancia.uf_origem || estadoDestino.value || ''} para 
+               ${distancia.ponto_referencia_cidade || ''}/
+               ${distancia.ponto_referencia_uf || ''}`),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -137,13 +145,13 @@ export function useDistanceHandling(formData, pontoReferencia, distanciaCalculad
         throw error;
       }
   
-      console.log('Distâncias salvas com sucesso:', data);
-      showToast(`${distanciasParaSalvar.length} distâncias salvas com sucesso!`, 'success')
-      return true
+      console.log('Distâncias salvas com sucesso!');
+      showToast(`${distanciasParaSalvar.length} distâncias salvas com sucesso!`, 'success');
+      return true;
     } catch (error) {
-      console.error('Erro detalhado ao salvar distâncias:', error)
-      showToast(`Erro ao salvar distâncias: ${error.message}`, 'error')
-      return false
+      console.error('Erro detalhado ao salvar distâncias:', error);
+      showToast(`Erro ao salvar distâncias: ${error.message}`, 'error');
+      return false;
     }
   }
 

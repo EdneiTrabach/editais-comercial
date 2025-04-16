@@ -1606,12 +1606,36 @@ export default {
         
         if (error) throw error;
         
-        // Abordagem simplificada: apenas atribuir dados
-        this.processos = data || [];
+        // Processar dados para carregar as distâncias para cada processo
+        const processosPromises = data.map(async (processo) => {
+          try {
+            // Carregar distâncias específicas para este processo
+            const { data: distancias } = await supabase
+              .from('processo_distancias')
+              .select('*')
+              .eq('processo_id', processo.id)
+              .order('created_at');
+            
+            // Anexar as distâncias ao processo
+            processo._distancias = distancias || [];
+            
+            // Se não houver distâncias na tabela específica, mas houver no formato antigo
+            if ((!distancias || distancias.length === 0) && processo.distancia_km) {
+              processo._distancias = [{
+                distancia_km: processo.distancia_km,
+                ponto_referencia_cidade: processo.ponto_referencia_cidade || null,
+                ponto_referencia_uf: processo.ponto_referencia_uf || null
+              }];
+            }
+          } catch (err) {
+            console.error(`Erro ao carregar distâncias para processo ${processo.id}:`, err);
+            processo._distancias = [];
+          }
+          
+          return processo;
+        });
         
-        // Se você realmente precisar carregar as distâncias, faça isso separadamente
-        // para cada processo quando necessário, como quando for exibir detalhes
-        
+        this.processos = await Promise.all(processosPromises);
         this.loading = false;
       } catch (error) {
         console.error('Erro ao carregar processos:', error);

@@ -904,11 +904,25 @@ export default {
       // Verifica se há múltiplas distâncias
       if (processo._distancias && processo._distancias.length > 0) {
         return processo._distancias.map(d => {
+          // Se tiver texto completo, usar ele como está
           if (d.texto_completo) {
-            return `${d.distancia_km} km (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})`;
-          } else {
-            return `${d.distancia_km} km${d.ponto_referencia_cidade ? 
-              ` (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})` : ''}`;
+            return `${d.distancia_km} km (${d.texto_completo})`;
+          } 
+          // Se for distância manual, formatar de modo simples
+          else if (d.isManual) {
+            return `${d.distancia_km} km`;
+          } 
+          // Caso contrário, formatar com origem e destino
+          else {
+            const origem = d.cidade_origem && d.uf_origem ? 
+              `${d.cidade_origem}/${d.uf_origem}` : '';
+              
+            const destino = d.ponto_referencia_cidade && d.ponto_referencia_uf ? 
+              `${d.ponto_referencia_cidade}/${d.ponto_referencia_uf}` : 
+              (d.cidade_destino && d.uf_destino ? 
+                `${d.cidade_destino}/${d.uf_destino}` : '');
+                
+            return `${d.distancia_km} km (${origem} → ${destino})`;
           }
         }).join('\n');
       }
