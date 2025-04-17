@@ -1,0 +1,51 @@
+/* Estilos para status de análise nos elementos da tela de análises */
+
+.analise-status-atende {
+  border-left: 4px solid #28a745 !important; /* Verde para atende */
+}
+
+.analise-status-nao-atende {
+  border-left: 4px solid #dc3545 !important; /* Vermelho para não atende */
+}
+
+.analise-status-nao-analisado {
+  border-left: 4px solid #fd7e14 !important; /* Laranja para não analisado */
+}
+
+/* Aplicação nas linhas da tabela */
+tr.analise-status-atende td:first-child {
+  border-left: 4px solid #28a745;
+  padding-left: 8px;
+}
+
+tr.analise-status-nao-atende td:first-child {
+  border-left: 4px solid #dc3545;
+  padding-left: 8px;
+}
+
+tr.analise-status-nao-analisado td:first-child {
+  border-left: 4px solid #fd7e14;
+  padding-left: 8px;
+}
+
+/* Ajustes para as células da tabela */
+.processo-row td:first-child {
+  position: relative;
+  padding-left: 12px !important;
+}
+
+/* Estilos para status textual */
+.status-nao-analisado {
+  color: #fd7e14;
+  font-weight: bold;
+}
+
+.status-atende {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status-nao-atende {
+  color: #dc3545;
+  font-weight: bold;
+}

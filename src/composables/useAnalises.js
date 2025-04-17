@@ -382,12 +382,12 @@ export function useAnalises() {
           responsavel, 
           sistemas(id, nome)
         `)
-        .eq('status', 'em_analise') // Adicionar esta linha para filtrar apenas processos em análise
+        .eq('status', 'em_analise') // Filtrar apenas processos em análise
         .order('data_pregao', { ascending: false });
         
       if (error) throw error;
       
-      // Manter os dados como estão sem tentar acessar relações inexistentes
+      // Processar resultados
       processos.value = data;
       
       // Extrair anos únicos para o seletor de anos
