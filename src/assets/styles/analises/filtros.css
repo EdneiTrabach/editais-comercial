@@ -1,0 +1,201 @@
+/* Estilos para o cabeçalho de seleção de processo */
+.processo-header-section {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.processo-header-section h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.processo-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Botão de novo processo */
+.btn-novo-processo {
+  display: flex;
+  align-items: center;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-novo-processo i {
+  margin-right: 0.5rem;
+}
+
+.btn-novo-processo:hover {
+  background-color: #3d8b40;
+}
+
+/* Container de filtros */
+.filtros-container {
+  width: 100%;
+  border-radius: 6px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filtros-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filtros-header h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #4b5563;
+}
+
+.btn-toggle-filtros {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-filtros i {
+  margin-left: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.btn-toggle-filtros.active i {
+  transform: rotate(180deg);
+}
+
+.btn-toggle-filtros:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Conteúdo dos filtros */
+.filtros-content {
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.filtro-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filtro-item label {
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.filtro-item input,
+.filtro-item select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #1f2937;
+}
+
+.filtro-item input:focus,
+.filtro-item select:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.filtro-acoes {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-limpar,
+.btn-aplicar {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-limpar {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.btn-limpar:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-aplicar {
+  background-color: #3b82f6;
+  color: #fff;
+}
+
+.btn-aplicar:hover {
+  background-color: #2563eb;
+}
+
+.btn-limpar i,
+.btn-aplicar i {
+  margin-right: 0.4rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .filtros-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filtro-acoes {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-limpar,
+  .btn-aplicar {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Estilo quando os filtros estão abertos */
+.filtros-container.expanded .btn-toggle-filtros i {
+  transform: rotate(180deg);
+}

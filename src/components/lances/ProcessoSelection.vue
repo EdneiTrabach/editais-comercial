@@ -1,12 +1,4 @@
 <template>
-  <div class="processo-selection">
-    <div class="header-section">
-      <h2>Selecione o Processo</h2>
-      <button class="btn-novo-processo" @click="showNovoProcessoModal = true">
-        <i class="fas fa-plus"></i> Criar Novo Processo
-      </button>
-    </div>
-
     <div class="processos-grid">
       <li 
         v-for="processo in processos" 
@@ -64,7 +56,6 @@
         </form>
       </div>
     </div>
-  </div>
 
   <!-- Adicione este trecho na parte de filtragem da AnalisesView.vue -->
   <div class="filter-options mt-3">
@@ -83,11 +74,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, defineProps, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useProcessos } from '@/composables/useProcessos'
 import { useAnalises } from '@/composables/useAnalises';
+import AnalisesFiltros from '../../components/analises/AnalisesFiltros.vue';
 
 const props = defineProps({
   processos: Array,
@@ -110,12 +102,14 @@ const novoProcesso = ref({
   status: 'em_analise'
 })
 
+// Função para aplicar filtros
+const aplicarFiltros = (filtros) => {
+  emit('filtrar', filtros);
+};
+
 // Função para criar novo processo
 const criarNovoProcesso = async () => {
   try {
-    loading.value = true
-
-    // Adicionar data de criação e outros campos necessários
     const processoData = {
       ...novoProcesso.value,
       created_at: new Date().toISOString(),
@@ -126,7 +120,6 @@ const criarNovoProcesso = async () => {
       .from('processos')
       .insert(processoData)
       .select()
-      .single()
 
     if (error) throw error
 

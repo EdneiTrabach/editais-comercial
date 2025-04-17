@@ -4,9 +4,9 @@
     
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="analises-container">
+        <!-- Header principal sempre visível -->
         <div class="header-section">
           <h1>Análise de Sistemas</h1>
-          <!-- Move os botões para o header-section -->
           <div class="header-actions">
             <div class="acoes-principais" v-if="step === 2">
               <button 
@@ -83,7 +83,15 @@
           </button>
         </div>
 
-        <div v-else-if="step === 1">
+        <!-- Componente de seleção de processo com cabeçalho e filtros -->
+        <ProcessoHeader
+          v-if="step === 1"
+          :sistemas="sistemas"
+          @filtrar="filtrarProcessos"
+          @criar-processo="criarNovoProcesso"
+        />
+        
+        <div v-if="step === 1">
           <ProcessoSelection
             :processos="processosFiltrados"
             :selectedProcesso="selectedProcesso"
@@ -340,13 +348,13 @@ import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
 import AnoSelection from '@/components/lances/AnoSelection.vue'
 import ProcessoSelection from '@/components/lances/ProcessoSelection.vue'
+import ProcessoHeader from '@/components/analises/ProcessoHeader.vue'
 import { useAnalises } from '@/composables/useAnalises'
 import * as XLSX from 'xlsx'
 import ToastMessages from '@/components/ToastMessages.vue'
 import { useToast } from '@/composables/useToast'
 import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
 import SimpleNavButton from '@/components/navigation/SimpleNavButton.vue'
-
 
 export default {
   name: 'AnalisesView',
@@ -355,10 +363,10 @@ export default {
     TheSidebar,
     AnoSelection,
     ProcessoSelection,
+    ProcessoHeader,
     ToastMessages,
     AnaliseExportMenu,
-    SimpleNavButton,
-    
+    SimpleNavButton,    
   },
   
   // Adicione esta declaração de emits
@@ -384,8 +392,8 @@ export default {
     const showConfirmDialog = ref(false)
     const acaoAposSalvar = ref(null)
     const editando = ref({ id: null, campo: null, valor: null })
-    const percentualMinimoGeral = ref(''); // Antes era ref(60)
-    const percentualMinimoObrigatorios = ref(''); // Antes era ref(90)
+    const percentualMinimoGeral = ref(''); 
+    const percentualMinimoObrigatorios = ref(''); 
     const { toasts, showToast } = useToast();
 
     const {
@@ -1883,6 +1891,48 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       return filtrados;
     });
 
+    // Adicione estas funções dentro do setup para que fiquem disponíveis no escopo
+    const filtrarProcessos = (filtros) => {
+      // Implementação para filtrar processos baseado nos critérios
+      const processosFiltrados = processos.value.filter(processo => {
+        let atendeFiltro = true;
+        
+        if (filtros.orgao && !processo.orgao?.toLowerCase().includes(filtros.orgao.toLowerCase())) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.data) {
+          const dataFiltro = new Date(filtros.data);
+          const dataProcesso = processo.data ? new Date(processo.data) : null;
+          if (!dataProcesso || dataProcesso.toDateString() !== dataFiltro.toDateString()) {
+            atendeFiltro = false;
+          }
+        }
+        
+        if (filtros.numeroProcesso && !processo.numero_processo?.includes(filtros.numeroProcesso)) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.codigoGpi && !processo.codigo_gpi?.includes(filtros.codigoGpi)) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.sistema && processo.sistema_id !== filtros.sistema) {
+          atendeFiltro = false;
+        }
+        
+        return atendeFiltro;
+      });
+      
+      // Atualize processosFiltrados.value com os resultados
+      return processosFiltrados;
+    };
+    
+    const criarNovoProcesso = () => {
+      // Navegação para a rota de criação de processo
+      router.push('/editais');
+    };
+
     return {
       // Outras propriedades e métodos...
       step,
@@ -1952,6 +2002,51 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       calcularClasseEstilo,
       aplicarPercentualGeralTodasLinhas,
       showOnlyInAnalysis,
+      filtrarProcessos,  // Adicione a função ao objeto retornado
+      criarNovoProcesso, // Adicione a função ao objeto retornado
+    }
+  },
+  methods: {
+    // ...existing methods...
+    
+    filtrarProcessos(filtros) {
+      // Implementação para filtrar processos baseado nos critérios
+      const processosFiltrados = this.processos.filter(processo => {
+        let atendeFiltro = true;
+        
+        if (filtros.orgao && !processo.orgao.toLowerCase().includes(filtros.orgao.toLowerCase())) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.data) {
+          const dataFiltro = new Date(filtros.data);
+          const dataProcesso = new Date(processo.data);
+          if (dataProcesso.toDateString() !== dataFiltro.toDateString()) {
+            atendeFiltro = false;
+          }
+        }
+        
+        if (filtros.numeroProcesso && !processo.numeroProcesso.includes(filtros.numeroProcesso)) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.codigoGpi && !processo.codigoGpi.includes(filtros.codigoGpi)) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.sistema && processo.sistemaId !== filtros.sistema) {
+          atendeFiltro = false;
+        }
+        
+        return atendeFiltro;
+      });
+      
+      this.processosFiltrados = processosFiltrados;
+    },
+    
+    criarNovoProcesso() {
+      // Navegação para a rota de criação de processo
+      this.$router.push('/editais');
     }
   }
 }
@@ -1985,3 +2080,4 @@ const verificarConexaoBanco = async () => {
 </script>
 <style src="./AnalisesView.css" scoped></style>
 <style src="../assets/styles/analises/buttons.css"></style>
+<style src="../assets/styles/analises/filtros.css"></style>
