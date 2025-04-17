@@ -198,9 +198,6 @@ input.input-cfg-usuarios {
   border-top: 1px solid #e5e7eb;
 }
 
-.btn-action.edit {
-  background: #a5daff;
-}
 
 .btn-action:hover {
   transform: translateY(-2px);

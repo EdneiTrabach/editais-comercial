@@ -119,3 +119,17 @@
 .btn-remover:hover {
   background: #ffebeb;
 }
+
+.btn-action.edit {
+  background: #a5daff;
+  border: none;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+
+.btn-action.delete {
+  background: hsl(0, 100%, 88%);
+  border: none;
+  border-radius: 6px;
+}
+
