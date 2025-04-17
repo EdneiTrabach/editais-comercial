@@ -87,8 +87,10 @@
         <ProcessoHeader
           v-if="step === 1"
           :sistemas="sistemas"
+          :modoVisualizacao="modoVisualizacao"
           @filtrar="filtrarProcessos"
           @criar-processo="abrirModalCriarProcesso"
+          @mudar-visualizacao="mudarVisualizacaoProcessos"
         />
         
         <div v-if="step === 1">
@@ -96,6 +98,7 @@
             ref="processoSelectionRef"
             :processos="processosFiltrados"
             :selectedProcesso="selectedProcesso"
+            :modoVisualizacao="modoVisualizacao"
             @select-processo="selectProcesso"
           />
         </div>
@@ -396,6 +399,7 @@ export default {
     const percentualMinimoGeral = ref(''); 
     const percentualMinimoObrigatorios = ref(''); 
     const { toasts, showToast } = useToast();
+    const modoVisualizacao = ref('grid'); // 'grid' ou 'lista'
 
     const {
       step,
@@ -1944,6 +1948,23 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       }
     }
 
+    const mudarVisualizacaoProcessos = (modo) => {
+      modoVisualizacao.value = modo;
+      // Opcional: Salvar preferência do usuário em localStorage
+      localStorage.setItem('modoVisualizacaoProcessos', modo);
+    };
+    
+    // Restaurar preferência salva do usuário
+    onMounted(() => {
+      // ...existing onMounted code...
+      
+      // Restaurar modo de visualização salvo
+      const modoSalvo = localStorage.getItem('modoVisualizacaoProcessos');
+      if (modoSalvo) {
+        modoVisualizacao.value = modoSalvo;
+      }
+    });
+
     return {
       // Outras propriedades e métodos...
       step,
@@ -2017,7 +2038,9 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       filtrarProcessos,  // Adicione a função ao objeto retornado
       criarNovoProcesso, // Adicione a função ao objeto retornado
       processoSelectionRef,
-      abrirModalCriarProcesso
+      abrirModalCriarProcesso,
+      modoVisualizacao,
+      mudarVisualizacaoProcessos
     }
   },
   methods: {

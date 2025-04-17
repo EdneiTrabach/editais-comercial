@@ -2,9 +2,15 @@
   <div class="processo-header-section">
     <div class="processo-header-top">
       <h2>Selecione o Processo</h2>
-      <button class="btn-novo-processo" @click="$emit('criar-processo')">
-        <i class="fas fa-plus"></i> Criar Novo Processo
-      </button>
+      <div class="header-actions">
+        <VisualizacaoToggle 
+          :modo="modoVisualizacao"
+          @mudar-visualizacao="alterarModoVisualizacao"
+        />
+        <button class="btn-novo-processo" @click="$emit('criar-processo')">
+          <i class="fas fa-plus"></i> Criar Novo Processo
+        </button>
+      </div>
     </div>
     
     <div class="filtros-container" :class="{ 'expanded': filtrosVisiveis }">
@@ -92,17 +98,27 @@
 </template>
 
 <script>
+import VisualizacaoToggle from './VisualizacaoToggle.vue';
+
 export default {
   name: 'ProcessoHeader',
+  
+  components: {
+    VisualizacaoToggle
+  },
   
   props: {
     sistemas: {
       type: Array,
       default: () => []
+    },
+    modoVisualizacao: {
+      type: String,
+      default: 'grid'
     }
   },
   
-  emits: ['filtrar', 'criar-processo'],
+  emits: ['filtrar', 'criar-processo', 'mudar-visualizacao'],
   
   data() {
     return {
@@ -134,9 +150,27 @@ export default {
     
     aplicarFiltros() {
       this.$emit('filtrar', { ...this.filtros });
+    },
+    
+    alterarModoVisualizacao(modo) {
+      this.$emit('mudar-visualizacao', modo);
     }
   }
 }
 </script>
 
-<style src="@/assets/styles/analises/filtros.css"></style>
+<style scoped>
+/* Adicionado este estilo específico */
+.processo-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+</style>
