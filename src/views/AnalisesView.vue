@@ -386,8 +386,6 @@ export default {
     const editando = ref({ id: null, campo: null, valor: null })
     const percentualMinimoGeral = ref(''); // Antes era ref(60)
     const percentualMinimoObrigatorios = ref(''); // Antes era ref(90)
-    
-    // Adicione o Toast
     const { toasts, showToast } = useToast();
 
     const {
@@ -400,7 +398,6 @@ export default {
       sistemasAnalise,
       anosDisponiveis,
       anoSelecionado,
-      processosFiltrados,
       podeAvancar,
       porcentagemGeralAtendimento,
       handleSidebarToggle,
@@ -1864,6 +1861,28 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       return Promise.resolve(true);
     };
 
+    const showOnlyInAnalysis = ref(false);
+
+    const processosFiltrados = computed(() => {
+      if (!processos.value) return [];
+      
+      let filtrados = processos.value.filter(processo => {
+        const anoPregao = processo.data_pregao ? new Date(processo.data_pregao).getFullYear() : null;
+        const anoProcesso = processo.ano ? parseInt(processo.ano) : null;
+        
+        return anoPregao === anoSelecionado.value || anoProcesso === anoSelecionado.value;
+      });
+      
+      // Aplicar filtro adicional se a opção estiver marcada
+      if (showOnlyInAnalysis.value) {
+        filtrados = filtrados.filter(processo => 
+          processo.status && ['em_analise', 'em analise', 'EM_ANALISE'].includes(processo.status.toLowerCase())
+        );
+      }
+      
+      return filtrados;
+    });
+
     return {
       // Outras propriedades e métodos...
       step,
@@ -1932,20 +1951,22 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       handleTabNavigation,
       calcularClasseEstilo,
       aplicarPercentualGeralTodasLinhas,
+      showOnlyInAnalysis,
     }
   }
 }
 
-// Adicione esta função para verificar a conexão com o Supabase
+// Substitua a função verificarConexaoBanco na linha ~1943 por esta:
 const verificarConexaoBanco = async () => {
   try {
     console.log('🔍 Verificando conexão com o banco de dados...');
     const inicio = performance.now();
     
     // Fazer uma consulta simples para testar a conexão
+    // Usando count() com countOption em vez de select(count(*))
     const { data, error } = await supabase
-      .from('configuracoes')
-      .select('count(*)', { count: 'exact', head: true });
+      .from('analises_itens')
+      .select('id', { count: 'exact', head: true });
     
     const tempo = (performance.now() - inicio).toFixed(2);
     

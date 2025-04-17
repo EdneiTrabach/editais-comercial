@@ -8,46 +8,19 @@
     </div>
 
     <div class="processos-grid">
-      <div 
+      <li 
         v-for="processo in processos" 
         :key="processo.id"
-        class="processo-card"
+        @click="$emit('select-processo', processo)"
+        class="processo-item"
         :class="{ 
           'selected': selectedProcesso === processo.id,
-          'has-analysis': processo.codigo_gpi
+          'not-in-analysis': !isStillInAnalysis(processo)
         }"
-        @click="$emit('select-processo', processo)"
+        :data-current-status="formatStatus(processo.status)"
       >
-        <div class="card-header">
-          <h3>{{ processo.numero_processo }}</h3>
-          <div v-if="processo.codigo_gpi" class="analise-badge">
-            <span class="codigo-gpi">GPI: {{ processo.codigo_gpi }}</span>
-          </div>
-        </div>
-
-        <div class="processo-info">
-          <p><strong>Órgão:</strong> {{ processo.orgao }}</p>
-          <p><strong>Data:</strong> {{ formatDate(processo.data_pregao) }}</p>
-          <p><strong>Hora:</strong> {{ processo.hora_pregao }}</p>
-          
-          <!-- Novo bloco para prazo de análise -->
-          <div v-if="processo.prazo_analise" class="analise-info">
-            <p class="prazo-analise">
-              <i class="fas fa-clock"></i>
-              <strong>Prazo Análise:</strong> 
-              <span :class="getPrazoClass(processo.prazo_analise)">
-                {{ formatDate(processo.prazo_analise) }}
-              </span>
-            </p>
-          </div>
-
-          <p class="objeto">{{ processo.objeto_resumido }}</p>
-        </div>
-        
-        <div class="processo-status">
-          {{ formatStatus(processo.status) }}
-        </div>
-      </div>
+        {{ processo.numero_processo }} - {{ processo.orgao }}
+      </li>
     </div>
 
     <!-- Modal de Novo Processo -->
@@ -92,6 +65,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Adicione este trecho na parte de filtragem da AnalisesView.vue -->
+  <div class="filter-options mt-3">
+    <div class="form-check">
+      <input 
+        class="form-check-input" 
+        type="checkbox" 
+        id="showOnlyInAnalysis" 
+        v-model="showOnlyInAnalysis"
+      >
+      <label class="form-check-label" for="showOnlyInAnalysis">
+        Mostrar apenas processos com status atual "Em Análise"
+      </label>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -99,6 +87,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useProcessos } from '@/composables/useProcessos'
+import { useAnalises } from '@/composables/useAnalises';
 
 const props = defineProps({
   processos: Array,
@@ -108,6 +97,7 @@ const props = defineProps({
 const emit = defineEmits(['select-processo'])
 const router = useRouter()
 const { formatStatus } = useProcessos()
+const { isStillInAnalysis } = useAnalises();
 
 // Estado do modal
 const showNovoProcessoModal = ref(false)

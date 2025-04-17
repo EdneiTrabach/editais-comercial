@@ -363,71 +363,43 @@ export function useAnalises() {
 
   const loadProcessos = async () => {
     try {
-      // Abordagem alternativa: buscar diretamente os processos com status de análise
-      const { data: processosData, error: processosError } = await supabase
+      console.log('Iniciando carregamento de processos em análises...');
+      
+      // 1. Buscar todos os processos que têm registros em analises_itens
+      const { data: analiseItens, error: analiseError } = await supabase
+        .from('analises_itens')
+        .select('processo_id');
+      
+      if (analiseError) throw analiseError;
+      
+      if (!analiseItens || analiseItens.length === 0) {
+        processos.value = [];
+        console.log('Nenhum processo encontrado com registros de análise');
+        return;
+      }
+      
+      // Extrair IDs de processos e remover duplicatas
+      const processosIds = Array.from(new Set(analiseItens.map(item => item.processo_id)));
+      
+      console.log(`Encontrados ${processosIds.length} processos únicos com registros de análise`);
+      
+      // 2. Buscar os detalhes destes processos
+      const { data: processosDetalhes, error: processosError } = await supabase
         .from('processos')
         .select('*')
-        .or('status.eq.em_analise,status.eq.EM_ANALISE,status.ilike.%analise%')
+        .in('id', processosIds)
         .order('data_pregao', { ascending: false });
       
       if (processosError) throw processosError;
       
-      // Armazenar processos que precisam ser corrigidos
-      const processosParaCorrigir = [];
-      const processosValidados = [];
+      // 3. Atribuir os processos encontrados à variável reativa
+      processos.value = processosDetalhes || [];
       
-      for (const processo of processosData) {
-        // Verificar se o processo tem registros na tabela analises_itens
-        const { data: analiseItems, error: analiseError } = await supabase
-          .from('analises_itens')
-          .select('id')
-          .eq('processo_id', processo.id)
-          .limit(1);
-          
-        if (!analiseError && analiseItems && analiseItems.length > 0) {
-          // Processo tem registro na tabela de análises, adicionar à lista
-          processosValidados.push(processo);
-        } else {
-          console.log(`Processo ${processo.numero_processo} tem status de análise mas não tem registros em analises_itens`);
-          processosParaCorrigir.push(processo);
-        }
-      }
-      
-      // Se houver processos para corrigir, mostrar alerta e oferecer correção automática
-      if (processosParaCorrigir.length > 0) {
-        console.warn(`${processosParaCorrigir.length} processos estão com status de análise mas não têm registros na tabela analises_itens`);
-        
-        // Aqui você pode implementar a correção automática ou mostrar um alerta para o usuário
-        // Por exemplo: alert(`${processosParaCorrigir.length} processos não aparecem na lista porque estão faltando registros na tabela analises_itens`);
-        
-        // Correção automática - criar um registro básico para cada processo com problema
-        for (const processo of processosParaCorrigir) {
-          console.log(`Criando registro básico para processo ${processo.numero_processo}`);
-          
-          const { error: insertError } = await supabase
-            .from('analises_itens')
-            .insert({
-              processo_id: processo.id,
-              is_custom_line: true,
-              sistema_nome_personalizado: 'Análise Pendente',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-            
-          if (!insertError) {
-            // Adicionar o processo corrigido à lista validada
-            processosValidados.push(processo);
-          } else {
-            console.error(`Erro ao criar registro para processo ${processo.numero_processo}:`, insertError);
-          }
-        }
-      }
-      
-      processos.value = processosValidados;
-      console.log('Processos carregados para análise:', processos.value.length);
+      console.log(`Carregados ${processos.value.length} processos para análise`);
       
     } catch (error) {
       console.error('Erro ao carregar processos para análise:', error);
+      processos.value = [];
     }
   };
 
@@ -721,6 +693,11 @@ export function useAnalises() {
     return percentualAtendimento >= percentualMinimo ? 'atende-status-forte' : 'nao-atende-status-forte';
   };
 
+  // Adicione esta função na composable (src/composables/useAnalises.js)
+  const isStillInAnalysis = (processo) => {
+    return processo.status && ['em_analise', 'em analise', 'EM_ANALISE'].includes(processo.status.toLowerCase());
+  }
+
   // No return do composable, inclua as novas funções:
   return {
     step,
@@ -758,5 +735,7 @@ export function useAnalises() {
     atualizarPercentuaisMinimos,  // Adicionado aqui
     temSistemasObrigatoriosNaoAtendidos,  // Adicionado aqui
     calcularClasseEstilo,  // Adicione esta linha
+    isStillInAnalysis,  // Adicione esta linha
+    isStillInAnalysis,
   }
 }
