@@ -134,6 +134,16 @@
               <option value="aguardando">Aguardando</option>
             </select>
           </div>
+
+          <div class="filtro-item">
+            <label for="responsavel">Responsável</label>
+            <input 
+              type="text" 
+              id="responsavel" 
+              v-model="filtros.responsavel"
+              placeholder="Nome do responsável"
+            >
+          </div>
           
           <div class="filtro-item filtro-acoes">
             <button class="btn-limpar" @click="limparFiltros">
@@ -182,7 +192,8 @@ export default {
         codigoGpi: '',
         sistema: '',
         estado: '',
-        status: ''
+        status: '',
+        responsavel: '' // Adicionado filtro de responsável
       }
     }
   },
@@ -200,7 +211,8 @@ export default {
         codigoGpi: '',
         sistema: '',
         estado: '',
-        status: ''
+        status: '',
+        responsavel: ''
       };
     },
     

@@ -363,43 +363,50 @@ export function useAnalises() {
 
   const loadProcessos = async () => {
     try {
-      console.log('Iniciando carregamento de processos em análises...');
+      processos.value = [];
       
-      // 1. Buscar todos os processos que têm registros em analises_itens
-      const { data: analiseItens, error: analiseError } = await supabase
-        .from('analises_itens')
-        .select('processo_id');
+      const { data, error } = await supabase
+        .from('processos')
+        .select(`
+          id, 
+          ano,
+          numero_processo, 
+          orgao, 
+          modalidade, 
+          estado,
+          codigo_analise,
+          data_pregao, 
+          hora_pregao, 
+          objeto_resumido,
+          status,
+          responsavel, 
+          sistemas(id, nome)
+        `)
+        .order('data_pregao', { ascending: false });
+        
+      if (error) throw error;
       
-      if (analiseError) throw analiseError;
+      // Manter os dados como estão sem tentar acessar relações inexistentes
+      processos.value = data;
       
-      if (!analiseItens || analiseItens.length === 0) {
-        processos.value = [];
-        console.log('Nenhum processo encontrado com registros de análise');
-        return;
+      // Extrair anos únicos para o seletor de anos
+      const anos = [...new Set(data.map(processo => {
+        // Primeiro tentar extrair da data_pregao
+        if (processo.data_pregao) {
+          return new Date(processo.data_pregao).getFullYear();
+        } 
+        // Caso contrário, usar o campo ano
+        return processo.ano;
+      }))];
+      
+      anosDisponiveis.value = anos.sort((a, b) => b - a); // Ordenar em ordem decrescente
+      
+      if (anosDisponiveis.value.length > 0) {
+        anoSelecionado.value = anosDisponiveis.value[0];
       }
       
-      // Extrair IDs de processos e remover duplicatas
-      const processosIds = Array.from(new Set(analiseItens.map(item => item.processo_id)));
-      
-      console.log(`Encontrados ${processosIds.length} processos únicos com registros de análise`);
-      
-      // 2. Buscar os detalhes destes processos
-      const { data: processosDetalhes, error: processosError } = await supabase
-        .from('processos')
-        .select('*')
-        .in('id', processosIds)
-        .order('data_pregao', { ascending: false });
-      
-      if (processosError) throw processosError;
-      
-      // 3. Atribuir os processos encontrados à variável reativa
-      processos.value = processosDetalhes || [];
-      
-      console.log(`Carregados ${processos.value.length} processos para análise`);
-      
     } catch (error) {
-      console.error('Erro ao carregar processos para análise:', error);
-      processos.value = [];
+      console.error("Erro ao carregar processos:", error);
     }
   };
 

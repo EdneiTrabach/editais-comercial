@@ -1898,7 +1898,6 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
 
     // Adicione essas funções dentro do setup para que fiquem disponíveis no escopo
     const filtrarProcessos = (filtros) => {
-      // Implementação para filtrar processos baseado nos critérios
       const processosFiltrados = processos.value.filter(processo => {
         let atendeFiltro = true;
         
@@ -1908,7 +1907,7 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
         
         if (filtros.data) {
           const dataFiltro = new Date(filtros.data);
-          const dataProcesso = processo.data ? new Date(processo.data) : null;
+          const dataProcesso = processo.data_pregao ? new Date(processo.data_pregao) : null;
           if (!dataProcesso || dataProcesso.toDateString() !== dataFiltro.toDateString()) {
             atendeFiltro = false;
           }
@@ -1918,7 +1917,7 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
           atendeFiltro = false;
         }
         
-        if (filtros.codigoGpi && !processo.codigo_gpi?.includes(filtros.codigoGpi)) {
+        if (filtros.codigoGpi && !processo.codigo_analise?.includes(filtros.codigoGpi)) {
           atendeFiltro = false;
         }
         
@@ -1926,10 +1925,23 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
           atendeFiltro = false;
         }
         
+        if (filtros.estado && processo.estado !== filtros.estado) {
+          atendeFiltro = false;
+        }
+        
+        if (filtros.status && processo.status !== filtros.status) {
+          atendeFiltro = false;
+        }
+        
+        // Adicionar filtro para responsável
+        if (filtros.responsavel && (!processo.responsavel || 
+            !processo.responsavel.toLowerCase().includes(filtros.responsavel.toLowerCase()))) {
+          atendeFiltro = false;
+        }
+        
         return atendeFiltro;
       });
       
-      // Atualize processosFiltrados.value com os resultados
       return processosFiltrados;
     };
     

@@ -23,7 +23,7 @@
         <div class="card-info">
           <div class="info-item">
             <i class="fas fa-building"></i>
-            <span>{{ processo.modalidade || 'N/A' }}</span>
+            <span>{{ formatarModalidade(processo.modalidade) || 'N/A' }}</span>
           </div>
           <div class="info-item">
             <i class="fas fa-map-marker-alt"></i>
@@ -37,7 +37,7 @@
         <div class="card-footer">
           <div class="info-item">
             <i class="fas fa-user"></i>
-            <span>{{ processo.responsavel || 'Não atribuído' }}</span>
+            <span>{{ getResponsavel(processo) }}</span>
           </div>
         </div>
       </div>
@@ -72,7 +72,7 @@
         >
           <td class="numero-processo">{{ processo.numero_processo }}</td>
           <td>{{ processo.orgao }}</td>
-          <td>{{ processo.modalidade || 'N/A' }}</td>
+          <td>{{ formatarModalidade(processo.modalidade) }}</td>
           <td>{{ processo.estado || 'N/A' }}</td>
           <td>{{ processo.codigo_analise || 'N/A' }}</td>
           <td>
@@ -80,7 +80,7 @@
               {{ formatStatus(processo.status) }}
             </span>
           </td>
-          <td>{{ processo.responsavel || 'Não atribuído' }}</td>
+          <td>{{ getResponsavel(processo) }}</td>
         </tr>
       </tbody>
     </table>
@@ -105,6 +105,62 @@
           <label>Hora do Pregão*</label>
           <input v-model="novoProcesso.hora_pregao" type="time" required>
         </div>
+        
+        <div class="form-group">
+          <label>Modalidade</label>
+          <select v-model="novoProcesso.modalidade">
+            <option value="pregao_eletronico">Pregão Eletrônico</option>
+            <option value="pregao_presencial">Pregão Presencial</option>
+            <option value="concorrencia">Concorrência</option>
+            <option value="tomada_preco">Tomada de Preço</option>
+            <option value="convite">Convite</option>
+            <option value="inexigibilidade">Inexigibilidade</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Estado</label>
+          <select v-model="novoProcesso.estado">
+            <option value="">Selecione o estado</option>
+            <option value="AC">Acre</option>
+            <option value="AL">Alagoas</option>
+            <option value="AP">Amapá</option>
+            <option value="AM">Amazonas</option>
+            <option value="BA">Bahia</option>
+            <option value="CE">Ceará</option>
+            <option value="DF">Distrito Federal</option>
+            <option value="ES">Espírito Santo</option>
+            <option value="GO">Goiás</option>
+            <option value="MA">Maranhão</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="PA">Pará</option>
+            <option value="PB">Paraíba</option>
+            <option value="PR">Paraná</option>
+            <option value="PE">Pernambuco</option>
+            <option value="PI">Piauí</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="RN">Rio Grande do Norte</option>
+            <option value="RS">Rio Grande do Sul</option>
+            <option value="RO">Rondônia</option>
+            <option value="RR">Roraima</option>
+            <option value="SC">Santa Catarina</option>
+            <option value="SP">São Paulo</option>
+            <option value="SE">Sergipe</option>
+            <option value="TO">Tocantins</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Código de Análise</label>
+          <input v-model="novoProcesso.codigo_analise" placeholder="Código de análise">
+        </div>
+
+        <div class="form-group">
+          <label>Responsável</label>
+          <input v-model="novoProcesso.responsavel" placeholder="Responsável pelo processo">
+        </div>
 
         <div class="form-group">
           <label>Objeto Resumido*</label>
@@ -127,13 +183,24 @@
       </form>
     </div>
   </div>
+
+  <div class="filter-options mt-3">
+    <div class="form-check">
+      <input 
+        class="form-check-input" 
+        type="checkbox" 
+        id="showOnlyInAnalysis" 
+        v-model="showOnlyInAnalysis"
+      >
+      <label class="form-check-label" for="showOnlyInAnalysis">
+        Mostrar apenas processos com status atual "Em Análise"
+      </label>
+    </div>
+  </div>
 </template>
 
 <script>
-import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import { useProcessos } from '@/composables/useProcessos'
-import { useAnalises } from '@/composables/useAnalises'
 
 export default {
   name: 'ProcessoSelection',
@@ -150,41 +217,42 @@ export default {
   
   emits: ['select-processo'],
   
-  setup(props, { emit }) {
-    const { formatStatus } = useProcessos()
-    const { isStillInAnalysis } = useAnalises()
-    
-    // Estado do modal
-    const showNovoProcessoModal = ref(false)
-    const loading = ref(false)
-    const novoProcesso = ref({
-      orgao: '',
-      data_pregao: '',
-      hora_pregao: '',
-      objeto_resumido: '',
-      status: 'em_analise'
-    })
-    
-    // Função para abrir modal
-    const abrirModal = () => {
-      // Reiniciar estado do formulário
-      novoProcesso.value = {
+  data() {
+    return {
+      showNovoProcessoModal: false,
+      loading: false,
+      novoProcesso: {
         orgao: '',
         data_pregao: '',
         hora_pregao: '',
         objeto_resumido: '',
-        status: 'em_analise'
-      }
-      showNovoProcessoModal.value = true
+        status: 'em_analise',
+        responsavel: '',
+        modalidade: 'pregao_eletronico',
+        estado: 'ES'
+      },
+      showOnlyInAnalysis: false
     }
+  },
+  
+  methods: {
+    formatStatus(status) {
+      if (!status) return 'Desconhecido';
+      
+      const statusMap = {
+        'em_analise': 'Em Análise',
+        'ganhamos': 'Ganhamos',
+        'perdemos': 'Perdemos',
+        'desistimos': 'Desistimos',
+        'cancelado': 'Cancelado',
+        'adiado': 'Adiado',
+        'aguardando': 'Aguardando'
+      };
+      
+      return statusMap[status.toLowerCase()] || status;
+    },
     
-    // Função para fechar modal
-    const fecharModal = () => {
-      showNovoProcessoModal.value = false
-    }
-
-    // Função para formatar data
-    const formatarData = (dateString) => {
+    formatarData(dateString) {
       if (!dateString) return '-';
       
       try {
@@ -193,59 +261,86 @@ export default {
       } catch (error) {
         return dateString;
       }
-    };
+    },
     
-    // Função para criar novo processo
-    const criarNovoProcesso = async () => {
+    formatarModalidade(modalidade) {
+      if (!modalidade) return 'N/A';
+      
+      // Transformar de snake_case para formato legível
+      return modalidade
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    },
+    
+    isStillInAnalysis(processo) {
+      return processo.status && processo.status.toLowerCase() === 'em_analise';
+    },
+    
+    abrirModal() {
+      // Reiniciar estado do formulário
+      this.novoProcesso = {
+        orgao: '',
+        data_pregao: '',
+        hora_pregao: '',
+        objeto_resumido: '',
+        status: 'em_analise',
+        responsavel: '',
+        modalidade: 'pregao_eletronico',
+        estado: 'ES'
+      };
+      this.showNovoProcessoModal = true;
+    },
+    
+    fecharModal() {
+      this.showNovoProcessoModal = false;
+    },
+    
+    async criarNovoProcesso() {
       try {
-        loading.value = true
+        this.loading = true;
         
         const processoData = {
-          ...novoProcesso.value,
+          ...this.novoProcesso,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          ano: parseInt(novoProcesso.value.data_pregao.split('-')[0], 10) // Extrair o ano da data
-        }
-
+          ano: parseInt(this.novoProcesso.data_pregao.split('-')[0], 10)
+        };
+        
         const { data, error } = await supabase
           .from('processos')
           .insert(processoData)
           .select()
-          .single()
-
-        if (error) throw error
-
+          .single();
+          
+        if (error) throw error;
+        
         // Fechar modal e emitir evento com o novo processo
-        showNovoProcessoModal.value = false
-        emit('select-processo', data)
-
+        this.showNovoProcessoModal = false;
+        this.$emit('select-processo', data);
+        
       } catch (error) {
-        console.error('Erro ao criar processo:', error)
-        alert('Erro ao criar processo. Por favor, tente novamente.')
+        console.error('Erro ao criar processo:', error);
+        alert('Erro ao criar processo. Por favor, tente novamente.');
       } finally {
-        loading.value = false
+        this.loading = false;
       }
-    }
+    },
     
-    // Função para aplicar filtros
-    const aplicarFiltros = (filtros) => {
-      emit('filtrar', filtros);
+    // Função especial para obter o responsável
+    getResponsavel(processo) {
+      // Verificação simplificada sem depender do relacionamento com usuarios
+      if (processo && processo.responsavel && processo.responsavel.trim()) {
+        return processo.responsavel;
+      }
+      
+      // Se não houver valor no campo responsavel, retornar mensagem padrão
+      return 'Não atribuído';
     }
-    
-    return {
-      formatStatus,
-      isStillInAnalysis,
-      showNovoProcessoModal,
-      loading,
-      novoProcesso,
-      abrirModal,
-      fecharModal,
-      criarNovoProcesso,
-      aplicarFiltros,
-      showOnlyInAnalysis: ref(false),
-      formatarData
-    }
-  }
+  },
+  
+  // Remove o hook mounted que estava usando require incorretamente
+  // O supabase já está sendo importado diretamente no topo do script
 }
 </script>
 

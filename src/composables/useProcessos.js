@@ -2,27 +2,54 @@ import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 
 export function useProcessos() {
-  const processos = ref([])
-  const sistemas = ref([])
-  const selectedProcesso = ref(null)
+  const processos = ref([]);
+  const loading = ref(false);
+  const error = ref(null);
+  const sistemas = ref([]);
+  const selectedProcesso = ref(null);
+
+  const carregarProcessos = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+      
+      // Remover a relação com 'usuarios' que está causando o erro
+      const { data, error: supabaseError } = await supabase
+        .from('processos')
+        .select(`
+          *,
+          sistemas(id, nome)
+        `)
+        .order('data_pregao', { ascending: false });
+        
+      if (supabaseError) throw supabaseError;
+      
+      processos.value = data;
+      
+    } catch (err) {
+      console.error('Erro ao carregar processos:', err);
+      error.value = err.message;
+    } finally {
+      loading.value = false;
+    }
+  };
 
   // Função para formatar status do processo
   const formatStatus = (status) => {
+    if (!status) return 'Desconhecido';
+    
     const statusMap = {
-      'vamos_participar': 'Vamos Participar',
       'em_analise': 'Em Análise',
-      'em_andamento': 'Em Andamento',
       'ganhamos': 'Ganhamos',
       'perdemos': 'Perdemos',
-      'suspenso': 'Suspenso',
-      'revogado': 'Revogado',
-      'adiado': 'Adiado',
-      'demonstracao': 'Demonstração',
+      'desistimos': 'Desistimos',
       'cancelado': 'Cancelado',
-      'nao_participar': 'Decidido Não Participar'
-    }
-    return statusMap[status] || status
-  }
+      'adiado': 'Adiado',
+      'aguardando': 'Aguardando'
+    };
+    
+    return statusMap[status.toLowerCase()] || status;
+  };
 
   const formatDate = (date) => {
     if (!date) return '-'
@@ -84,11 +111,13 @@ export function useProcessos() {
 
   return {
     processos,
-    sistemas,
-    selectedProcesso,
+    loading,
+    error,
+    carregarProcessos,
     formatStatus,
     formatDate,
     loadProcessos,
-    loadSistemas
+    loadSistemas,
+    selectedProcesso
   }
 }
