@@ -16,7 +16,7 @@
     </div>
 
     <!-- Modal de Novo Processo -->
-    <div v-if="showNovoProcessoModal" class="modal-overlay" @click.self="showNovoProcessoModal = false">
+    <div v-if="showNovoProcessoModal" class="modal-overlay" @click.self="fecharModal">
       <div class="modal-content">
         <h3>Novo Processo</h3>
         <form @submit.prevent="criarNovoProcesso">
@@ -46,7 +46,7 @@
           </div>
 
           <div class="form-buttons">
-            <button type="button" class="btn-cancelar" @click="showNovoProcessoModal = false">
+            <button type="button" class="btn-cancelar" @click="fecharModal">
               Cancelar
             </button>
             <button type="submit" class="btn-criar" :disabled="loading">
@@ -73,106 +73,104 @@
   </div>
 </template>
 
-<script setup>
-import { ref, defineProps, defineEmits } from 'vue'
-import { useRouter } from 'vue-router'
+<script>
+import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useProcessos } from '@/composables/useProcessos'
-import { useAnalises } from '@/composables/useAnalises';
-import AnalisesFiltros from '../../components/analises/AnalisesFiltros.vue';
+import { useAnalises } from '@/composables/useAnalises'
 
-const props = defineProps({
-  processos: Array,
-  selectedProcesso: [Number, String, Object] // Aceita qualquer tipo que possa ser um ID de processo
-})
-
-const emit = defineEmits(['select-processo'])
-const router = useRouter()
-const { formatStatus } = useProcessos()
-const { isStillInAnalysis } = useAnalises();
-
-// Estado do modal
-const showNovoProcessoModal = ref(false)
-const loading = ref(false)
-const novoProcesso = ref({
-  orgao: '',
-  data_pregao: '',
-  hora_pregao: '',
-  objeto_resumido: '',
-  status: 'em_analise'
-})
-
-// Função para aplicar filtros
-const aplicarFiltros = (filtros) => {
-  emit('filtrar', filtros);
-};
-
-// Função para criar novo processo
-const criarNovoProcesso = async () => {
-  try {
-    const processoData = {
-      ...novoProcesso.value,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+export default {
+  name: 'ProcessoSelection',
+  
+  props: {
+    processos: Array,
+    selectedProcesso: [Number, String, Object]
+  },
+  
+  emits: ['select-processo'],
+  
+  setup(props, { emit }) {
+    const { formatStatus } = useProcessos()
+    const { isStillInAnalysis } = useAnalises()
+    
+    // Estado do modal
+    const showNovoProcessoModal = ref(false)
+    const loading = ref(false)
+    const novoProcesso = ref({
+      orgao: '',
+      data_pregao: '',
+      hora_pregao: '',
+      objeto_resumido: '',
+      status: 'em_analise'
+    })
+    
+    // Função para abrir modal
+    const abrirModal = () => {
+      // Reiniciar estado do formulário
+      novoProcesso.value = {
+        orgao: '',
+        data_pregao: '',
+        hora_pregao: '',
+        objeto_resumido: '',
+        status: 'em_analise'
+      }
+      showNovoProcessoModal.value = true
     }
-
-    const { data, error } = await supabase
-      .from('processos')
-      .insert(processoData)
-      .select()
-
-    if (error) throw error
-
-    // Fechar modal e emitir evento com o novo processo
-    showNovoProcessoModal.value = false
-    emit('select-processo', data)
-
-  } catch (error) {
-    console.error('Erro ao criar processo:', error)
-    alert('Erro ao criar processo. Por favor, tente novamente.')
-  } finally {
-    loading.value = false
-  }
-}
-
-// Função para formatar data no padrão brasileiro
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  
-  try {
-    // Garantir que estamos usando a data sem alteração de fuso
-    const [date] = dateString.split('T')
-    const [year, month, day] = date.split('-')
     
-    // Retornar no formato brasileiro sem manipulação de timezone
-    return `${day}/${month}/${year}`
-  } catch (error) {
-    console.error('Erro ao formatar data:', error)
-    return '-'
-  }
-}
-
-// Função para calcular classe do prazo
-const getPrazoClass = (prazo) => {
-  if (!prazo) return 'prazo-normal'
-  
-  try {
-    const hoje = new Date()
-    hoje.setHours(0, 0, 0, 0) // Zerar as horas para comparar apenas as datas
+    // Função para fechar modal
+    const fecharModal = () => {
+      showNovoProcessoModal.value = false
+    }
     
-    // Criar data do prazo sem alteração de fuso
-    const [year, month, day] = prazo.split('-')
-    const dataPrazo = new Date(year, month - 1, day)
-    dataPrazo.setHours(0, 0, 0, 0)
-    
-    const diffDias = Math.ceil((dataPrazo - hoje) / (1000 * 60 * 60 * 24))
+    // Função para criar novo processo
+    const criarNovoProcesso = async () => {
+      try {
+        loading.value = true
+        
+        const processoData = {
+          ...novoProcesso.value,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ano: parseInt(novoProcesso.value.data_pregao.split('-')[0], 10) // Extrair o ano da data
+        }
 
-    if (diffDias < 0) return 'prazo-vencido'
-    if (diffDias <= 3) return 'prazo-proximo'
-    return 'prazo-normal'
-  } catch (error) {
-    console.error('Erro ao calcular prazo:', error)
-    return 'prazo-normal'
+        const { data, error } = await supabase
+          .from('processos')
+          .insert(processoData)
+          .select()
+          .single()
+
+        if (error) throw error
+
+        // Fechar modal e emitir evento com o novo processo
+        showNovoProcessoModal.value = false
+        emit('select-processo', data)
+
+      } catch (error) {
+        console.error('Erro ao criar processo:', error)
+        alert('Erro ao criar processo. Por favor, tente novamente.')
+      } finally {
+        loading.value = false
+      }
+    }
+    
+    // Função para aplicar filtros
+    const aplicarFiltros = (filtros) => {
+      emit('filtrar', filtros);
+    }
+    
+    return {
+      formatStatus,
+      isStillInAnalysis,
+      showNovoProcessoModal,
+      loading,
+      novoProcesso,
+      abrirModal,
+      fecharModal,
+      criarNovoProcesso,
+      aplicarFiltros,
+      showOnlyInAnalysis: ref(false)
+    }
   }
 }
 </script>

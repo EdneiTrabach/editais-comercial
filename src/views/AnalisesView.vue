@@ -88,11 +88,12 @@
           v-if="step === 1"
           :sistemas="sistemas"
           @filtrar="filtrarProcessos"
-          @criar-processo="criarNovoProcesso"
+          @criar-processo="abrirModalCriarProcesso"
         />
         
         <div v-if="step === 1">
           <ProcessoSelection
+            ref="processoSelectionRef"
             :processos="processosFiltrados"
             :selectedProcesso="selectedProcesso"
             @select-processo="selectProcesso"
@@ -1891,7 +1892,7 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       return filtrados;
     });
 
-    // Adicione estas funções dentro do setup para que fiquem disponíveis no escopo
+    // Adicione essas funções dentro do setup para que fiquem disponíveis no escopo
     const filtrarProcessos = (filtros) => {
       // Implementação para filtrar processos baseado nos critérios
       const processosFiltrados = processos.value.filter(processo => {
@@ -1932,6 +1933,16 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       // Navegação para a rota de criação de processo
       router.push('/editais');
     };
+
+    // Referência para acessar o componente ProcessoSelection
+    const processoSelectionRef = ref(null)
+    
+    // Função para abrir o modal de criação de processo
+    const abrirModalCriarProcesso = () => {
+      if (processoSelectionRef.value) {
+        processoSelectionRef.value.abrirModal()
+      }
+    }
 
     return {
       // Outras propriedades e métodos...
@@ -2001,9 +2012,12 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       handleTabNavigation,
       calcularClasseEstilo,
       aplicarPercentualGeralTodasLinhas,
+      aplicarPercentualObrigatoriosTodasLinhas,
       showOnlyInAnalysis,
       filtrarProcessos,  // Adicione a função ao objeto retornado
       criarNovoProcesso, // Adicione a função ao objeto retornado
+      processoSelectionRef,
+      abrirModalCriarProcesso
     }
   },
   methods: {
