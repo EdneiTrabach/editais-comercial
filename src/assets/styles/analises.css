@@ -1,5 +1,6 @@
 /* Estilos para status de análise nos elementos da tela de análises */
 
+/* Classes para bordas dos cartões e linhas */
 .analise-status-atende {
   border-left: 4px solid #28a745 !important; /* Verde para atende */
 }
@@ -14,17 +15,17 @@
 
 /* Aplicação nas linhas da tabela */
 tr.analise-status-atende td:first-child {
-  border-left: 4px solid #28a745;
+  border-left: 4px solid #28a745 !important;
   padding-left: 8px;
 }
 
 tr.analise-status-nao-atende td:first-child {
-  border-left: 4px solid #dc3545;
+  border-left: 4px solid #dc3545 !important;
   padding-left: 8px;
 }
 
 tr.analise-status-nao-analisado td:first-child {
-  border-left: 4px solid #fd7e14;
+  border-left: 4px solid #fd7e14 !important;
   padding-left: 8px;
 }
 
@@ -48,4 +49,19 @@ tr.analise-status-nao-analisado td:first-child {
 .status-nao-atende {
   color: #dc3545;
   font-weight: bold;
+}
+
+/* Classes para o status geral de análise */
+.status-geral-atende {
+  color: #28a745;
+}
+
+.status-geral-nao-atende {
+  color: #dc3545;
+}
+
+/* Percentual geral */
+.percentual-geral {
+  margin-top: 10px;
+  font-weight: 600;
 }

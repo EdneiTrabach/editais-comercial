@@ -238,7 +238,8 @@ export default {
         estado: 'ES'
       },
       showOnlyInAnalysis: false,
-      analisesCache: {} // Cache para armazenar estados das análises
+      analisesCache: {}, // Cache para armazenar estados das análises
+      statusAnaliseProcessos: {} // Cache para armazenar status de análise dos processos
     }
   },
   
@@ -353,48 +354,39 @@ export default {
 
     // Método para determinar o status de análise do processo
     async getStatusAnalise(processo) {
-      // Se não é um processo em análise, não aplicamos estilo específico
-      if (processo.status !== 'em_analise') {
-        return null;
-      }
-
-      // Verificar se já temos o resultado em cache
-      if (this.analisesCache[processo.id]) {
-        return this.analisesCache[processo.id];
+      // Verificar se já temos o status em cache
+      if (this.statusAnaliseProcessos[processo.id]) {
+        return this.statusAnaliseProcessos[processo.id];
       }
       
       try {
         // Buscar dados de análise deste processo
-        const { data, error } = await supabase
+        const { data: analiseData, error: analiseError } = await supabase
           .from('analises_itens')
           .select('total_itens, nao_atendidos, obrigatorio, percentual_minimo')
           .eq('processo_id', processo.id);
-          
-        if (error) throw error;
         
-        // Se não há registros de análise, considerar como não analisado
-        if (!data || data.length === 0) {
-          this.analisesCache[processo.id] = 'nao-analisado';
-          return 'nao-analisado';
+        // Se não tem registros na tabela de análises, retornar null
+        if (!analiseData || analiseData.length === 0) {
+          return null;
         }
         
-        // Verificar se algum item foi analisado (tem valor em total_itens)
-        const itensAnalisados = data.filter(item => 
+        // Verificar se algum item foi realmente analisado
+        const itensAnalisados = analiseData?.filter(item => 
           item.total_itens && item.total_itens > 0 && 
-          (item.nao_atendidos !== null && item.nao_atendidos !== undefined)
-        );
+          item.nao_atendidos !== null && item.nao_atendidos !== undefined
+        ) || [];
         
-        // Se nenhum item foi analisado, considerar como não analisado
+        // Se não há itens analisados, considerar não analisado
         if (itensAnalisados.length === 0) {
-          this.analisesCache[processo.id] = 'nao-analisado';
+          this.statusAnaliseProcessos[processo.id] = 'nao-analisado';
           return 'nao-analisado';
         }
         
-        // Calcular se atende os requisitos
+        // Calcular se atende aos requisitos
         let atende = true;
-        
         for (const item of itensAnalisados) {
-          const percentualMinimo = item.obrigatorio ? 90 : 70; // Valores padrão
+          const percentualMinimo = item.obrigatorio ? 90 : 70;
           const percentualAtendimento = ((item.total_itens - item.nao_atendidos) / item.total_itens) * 100;
           
           if (percentualAtendimento < (item.percentual_minimo || percentualMinimo)) {
@@ -403,13 +395,13 @@ export default {
           }
         }
         
-        // Armazenar o resultado em cache
-        this.analisesCache[processo.id] = atende ? 'atende' : 'nao-atende';
-        return atende ? 'atende' : 'nao-atende';
+        const status = atende ? 'atende' : 'nao-atende';
+        this.statusAnaliseProcessos[processo.id] = status;
+        return status;
         
       } catch (error) {
         console.error('Erro ao obter status de análise:', error);
-        return 'nao-analisado'; // Em caso de erro, consideramos como não analisado
+        return null;
       }
     }
   },

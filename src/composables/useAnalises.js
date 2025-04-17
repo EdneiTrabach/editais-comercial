@@ -12,6 +12,10 @@ export function useAnalises() {
   const showConfirmDialog = ref(false)
   const acaoAposSalvar = ref(null)
   const anoSelecionado = ref(new Date().getFullYear())
+  const loading = ref(false)
+  const error = ref(null)
+  const anosDisponiveis = ref([])
+  const statusAnaliseMap = ref({}) // Para armazenar o status de cada análise
 
   // Adicione estas definições no início do composable
   const percentualMinimoGeral = ref(60);
@@ -36,7 +40,7 @@ export function useAnalises() {
   })
 
   // Computed para anos disponíveis
-  const anosDisponiveis = computed(() => {
+  const anosDisponiveisComputed = computed(() => {
     const anos = new Set(processos.value.map(p => {
       return p.data_pregao ? new Date(p.data_pregao).getFullYear() : null;
     }).filter(Boolean));
@@ -363,53 +367,120 @@ export function useAnalises() {
 
   const loadProcessos = async () => {
     try {
-      processos.value = [];
+      loading.value = true
+      processos.value = []
       
-      const { data, error } = await supabase
-        .from('processos')
-        .select(`
-          id, 
-          ano,
-          numero_processo, 
-          orgao, 
-          modalidade, 
-          estado,
-          codigo_analise,
-          data_pregao, 
-          hora_pregao, 
-          objeto_resumido,
-          status,
-          responsavel, 
-          sistemas(id, nome)
-        `)
-        .eq('status', 'em_analise') // Filtrar apenas processos em análise
-        .order('data_pregao', { ascending: false });
+      // Buscar os processos que têm registros na tabela analises_itens
+      // Usando .select('processo_id').eq('is_custom_line', false) em vez de .distinct()
+      const { data: processosComAnalise, error: analiseError } = await supabase
+        .from('analises_itens')
+        .select('processo_id')
+      
+      if (analiseError) throw analiseError
+      
+      // Filtrar para obter IDs de processo únicos
+      const processosComAnaliseIds = [...new Set(processosComAnalise.map(item => item.processo_id))].filter(Boolean)
+      
+      // Agora vamos buscar todos os detalhes desses processos
+      if (processosComAnaliseIds.length > 0) {
+        const { data, error: queryError } = await supabase
+          .from('processos')
+          .select(`
+            id, 
+            ano,
+            numero_processo, 
+            orgao, 
+            modalidade, 
+            estado,
+            codigo_analise,
+            data_pregao, 
+            hora_pregao, 
+            objeto_resumido,
+            status,
+            responsavel_id,
+            responsavel,
+            sistemas(id, nome)
+          `)
+          .in('id', processosComAnaliseIds)
+          .order('data_pregao', { ascending: false })
         
-      if (error) throw error;
-      
-      // Processar resultados
-      processos.value = data;
-      
-      // Extrair anos únicos para o seletor de anos
-      const anos = [...new Set(data.map(processo => {
-        // Primeiro tentar extrair da data_pregao
-        if (processo.data_pregao) {
-          return new Date(processo.data_pregao).getFullYear();
-        } 
-        // Caso contrário, usar o campo ano
-        return processo.ano;
-      }))];
-      
-      anosDisponiveis.value = anos.sort((a, b) => b - a); // Ordenar em ordem decrescente
-      
-      if (anosDisponiveis.value.length > 0) {
-        anoSelecionado.value = anosDisponiveis.value[0];
+        if (queryError) throw queryError
+        
+        processos.value = data || []
+        
+        // Extrair anos únicos para o seletor de anos
+        const anos = [...new Set(processos.value.map(processo => {
+          // Primeiro tentar extrair da data_pregao
+          if (processo.data_pregao) {
+            return new Date(processo.data_pregao).getFullYear()
+          } 
+          // Caso contrário, usar o campo ano
+          return processo.ano
+        }))].filter(Boolean)
+        
+        anosDisponiveis.value = anos.sort((a, b) => b - a) // Ordenar em ordem decrescente
+        
+        if (anosDisponiveis.value.length > 0) {
+          anoSelecionado.value = anosDisponiveis.value[0]
+        }
       }
+
+      // Carregar status de análise para cada processo
+      await loadAnaliseStatus()
       
-    } catch (error) {
-      console.error("Erro ao carregar processos:", error);
+      loading.value = false
+    } catch (e) {
+      console.error('Erro ao carregar processos:', e)
+      error.value = e
+      loading.value = false
     }
-  };
+  }
+
+  const loadAnaliseStatus = async () => {
+    try {
+      for (const processo of processos.value) {
+        const { data, error: statusError } = await supabase
+          .from('analises_itens')
+          .select('total_itens, nao_atendidos, obrigatorio, percentual_minimo')
+          .eq('processo_id', processo.id)
+        
+        if (statusError) throw statusError
+        
+        // Se não houver dados de análise, considerar como não analisado
+        if (!data || data.length === 0) {
+          statusAnaliseMap.value[processo.id] = 'nao-analisado'
+          continue
+        }
+        
+        // Verificar se existem itens analisados
+        const itensAnalisados = data.filter(item => 
+          item.total_itens && item.total_itens > 0 && 
+          (item.nao_atendidos !== null && item.nao_atendidos !== undefined)
+        )
+        
+        if (itensAnalisados.length === 0) {
+          statusAnaliseMap.value[processo.id] = 'nao-analisado'
+          continue
+        }
+        
+        // Verificar se atende aos requisitos mínimos
+        let atende = true
+        for (const item of itensAnalisados) {
+          const percentualMinimo = item.obrigatorio ? 90 : 70
+          const percentualAtendimento = ((item.total_itens - item.nao_atendidos) / item.total_itens) * 100
+          
+          if (percentualAtendimento < (item.percentual_minimo || percentualMinimo)) {
+            atende = false
+            break
+          }
+        }
+        
+        statusAnaliseMap.value[processo.id] = atende ? 'atende' : 'nao-atende'
+      }
+    } catch (e) {
+      console.error('Erro ao carregar status de análise:', e)
+    }
+  }
 
   // Navegação entre etapas
   const voltarEtapa = () => {
@@ -715,7 +786,7 @@ export function useAnalises() {
     selectedProcesso,
     processoAtual,
     sistemasAnalise,
-    anosDisponiveis,
+    anosDisponiveis: anosDisponiveisComputed,
     anoSelecionado,
     processosFiltrados,
     podeAvancar,
@@ -745,5 +816,9 @@ export function useAnalises() {
     calcularClasseEstilo,  // Adicione esta linha
     isStillInAnalysis,  // Adicione esta linha
     isStillInAnalysis,
+    loading,
+    error,
+    statusAnaliseMap,
+    loadAnaliseStatus,
   }
 }

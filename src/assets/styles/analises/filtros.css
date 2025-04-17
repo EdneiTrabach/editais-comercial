@@ -145,6 +145,10 @@
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-content: center;
+  flex-wrap: nowrap;
 }
 
 .btn-limpar,
@@ -188,12 +192,12 @@
   .filtros-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .filtro-acoes {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn-limpar,
   .btn-aplicar {
     width: 100%;
