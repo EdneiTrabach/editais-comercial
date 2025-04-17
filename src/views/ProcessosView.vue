@@ -1938,48 +1938,76 @@ export default {
         console.error('Erro ao resetar configurações da tabela:', error);
         this.showToast('Erro ao resetar configurações da tabela.', 'error');
       }
-    }
-  }
-};
-
-const processarProcessos = async (data) => {
-  if (!data || !Array.isArray(data)) {
-    console.error('Dados inválidos para processamento');
-    return;
-  }
-
-  const processosPromises = data.map(async (processo) => {
-    // Carregar distâncias para cada processo
-    try {
-      const { data: distancias } = await supabase
-        .from('processo_distancias')
-        .select('*')
-        .eq('processo_id', processo.id)
-        .order('created_at');
-      
-      // Se houver distâncias, anexá-las ao processo
-      if (distancias && distancias.length > 0) {
-        processo._distancias = distancias;
-      } else if (processo.distancia_km) {
-        // Usar dados no formato antigo se não houver distâncias na nova tabela
-        processo._distancias = [{
-          distancia_km: processo.distancia_km,
-          ponto_referencia_cidade: processo.ponto_referencia_cidade || null,
-          ponto_referencia_uf: processo.ponto_referencia_uf || null
-        }];
-      } else {
-        processo._distancias = [];
+    },
+    
+    async atualizarStatusProcesso(processo, novoStatus) {
+      try {
+        this.loading = true;
+        
+        // Atualizar o status do processo
+        const { error } = await supabase
+          .from('processos')
+          .update({
+            status: novoStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', processo.id);
+          
+        if (error) throw error;
+        
+        // Se o status foi alterado para "em_analise", criar entrada na tabela analises_itens
+        // para que o processo apareça na tela de análises
+        if (novoStatus === 'em_analise') {
+          // Verificar se já existe um registro na tabela de análises
+          const { data: analiseExistente, error: checkError } = await supabase
+            .from('analises_itens')
+            .select('id')
+            .eq('processo_id', processo.id)
+            .maybeSingle();
+            
+          if (checkError) throw checkError;
+          
+          // Se não existir nenhum registro, criar um
+          if (!analiseExistente) {
+            // Obter sistemas associados ao processo, se houver
+            const sistemasIds = processo.sistemas_ativos || [];
+            
+            // Criar registros de análise para cada sistema
+            if (sistemasIds.length > 0) {
+              const registrosAnalise = sistemasIds.map(sistemaId => ({
+                processo_id: processo.id,
+                sistema_id: sistemaId,
+                total_itens: 0,
+                nao_atendidos: 0,
+                obrigatorio: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }));
+              
+              const { error: insertError } = await supabase
+                .from('analises_itens')
+                .insert(registrosAnalise);
+                
+              if (insertError) throw insertError;
+            }
+          }
+        }
+        
+        // Atualizar a lista de processos
+        await this.carregarProcessos();
+        
+        this.$toast.success(`Status do processo atualizado para "${this.formatStatus(novoStatus)}"`);
+        
+      } catch (error) {
+        console.error('Erro ao atualizar status do processo:', error);
+        this.$toast.error('Erro ao atualizar status do processo');
+      } finally {
+        this.loading = false;
       }
-    } catch (err) {
-      console.error(`Erro ao carregar distâncias para processo ${processo.id}:`, err);
-      processo._distancias = [];
-    }
-
-    return processo;
-  });
-
-  this.processos = await Promise.all(processosPromises);
-};
+    },
+  },
+  
+}
 </script>
 
 <style src="@/assets/styles/ProcessosView.css"></style>

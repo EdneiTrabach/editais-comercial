@@ -307,6 +307,12 @@ export default {
           ano: parseInt(this.novoProcesso.data_pregao.split('-')[0], 10)
         };
         
+        // Garantir que o status padrão não seja em_analise
+        // Para evitar que novos processos apareçam automaticamente na tela de análises
+        if (!processoData.status) {
+          processoData.status = 'cadastrado';
+        }
+        
         const { data, error } = await supabase
           .from('processos')
           .insert(processoData)

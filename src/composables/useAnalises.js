@@ -382,6 +382,7 @@ export function useAnalises() {
           responsavel, 
           sistemas(id, nome)
         `)
+        .eq('status', 'em_analise') // Adicionar esta linha para filtrar apenas processos em análise
         .order('data_pregao', { ascending: false });
         
       if (error) throw error;
