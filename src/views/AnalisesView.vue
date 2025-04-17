@@ -2130,4 +2130,3 @@ const verificarConexaoBanco = async () => {
 <style src="./AnalisesView.css" scoped></style>
 <style src="../assets/styles/analises/buttons.css"></style>
 <style src="../assets/styles/analises/filtros.css"></style>
-     
