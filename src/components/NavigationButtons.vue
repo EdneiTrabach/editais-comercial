@@ -3,35 +3,24 @@
        v-if="shouldShowNavigation"
        :class="{ 'sidebar-expanded': isSidebarExpanded, 'sidebar-collapsed': !isSidebarExpanded }">
     
-    <!-- Modo especial: botão voltar quando estiver em rota de edição/criação -->
-    <template v-if="isSpecialRoute">
-      <nav-button 
-        direction="prev"
-        text="VOLTAR PARA LISTA"
-        @click="router.push(getBackRoute)"
-      />
-    </template>
-    
-    <!-- Navegação padrão para rotas normais -->
-    <template v-else>
-      <nav-button 
-        direction="prev"
-        text="ANTERIOR"
-        :disabled="!hasPrevious"
-        @click="goToPrevious"
-      />
+    <!-- Navegação padrão para todas as rotas -->
+    <nav-button 
+      direction="prev"
+      text="ANTERIOR"
+      :disabled="!hasPrevious"
+      @click="goToPrevious"
+    />
 
-      <div class="current-page" v-if="!isSpecialRoute">
-        {{ navigationRoutes[currentIndex]?.name || 'Página Atual' }}
-      </div>
+    <div class="current-page">
+      {{ navigationRoutes[currentIndex]?.name || 'Página Atual' }}
+    </div>
 
-      <nav-button
-        direction="next" 
-        text="PRÓXIMO"
-        :disabled="!hasNext"
-        @click="goToNext"
-      />
-    </template>
+    <nav-button
+      direction="next" 
+      text="PRÓXIMO"
+      :disabled="!hasNext"
+      @click="goToNext"
+    />
   </div>
 </template>
 
@@ -58,19 +47,33 @@ export default {
     const router = useRouter()
     const route = useRoute()
 
-    // Define rotas de navegação
+    // Define rotas de navegação com a ordem correta
     const navigationRoutes = [
       { path: '/processos', name: 'Processos' },
-      { path: '/editais', name: 'Editais' },
+      { path: '/funcionalidades', name: 'Funcionalidades' },
+      { path: '/editais', name: 'Novo Processo' },
       { path: '/lances', name: 'Lances' },
+      { path: '/analises', name: 'Análises' },
       { path: '/sistemas', name: 'Sistemas' },
-      { path: '/empresas', name: 'Empresas' },
+      { path: '/dashboard', name: 'Dashboard' },
       { path: '/representantes', name: 'Representantes' },
+      { path: '/plataformas', name: 'Plataformas' },
+      { path: '/empresas', name: 'Empresas' },
+      { path: '/publicacoes-contratuais', name: 'Publicações Contratuais' },
+      { path: '/configuracoes-ia', name: 'Configurações IA' },
+      { path: '/responsaveis', name: 'Responsáveis' },
       { path: '/configuracoes', name: 'Admin. de Usuários' }
     ]
 
     const currentIndex = computed(() => {
-      return navigationRoutes.findIndex(r => r.path === route.path)
+      // Primeiro tenta encontrar correspondência exata
+      const exactIndex = navigationRoutes.findIndex(r => r.path === route.path)
+      if (exactIndex !== -1) return exactIndex
+      
+      // Se não encontrar correspondência exata, procura por rota base
+      // Por exemplo: /editais/123 deve corresponder a /editais
+      const currentBasePath = '/' + route.path.split('/')[1]
+      return navigationRoutes.findIndex(r => r.path === currentBasePath)
     })
 
     const hasPrevious = computed(() => currentIndex.value > 0)
@@ -79,20 +82,8 @@ export default {
     // Rotas onde não devemos mostrar a navegação
     const hideNavigationRoutes = ['/login', '/reset-password', '/forgot-password']
 
-    const isSpecialRoute = computed(() => {
-      return route.path.includes('/edit') || 
-             route.path.includes('/new') || 
-             route.path.includes('/create') || 
-             (route.path.includes('/') && route.params.id)
-    })
-
     const shouldShowNavigation = computed(() => {
       return !hideNavigationRoutes.includes(route.path)
-    })
-
-    const getBackRoute = computed(() => {
-      const basePath = '/' + route.path.split('/')[1]
-      return basePath
     })
 
     const goToPrevious = () => {
@@ -112,11 +103,9 @@ export default {
       currentIndex,
       hasPrevious,
       hasNext,
-      isSpecialRoute,
-      shouldShowNavigation,
-      getBackRoute,
       goToPrevious,
       goToNext,
+      shouldShowNavigation,
       router
     }
   }
