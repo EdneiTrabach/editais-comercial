@@ -43,8 +43,23 @@ export default {
     const loadingTimeout = ref(null)
     const filtroModalidadeSearch = ref('');
     const filtroSearch = ref({})
+    const nextNotificationDateMap = ref({});
+    const selectedStatusMap = ref({});
 
     const sistemasNomesCache = ref({})
+    const statusOptions = ref([
+      { value: 'vamos_participar', text: 'Vamos Participar' },
+      { value: 'em_analise', text: 'Em Análise' },
+      { value: 'em_andamento', text: 'Em Andamento' },
+      { value: 'ganhamos', text: 'Ganhamos' },
+      { value: 'perdemos', text: 'Perdemos' },
+      { value: 'suspenso', text: 'Suspenso' },
+      { value: 'revogado', text: 'Revogado' },
+      { value: 'adiado', text: 'Adiado' },
+      { value: 'demonstracao', text: 'Demonstração' },
+      { value: 'cancelado', text: 'Cancelado' },
+      { value: 'nao_participar', text: 'Decidido Não Participar' }
+    ]);
 
     const confirmDialog = ref({
       show: false,
@@ -2832,46 +2847,123 @@ export default {
       return valido;
     };
 
-    const handleStatusUpdate = async (statusData) => {
-      await loadProcessosAno(anoSelecionado.value);
-      showToast(`Status do processo atualizado para ${statusData.newStatus}`, 'success');
+    const handleStatusUpdate = async (processo, newStatus) => {
+      try {
+        console.log('Atualizando status para:', newStatus);
+        
+        if (newStatus === processo.status) return;
+        
+        // Verificar se o status é "em_analise" (considerando variações)
+        const isAnaliseStatus = ['em_analise', 'em analise', 'EM_ANALISE'].includes(newStatus.toLowerCase());
+        
+        // Atualizar status na tabela de processos
+        const updateData = {
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          updateData.updated_by = user.id;
+        }
+
+        const { error } = await supabase
+          .from('processos')
+          .update(updateData)
+          .eq('id', processo.id);
+
+        if (error) throw error;
+
+        // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
+        if (isAnaliseStatus) {
+          // Verificar se já existe registro para esse processo
+          const { data: existingItem, error: checkError } = await supabase
+            .from('analises_itens')
+            .select('id')
+            .eq('processo_id', processo.id)
+            .limit(1);
+            
+          if (checkError) console.error('Erro ao verificar existência de registro em analises_itens:', checkError);
+          
+          // Se não existir nenhum registro, criar um
+          if (!existingItem || existingItem.length === 0) {
+            console.log('Criando registro em analises_itens para o processo:', processo.id);
+            
+            // Buscar sistemas ativos do processo para adicionar na análise
+            let sistemasAtivos = [];
+            try {
+              if (processo.sistemas_ativos) {
+                if (typeof processo.sistemas_ativos === 'string') {
+                  sistemasAtivos = JSON.parse(processo.sistemas_ativos);
+                } else if (Array.isArray(processo.sistemas_ativos)) {
+                  sistemasAtivos = processo.sistemas_ativos;
+                }
+              }
+            } catch (e) {
+              console.error('Erro ao processar sistemas_ativos:', e);
+            }
+            
+            // Se tiver sistemas ativos, criar um registro para cada sistema
+            if (sistemasAtivos && sistemasAtivos.length > 0) {
+              const registros = sistemasAtivos.map(sistemaId => ({
+                processo_id: processo.id,
+                sistema_id: sistemaId,
+                total_itens: 0,
+                nao_atendidos: 0,
+                obrigatorio: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }));
+              
+              const { error: insertError } = await supabase
+                .from('analises_itens')
+                .insert(registros);
+              
+              if (insertError) {
+                console.error('Erro ao criar registros em analises_itens:', insertError);
+              } else {
+                console.log('Registros criados com sucesso em analises_itens:', registros.length);
+              }
+            } else {
+              // Se não tiver sistemas ativos, criar pelo menos um registro vazio
+              // para que o processo apareça na tela de análises
+              const { error: insertError } = await supabase
+                .from('analises_itens')
+                .insert({
+                  processo_id: processo.id,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  is_custom_line: true,
+                  sistema_nome_personalizado: 'Anotações'
+                });
+                
+              if (insertError) {
+                console.error('Erro ao criar registro vazio em analises_itens:', insertError);
+              } else {
+                console.log('Registro vazio criado com sucesso em analises_itens');
+              }
+            }
+          }
+        }
+
+        await logSystemAction({
+          tipo: 'atualizacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          campo_alterado: 'status',
+          dados_anteriores: processo.status,
+          dados_novos: newStatus
+        });
+
+        await loadProcessos();
+        
+        showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
+      } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        showToast('Erro ao atualizar status do processo', 'error');
+      }
     };
 
-    const selectedStatusMap = ref({});
-    const nextNotificationDateMap = ref({});
-    const { updateProcessoStatus } = useProcessoUpdate();
-    
-    const statusOptions = computed(() => {
-      const statusMap = {
-        'vamos_participar': 'Vamos Participar',
-        'em_analise': 'Em Análise',
-        'em_andamento': 'Em Andamento',
-        'ganhamos': 'Ganhamos',
-        'perdemos': 'Perdemos',
-        'suspenso': 'Suspenso',
-        'revogado': 'Revogado',
-        'adiado': 'Adiado',
-        'demonstracao': 'Demonstração',
-        'cancelado': 'Cancelado',
-        'nao_participar': 'Decidido Não Participar'
-      };
-      
-      return Object.entries(statusMap).map(([value, label]) => ({
-        value,
-        label
-      }));
-    });
-    
-    const getStatusClass = (processo) => {
-      const status = selectedStatusMap.value[processo.id] || processo.status;
-      return `status-${status.toLowerCase()}`;
-    };
-    
-    const isRecurringStatus = (processo) => {
-      const status = selectedStatusMap.value[processo.id] || processo.status;
-      return ['suspenso', 'adiado', 'demonstracao'].includes(status);
-    };
-    
     const handleStatusChange = async (processo, event) => {
       try {
         const newStatus = event.target.value;
@@ -4013,6 +4105,26 @@ export default {
       }
     };
 
+    // Adicione esta função em algum lugar adequado no arquivo, por volta da linha 570, próximo a outras funções relacionadas a status
+
+const getStatusClass = (status) => {
+  const statusClassMap = {
+    'vamos_participar': 'status-vamos-participar',
+    'em_analise': 'status-em-analise',
+    'em_andamento': 'status-em-andamento',
+    'ganhamos': 'status-ganhamos',
+    'perdemos': 'status-perdemos',
+    'suspenso': 'status-suspenso',
+    'revogado': 'status-revogado',
+    'adiado': 'status-adiado',
+    'demonstracao': 'status-demonstracao',
+    'cancelado': 'status-cancelado',
+    'nao_participar': 'status-nao-participar'
+  };
+  
+  return statusClassMap[status] || 'status-desconhecido';
+};
+
     // Adicione esta função ao ProcessosView.js ou ajuste a existente
     // para ser chamada quando for necessário atualizar o campo empresa_atual_prestadora
 
@@ -4184,6 +4296,13 @@ export default {
         throw error;
       }
     };
+
+    // Adicione esta função próxima às outras funções relacionadas a status
+
+const isRecurringStatus = (processo) => {
+  if (!processo || !processo.status) return false;
+  return ['suspenso', 'adiado', 'demonstracao'].includes(processo.status.toLowerCase());
+};
 
     return {
       handleStatusUpdate,

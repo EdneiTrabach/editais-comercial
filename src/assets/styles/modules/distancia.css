@@ -152,6 +152,7 @@ select.cidade-select {
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-content: center;
 }
 
 .distancia-valor {
@@ -240,11 +241,12 @@ select.cidade-select {
 }
 
 
-[data-theme="dark"] .confirm-dialog p, .warning-text {
+[data-theme="dark"] .confirm-dialog p,
+.warning-text {
   color: white;
 }
 
-[data-theme="dark"]  .confirm-dialog h3 {
+[data-theme="dark"] .confirm-dialog h3 {
   background: transparent;
   color: white;
 }

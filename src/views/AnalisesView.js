@@ -526,6 +526,66 @@ export default {
       return; // Impede que continue o salvamento com valor inválido
     }
 
+    const corrigirProcessosAnalise = async () => {
+      try {
+        // Buscar processos com status em_analise mas sem registros na tabela analises_itens
+        const { data: processosEmAnalise, error: processosError } = await supabase
+          .from('processos')
+          .select('id, numero_processo, status')
+          .or('status.eq.em_analise,status.eq.EM_ANALISE,status.ilike.%analise%');
+          
+        if (processosError) throw processosError;
+        
+        showToast(`Encontrados ${processosEmAnalise.length} processos com status de análise`, 'info');
+        
+        // Para cada processo, verificar se tem registros na tabela analises_itens
+        const processosParaCorrigir = [];
+        
+        for (const processo of processosEmAnalise) {
+          const { data, error } = await supabase
+            .from('analises_itens')
+            .select('id')
+            .eq('processo_id', processo.id)
+            .limit(1);
+            
+          if (error || !data || data.length === 0) {
+            processosParaCorrigir.push(processo);
+          }
+        }
+        
+        showToast(`${processosParaCorrigir.length} processos precisam de correção`, 'warning');
+        
+        if (processosParaCorrigir.length > 0 && confirm('Deseja corrigir os processos encontrados?')) {
+          for (const processo of processosParaCorrigir) {
+            // Criar um registro básico na tabela analises_itens para cada processo
+            const { error } = await supabase
+              .from('analises_itens')
+              .insert({
+                processo_id: processo.id,
+                is_custom_line: false,
+                total_itens: 0,
+                nao_atendidos: 0,
+                obrigatorio: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+              
+            if (error) {
+              console.error(`Erro ao corrigir processo ${processo.numero_processo}:`, error);
+            }
+          }
+          
+          showToast('Processos corrigidos com sucesso!', 'success');
+          
+          // Recarregar os processos para exibir os corrigidos
+          await loadProcessos();
+        }
+      } catch (error) {
+        console.error('Erro ao corrigir processos:', error);
+        showToast('Erro ao corrigir processos: ' + error.message, 'error');
+      }
+    };
+
     return {
       step,
       isSidebarExpanded,
@@ -578,7 +638,8 @@ export default {
       salvarPercentuaisMinimosLocal,
       toasts,
       handleTabNavigation,
-      calcularClasseEstilo
+      calcularClasseEstilo,
+      corrigirProcessosAnalise
     }
   }
 }
