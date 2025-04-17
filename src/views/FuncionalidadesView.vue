@@ -78,12 +78,12 @@ const features = [
     description: 'Visualize e gerencie análises de processos',
     route: '/analises'
   },
-  {
-    icon: '/icons/edicao.svg',
-    title: 'Declarações',
-    description: 'Visualize e gerencie declarações de processos',
-    route: '/declaracoes'
-  },
+  // {
+  //   icon: '/icons/edicao.svg',
+  //   title: 'Declarações',
+  //   description: 'Visualize e gerencie declarações de processos',
+  //   route: '/declaracoes'
+  // },
     {
     icon: '/icons/app.svg',
     title: 'Sistemas',

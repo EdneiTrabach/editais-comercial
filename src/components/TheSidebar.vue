@@ -55,13 +55,13 @@
               <span class="link-text">Análises</span>
             </router-link>
           </li>
-
+<!-- 
           <li class="sidebar-menu-item">
             <router-link to="/declaracoes" class="sidebar-menu-link">
               <img src="/icons/edicao.svg" alt="Declarações" class="icon" />
               <span class="link-text">Declarações</span>
             </router-link>
-          </li>
+          </li> -->
 
           <li>
             <router-link to="/sistemas" class="sidebar-menu-link" v-slot="{ isActive }">
