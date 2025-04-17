@@ -159,3 +159,298 @@
 .btn-filtro:hover .icon-filter {
   opacity: 1;
 }
+
+/* Estilo moderno para botões de ação com gradiente linear */
+.btn-action-actions,
+.btn-tour,
+.btn-filter,
+.btn-export,
+.btn-add {
+  /* Base visual do botão */
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  
+  /* Flex para centralizar conteúdo */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  /* Tipografia */
+  font-weight: 500;
+  font-size: 0.9rem;
+  
+  /* Efeitos visuais */
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+  transition: all 0.3s ease;
+  
+  /* Acessibilidade e interação */
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Estado hover com efeito de elevação */
+.btn-action-actions:hover:not(:disabled),
+.btn-tour:hover,
+.btn-filter:hover,
+.btn-export:hover,
+.btn-add:hover {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+/* Estado ativo/clicado */
+.btn-action-actions:active:not(:disabled),
+.btn-tour:active,
+.btn-filter:active,
+.btn-export:active,
+.btn-add:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+/* Estado desabilitado */
+.btn-action-actions:disabled,
+.btn-tour:disabled,
+.btn-filter:disabled,
+.btn-export:disabled,
+.btn-add:disabled {
+  background: linear-gradient(135deg, #A5B4FC 0%, #C4B5FD 100%);
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Estado ativo para botões alternáveis como filtro */
+.btn-filter.active {
+  background: linear-gradient(135deg, #3730A3 0%, #6D28D9 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(79, 70, 229, 0.3);
+}
+
+/* Estilo para ícones */
+.icon,
+.icon-filter,
+.icon-add {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  transition: all 0.2s ease;
+}
+
+/* Efeito nos ícones durante hover */
+.btn-action-actions:hover:not(:disabled) .icon,
+.btn-tour:hover .icon,
+.btn-filter:hover .icon-filter,
+.btn-export:hover .icon,
+.btn-add:hover .icon-add {
+  transform: scale(1.1);
+}
+
+/* Badge para notificações (como contador de filtros) */
+.filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #EF4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 768px) {
+  .btn-action-actions,
+  .btn-tour,
+  .btn-filter,
+  .btn-export,
+  .btn-add {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .btn-filter span:not(.filter-badge) {
+    display: none;
+  }
+  
+  .icon,
+  .icon-filter,
+  .icon-add {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Estilização específica para o botão de filtro em tons de azul */
+.btn-filter {
+  /* Base visual com gradiente azul */
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  
+  /* Flex para centralizar conteúdo */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  /* Tipografia */
+  font-weight: 500;
+  font-size: 0.9rem;
+  
+  /* Efeitos visuais */
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  
+  /* Acessibilidade e interação */
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Estado hover do botão de filtro */
+.btn-filter:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Estado ativo/clicado do botão de filtro */
+.btn-filter:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Estado ativo (quando o filtro está aplicado) */
+.btn-filter.active {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Estilo para ícone do filtro */
+.btn-filter .icon-filter {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  opacity: 1;
+  transition: all 0.2s ease;
+}
+
+/* Badge para contador de filtros ativos */
+.btn-filter .filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+
+/* Estilização específica para o botão Tour com gradiente em tons de azul-roxo */
+.btn-tour {
+  /* Base visual do botão com gradiente personalizado */
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  
+  /* Flex para centralizar conteúdo */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  /* Tipografia */
+  font-weight: 500;
+  font-size: 0.9rem;
+  
+  /* Efeitos visuais */
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  
+  /* Acessibilidade e interação */
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Estado hover do botão de tour */
+.btn-tour:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Estado ativo/clicado do botão de tour */
+.btn-tour:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Estilo para ícone do tour */
+.btn-tour .icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  opacity: 1;
+  transition: all 0.2s ease;
+}
+
+/* Efeito no ícone durante hover */
+.btn-tour:hover .icon {
+  transform: scale(1.1);
+}
+
+/* Pulsação sutil para chamar atenção (opcional) */
+@keyframes pulse-subtle {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Aplicar animação quando desejado (ex: para novos usuários) */
+.btn-tour.highlight {
+  animation: pulse-subtle 2s infinite;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .btn-tour {
+    padding: 0.5rem 0.8rem;
+  }
+  
+  .btn-tour .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+

@@ -99,15 +99,6 @@
   color: #8c8c8c;
 }
 
-/* Buttons */
-button.btn-tour {
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  background: var(--primary-color);
-  border-radius: 8px;
-  font-weight: 500;
-}
 
 /* Table cells */
 td[data-field="empresa_vencedora"] {
