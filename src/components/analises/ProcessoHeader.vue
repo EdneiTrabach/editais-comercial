@@ -65,6 +65,43 @@
               placeholder="Código GPI"
             >
           </div>
+
+          <div class="filtro-item">
+            <label for="estado">Estado</label>
+            <select 
+              id="estado" 
+              v-model="filtros.estado"
+            >
+              <option value="">Todos os estados</option>
+              <option value="AC">Acre</option>
+              <option value="AL">Alagoas</option>
+              <option value="AP">Amapá</option>
+              <option value="AM">Amazonas</option>
+              <option value="BA">Bahia</option>
+              <option value="CE">Ceará</option>
+              <option value="DF">Distrito Federal</option>
+              <option value="ES">Espírito Santo</option>
+              <option value="GO">Goiás</option>
+              <option value="MA">Maranhão</option>
+              <option value="MT">Mato Grosso</option>
+              <option value="MS">Mato Grosso do Sul</option>
+              <option value="MG">Minas Gerais</option>
+              <option value="PA">Pará</option>
+              <option value="PB">Paraíba</option>
+              <option value="PR">Paraná</option>
+              <option value="PE">Pernambuco</option>
+              <option value="PI">Piauí</option>
+              <option value="RJ">Rio de Janeiro</option>
+              <option value="RN">Rio Grande do Norte</option>
+              <option value="RS">Rio Grande do Sul</option>
+              <option value="RO">Rondônia</option>
+              <option value="RR">Roraima</option>
+              <option value="SC">Santa Catarina</option>
+              <option value="SP">São Paulo</option>
+              <option value="SE">Sergipe</option>
+              <option value="TO">Tocantins</option>
+            </select>
+          </div>
           
           <div class="filtro-item">
             <label for="sistema">Sistema</label>
@@ -80,6 +117,21 @@
               >
                 {{ sistema.nome }}
               </option>
+            </select>
+          </div>
+          
+          <div class="filtro-item">
+            <label for="status">Status</label>
+            <select 
+              id="status" 
+              v-model="filtros.status"
+            >
+              <option value="">Todos os status</option>
+              <option value="em_analise">Em Análise</option>
+              <option value="ganhamos">Ganhamos</option>
+              <option value="perdemos">Perdemos</option>
+              <option value="cancelado">Cancelado</option>
+              <option value="aguardando">Aguardando</option>
             </select>
           </div>
           
@@ -128,7 +180,9 @@ export default {
         data: '',
         numeroProcesso: '',
         codigoGpi: '',
-        sistema: ''
+        sistema: '',
+        estado: '',
+        status: ''
       }
     }
   },
@@ -144,7 +198,9 @@ export default {
         data: '',
         numeroProcesso: '',
         codigoGpi: '',
-        sistema: ''
+        sistema: '',
+        estado: '',
+        status: ''
       };
     },
     
@@ -160,7 +216,6 @@ export default {
 </script>
 
 <style scoped>
-/* Adicionado este estilo específico */
 .processo-header-top {
   display: flex;
   justify-content: space-between;

@@ -47,7 +47,6 @@ export default {
 .visualizacao-toggle {
   display: flex;
   gap: 4px;
-  margin-left: 10px;
 }
 
 .btn-visualizacao {

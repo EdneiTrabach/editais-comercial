@@ -289,3 +289,55 @@
   background-color: #9ca3af;
   cursor: not-allowed;
 }
+
+/* Estilos adicionais para o ProcessoSelection */
+.processo-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border-left: 4px solid #4285f4;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.processo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.processo-card.selected {
+  box-shadow: 0 0 0 2px #4285f4, 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.card-numero {
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.card-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.filter-options {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
