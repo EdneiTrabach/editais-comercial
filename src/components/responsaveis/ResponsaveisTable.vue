@@ -177,6 +177,7 @@ export default {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border-primary, #dee2e6);
+  text-align: center;
 }
 
 .excel-table td {
@@ -218,7 +219,7 @@ export default {
 .editable-field {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
 }
 

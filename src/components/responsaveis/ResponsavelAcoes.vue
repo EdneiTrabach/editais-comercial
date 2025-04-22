@@ -52,7 +52,7 @@ export default {
 .acoes-column {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0.5rem;
 }
 
