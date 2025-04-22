@@ -50,11 +50,43 @@
 export default {
   name: 'UpdateFormModal',
   props: {
-    updateForm: Object,
-    editingUpdate: Object,
-    loading: Boolean
+    updateForm: {
+      type: Object,
+      required: true
+    },
+    editingUpdate: {
+      type: Object,
+      default: null
+    },
+    loading: {
+      type: Boolean,
+      default: false
+    }
   },
-  emits: ['close', 'save']
+  emits: ['close', 'save'],
+  setup(props) {
+    // Validação básica integrada ao componente
+    const validateForm = () => {
+      const errors = {};
+      
+      if (!props.updateForm.title || props.updateForm.title.trim() === '') {
+        errors.title = 'O título é obrigatório';
+      }
+      
+      if (!props.updateForm.description || props.updateForm.description.trim() === '') {
+        errors.description = 'A descrição é obrigatória';
+      }
+      
+      return {
+        isValid: Object.keys(errors).length === 0,
+        errors
+      };
+    };
+
+    return {
+      validateForm
+    };
+  }
 }
 </script>
 
@@ -157,51 +189,5 @@ export default {
 .form-actions button:last-child:disabled {
   opacity: 0.65;
   cursor: not-allowed;
-}
-
-/* Tema escuro */
-[data-theme="dark"] .modal {
-  background: #1e293b;
-}
-
-[data-theme="dark"] .modal h3 {
-  color: #f8fafc;
-}
-
-[data-theme="dark"] .form-group label {
-  color: #e5e7eb;
-}
-
-[data-theme="dark"] .form-group input,
-[data-theme="dark"] .form-group select,
-[data-theme="dark"] .form-group textarea {
-  background: #0f172a;
-  border-color: #2d3748;
-  color: #f8fafc;
-}
-
-[data-theme="dark"] .form-actions button:first-child {
-  background: #334155;
-  color: #e5e7eb;
-}
-
-[data-theme="dark"] .form-actions button:last-child {
-  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .modal {
-    width: 90%;
-    padding: 1.5rem;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .form-actions button {
-    width: 100%;
-  }
 }
 </style>
