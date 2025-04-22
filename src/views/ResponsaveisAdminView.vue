@@ -98,20 +98,20 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { supabase } from '@/lib/supabase'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { supabase } from '@/lib/supabase';
 
 // Componentes
-import TheSidebar from '@/components/TheSidebar.vue'
-import ResponsaveisTable from './responsaveis/components/ResponsaveisTable.vue'
-import ResponsavelForm from './responsaveis/components/ResponsavelForm.vue'
+import TheSidebar from '@/components/TheSidebar.vue';
+import ResponsaveisTable from '@/components/responsaveis/ResponsaveisTable.vue';
+import ResponsavelForm from '@/components/responsaveis/ResponsavelForm.vue';
 
 // Composables
-import { useResponsaveisStore } from './responsaveis/composables/useResponsaveisStore'
-import { useResponsavelForm } from './responsaveis/composables/useResponsavelForm'
-import { useInlineEditing } from './responsaveis/composables/useInlineEditing'
-import { useConnectionManager } from '@/composables/useConnectionManager'
+import { useResponsaveisStore } from '@/composables/responsaveis/useResponsaveisStore';
+import { useResponsavelForm } from '@/composables/responsaveis/useResponsavelForm';
+import { useInlineEditing } from '@/composables/responsaveis/useInlineEditing';
+import { useConnectionManager } from '@/composables/useConnectionManager';
 
 export default {
   name: 'ResponsaveisAdminView',
@@ -121,19 +121,19 @@ export default {
     ResponsavelForm
   },
   setup() {
-    const router = useRouter()
-    const isSidebarExpanded = ref(true)
-    const showAccessDeniedModal = ref(false)
-    const showFormModal = ref(false)
-    const showConfirmDialog = ref(false)
-    const dialogConfig = ref({})
-    const showToast = ref(false)
+    const router = useRouter();
+    const isSidebarExpanded = ref(true);
+    const showAccessDeniedModal = ref(false);
+    const showFormModal = ref(false);
+    const showConfirmDialog = ref(false);
+    const dialogConfig = ref({});
+    const showToast = ref(false);
     const toastConfig = ref({
       message: '',
       type: 'success'
-    })
-    const operationLoading = ref(false)
-    const pendingAction = ref(null)
+    });
+    const operationLoading = ref(false);
+    const pendingAction = ref(null);
     
     // Utiliza os composables
     const { 
@@ -145,7 +145,7 @@ export default {
       deleteResponsavel,
       formatStatus,
       setupRealtimeSubscription
-    } = useResponsaveisStore()
+    } = useResponsaveisStore();
     
     const { 
       formData,
@@ -153,7 +153,7 @@ export default {
       setupForEditing,
       resetForm,
       saveResponsavel
-    } = useResponsavelForm()
+    } = useResponsavelForm();
     
     const {
       editingNames,
@@ -163,16 +163,16 @@ export default {
       startEditingDept,
       updateName,
       updateDepartment
-    } = useInlineEditing()
+    } = useInlineEditing();
     
     // Verificar permissão de admin
     const checkAdminAccess = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          router.push('/login')
-          return false
+          router.push('/login');
+          return false;
         }
         
         // Buscar perfil do usuário
@@ -180,120 +180,120 @@ export default {
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single()
+          .single();
         
-        if (error) throw error
+        if (error) throw error;
         
         // Verificar se é admin
-        const isAdmin = profile?.role === 'admin'
+        const isAdmin = profile?.role === 'admin';
         
         if (!isAdmin) {
-          showAccessDeniedModal.value = true
-          return false
+          showAccessDeniedModal.value = true;
+          return false;
         }
         
-        return true
+        return true;
       } catch (error) {
-        console.error('Erro ao verificar acesso:', error)
-        return false
+        console.error('Erro ao verificar acesso:', error);
+        return false;
       }
-    }
+    };
     
     // Lidar com toggle do sidebar
     const handleSidebarToggle = (expanded) => {
-      isSidebarExpanded.value = expanded
-    }
+      isSidebarExpanded.value = expanded;
+    };
     
     // Redirecionar para home
     const redirectToHome = () => {
-      router.push('/processos')
-    }
+      router.push('/processos');
+    };
     
     // Funções para manipular modal de formulário
     const openAddModal = () => {
-      resetForm()
-      showFormModal.value = true
-    }
+      resetForm();
+      showFormModal.value = true;
+    };
     
     const openEditModal = (responsavel) => {
-      setupForEditing(responsavel)
-      showFormModal.value = true
-    }
+      setupForEditing(responsavel);
+      showFormModal.value = true;
+    };
     
     const closeModal = () => {
-      showFormModal.value = false
-      resetForm()
-    }
+      showFormModal.value = false;
+      resetForm();
+    };
     
     // Função para mostrar toast
     const showToastMessage = (message, type = 'success', duration = 3000) => {
       toastConfig.value = {
         message,
         type
-      }
-      showToast.value = true
+      };
+      showToast.value = true;
       
       setTimeout(() => {
-        showToast.value = false
-      }, duration)
-    }
+        showToast.value = false;
+      }, duration);
+    };
     
     // Salvar responsável
     const handleSaveResponsavel = async () => {
-      operationLoading.value = true
+      operationLoading.value = true;
       
       try {
-        const result = await saveResponsavel()
+        const result = await saveResponsavel();
         
         if (result.success) {
           showToastMessage(
             isEditing.value 
               ? 'Responsável atualizado com sucesso!' 
               : 'Responsável adicionado com sucesso!'
-          )
-          closeModal()
-          await loadResponsaveis()
+          );
+          closeModal();
+          await loadResponsaveis();
         } else {
-          showToastMessage(result.errors[0], 'error')
+          showToastMessage(result.errors[0], 'error');
         }
       } finally {
-        operationLoading.value = false
+        operationLoading.value = false;
       }
-    }
+    };
     
     // Confirmar toggle de status
     const confirmToggleStatus = (responsavel) => {
-      const isActivating = responsavel.status !== 'ACTIVE'
+      const isActivating = responsavel.status !== 'ACTIVE';
       
       dialogConfig.value = {
         title: `Confirmar ${isActivating ? 'Ativação' : 'Inativação'}`,
         message: `Deseja realmente ${isActivating ? 'ativar' : 'inativar'} o responsável ${responsavel.nome}?`,
         confirmText: isActivating ? 'Ativar' : 'Inativar'
-      }
+      };
       
-      pendingAction.value = () => handleToggleStatus(responsavel)
-      showConfirmDialog.value = true
-    }
+      pendingAction.value = () => handleToggleStatus(responsavel);
+      showConfirmDialog.value = true;
+    };
     
     // Executar toggle de status
     const handleToggleStatus = async (responsavel) => {
-      operationLoading.value = true
+      operationLoading.value = true;
       
       try {
-        const result = await toggleResponsavelStatus(responsavel)
+        const result = await toggleResponsavelStatus(responsavel);
         
         if (result.success) {
           showToastMessage(
             `Responsável ${result.newStatus === 'ACTIVE' ? 'ativado' : 'inativado'} com sucesso!`
-          )
-          await loadResponsaveis()
+          );
+          await loadResponsaveis();
         } else {
-          showToastMessage('Erro ao alterar status do responsável', 'error')
+          showToastMessage('Erro ao alterar status do responsável', 'error');
         }
       } finally {
-        operationLoading.value = false
+        operationLoading.value = false;
       }
-    }
+    };
     
     // Confirmar exclusão
     const confirmDelete = (responsavel) => {
@@ -303,97 +303,97 @@ export default {
         warning: 'Esta ação não poderá ser desfeita!',
         confirmText: 'Excluir',
         confirmClass: 'danger'
-      }
+      };
       
-      pendingAction.value = () => handleDelete(responsavel)
-      showConfirmDialog.value = true
-    }
+      pendingAction.value = () => handleDelete(responsavel);
+      showConfirmDialog.value = true;
+    };
     
     // Executar exclusão
     const handleDelete = async (responsavel) => {
-      operationLoading.value = true
+      operationLoading.value = true;
       
       try {
-        const result = await deleteResponsavel(responsavel)
+        const result = await deleteResponsavel(responsavel);
         
         if (result.success) {
-          showToastMessage('Responsável excluído com sucesso!')
-          await loadResponsaveis()
+          showToastMessage('Responsável excluído com sucesso!');
+          await loadResponsaveis();
         } else {
           if (result.type === 'IN_USE') {
-            showToastMessage('Este responsável está vinculado a processos e não pode ser excluído.', 'warning')
+            showToastMessage('Este responsável está vinculado a processos e não pode ser excluído.', 'warning');
           } else {
-            showToastMessage('Erro ao excluir responsável', 'error')
+            showToastMessage('Erro ao excluir responsável', 'error');
           }
         }
       } finally {
-        operationLoading.value = false
+        operationLoading.value = false;
       }
-    }
+    };
     
     // Executar ação pendente
     const handleConfirmAction = () => {
-      showConfirmDialog.value = false
+      showConfirmDialog.value = false;
       
       if (pendingAction.value) {
-        pendingAction.value()
-        pendingAction.value = null
+        pendingAction.value();
+        pendingAction.value = null;
       }
-    }
+    };
     
     // Atualizar nome (edição inline)
     const handleNameUpdate = async (payload) => {
-      operationLoading.value = true
+      operationLoading.value = true;
       
       try {
-        const result = await updateName(payload.responsavel, payload.newName)
+        const result = await updateName(payload.responsavel, payload.newName);
         
         if (result.success) {
-          showToastMessage('Nome atualizado com sucesso!')
-          await loadResponsaveis()
+          showToastMessage('Nome atualizado com sucesso!');
+          await loadResponsaveis();
         } else if (!result.noChange) {
-          showToastMessage('Erro ao atualizar nome', 'error')
+          showToastMessage('Erro ao atualizar nome', 'error');
         }
       } finally {
-        operationLoading.value = false
+        operationLoading.value = false;
       }
-    }
+    };
     
     // Atualizar departamento (edição inline)
     const handleDeptUpdate = async (payload) => {
-      operationLoading.value = true
+      operationLoading.value = true;
       
       try {
-        const result = await updateDepartment(payload.responsavel, payload.newDept)
+        const result = await updateDepartment(payload.responsavel, payload.newDept);
         
         if (result.success) {
-          showToastMessage('Departamento atualizado com sucesso!')
-          await loadResponsaveis()
+          showToastMessage('Departamento atualizado com sucesso!');
+          await loadResponsaveis();
         } else if (!result.noChange) {
-          showToastMessage('Erro ao atualizar departamento', 'error')
+          showToastMessage('Erro ao atualizar departamento', 'error');
         }
       } finally {
-        operationLoading.value = false
+        operationLoading.value = false;
       }
-    }
+    };
     
     // Usar o composable para gerenciar reconexões
-    useConnectionManager(() => loadResponsaveis())
+    useConnectionManager(() => loadResponsaveis());
     
     // Lifecycle hooks
     onMounted(async () => {
-      const hasAccess = await checkAdminAccess()
+      const hasAccess = await checkAdminAccess();
       if (hasAccess) {
-        await loadResponsaveis()
+        await loadResponsaveis();
         
         // Configurar realtime para atualizações de outros usuários
-        const unsubscribe = setupRealtimeSubscription()
+        const unsubscribe = setupRealtimeSubscription();
         
         onUnmounted(() => {
-          unsubscribe()
-        })
+          unsubscribe();
+        });
       }
-    })
+    });
     
     return {
       // Estado
@@ -431,9 +431,9 @@ export default {
       handleDeptUpdate,
       startEditingName,
       startEditingDept
-    }
+    };
   }
-}
+};
 </script>
 
 <style src="@/assets/styles/components/responsaveis/layout.css" scoped></style>
