@@ -1,0 +1,95 @@
+.acoes-column {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon.edit {
+  background-color: var(--bg-edit-btn, #e8f5e9);
+  color: var(--text-edit-btn, #388e3c);
+}
+
+.btn-icon.delete {
+  background-color: var(--bg-delete-btn, #fee2e2);
+  color: var(--text-delete-btn, #d32f2f);
+}
+
+.btn-icon.activate {
+  background-color: var(--bg-activate-btn, #dcfce7);
+  color: var(--text-activate-btn, #16a34a);
+}
+
+.btn-icon.deactivate {
+  background-color: var(--bg-deactivate-btn, #fef3c7);
+  color: var(--text-deactivate-btn, #d97706);
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon.edit:hover {
+  background-color: var(--bg-edit-btn-hover, #c8e6c9);
+}
+
+.btn-icon.delete:hover {
+  background-color: var(--bg-delete-btn-hover, #ffcdd2);
+}
+
+.btn-icon.activate:hover {
+  background-color: var(--bg-activate-btn-hover, #bbf7d0);
+}
+
+.btn-icon.deactivate:hover {
+  background-color: var(--bg-deactivate-btn-hover, #fde68a);
+}
+
+.icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tema escuro */
+.dark .btn-icon.edit {
+  background-color: var(--bg-edit-btn-dark, rgba(56, 142, 60, 0.2));
+  color: var(--text-edit-btn-dark, #81c784);
+}
+
+.dark .btn-icon.delete {
+  background-color: var(--bg-delete-btn-dark, rgba(211, 47, 47, 0.2));
+  color: var(--text-delete-btn-dark, #ef5350);
+}
+
+.dark .btn-icon.activate {
+  background-color: var(--bg-activate-btn-dark, rgba(22, 163, 74, 0.2));
+  color: var(--text-activate-btn-dark, #4ade80);
+}
+
+.dark .btn-icon.deactivate {
+  background-color: var(--bg-deactivate-btn-dark, rgba(217, 119, 6, 0.2));
+  color: var(--text-deactivate-btn-dark, #fbbf24);
+}
+
+/* Responsividade */
+@media (max-width: 540px) {
+  .acoes-column {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

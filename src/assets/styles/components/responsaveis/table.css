@@ -1,0 +1,159 @@
+/* Tabela de responsáveis */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-card, white);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-top: 1.5rem;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: var(--text-primary, #333);
+}
+
+.excel-table thead {
+  background-color: var(--bg-header, #f8f9fa);
+  font-weight: 600;
+  color: var(--text-header, #495057);
+}
+
+.excel-table th {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-primary, #dee2e6);
+}
+
+.excel-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-light, #f1f1f1);
+}
+
+.excel-table tr:hover {
+  background-color: var(--bg-hover, #f8f9fa);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: var(--bg-success-light, #d4edda);
+  color: var(--text-success, #155724);
+}
+
+.status-badge.inactive {
+  background-color: var(--bg-danger-light, #f8d7da);
+  color: var(--text-danger, #721c24);
+}
+
+.status-badge.pending {
+  background-color: var(--bg-warning-light, #fff3cd);
+  color: var(--text-warning, #856404);
+}
+
+/* Edição inline */
+.editable-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.editing-field {
+  width: 100%;
+}
+
+.input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-primary, #ced4da);
+  width: 100%;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary, #193155);
+  box-shadow: 0 0 0 2px rgba(25, 49, 85, 0.1);
+}
+
+/* Estado de carregamento */
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted, #6c757d);
+  font-size: 1rem;
+}
+
+/* Mensagem de tabela vazia */
+.empty-table {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted, #6c757d);
+  font-style: italic;
+}
+
+/* Tema escuro */
+.dark .table-container {
+  background: var(--bg-card-dark, #252525);
+}
+
+.dark .excel-table {
+  color: var(--text-primary-dark, #e9ecef);
+}
+
+.dark .excel-table thead {
+  background-color: var(--bg-header-dark, #2c2c2c);
+  color: var(--text-header-dark, #e9ecef);
+}
+
+.dark .excel-table th {
+  border-bottom-color: var(--border-primary-dark, #3a3a3a);
+}
+
+.dark .excel-table td {
+  border-bottom-color: var(--border-light-dark, #2c2c2c);
+}
+
+.dark .excel-table tr:hover {
+  background-color: var(--bg-hover-dark, #333333);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .excel-table thead {
+    display: none;
+  }
+  
+  .excel-table tr {
+    display: block;
+    border-bottom: 1px solid var(--border-primary, #dee2e6);
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .excel-table td {
+    display: flex;
+    text-align: right;
+    border-bottom: none;
+    padding: 0.5rem;
+  }
+  
+  .excel-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: auto;
+  }
+}
