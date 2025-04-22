@@ -193,14 +193,11 @@
             </div>
           </div>
 
-          <!-- Novo botão de notificações -->
-          <button class="notifications-btn sidebar-menu-link" @click="toggleNotifications">
-            <div class="notification-icon-wrapper">
-              <img src="/icons/bell.svg" alt="Notificações" class="icon" />
-              <span v-if="unreadNotifications" class="notification-badge">{{ unreadNotifications }}</span>
-            </div>
-            <span class="link-text">Notificações</span>
-          </button>
+          <!-- Botão de notificações substituído pelo componente -->
+          <NotificationButton 
+            :count="unreadNotifications" 
+            @click="toggleNotifications" 
+          />
 
           <button @click="handleLogout" class="logout-btn sidebar-menu-link">
             <img src="/icons/sair.svg" alt="Sair" class="icon" />

@@ -1,10 +1,11 @@
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
-import { SupabaseManager } from '@/lib/supabaseManager'
+import { getUnreadNotificationsCount } from '@/api/notificationsApi'
+import { SupabaseManager } from '@/lib/supabaseManager' // Caminho corrigido
 import Shepherd from '../components/Shepherd.vue';
-import NotificationsPanel from '../components/notifications/NotificationsPanel.vue';
-import { getUnreadNotificationsCount } from '@/api/notificationsApi';
+import NotificationsPanel from './notifications/NotificationsPanel.vue'
+import NotificationButton from './notifications/NotificationButton.vue'
 import '../assets/styles/themes/red-theme.css'
 import '../assets/styles/themes/baby-blue-theme.css'
 import '../assets/styles/themes/green-theme.css'
@@ -18,7 +19,8 @@ export default {
   name: 'TheSidebar',
   components: {
     Shepherd,
-    NotificationsPanel
+    NotificationsPanel,
+    NotificationButton
   },
   emits: ['sidebarToggle'],
   
