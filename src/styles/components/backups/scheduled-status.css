@@ -1,0 +1,77 @@
+/* Estilos para status do backup agendado */
+.backup-scheduled-status {
+  margin-bottom: 2rem;
+}
+
+.backup-scheduled-status .status-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background-color: #F5F5F5;
+  border-left: 5px solid #9E9E9E;
+}
+
+.backup-scheduled-status .status-card.completed {
+  background-color: #E8F5E9;
+  border-left-color: #2E7D32;
+}
+
+.backup-scheduled-status .status-card.failed {
+  background-color: #FFEBEE;
+  border-left-color: #C62828;
+}
+
+.backup-scheduled-status .status-card.in_progress {
+  background-color: #E3F2FD;
+  border-left-color: #1565C0;
+}
+
+.backup-scheduled-status .status-card.missed {
+  background-color: #FFF8E1;
+  border-left-color: #FFA000;
+}
+
+.backup-scheduled-status .status-icon {
+  margin-right: 1rem;
+  display: flex;
+  color: #9E9E9E;
+}
+
+.status-card.completed .status-icon {
+  color: #2E7D32;
+}
+
+.status-card.failed .status-icon {
+  color: #C62828;
+}
+
+.status-card.in_progress .status-icon {
+  color: #1565C0;
+}
+
+.status-card.missed .status-icon {
+  color: #FFA000;
+}
+
+.backup-scheduled-status .status-content {
+  flex: 1;
+}
+
+.backup-scheduled-status .status-title {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.backup-scheduled-status .status-details {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.backup-scheduled-status .status-horario {
+  font-weight: 500;
+}
+
+.backup-scheduled-status .status-action {
+  margin-left: 1rem;
+}

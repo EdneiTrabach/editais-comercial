@@ -1,0 +1,76 @@
+/* Estilos para a barra de progresso do backup */
+.backup-progress-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.backup-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.backup-progress-status {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.backup-progress-status.running {
+  color: #1565C0;
+}
+
+.backup-progress-status.success {
+  color: #2E7D32;
+}
+
+.backup-progress-status.error {
+  color: #C62828;
+}
+
+.backup-progress-message {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.backup-progress-percentage {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #193155;
+}
+
+.backup-progress-bar {
+  height: 12px;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.backup-progress-fill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.backup-progress-fill.running {
+  background: linear-gradient(90deg, #1565C0, #42A5F5);
+  background-size: 200% 100%;
+  animation: progress-animation 2s linear infinite;
+}
+
+.backup-progress-fill.success {
+  background-color: #4CAF50;
+}
+
+.backup-progress-fill.error {
+  background-color: #C62828;
+}
+
+@keyframes progress-animation {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}

@@ -1,0 +1,47 @@
+/* Estilos para logs de execução dos backups */
+.backup-execution-log {
+  margin-top: 1.5rem;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 1rem;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.log-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #193155;
+  margin: 0;
+}
+
+.btn-toggle-log {
+  background: none;
+  border: none;
+  color: #1565C0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.log-content {
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.log-line {
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.log-line:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.03);
+}

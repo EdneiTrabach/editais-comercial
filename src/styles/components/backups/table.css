@@ -1,0 +1,182 @@
+/* Estilos para a tabela de backups */
+.backups-section {
+  margin-top: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #193155;
+}
+
+.filtros {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.select-filter,
+.date-filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.select-filter:focus,
+.date-filter:focus {
+  border-color: #4CAF50;
+}
+
+.backups-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.backups-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+  border: 1px solid #f0f0f0;
+}
+
+.backups-table th,
+.backups-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.backups-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #193155;
+  position: sticky;
+  top: 0;
+}
+
+.backups-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.backups-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  padding: 0.4rem 0.75rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-badge.completed {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-badge.completed::before {
+  background-color: #2E7D32;
+}
+
+.status-badge.in_progress {
+  background-color: #E3F2FD;
+  color: #1565C0;
+}
+
+.status-badge.in_progress::before {
+  background-color: #1565C0;
+}
+
+.status-badge.failed {
+  background-color: #FFEBEE;
+  color: #C62828;
+}
+
+.status-badge.failed::before {
+  background-color: #C62828;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
+  color: #666;
+  text-align: center;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: #666;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4CAF50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .backups-section {
+    padding: 1rem;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filtros {
+    width: 100%;
+  }
+  
+  .select-filter, 
+  .date-filter {
+    flex: 1;
+    min-width: 120px;
+  }
+}

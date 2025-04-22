@@ -1,0 +1,78 @@
+/* Estilos para o header da tela de backups */
+.header-backups {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-backups {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #193155;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle-backups {
+  font-size: 0.875rem;
+  color: #666;
+  max-width: 600px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-backup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-backup:hover:not(:disabled) {
+  background-color: #3d8b40;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-backup:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header-backups {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .title-backups {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-backup {
+    width: 100%;
+    justify-content: center;
+  }
+}

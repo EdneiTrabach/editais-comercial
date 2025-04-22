@@ -1,0 +1,28 @@
+/* Layout geral da tela de backups */
+.layout-backups {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  transition: margin-left 0.3s;
+}
+
+.main-content.expanded {
+  margin-left: 0;
+}
+
+/* Responsividade para o layout geral */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 1rem;
+  }
+}

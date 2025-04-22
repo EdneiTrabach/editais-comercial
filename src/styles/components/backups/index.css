@@ -1,0 +1,34 @@
+/* Index de importação dos componentes da tela de backups */
+
+/* Layout e estrutura básica */
+@import './layout.css';
+
+/* Cabeçalho e controles principais */
+@import './header.css';
+
+/* Status cards e estatísticas */
+@import './status-card.css';
+
+/* Tabela de backups */
+@import './table.css';
+
+/* Botões de ação */
+@import './action-buttons.css';
+
+/* Modais e notificações */
+@import './modals.css';
+
+/* Formulário de agendamento */
+@import './form.css';
+
+/* Barra de progresso de backup */
+@import './progress.css';
+
+/* Logs de execução */
+@import './logs.css';
+
+/* Status de backups agendados */
+@import './scheduled-status.css';
+
+/* Tela de instruções e informações */
+@import './setup-info.css';
