@@ -32,11 +32,73 @@ export default {
     const nameInput = ref(null)
     const deptInput = ref(null)
     
-    const newResponsavel = ref({
+    // Para controlar o modo do formulário (adição ou edição)
+    const isEditing = ref(false)
+    const editingId = ref(null)
+
+    // Renomear newResponsavel para formData para melhor consistência
+    const formData = ref({
       nome: '',
       email: '',
-      departamento: ''
+      departamento: '',
+      status: 'ACTIVE'
     })
+
+    // Função para abrir o modal no modo de edição
+    const openEditModal = (responsavel) => {
+      // Primeiro limpa o formulário e configura os modos
+      resetModalState();
+      
+      isEditing.value = true;
+      editingId.value = responsavel.id;
+      
+      // Preencher o formulário com os dados do responsável
+      formData.value = {
+        nome: responsavel.nome,
+        email: responsavel.email,
+        departamento: responsavel.departamento || '',
+        status: responsavel.status
+      };
+      
+      showAddModal.value = true;
+    };
+
+    // Função para abrir o modal no modo de adição
+    const openAddModal = () => {
+      // Sempre resetar o estado do modal antes de abrir
+      resetModalState();
+      
+      showAddModal.value = true;
+    };
+
+    // Função para resetar o estado do modal
+    const resetModalState = () => {
+      isEditing.value = false;
+      editingId.value = null;
+      
+      // Limpar o formulário
+      formData.value = {
+        nome: '',
+        email: '',
+        departamento: '',
+        status: 'ACTIVE'
+      };
+    };
+
+    // Função para fechar o modal e limpar os dados
+    const closeModal = () => {
+      showAddModal.value = false;
+      resetModalState();
+    };
+
+    // Função unificada para salvar (adicionar ou atualizar)
+    const handleSaveResponsavel = async () => {
+      if (isEditing.value) {
+        await updateResponsavel()
+      } else {
+        await addResponsavel()
+      }
+    }
 
     // Função para carregar responsáveis
     const loadResponsaveis = async () => {
@@ -209,11 +271,11 @@ export default {
       }
     }
 
-    // Função para adicionar novo responsável
-    const handleAddResponsavel = async () => {
+    // Função para adicionar responsável (anteriormente handleAddResponsavel)
+    const addResponsavel = async () => {
       try {
         // Validação básica
-        if (!newResponsavel.value.nome.trim() || !newResponsavel.value.email.trim()) {
+        if (!formData.value.nome.trim() || !formData.value.email.trim()) {
           showToastMessage('Nome e email são obrigatórios', 'error')
           return
         }
@@ -224,7 +286,7 @@ export default {
         const { data: existingUserResp, error: checkErrorResp } = await supabase
           .from('responsaveis_processos')
           .select('id')
-          .eq('email', newResponsavel.value.email.trim())
+          .eq('email', formData.value.email.trim())
         
         if (checkErrorResp) throw checkErrorResp
         
@@ -237,7 +299,7 @@ export default {
         const { data: existingUserProfile, error: checkErrorProfile } = await supabase
           .from('profiles')
           .select('id')
-          .eq('email', newResponsavel.value.email.trim())
+          .eq('email', formData.value.email.trim())
         
         if (checkErrorProfile) throw checkErrorProfile
         
@@ -249,21 +311,56 @@ export default {
         // 3. Insere apenas na tabela de responsáveis, sem usar RLS ou triggers
         const { error } = await supabase
           .rpc('adicionar_responsavel', {
-            p_nome: newResponsavel.value.nome.trim(),
-            p_email: newResponsavel.value.email.trim(),
-            p_departamento: newResponsavel.value.departamento.trim() || null
+            p_nome: formData.value.nome.trim(),
+            p_email: formData.value.email.trim(),
+            p_departamento: formData.value.departamento.trim() || null
           })
         
         if (error) throw error
         
         // Feedback e reset
-        showToastMessage('Responsável adicionado com sucesso!')
-        showAddModal.value = false
-        newResponsavel.value = { nome: '', email: '', departamento: '' }
-        await loadResponsaveis()
+        showToastMessage('Responsável adicionado com sucesso!');
+        closeModal(); // Usar closeModal em vez de showAddModal.value = false
+        await loadResponsaveis();
       } catch (error) {
         console.error('Erro ao adicionar responsável:', error)
         showToastMessage('Erro ao adicionar responsável', 'error')
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // Função para atualizar responsável
+    const updateResponsavel = async () => {
+      try {
+        // Validação básica
+        if (!formData.value.nome.trim()) {
+          showToastMessage('Nome é obrigatório', 'error')
+          return
+        }
+        
+        loading.value = true
+        
+        // Atualiza o responsável
+        const { error } = await supabase
+          .from('responsaveis_processos')
+          .update({ 
+            nome: formData.value.nome.trim(),
+            departamento: formData.value.departamento.trim() || null,
+            status: formData.value.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingId.value)
+        
+        if (error) throw error
+        
+        // Feedback e reset
+        showToastMessage('Responsável atualizado com sucesso!');
+        closeModal(); // Usar closeModal em vez de showAddModal.value = false
+        await loadResponsaveis();
+      } catch (error) {
+        console.error('Erro ao atualizar responsável:', error)
+        showToastMessage('Erro ao atualizar responsável', 'error')
       } finally {
         loading.value = false
       }
@@ -384,6 +481,55 @@ export default {
     
     // Usar o composable para gerenciar reconexões
     useConnectionManager(loadData)
+
+    // Função para verificar se o responsável está vinculado a algum processo
+    const isUsuarioVinculado = async (responsavel) => {
+      try {
+        // Verifica se o responsável está vinculado a algum processo
+        const { data, error } = await supabase
+          .from('processos')
+          .select('id')
+          .eq('responsavel_id', responsavel.id)
+          .limit(1);
+        
+        if (error) throw error;
+        
+        // Se encontrou algum processo, o responsável está vinculado
+        return data && data.length > 0;
+      } catch (error) {
+        console.error('Erro ao verificar vínculo do responsável:', error);
+        return false; // Em caso de erro, permitimos a exclusão
+      }
+    };
+
+    // Cache para responsáveis em uso (para não fazer muitas chamadas ao banco)
+    const responsaveisEmUso = ref({});
+
+    // Verifica se o responsável está em uso em algum processo
+    const isResponsavelEmUso = async (responsavel) => {
+      // Se já temos o resultado em cache, retorna direto
+      if (responsaveisEmUso.value[responsavel.id] !== undefined) {
+        return responsaveisEmUso.value[responsavel.id];
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('processos')
+          .select('id')
+          .eq('responsavel_id', responsavel.id)
+          .limit(1);
+        
+        if (error) throw error;
+        
+        // Armazena o resultado em cache
+        const emUso = data && data.length > 0;
+        responsaveisEmUso.value[responsavel.id] = emUso;
+        return emUso;
+      } catch (error) {
+        console.error('Erro ao verificar uso do responsável:', error);
+        return false; // Em caso de erro, permitimos exclusão
+      }
+    };
 
     // Lifecycle hooks
     onMounted(async () => {
@@ -512,7 +658,7 @@ export default {
       showAddModal,
       showConfirmDialog,
       dialogConfig,
-      newResponsavel,
+      formData, // Novo nome para newResponsavel
       showToast,
       toastConfig,
       editingNames,
@@ -526,11 +672,17 @@ export default {
       startEditingDept,
       handleSidebarToggle,
       formatStatus,
-      handleAddResponsavel,
+      handleSaveResponsavel, // Nova função unificada
+      openAddModal, // Nova função para abrir modal de adição
+      openEditModal, // Nova função para abrir modal de edição
+      closeModal,  // Adicionar a nova função
+      isEditing, // Flag para controlar o modo do modal
       toggleResponsavelStatus,
       deleteResponsavel,
       showAccessDeniedModal,
-      redirectToHome
+      redirectToHome,
+      isUsuarioVinculado,
+      isResponsavelEmUso
     }
   }
 }
