@@ -7,6 +7,7 @@
   align-items: stretch;
   justify-items: stretch;
   justify-content: space-around;
+  width: 100%;
 }
 
 .cidade-input {
