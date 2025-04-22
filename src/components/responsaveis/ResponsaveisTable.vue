@@ -151,15 +151,6 @@ export default {
 </script>
 
 <style scoped>
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  background: var(--bg-card, white);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-top: 1.5rem;
-}
-
 .excel-table {
   width: 100%;
   border-collapse: collapse;
