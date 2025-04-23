@@ -79,6 +79,7 @@
   [data-theme="dark"] table {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
+    border: none;
   }
   
   [data-theme="dark"] th {

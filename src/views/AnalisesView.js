@@ -526,97 +526,123 @@ export default {
       return; // Impede que continue o salvamento com valor inválido
     }
 
-    // Modifique a função corrigirProcessosAnalise para adicionar logs e melhor feedback
+    // Modifique a função corrigirProcessosAnalise para implementá-la corretamente
     const corrigirProcessosAnalise = async () => {
+      console.log('🔍 BOTÃO CLICADO: Corrigir Processos em Análise');
       try {
         console.log('🔄 Iniciando correção de processos em análise...');
         showToast('Verificando processos em análise...', 'info');
         
-        // Buscar processos com status em_analise mas sem registros na tabela analises_itens
+        // Buscar processos com status em_analise
         const { data: processosEmAnalise, error: processosError } = await supabase
           .from('processos')
-          .select('id, numero_processo, status')
+          .select('id, numero_processo, status, sistemas_ativos')
           .or('status.eq.em_analise,status.eq.EM_ANALISE,status.ilike.%analise%');
           
-        if (processosError) throw processosError;
+        console.log('📊 Processos encontrados com status de análise:', processosEmAnalise?.length || 0);
         
-        console.log(`📊 Encontrados ${processosEmAnalise.length} processos com status de análise`);
-        showToast(`Encontrados ${processosEmAnalise.length} processos com status de análise`, 'info');
+        if (processosError) {
+          console.error('❌ Erro ao buscar processos:', processosError);
+          throw processosError;
+        }
         
-        // Para cada processo, verificar se tem registros na tabela analises_itens
-        const processosParaCorrigir = [];
+        // Verificar quais processos não têm registros na tabela analises_itens
+        let processosCriados = 0;
+        let registrosCriados = 0;
         
         for (const processo of processosEmAnalise) {
-          const { data, error } = await supabase
+          // Verificar se o processo já tem registros na tabela analises_itens
+          const { data: analiseExistente, error: checkError } = await supabase
             .from('analises_itens')
-            .select('id')
+            .select('count')
             .eq('processo_id', processo.id)
-            .limit(1);
+            .single();
             
-          if (error || !data || data.length === 0) {
-            processosParaCorrigir.push(processo);
-            console.log(`🔍 Processo ${processo.numero_processo} precisa de correção`);
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error(`❌ Erro ao verificar processo ${processo.numero_processo}:`, checkError);
+            continue;
           }
-        }
-        
-        console.log(`🛠️ ${processosParaCorrigir.length} processos precisam de correção`);
-        
-        if (processosParaCorrigir.length === 0) {
-          showToast('Todos os processos já estão corretamente configurados!', 'success');
-          return;
-        }
-        
-        showToast(`${processosParaCorrigir.length} processos precisam de correção`, 'warning');
-        
-        if (processosParaCorrigir.length > 0) {
-          const confirmar = confirm(`Foram encontrados ${processosParaCorrigir.length} processos que precisam de correção. Deseja corrigir agora?`);
           
-          if (confirmar) {
-            console.log('🔧 Iniciando correção dos processos...');
-            let sucessos = 0;
+          const contemRegistros = analiseExistente && analiseExistente.count > 0;
+          
+          // Se não tiver registros, criar
+          if (!contemRegistros) {
+            console.log(`📝 Criando registros para processo ${processo.numero_processo} (ID: ${processo.id})`);
             
-            for (const processo of processosParaCorrigir) {
-              try {
-                // Criar um registro básico na tabela analises_itens para cada processo
-                const { error } = await supabase
-                  .from('analises_itens')
-                  .insert({
-                    processo_id: processo.id,
-                    is_custom_line: false,
-                    total_itens: 0,
-                    nao_atendidos: 0,
-                    obrigatorio: false,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                  });
+            // Obter sistemas associados ao processo, se houver
+            const sistemasIds = processo.sistemas_ativos || [];
+            
+            // Criar registros de análise para cada sistema
+            if (sistemasIds.length > 0) {
+              const registrosAnalise = sistemasIds.map(sistemaId => ({
+                processo_id: processo.id,
+                sistema_id: sistemaId,
+                total_itens: 0,
+                nao_atendidos: 0,
+                obrigatorio: false,
+                percentual_minimo: 70,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }));
+              
+              const { data, error: insertError } = await supabase
+                .from('analises_itens')
+                .insert(registrosAnalise)
+                .select();
                 
-                if (error) {
-                  console.error(`❌ Erro ao corrigir processo ${processo.numero_processo}:`, error);
-                } else {
-                  console.log(`✅ Processo ${processo.numero_processo} corrigido com sucesso`);
-                  sucessos++;
-                }
-              } catch (err) {
-                console.error(`❌ Erro inesperado ao corrigir processo ${processo.numero_processo}:`, err);
+              if (insertError) {
+                console.error(`❌ Erro ao criar registros para processo ${processo.numero_processo}:`, insertError);
+              } else {
+                console.log(`✅ ${data.length} registros criados para processo ${processo.numero_processo}`);
+                processosCriados++;
+                registrosCriados += data.length;
+              }
+            } else {
+              // Se não tiver sistemas associados, criar um registro vazio
+              const { data, error: insertError } = await supabase
+                .from('analises_itens')
+                .insert({
+                  processo_id: processo.id,
+                  sistema_nome_personalizado: 'Anotações',
+                  is_custom_line: true,
+                  total_itens: 0,
+                  nao_atendidos: 0,
+                  obrigatorio: false,
+                  percentual_minimo: 70,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .select();
+                
+              if (insertError) {
+                console.error(`❌ Erro ao criar registro vazio para processo ${processo.numero_processo}:`, insertError);
+              } else {
+                console.log(`✅ Registro vazio criado para processo ${processo.numero_processo}`);
+                processosCriados++;
+                registrosCriados++;
               }
             }
-            
-            showToast(`${sucessos} processos corrigidos com sucesso!`, 'success');
-            
-            // Recarregar os processos para exibir os corrigidos
-            await loadProcessos();
           } else {
-            console.log('🚫 Operação de correção cancelada pelo usuário');
+            console.log(`⏭️ Processo ${processo.numero_processo} já tem registros de análise`);
           }
         }
+        
+        // Mostrar mensagem de sucesso
+        if (processosCriados > 0) {
+          showToast(`Correção concluída: ${processosCriados} processos corrigidos com ${registrosCriados} registros criados`, 'success');
+        } else {
+          showToast('Todos os processos já estão corretamente configurados para análise', 'info');
+        }
+        
       } catch (error) {
         console.error('❌ Erro ao corrigir processos:', error);
         showToast('Erro ao corrigir processos: ' + error.message, 'error');
       }
     };
 
-    // Adicione uma nova função para sincronizar todos os processos em análise
+    // Implemente corretamente a função sincronizarTodosProcessosAnalise
     const sincronizarTodosProcessosAnalise = async () => {
+      console.log('🔍 BOTÃO CLICADO: Sincronizar Processos com Status Em Análise');
       try {
         console.log('🔄 Iniciando sincronização de todos os processos em análise...');
         showToast('Verificando processos para sincronização...', 'info');
@@ -626,116 +652,109 @@ export default {
           .from('processos')
           .select('id, numero_processo, status, sistemas_ativos')
           .or('status.eq.em_analise,status.eq.EM_ANALISE,status.ilike.%analise%');
-          
-        if (processosError) throw processosError;
         
-        console.log(`📊 Encontrados ${processosEmAnalise.length} processos para sincronização`);
+        console.log('📊 Processos encontrados para sincronização:', processosEmAnalise?.length || 0);
         
-        if (processosEmAnalise.length === 0) {
-          showToast('Nenhum processo em análise encontrado para sincronizar', 'info');
-          return;
+        if (processosError) {
+          console.error('❌ Erro ao buscar processos:', processosError);
+          throw processosError;
         }
         
-        // Confirmar antes de sincronizar todos
-        const confirmar = confirm(`Sincronizar ${processosEmAnalise.length} processos com status 'Em Análise'?`);
+        // Variáveis para contagem
+        let processosSincronizados = 0;
+        let sistemasAdicionados = 0;
+        let sistemasRemovidos = 0;
         
-        if (!confirmar) {
-          console.log('🚫 Sincronização cancelada pelo usuário');
-          return;
-        }
-        
-        let sincronizados = 0;
-        let adicionadosTotal = 0;
-        let removidosTotal = 0;
-        
-        // Para cada processo, realizar a sincronização de sistemas
+        // Para cada processo, sincronizar sistemas
         for (const processo of processosEmAnalise) {
           try {
-            // Verificar registros existentes na tabela analises_itens
+            console.log(`🔄 Sincronizando processo ${processo.numero_processo} (ID: ${processo.id})`);
+            
+            // Obter sistemas ativos do processo
+            const sistemasAtivos = processo.sistemas_ativos || [];
+            
+            // Buscar registros existentes na tabela analises_itens
             const { data: registrosExistentes, error: registrosError } = await supabase
               .from('analises_itens')
               .select('id, sistema_id')
               .eq('processo_id', processo.id);
               
-            if (registrosError) throw registrosError;
+            if (registrosError) {
+              console.error(`❌ Erro ao buscar registros para processo ${processo.numero_processo}:`, registrosError);
+              continue;
+            }
             
-            // Extrair IDs de sistemas já registrados
+            // Extrair IDs de sistemas já registrados (excluindo registros personalizados que têm sistema_id null)
             const sistemasRegistrados = registrosExistentes
-              .filter(item => item.sistema_id) // Filtrar apenas registros com sistema_id válido
+              .filter(item => item.sistema_id !== null)
               .map(item => item.sistema_id);
-            
-            // Garantir que sistemas_ativos seja um array
-            const sistemasAtivos = Array.isArray(processo.sistemas_ativos) 
-              ? processo.sistemas_ativos 
-              : (processo.sistemas_ativos ? JSON.parse(processo.sistemas_ativos) : []);
             
             // Identificar sistemas para adicionar e remover
             const sistemasParaAdicionar = sistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
             const sistemasParaRemover = sistemasRegistrados.filter(id => !sistemasAtivos.includes(id));
             
-            let adicionados = 0;
-            let removidos = 0;
-            
-            // Adicionar novos sistemas
-            if (sistemasParaAdicionar.length > 0) {
-              const registros = sistemasParaAdicionar.map(sistemaId => ({
-                processo_id: processo.id,
-                sistema_id: sistemaId,
-                total_itens: 0,
-                nao_atendidos: 0,
-                obrigatorio: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }));
-              
-              const { error: insertError } = await supabase
-                .from('analises_itens')
-                .insert(registros);
-              
-              if (insertError) {
-                console.error(`❌ Erro ao adicionar sistemas para ${processo.numero_processo}:`, insertError);
-              } else {
-                adicionados = sistemasParaAdicionar.length;
-                adicionadosTotal += adicionados;
-              }
-            }
-            
-            // Remover sistemas que não estão mais ativos
-            if (sistemasParaRemover.length > 0) {
-              for (const sistemaId of sistemasParaRemover) {
-                const { error: deleteError } = await supabase
+            // Se houver alterações a fazer
+            if (sistemasParaAdicionar.length > 0 || sistemasParaRemover.length > 0) {
+              // Adicionar novos sistemas
+              if (sistemasParaAdicionar.length > 0) {
+                const registrosNovos = sistemasParaAdicionar.map(sistemaId => ({
+                  processo_id: processo.id,
+                  sistema_id: sistemaId,
+                  total_itens: 0,
+                  nao_atendidos: 0,
+                  obrigatorio: false,
+                  percentual_minimo: 70,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }));
+                
+                const { data, error: insertError } = await supabase
                   .from('analises_itens')
-                  .delete()
-                  .eq('processo_id', processo.id)
-                  .eq('sistema_id', sistemaId);
+                  .insert(registrosNovos)
+                  .select();
                   
-                if (deleteError) {
-                  console.error(`❌ Erro ao remover sistema ${sistemaId} do processo ${processo.numero_processo}:`, deleteError);
+                if (insertError) {
+                  console.error(`❌ Erro ao adicionar sistemas ao processo ${processo.numero_processo}:`, insertError);
                 } else {
-                  removidos++;
-                  removidosTotal++;
+                  sistemasAdicionados += data.length;
+                  console.log(`✅ ${data.length} sistemas adicionados ao processo ${processo.numero_processo}`);
                 }
               }
+              
+              // Remover sistemas que não estão mais ativos
+              if (sistemasParaRemover.length > 0) {
+                for (const sistemaId of sistemasParaRemover) {
+                  const { error: deleteError } = await supabase
+                    .from('analises_itens')
+                    .delete()
+                    .eq('processo_id', processo.id)
+                    .eq('sistema_id', sistemaId);
+                    
+                  if (deleteError) {
+                    console.error(`❌ Erro ao remover sistema ${sistemaId} do processo ${processo.numero_processo}:`, deleteError);
+                  } else {
+                    sistemasRemovidos++;
+                    console.log(`✅ Sistema ${sistemaId} removido do processo ${processo.numero_processo}`);
+                  }
+                }
+              }
+              
+              processosSincronizados++;
+            } else {
+              console.log(`⏭️ Processo ${processo.numero_processo} já está sincronizado`);
             }
-            
-            if (adicionados > 0 || removidos > 0) {
-              console.log(`✅ Processo ${processo.numero_processo} sincronizado: ${adicionados} adicionados, ${removidos} removidos`);
-              sincronizados++;
-            }
-          } catch (err) {
-            console.error(`❌ Erro ao sincronizar processo ${processo.numero_processo}:`, err);
+          } catch (processoError) {
+            console.error(`❌ Erro ao processar processo ${processo.numero_processo}:`, processoError);
           }
         }
         
-        showToast(`${sincronizados} processos sincronizados: ${adicionadosTotal} sistemas adicionados, ${removidosTotal} sistemas removidos`, 'success');
-        
-        // Recarregar dados se necessário
-        if (sincronizados > 0) {
-          await loadProcessos();
-          if (selectedProcesso.value) {
-            await carregarAnalisesSistemas();
-          }
+        // Mostrar mensagem de sucesso
+        if (processosSincronizados > 0) {
+          showToast(`Sincronização concluída: ${processosSincronizados} processos atualizados, ${sistemasAdicionados} sistemas adicionados, ${sistemasRemovidos} sistemas removidos`, 'success');
+        } else {
+          showToast('Todos os processos já estão sincronizados', 'info');
         }
+        
       } catch (error) {
         console.error('❌ Erro ao sincronizar processos:', error);
         showToast('Erro ao sincronizar processos: ' + error.message, 'error');

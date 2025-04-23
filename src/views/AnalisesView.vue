@@ -68,8 +68,8 @@
           <button 
             v-if="step === 0" 
             class="btn btn-warning mt-2"
-            @click="corrigirProcessosAnalise"
-          >
+            @click="corrigirProcessosAnalise" 
+            >
             Corrigir Processos em Análise
           </button>
           <!-- Adicione este botão logo abaixo do "Corrigir Processos em Análise" existente -->
@@ -77,8 +77,8 @@
           <button 
             v-if="step === 0" 
             class="btn btn-info mt-2 ml-2"
-            @click="sincronizarProcessosEmAnalise"
-          >
+            @click="sincronizarTodosProcessosAnalise" 
+            >
             Sincronizar Processos com Status 'Em Análise'
           </button>
         </div>
