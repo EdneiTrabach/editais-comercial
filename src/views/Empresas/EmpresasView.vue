@@ -6,9 +6,6 @@
       <div class="header">
         <h1>Empresas</h1>
         <div class="header-buttons">
-          <button @click="recarregarDados" class="btn-add btn-reload">
-            Recarregar dados
-          </button>
           <button class="btn-add" @click="abrirModalNovo">
             <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
             Nova Empresa
@@ -55,7 +52,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { useEmpresasStore } from './composables/useEmpresasStore'

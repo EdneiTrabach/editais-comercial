@@ -1,0 +1,22 @@
+:root {
+  /* Cores para botões de edição */
+  --bg-edit-btn: #e8f5e9;
+  --text-edit-btn: #388e3c;
+  --bg-edit-btn-hover: #c8e6c9;
+  
+  /* Cores para botões de deleção */
+  --bg-delete-btn: #fee2e2;
+  --text-delete-btn: #d32f2f;
+  --bg-delete-btn-hover: #ffcdd2;
+}
+
+/* Tema escuro, se aplicável */
+[data-theme="dark"] {
+  --bg-edit-btn: #1e4620;
+  --text-edit-btn: #81c784;
+  --bg-edit-btn-hover: #2e7d32;
+  
+  --bg-delete-btn: #7f1d1d;
+  --text-delete-btn: #ef5350;
+  --bg-delete-btn-hover: #c62828;
+}

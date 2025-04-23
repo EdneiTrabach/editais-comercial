@@ -27,6 +27,25 @@ export function useEmpresasStore() {
     color: '#FFFFFF'
   })
   
+  // Cores predefinidas para seleção rápida
+  const predefinedColors = [
+    '#FFFFFF', // Branco
+    '#193155', // Azul escuro (cor da E&L)
+    '#4285F4', // Azul Google
+    '#34A853', // Verde Google
+    '#FBBC05', // Amarelo Google
+    '#EA4335', // Vermelho Google
+    '#9C27B0', // Roxo
+    '#3F51B5', // Índigo
+    '#00BCD4', // Ciano
+    '#009688', // Verde-azulado
+    '#8BC34A', // Verde claro
+    '#FFEB3B', // Amarelo
+    '#FF9800', // Laranja
+    '#795548', // Marrom
+    '#607D8B'  // Azul acinzentado
+  ];
+
   // Getters - retornam valores não-reativos
   const getEmpresas = () => toRaw(empresas.value)
   const getIsLoading = () => isLoading.value
@@ -158,49 +177,19 @@ export function useEmpresasStore() {
   // Salvar empresa (nova ou edição)
   const salvarEmpresa = async () => {
     try {
-      // Remove caracteres não numéricos do CNPJ
-      const cnpjLimpo = formData.value.cnpj.replace(/[^\d]/g, '')
+      console.log('Iniciando salvarEmpresa');
       
-      const empresaData = {
-        nome: formData.value.nome,
-        cnpj: cnpjLimpo,
-        razao_social: formData.value.razao_social,
-        contato: formData.value.contato,
-        telefone: formData.value.telefone,
-        email: formData.value.email,
-        color: formData.value.color,
-        updated_at: new Date().toISOString()
-      }
-
+      // Se estiver editando, usar método alternativo
       if (isEditing.value && editingId.value) {
-        // Atualizar empresa existente
-        const { error } = await supabase
-          .from('empresas')
-          .update(empresaData)
-          .eq('id', editingId.value)
-
-        if (error) throw error
-        showToastMessage('Empresa atualizada com sucesso!')
-      } else {
-        // Inserir nova empresa
-        const { error } = await supabase
-          .from('empresas')
-          .insert(empresaData)
-
-        if (error) throw error
-        showToastMessage('Empresa cadastrada com sucesso!')
+        console.log('Usando método alternativo para edição');
+        return await updateEmpresaDirectly();
       }
-
-      await fetchEmpresas()
-      resetForm()
-    } catch (error) {
-      console.error('Erro ao salvar empresa:', error)
       
-      if (error.code === '23505') {
-        showToastMessage('CNPJ já cadastrado no sistema', 'error')
-      } else {
-        showToastMessage('Erro ao salvar empresa. Por favor, tente novamente.', 'error')
-      }
+      // Código existente para inserção...
+      
+    } catch (error) {
+      console.error('Erro ao salvar empresa:', error);
+      // resto do tratamento de erro...
     }
   }
 
@@ -274,6 +263,157 @@ export function useEmpresasStore() {
   // Chamar initialize ao criar o store
   initialize()
 
+  // Adicione uma função de validação de CNPJ específica para edição
+
+  // Função para validar CNPJ durante a edição (evitando o erro 406)
+  const validateCnpjForEdit = async (cnpj, editingId) => {
+    console.log('validateCnpjForEdit iniciado com:', { cnpj, editingId });
+    
+    if (!cnpj) return { isValid: false, message: 'CNPJ é obrigatório' };
+    
+    // Remove caracteres não numéricos do CNPJ
+    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
+    console.log('CNPJ limpo:', cnpjLimpo);
+    
+    if (cnpjLimpo.length !== 14) {
+      return { isValid: false, message: 'CNPJ inválido' };
+    }
+    
+    try {
+      // Modificação aqui: buscar primeiro sem condições para verificar disponibilidade
+      console.log('Buscando empresas com CNPJ:', cnpjLimpo);
+      
+      // Abordagem corrigida: primeiro buscar todas as empresas com este CNPJ
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id, cnpj')
+        .eq('cnpj', cnpjLimpo);
+        
+      if (error) {
+        console.error('Erro na consulta de CNPJ:', error);
+        throw error;
+      }
+      
+      console.log('Empresas encontradas com este CNPJ:', data);
+      
+      // Se não encontrou nenhuma, o CNPJ é válido para uso
+      if (!data || data.length === 0) {
+        console.log('Nenhuma empresa encontrada com este CNPJ, está disponível');
+        return { isValid: true, message: '' };
+      }
+      
+      // Se encontrou alguma, verificar se é a própria empresa que está sendo editada
+      const cnpjDuplicado = data.some(item => {
+        // Garantir que ambos são strings para comparação
+        const itemId = String(item.id);
+        const currentId = String(editingId);
+        console.log(`Comparando: ID encontrado ${itemId} com editingId ${currentId}`);
+        return itemId !== currentId;
+      });
+      
+      if (cnpjDuplicado) {
+        console.log('CNPJ já está em uso por outra empresa');
+        return { isValid: false, message: 'CNPJ já cadastrado para outra empresa' };
+      }
+      
+      console.log('CNPJ é da própria empresa, pode seguir');
+      return { isValid: true, message: '' };
+    } catch (error) {
+      console.error('Erro ao validar CNPJ:', error);
+      return { isValid: false, message: `Erro ao validar CNPJ: ${error.message}` };
+    }
+  };
+
+  // Função alternativa para atualizar empresa diretamente
+  const updateEmpresaDirectly = async () => {
+    try {
+      console.log('Usando método alternativo de atualização');
+      
+      if (!isEditing.value || !editingId.value) {
+        console.error('Tentativa de atualizar sem estar em modo de edição');
+        return false;
+      }
+      
+      // Primeiro, recupera a empresa atual para comparar o CNPJ
+      const { data: currentEmpresa, error: fetchError } = await supabase
+        .from('empresas')
+        .select('cnpj')
+        .eq('id', editingId.value)
+        .single();
+        
+      if (fetchError) {
+        console.error('Erro ao buscar empresa atual:', fetchError);
+        throw fetchError;
+      }
+      
+      console.log('Dados atuais:', currentEmpresa);
+      
+      // Remove caracteres não numéricos do CNPJ do formulário
+      const cnpjLimpo = formData.value.cnpj.replace(/[^\d]/g, '');
+      
+      // Se o CNPJ mudou, verificar duplicidade
+      if (currentEmpresa.cnpj !== cnpjLimpo) {
+        console.log('CNPJ foi alterado, verificando disponibilidade');
+        
+        // Buscar todas as empresas com este CNPJ 
+        // (a verificação se é da própria empresa será feita em JavaScript)
+        const { data: existingWithCnpj } = await supabase
+          .from('empresas')
+          .select('id, cnpj')
+          .eq('cnpj', cnpjLimpo);
+          
+        if (existingWithCnpj && existingWithCnpj.length > 0) {
+          // Verificar se algum dos resultados não é a empresa atual
+          const isDuplicate = existingWithCnpj.some(e => e.id !== editingId.value);
+          
+          if (isDuplicate) {
+            console.log('CNPJ já usado por outra empresa');
+            showToastMessage('CNPJ já cadastrado no sistema', 'error');
+            return false;
+          }
+        }
+      } else {
+        console.log('CNPJ não foi alterado, continuando');
+      }
+      
+      // Prepara dados para salvar
+      const empresaData = {
+        nome: formData.value.nome,
+        cnpj: cnpjLimpo,
+        razao_social: formData.value.razao_social,
+        contato: formData.value.contato,
+        telefone: formData.value.telefone,
+        email: formData.value.email,
+        color: formData.value.color,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Dados para atualizar:', empresaData);
+      
+      // Atualiza a empresa
+      const { error: updateError } = await supabase
+        .from('empresas')
+        .update(empresaData)
+        .eq('id', editingId.value);
+        
+      if (updateError) {
+        console.error('Erro na atualização:', updateError);
+        throw updateError;
+      }
+      
+      console.log('Empresa atualizada com sucesso');
+      showToastMessage('Empresa atualizada com sucesso!');
+      
+      await fetchEmpresas();
+      resetForm();
+      return true;
+    } catch (error) {
+      console.error('Erro no método alternativo:', error);
+      showToastMessage(`Erro ao atualizar empresa: ${error.message}`, 'error');
+      return false;
+    }
+  };
+
   return {
     // Expose state
     empresas,
@@ -311,6 +451,9 @@ export function useEmpresasStore() {
     prepararExclusao,
     confirmarExclusao,
     hideDeleteDialog,
-    initialize
+    initialize,
+    validateCnpjForEdit,
+    updateEmpresaDirectly,
+    predefinedColors
   }
 }

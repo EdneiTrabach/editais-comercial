@@ -4,11 +4,13 @@
  * @returns {string} CNPJ formatado
  */
 export function formatCNPJ(cnpj) {
-  if (!cnpj) return '-'
+  if (!cnpj) return '-';
   
-  // Formata o CNPJ no padrão 00.000.000/0000-00
-  cnpj = String(cnpj).replace(/[^\d]/g, '')
-  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  // Remove caracteres não numéricos
+  const digits = cnpj.replace(/\D/g, '');
+  
+  // Aplica a formatação padrão XX.XXX.XXX/XXXX-XX
+  return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
 }
 
 /**
@@ -54,4 +56,28 @@ export function formatarTelefone(e) {
     return value.replace(/^(\d{2})(\d+)$/, "($1) $2")
   }
   return value
+}
+
+/**
+ * Formata um número de telefone para exibição
+ * @param {string} telefone - Telefone sem formatação
+ * @returns {string} Telefone formatado
+ */
+export function formatTelefone(telefone) {
+  if (!telefone) return '-';
+  
+  // Remove caracteres não numéricos
+  const digits = telefone.replace(/\D/g, '');
+  
+  // Formata como celular ou telefone fixo dependendo do número de dígitos
+  if (digits.length === 11) {
+    // Celular - (XX) XXXXX-XXXX
+    return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  } else if (digits.length === 10) {
+    // Telefone fixo - (XX) XXXX-XXXX
+    return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+  }
+  
+  // Se não estiver no formato esperado, retorna como está
+  return telefone;
 }
