@@ -97,51 +97,92 @@
           <form @submit.prevent="handleSubmit" class="form-grid">
             <div class="form-row">
               <div class="form-group">
-                <label>Setor*</label>
+                <label>Setor<span class="required">*</span></label>
                 <div class="setor-container">
-                  <select v-model="formData.setor_id" required class="form-control">
+                  <select 
+                    v-model="formData.setor_id" 
+                    required 
+                    class="form-control"
+                    aria-label="Selecione o setor"
+                  >
                     <option value="">Selecione o setor...</option>
                     <option v-for="setor in setores" :key="setor.id" :value="setor.id">
                       {{ setor.nome }}
                     </option>
                   </select>
-                  <button type="button" class="btn-icon edit" @click="showSetorModal = true">
+                  <button 
+                    type="button" 
+                    class="btn-icon edit" 
+                    @click="showSetorModal = true"
+                    aria-label="Adicionar novo setor"
+                  >
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
               </div>
               <div class="form-group">
-                <label>Nome do Sistema*</label>
-                <input v-model="formData.nome" required type="text" class="form-control" />
+                <label>Nome do Sistema<span class="required">*</span></label>
+                <input 
+                  v-model="formData.nome" 
+                  required 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Digite o nome do sistema"
+                />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Descrição</label>
-                <textarea v-model="formData.descricao" rows="3" class="form-control"></textarea>
+                <textarea 
+                  v-model="formData.descricao" 
+                  rows="3" 
+                  class="form-control" 
+                  placeholder="Descreva o sistema brevemente"
+                ></textarea>
               </div>
               <div class="form-group">
                 <label>URL</label>
-                <input v-model="formData.url" type="url" class="form-control" />
+                <input 
+                  v-model="formData.url" 
+                  type="url" 
+                  class="form-control" 
+                  placeholder="https://exemplo.com.br"
+                />
               </div>
             </div>
 
             <!-- Seção de Contatos -->
-            <div class="form-row">
-              <div class="form-group">
-                <label>Contatos</label>
-                <div v-for="(contato, index) in formData.contatos" :key="index" class="contato-form">
-                  <input v-model="contato.nome" placeholder="Nome" class="form-control" />
-                  <input v-model="contato.telefone" placeholder="Telefone" class="form-control" />
-                  <button type="button" class="btn-icon delete" @click="removeContato(index)">
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
-                </div>
-                <button type="button" @click="addContato" class="btn-add-contato">
-                  <i class="fas fa-plus"></i> Adicionar Contato
+            <div class="form-group">
+              <label>Contatos</label>
+              <div v-for="(contato, index) in formData.contatos" :key="index" class="contato-form">
+                <input 
+                  v-model="contato.nome" 
+                  placeholder="Nome" 
+                  class="form-control" 
+                />
+                <input 
+                  v-model="contato.telefone" 
+                  placeholder="Telefone" 
+                  class="form-control" 
+                />
+                <button 
+                  type="button" 
+                  class="btn-icon delete" 
+                  @click="removeContato(index)"
+                  aria-label="Remover contato"
+                >
+                  <i class="fas fa-trash-alt"></i>
                 </button>
               </div>
+              <button 
+                type="button" 
+                @click="addContato" 
+                class="btn-add-contato"
+              >
+                <i class="fas fa-plus"></i> Adicionar Contato
+              </button>
             </div>
             
             <div class="modal-actions">
