@@ -15,37 +15,37 @@
       
       <!-- Tabela de empresas -->
       <EmpresaTable
-        :empresas="store.getEmpresas()"
-        :isLoading="store.getIsLoading()"
-        :loadError="store.getLoadError() || ''"
+        :empresas="empresas"
+        :isLoading="isLoading"
+        :loadError="loadError || ''"
         @edit="editarEmpresa"
-        @delete="prepararExclusao"
+        @delete="handleDelete"
       />
 
       <!-- Modal de formulário -->
-      <EmpresaForm
-        v-if="store.getShowModal()"
-        :formData="store.getFormData()"
-        :isEditing="store.getIsEditing()"
-        :editingId="store.getEditingId()"
-        @submit="salvarEmpresa"
-        @cancel="resetarFormulario"
-        @update:cnpjError="cnpjError = $event"
+      <EmpresaForm 
+        v-if="showModalValue" 
+        :formData="formDataValue" 
+        :isEditing="isEditingValue"
+        :editingId="editingIdValue"
+        @submit="handleSubmitEmpresa"
+        @cancel="hideModal"
+        @update:cnpjError="handleCnpjError"
       />
 
       <!-- Modal de confirmação de exclusão -->
       <EmpresaDeleteDialog
-        v-if="store.getShowDeleteDialog() && store.getEmpresaToDelete()"
-        :empresa="store.getEmpresaToDelete()"
+        v-if="showDeleteDialogValue && empresaToDeleteValue"
+        :empresa="empresaToDeleteValue"
         @confirm="confirmarExclusao"
         @cancel="fecharModalDelete"
       />
 
       <!-- Toast notifications -->
       <EmpresaToast
-        v-if="store.getShowToast()"
-        :message="store.getToastMessage()"
-        :type="store.getToastType()"
+        v-if="showToastValue"
+        :message="toastMessageValue"
+        :type="toastTypeValue"
       />
     </div>
   </div>
@@ -79,39 +79,79 @@ export default {
       isSidebarExpanded.value = expanded
     }
     
+    // Usar o store para acessar todos os métodos e propriedades
+    const {
+      empresas,
+      isLoading,
+      loadError,
+      showModal,
+      formData,
+      isEditing,
+      editingId,
+      empresaToDelete,
+      showDeleteDialog,
+      toastMessage,
+      toastType,
+      showToast,
+      fetchEmpresas,
+      editEmpresa,
+      resetForm,
+      prepararExclusao,
+      confirmarExclusao,
+      hideDeleteDialog,
+      initialize,
+      updateEmpresaDirectly
+    } = store;
+    
+    // Computed properties para usarmos no template
+    const showModalValue = computed(() => showModal.value)
+    const formDataValue = computed(() => formData.value)
+    const isEditingValue = computed(() => isEditing.value)
+    const editingIdValue = computed(() => editingId.value)
+    const cnpjErrorValue = computed(() => cnpjError.value)
+    const showDeleteDialogValue = computed(() => showDeleteDialog.value)
+    const empresaToDeleteValue = computed(() => empresaToDelete.value)
+    const showToastValue = computed(() => showToast.value)
+    const toastMessageValue = computed(() => toastMessage.value)
+    const toastTypeValue = computed(() => toastType.value)
+    
     // Métodos wrapper para os métodos do store
     const recarregarDados = () => {
-      store.fetchEmpresas()
+      fetchEmpresas()
     }
     
     const abrirModalNovo = () => {
-      store.resetForm()
-      store.showModal.value = true
+      resetForm()
+      showModal.value = true
     }
     
     const editarEmpresa = (empresa) => {
-      store.editEmpresa(empresa)
+      editEmpresa(empresa)
     }
     
-    const prepararExclusao = (empresa) => {
-      store.prepararExclusao(empresa)
-    }
-    
-    const confirmarExclusao = () => {
-      store.confirmarExclusao()
+    // Renomeado para handleDelete para evitar duplicação
+    const handleDelete = (empresa) => {
+      prepararExclusao(empresa)
     }
     
     const fecharModalDelete = () => {
       console.log('Fechando modal de exclusão via componente pai')
-      store.hideDeleteDialog()
+      hideDeleteDialog()
     }
     
-    const salvarEmpresa = () => {
-      store.salvarEmpresa()
+    const hideModal = () => {
+      resetForm()
     }
     
-    const resetarFormulario = () => {
-      store.resetForm()
+    // Função que recebe os dados do formulário e chama salvarEmpresa do store
+    const handleSubmitEmpresa = (formData) => {
+      console.log('[DEBUG] Recebido submit do formulário:', formData)
+      store.salvarEmpresa(formData)
+    }
+    
+    const handleCnpjError = (error) => {
+      console.log('[DEBUG] CNPJ error atualizado:', error)
+      cnpjError.value = error
     }
     
     // Usar o composable de conexão
@@ -119,27 +159,41 @@ export default {
     
     onMounted(() => {
       console.log('Componente montado, carregando empresas...')
-      // Reinicializar o store para garantir estado limpo
-      store.initialize()
-      // Carregar dados após inicialização
+      initialize()
+      
       setTimeout(() => {
         recarregarDados()
       }, 100)
     })
-    
+
     return {
-      store,
+      // Propriedades reativas
       isSidebarExpanded,
-      cnpjError,
+      empresas,
+      isLoading,
+      loadError,
+      showModalValue,
+      formDataValue,
+      isEditingValue,
+      editingIdValue,
+      cnpjErrorValue,
+      showDeleteDialogValue,
+      empresaToDeleteValue,
+      showToastValue,
+      toastMessageValue,
+      toastTypeValue,
+      
+      // Métodos
       handleSidebarToggle,
       recarregarDados,
       abrirModalNovo,
       editarEmpresa,
-      prepararExclusao,
-      confirmarExclusao,
+      handleDelete,         // Usando o nome renomeado
+      confirmarExclusao,    // Este é diretamente do store
       fecharModalDelete,
-      salvarEmpresa,
-      resetarFormulario
+      hideModal,
+      handleSubmitEmpresa,
+      handleCnpjError
     }
   }
 }

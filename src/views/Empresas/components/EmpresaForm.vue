@@ -115,7 +115,6 @@
 <script>
 import { ref, watch } from 'vue';
 import { formatarCNPJ, formatarTelefone } from '../functions/formatacao';
-import { validateCNPJ } from '../functions/validacao';
 
 export default {
   name: 'EmpresaForm',
@@ -135,7 +134,7 @@ export default {
   },
   emits: ['submit', 'cancel', 'update:cnpjError'],
   setup(props, { emit }) {
-    // Cores predefinidas que antes estava no store
+    // Cores predefinidas
     const colors = [
       '#FFFFFF', // Branco
       '#193155', // Azul escuro (cor da E&L)
@@ -169,7 +168,8 @@ export default {
     // Inicializar o formulário quando as props mudarem
     watch(() => props.formData, (newValue) => {
       if (newValue) {
-        localFormData.value = { ...newValue };
+        // Faça uma cópia profunda para evitar modificação direta das props
+        localFormData.value = JSON.parse(JSON.stringify(newValue));
       }
     }, { immediate: true, deep: true });
     
@@ -196,23 +196,43 @@ export default {
         return false;
       }
       
-      // Para validações adicionais ou verificação de duplicidade, 
-      // usar validateCNPJ do arquivo de funções
-      
       cnpjError.value = '';
       emit('update:cnpjError', cnpjError.value);
       return true;
     };
     
     const handleSubmit = async () => {
-      // Validação do CNPJ
-      const isValid = await validateCNPJInput();
-      
-      if (!isValid) {
+      console.log('[DEBUG] Iniciando handleSubmit do formulário');
+      // Validações básicas
+      if (!localFormData.value.nome) {
+        console.warn('[WARN] Nome da empresa é obrigatório');
+        alert('Nome da empresa é obrigatório');
         return;
       }
       
-      emit('submit', localFormData.value);
+      if (!localFormData.value.razao_social) {
+        console.warn('[WARN] Razão social é obrigatória');
+        alert('Razão social é obrigatória');
+        return;
+      }
+      
+      // Validação do CNPJ
+      console.log('[DEBUG] Validando CNPJ:', localFormData.value.cnpj);
+      const isValid = await validateCNPJInput();
+      
+      if (!isValid) {
+        console.warn('[WARN] CNPJ inválido');
+        return;
+      }
+      
+      // Garante que a cor seja válida
+      if (!localFormData.value.color) {
+        console.log('[DEBUG] Definindo cor padrão');
+        localFormData.value.color = '#FFFFFF';
+      }
+      
+      console.log('[DEBUG] Emitindo evento submit com os dados:', localFormData.value);
+      emit('submit', JSON.parse(JSON.stringify(localFormData.value)));
     };
     
     return {

@@ -63,37 +63,33 @@ export function useEmpresasStore() {
   // Carrega as empresas
   const fetchEmpresas = async () => {
     try {
-      isLoading.value = true
-      loadError.value = null
-      
-      console.log('[DEBUG] Iniciando carregamento de empresas...')
+      console.log('[DEBUG] Iniciando carregamento de empresas...');
+      isLoading.value = true;
+      loadError.value = '';
       
       const { data, error } = await supabase
         .from('empresas')
         .select('*')
-        .order('nome')
-
+        .order('nome');
+      
       if (error) {
-        console.error('[DEBUG] Erro retornado pelo Supabase:', error)
-        loadError.value = 'Falha ao carregar empresas. Por favor, tente novamente.'
-        return false
+        console.error('[ERROR] Erro ao carregar empresas:', error);
+        loadError.value = `Erro ao carregar empresas: ${error.message}`;
+        isLoading.value = false;
+        return false;
       }
       
-      if (Array.isArray(data)) {
-        empresas.value = data
-        console.log('[DEBUG] Empresas carregadas:', empresas.value.length)
-      } else {
-        console.error('[DEBUG] Dados não são um array:', data)
-        empresas.value = []
-      }
-      
-      return true
+      // Limpar dados antigos e adicionar novos
+      empresas.value = [];
+      empresas.value = data || [];
+      console.log(`[DEBUG] Empresas carregadas: ${empresas.value.length}`, empresas.value);
+      isLoading.value = false;
+      return true;
     } catch (error) {
-      console.error('[DEBUG] Erro ao carregar empresas:', error)
-      loadError.value = 'Falha ao carregar empresas. Por favor, tente novamente.'
-      return false
-    } finally {
-      isLoading.value = false
+      console.error('[ERROR] Exceção ao carregar empresas:', error);
+      loadError.value = `Erro ao carregar empresas: ${error.message}`;
+      isLoading.value = false;
+      return false;
     }
   }
   
@@ -174,22 +170,92 @@ export function useEmpresasStore() {
     }
   }
 
-  // Salvar empresa (nova ou edição)
-  const salvarEmpresa = async () => {
+  // Adicionar logs mais detalhados à função salvarEmpresa
+  const salvarEmpresa = async (dadosEmpresa) => {
     try {
-      console.log('Iniciando salvarEmpresa');
+      console.log('[DEBUG] Iniciando função salvarEmpresa', { dadosEmpresa });
       
       // Se estiver editando, usar método alternativo
       if (isEditing.value && editingId.value) {
-        console.log('Usando método alternativo para edição');
+        console.log('[DEBUG] Modo edição detectado, usando updateEmpresaDirectly');
+        formData.value = dadosEmpresa; // Certifique-se de atualizar o formData
         return await updateEmpresaDirectly();
       }
       
-      // Código existente para inserção...
+      // Validar campos obrigatórios
+      if (!dadosEmpresa.nome || !dadosEmpresa.cnpj || !dadosEmpresa.razao_social) {
+        console.error('[ERROR] Campos obrigatórios não preenchidos');
+        showToastMessage('Nome, CNPJ e Razão Social são obrigatórios', 'error');
+        return false;
+      }
       
+      // Remove caracteres não numéricos do CNPJ
+      const cnpjLimpo = dadosEmpresa.cnpj.replace(/[^\d]/g, '');
+      console.log('[DEBUG] CNPJ limpo para salvar:', cnpjLimpo);
+      
+      // Verificar se CNPJ já existe
+      console.log('[DEBUG] Verificando se CNPJ já existe no banco');
+      const { data: existingCnpj, error: cnpjCheckError } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('cnpj', cnpjLimpo);
+      
+      if (cnpjCheckError) {
+        console.error('[ERROR] Erro ao verificar CNPJ existente:', cnpjCheckError);
+        showToastMessage(`Erro ao verificar CNPJ: ${cnpjCheckError.message}`, 'error');
+        return false;
+      }
+          
+      if (existingCnpj && existingCnpj.length > 0) {
+        console.warn('[WARN] CNPJ já cadastrado:', existingCnpj);
+        showToastMessage('CNPJ já cadastrado no sistema', 'error');
+        return false;
+      }
+      
+      // Preparar objeto com todos os dados para inserção
+      const empresaData = {
+        nome: dadosEmpresa.nome,
+        cnpj: cnpjLimpo,
+        razao_social: dadosEmpresa.razao_social,
+        contato: dadosEmpresa.contato || null,
+        telefone: dadosEmpresa.telefone || null,
+        email: dadosEmpresa.email || null,
+        color: dadosEmpresa.color || '#FFFFFF',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('[DEBUG] Dados preparados para inserção:', empresaData);
+      
+      // Inserir nova empresa
+      const { data: insertData, error: insertError } = await supabase
+        .from('empresas')
+        .insert(empresaData)
+        .select();
+        
+      if (insertError) {
+        console.error('[ERROR] Erro ao inserir empresa:', insertError);
+        
+        if (insertError.code === '23505') {
+          showToastMessage('CNPJ já cadastrado no sistema', 'error');
+        } else {
+          showToastMessage(`Erro ao salvar empresa: ${insertError.message}`, 'error');
+        }
+        return false;
+      }
+      
+      console.log('[SUCCESS] Empresa cadastrada com sucesso!', insertData);
+      showToastMessage('Empresa cadastrada com sucesso!', 'success');
+      
+      console.log('[DEBUG] Recarregando lista de empresas');
+      await fetchEmpresas();
+      showModal.value = false;
+      resetForm();
+      return true;
     } catch (error) {
-      console.error('Erro ao salvar empresa:', error);
-      // resto do tratamento de erro...
+      console.error('[ERROR] Exceção ao salvar empresa:', error);
+      showToastMessage(`Erro ao salvar empresa: ${error.message}`, 'error');
+      return false;
     }
   }
 
@@ -327,14 +393,26 @@ export function useEmpresasStore() {
   // Função alternativa para atualizar empresa diretamente
   const updateEmpresaDirectly = async () => {
     try {
-      console.log('Usando método alternativo de atualização');
+      console.log('[DEBUG] Usando método alternativo de atualização');
       
       if (!isEditing.value || !editingId.value) {
-        console.error('Tentativa de atualizar sem estar em modo de edição');
+        console.error('[ERROR] Tentativa de atualizar sem estar em modo de edição');
         return false;
       }
       
+      // Validar campos obrigatórios
+      if (!formData.value.nome || !formData.value.cnpj || !formData.value.razao_social) {
+        console.error('[ERROR] Campos obrigatórios não preenchidos');
+        showToastMessage('Nome, CNPJ e Razão Social são obrigatórios', 'error');
+        return false;
+      }
+      
+      // Remove caracteres não numéricos do CNPJ do formulário
+      const cnpjLimpo = formData.value.cnpj.replace(/[^\d]/g, '');
+      console.log('[DEBUG] CNPJ limpo para atualização:', cnpjLimpo);
+      
       // Primeiro, recupera a empresa atual para comparar o CNPJ
+      console.log('[DEBUG] Buscando dados atuais da empresa ID:', editingId.value);
       const { data: currentEmpresa, error: fetchError } = await supabase
         .from('empresas')
         .select('cnpj')
@@ -342,118 +420,106 @@ export function useEmpresasStore() {
         .single();
         
       if (fetchError) {
-        console.error('Erro ao buscar empresa atual:', fetchError);
+        console.error('[ERROR] Erro ao buscar empresa atual:', fetchError);
         throw fetchError;
       }
       
-      console.log('Dados atuais:', currentEmpresa);
-      
-      // Remove caracteres não numéricos do CNPJ do formulário
-      const cnpjLimpo = formData.value.cnpj.replace(/[^\d]/g, '');
+      console.log('[DEBUG] Dados atuais:', currentEmpresa);
       
       // Se o CNPJ mudou, verificar duplicidade
       if (currentEmpresa.cnpj !== cnpjLimpo) {
-        console.log('CNPJ foi alterado, verificando disponibilidade');
+        console.log('[DEBUG] CNPJ foi alterado, verificando disponibilidade');
         
         // Buscar todas as empresas com este CNPJ 
-        // (a verificação se é da própria empresa será feita em JavaScript)
-        const { data: existingWithCnpj } = await supabase
+        const { data: existingWithCnpj, error: cnpjCheckError } = await supabase
           .from('empresas')
           .select('id, cnpj')
           .eq('cnpj', cnpjLimpo);
           
+        if (cnpjCheckError) {
+          console.error('[ERROR] Erro ao verificar duplicidade de CNPJ:', cnpjCheckError);
+          throw cnpjCheckError;
+        }
+          
         if (existingWithCnpj && existingWithCnpj.length > 0) {
           // Verificar se algum dos resultados não é a empresa atual
           const isDuplicate = existingWithCnpj.some(e => e.id !== editingId.value);
+          console.log('[DEBUG] Verificação de duplicidade:', { existingWithCnpj, isDuplicate });
           
           if (isDuplicate) {
-            console.log('CNPJ já usado por outra empresa');
+            console.warn('[WARN] CNPJ já usado por outra empresa');
             showToastMessage('CNPJ já cadastrado no sistema', 'error');
             return false;
           }
         }
       } else {
-        console.log('CNPJ não foi alterado, continuando');
+        console.log('[DEBUG] CNPJ não foi alterado, continuando');
       }
       
-      // Prepara dados para salvar
+      // Prepara dados para salvar, garantindo que todos os campos são incluídos
       const empresaData = {
         nome: formData.value.nome,
         cnpj: cnpjLimpo,
         razao_social: formData.value.razao_social,
-        contato: formData.value.contato,
-        telefone: formData.value.telefone,
-        email: formData.value.email,
-        color: formData.value.color,
+        contato: formData.value.contato || null,
+        telefone: formData.value.telefone || null,
+        email: formData.value.email || null,
+        color: formData.value.color || '#FFFFFF',
         updated_at: new Date().toISOString()
       };
       
-      console.log('Dados para atualizar:', empresaData);
+      console.log('[DEBUG] Dados para atualizar:', empresaData);
       
       // Atualiza a empresa
-      const { error: updateError } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from('empresas')
         .update(empresaData)
-        .eq('id', editingId.value);
+        .eq('id', editingId.value)
+        .select();
         
       if (updateError) {
-        console.error('Erro na atualização:', updateError);
-        throw updateError;
+        console.error('[ERROR] Erro na atualização:', updateError);
+        showToastMessage(`Erro ao atualizar empresa: ${updateError.message}`, 'error');
+        return false;
       }
       
-      console.log('Empresa atualizada com sucesso');
-      showToastMessage('Empresa atualizada com sucesso!');
+      console.log('[SUCCESS] Empresa atualizada com sucesso', updateData);
+      showToastMessage('Empresa atualizada com sucesso!', 'success');
       
+      console.log('[DEBUG] Recarregando lista de empresas');
       await fetchEmpresas();
+      showModal.value = false;
       resetForm();
       return true;
     } catch (error) {
-      console.error('Erro no método alternativo:', error);
+      console.error('[ERROR] Exceção no método de atualização:', error);
       showToastMessage(`Erro ao atualizar empresa: ${error.message}`, 'error');
       return false;
     }
   };
 
   return {
-    // Expose state
     empresas,
-    isLoading, 
+    isLoading,
     loadError,
     showModal,
-    showDeleteDialog,
-    empresaToDelete,
+    formData,
     isEditing,
     editingId,
-    formData,
-    showToast,
+    empresaToDelete,
+    showDeleteDialog,
     toastMessage,
     toastType,
-    
-    // Expose getters
-    getEmpresas,
-    getIsLoading,
-    getLoadError,
-    getShowModal,
-    getShowDeleteDialog,
-    getEmpresaToDelete,
-    getIsEditing,
-    getEditingId,
-    getFormData,
-    getShowToast,
-    getToastMessage,
-    getToastType,
-    
-    // Métodos...
+    showToast,
     fetchEmpresas,
-    salvarEmpresa,
+    salvarEmpresa,  // Esta função deve receber os dados do formulário
     editEmpresa,
     resetForm,
     prepararExclusao,
     confirmarExclusao,
     hideDeleteDialog,
+    showToastMessage,
     initialize,
-    validateCnpjForEdit,
-    updateEmpresaDirectly,
-    predefinedColors
-  }
+    updateEmpresaDirectly
+  };
 }
