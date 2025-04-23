@@ -1,5 +1,4 @@
 /* Arquivo principal que importa todos os componentes */
-@import './components/Layout.css';
 @import './components/Header.css';
 @import './components/Table.css';
 @import './components/EmpresaSelector.css';
@@ -8,7 +7,12 @@
 @import './components/Status.css';
 @import './components/EmpresaTable.css';
 @import './components/ActionButtons.css';
-/* Adicionado o componente para botões de ação */
+@import "./base/variables.css";
+@import "./components/buttons.css";
+@import "./components/tables.css";
+@import "./components/forms.css";
+@import "./components/modals.css";
+@import "../styles/components/layout.css";
 
 /* Estilos específicos que não se encaixam nos componentes */
 .observacoes {
@@ -890,13 +894,6 @@ td.actions {
 
 /* Estilos para a visualização de Plataformas */
 
-/* Importar componentes compartilhados */
-@import "./base/variables.css";
-@import "./components/Layout.css";
-@import "./components/buttons.css";
-@import "./components/tables.css";
-@import "./components/forms.css";
-@import "./components/modals.css";
 
 /* Estilos específicos para plataformas */
 .plataforma-card {
