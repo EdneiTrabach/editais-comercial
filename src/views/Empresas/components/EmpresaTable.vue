@@ -22,7 +22,7 @@
           <td>{{ formatTelefone(empresa.telefone) }}</td>
           <td>{{ empresa.email || '-' }}</td>
           <td class="color-column">
-            <ColorCell :color="empresa.color || '#FFFFFF'" />
+            <ColorCell :color="empresa.color" />
           </td>
           <td class="actions-column">
             <AcoesCell 
@@ -36,13 +36,16 @@
       <tbody v-else-if="isLoading">
         <tr>
           <td colspan="8" class="loading-cell">
-            <div class="loading-indicator">Carregando...</div>
+            <div class="loading-indicator">
+              <span class="loading-spinner"></span>
+              Carregando empresas...
+            </div>
           </td>
         </tr>
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="8" class="empty-table">
+          <td colspan="8" class="no-data-cell">
             Nenhuma empresa cadastrada.
           </td>
         </tr>
@@ -160,5 +163,28 @@ export default {
   text-align: center;
   color: #6b7280;
   font-style: italic;
+}
+
+/* Os estilos estão no arquivo EmpresasView.css */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--primary-color, #193155);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-theme="dark"] .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color, #3b82f6);
 }
 </style>

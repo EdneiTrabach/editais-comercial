@@ -1,0 +1,710 @@
+/* Estilos principais para a tela de Empresas */
+
+/* Container principal */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--bg-content, #f8f9fa);
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 280px;
+  overflow-x: hidden;
+}
+
+.main-content.expanded {
+  margin-left: 80px;
+}
+
+/* Cabeçalho da página */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-light, #e9ecef);
+}
+
+.header h1 {
+  color: var(--text-title, #193155);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Botão para adicionar nova empresa */
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #193155);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-add:hover {
+  background: var(--primary-color-hover, #254677);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-add .icon-add {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+.btn-add:hover .icon-add {
+  transform: rotate(90deg);
+}
+
+/* Container da tabela */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-card, white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+/* Estilização da tabela */
+.empresa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.empresa-table th {
+  background-color: var(--bg-header, #f9fafb);
+  color: var(--text-header, #374151);
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border-light, #e5e7eb);
+  white-space: nowrap;
+}
+
+.empresa-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-light, #e5e7eb);
+  color: var(--text-primary, #1f2937);
+}
+
+.empresa-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.empresa-table tbody tr:hover {
+  background-color: var(--bg-hover, #f9fafb);
+}
+
+/* Colunas específicas */
+.color-column {
+  width: 120px;
+  text-align: center;
+}
+
+.actions-column {
+  width: 100px;
+  text-align: center;
+}
+
+/* Estados de carregamento e tabela vazia */
+.loading-cell, .no-data-cell {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-style: italic;
+}
+
+/* Modal de confirmação de exclusão */
+.confirm-dialog {
+  background: var(--bg-card, white);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.confirm-dialog h3 {
+  color: var(--text-title, #193155);
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.confirm-message {
+  color: var(--text-primary, #374151);
+  margin-bottom: 2rem;
+}
+
+.confirm-highlight {
+  font-weight: 600;
+  color: var(--text-title, #193155);
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-button-secondary, #f3f4f6);
+  color: var(--text-button-secondary, #4b5563);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-button-secondary-hover, #e5e7eb);
+}
+
+.btn-confirm {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #193155);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm:hover {
+  background: var(--primary-color-hover, #254677);
+}
+
+.btn-confirm.delete {
+  background: var(--danger-color, #dc2626);
+}
+
+.btn-confirm.delete:hover {
+  background: var(--danger-color-hover, #b91c1c);
+}
+
+/* Componente de indicador de cor */
+.color-cell-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px;
+}
+
+.color-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-light, #e5e7eb);
+}
+
+.color-hex {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+  font-family: monospace;
+}
+
+/* Componente de ações */
+.acoes-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon.edit {
+  background-color: var(--bg-edit-btn, #e8f5e9);
+  color: var(--text-edit-btn, #388e3c);
+}
+
+.btn-icon.delete {
+  background-color: var(--bg-delete-btn, #fee2e2);
+  color: var(--text-delete-btn, #d32f2f);
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon.edit:hover {
+  background-color: var(--bg-edit-btn-hover, #c8e6c9);
+}
+
+.btn-icon.delete:hover {
+  background-color: var(--bg-delete-btn-hover, #ffcdd2);
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  min-width: 300px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease, fadeOutRight 0.3s 2.7s ease forwards;
+  z-index: 1000;
+}
+
+.toast.success {
+  background: var(--success-color, #10B981);
+  color: white;
+}
+
+.toast.error {
+  background: var(--danger-color, #EF4444);
+  color: white;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Suporte a tema escuro - Versão melhorada */
+[data-theme="dark"] {
+  /* Cores base */
+  --bg-content: #0f172a;  /* Fundo mais escuro para melhor contraste */
+  --bg-card: #1e293b;     /* Cards com azul escuro mais moderno */
+  --bg-header: #1e293b;
+  --border-light: #334155; /* Bordas mais visíveis */
+  --text-title: #f8fafc;   /* Textos de títulos mais claros */
+  --text-primary: #e2e8f0; /* Texto primário ligeiramente mais claro */
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-header: #f8fafc;
+  --bg-hover: #334155;    /* Hover mais destacado */
+  
+  /* Cores de botões */
+  --bg-button-secondary: #334155;
+  --bg-button-secondary-hover: #475569;
+  --text-button-secondary: #f1f5f9;
+  
+  /* Botões de ação */
+  --bg-edit-btn: rgba(56, 142, 60, 0.15);  /* Fundo mais sutil */
+  --text-edit-btn: #4ade80;                /* Verde mais vibrante */
+  --bg-edit-btn-hover: rgba(56, 142, 60, 0.25);
+  
+  --bg-delete-btn: rgba(220, 38, 38, 0.15); /* Fundo mais sutil */
+  --text-delete-btn: #f87171;              /* Vermelho mais vibrante */
+  --bg-delete-btn-hover: rgba(220, 38, 38, 0.25);
+}
+
+/* Aprimoramentos específicos para modo escuro na visão de empresas */
+[data-theme="dark"] .main-content {
+  background-color: var(--bg-content);
+}
+
+/* Cabeçalho com gradiente sutil */
+[data-theme="dark"] .header {
+  border-bottom: 1px solid var(--border-light);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0) 100%);
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+}
+
+[data-theme="dark"] .header h1 {
+  color: var(--text-title);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Container de tabela com borda mais elegante */
+[data-theme="dark"] .table-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  overflow: hidden; /* Garante que o border-radius seja aplicado ao conteúdo interno */
+}
+
+/* Cabeçalhos de tabela com gradiente sutil */
+[data-theme="dark"] .empresa-table th {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 1) 0%, rgba(30, 41, 59, 0.9) 100%);
+  color: var(--text-title);
+  font-weight: 500;
+  border-bottom: 2px solid var(--border-light);
+  padding: 1.25rem 1rem;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+/* Células da tabela */
+[data-theme="dark"] .empresa-table td {
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 1rem;
+}
+
+/* Hover nas linhas com transição suave */
+[data-theme="dark"] .empresa-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+[data-theme="dark"] .empresa-table tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Células de cor com estilo melhorado */
+[data-theme="dark"] .color-indicator {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .color-hex {
+  color: var(--text-secondary);
+}
+
+/* Modal com efeito de vidro fosco (glassmorphism) */
+[data-theme="dark"] .modal-overlay {
+  backdrop-filter: blur(8px);
+  background-color: rgba(15, 23, 42, 0.75);
+}
+
+[data-theme="dark"] .modal-content {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-content h2 {
+  color: var(--text-title);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+/* Campos de formulário */
+[data-theme="dark"] .form-group label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus {
+  border-color: #3b82f6;
+  background-color: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  outline: none;
+}
+
+/* Seletor de cor no tema escuro */
+[data-theme="dark"] .color-picker {
+  background-color: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .color-preview {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .predefined-colors {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-theme="dark"] .color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .color-option:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .color-option.selected {
+  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Botões do modal */
+[data-theme="dark"] .modal-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-light);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+}
+
+[data-theme="dark"] .btn-cancel {
+  background-color: rgba(51, 65, 85, 0.6);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .btn-cancel:hover {
+  background-color: rgba(71, 85, 105, 0.8);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .btn-confirm {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .btn-confirm:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+}
+
+/* Toast notifications no tema escuro */
+[data-theme="dark"] .toast {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(30, 41, 59, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  border-left: 4px solid #3b82f6;
+  color: var(--text-primary);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .toast.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.85) 0%, rgba(6, 95, 70, 0.95) 100%);
+}
+
+[data-theme="dark"] .toast.error {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.85) 0%, rgba(153, 27, 27, 0.95) 100%);
+}
+
+/* Diálogo de confirmação de exclusão */
+[data-theme="dark"] .confirm-dialog {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .confirm-dialog h3 {
+  color: var(--text-title);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+}
+
+[data-theme="dark"] .confirm-message {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .confirm-highlight {
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .btn-confirm.delete {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+[data-theme="dark"] .btn-confirm.delete:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+
+/* Melhorias para os botões de ação da tabela */
+[data-theme="dark"] .btn-icon {
+  background-color: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .btn-icon:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .btn-icon.edit {
+  background-color: var(--bg-edit-btn);
+  color: var(--text-edit-btn);
+}
+
+[data-theme="dark"] .btn-icon.delete {
+  background-color: var(--bg-delete-btn);
+  color: var(--text-delete-btn);
+}
+
+[data-theme="dark"] .btn-icon.edit:hover {
+  background-color: var(--bg-edit-btn-hover);
+}
+
+[data-theme="dark"] .btn-icon.delete:hover {
+  background-color: var(--bg-delete-btn-hover);
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+  
+  .header h1 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 80px;
+    padding: 1rem;
+  }
+  
+  .main-content.expanded {
+    margin-left: 0;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-buttons {
+    width: 100%;
+  }
+  
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .empresa-table {
+    min-width: 720px;
+  }
+  
+  .toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    min-width: unset;
+    width: calc(100% - 2rem);
+  }
+  
+  .confirm-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .btn-cancel,
+  .btn-confirm {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+  
+  .header h1 {
+    font-size: 1.4rem;
+  }
+  
+  .table-container {
+    border-radius: 8px;
+    margin: 0 -0.75rem;
+    width: calc(100% + 1.5rem);
+  }
+  
+  .confirm-dialog {
+    padding: 1.5rem;
+  }
+}

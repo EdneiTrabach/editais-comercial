@@ -1,6 +1,5 @@
 <template>
-  <div class="toast" :class="{ 'toast-success': type === 'success', 'toast-error': type === 'error' }">
-    <i :class="type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+  <div class="toast" :class="type">
     {{ message }}
   </div>
 </template>
@@ -21,3 +20,7 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Os estilos estão no arquivo EmpresasView.css */
+</style>

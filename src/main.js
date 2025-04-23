@@ -2,12 +2,15 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createAppService } from './services/appService'
+// Importações de estilos
 import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
 import './assets/styles/components/colored-dropdown.css'
 import './assets/styles/components/buttons-theme.css';
-import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
+import './assets/styles/theme-variables.css'
 import '@/assets/sharedStyles.css'
+// Importações de componentes
+import EmpresaVencedoraColuna from './components/EmpresaVencedoraColuna.vue'
 
 // Não precisamos mais da configuração CSP via meta tag
 // import { configurarCSP } from './services/cspConfig'

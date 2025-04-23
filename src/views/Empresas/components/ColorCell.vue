@@ -1,7 +1,7 @@
 <template>
   <div class="color-cell-container">
     <div class="color-indicator" :style="colorStyle"></div>
-    <span class="color-hex">{{ color }}</span>
+    <span class="color-hex">{{ color || '#FFFFFF' }}</span>
   </div>
 </template>
 
@@ -16,9 +16,15 @@ export default {
   },
   computed: {
     colorStyle() {
+      const colorValue = this.color || '#FFFFFF';
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const borderStyle = colorValue.toLowerCase() === '#ffffff' 
+        ? `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb'}`
+        : 'none';
+      
       return {
-        backgroundColor: this.color || '#FFFFFF',
-        border: this.color === '#FFFFFF' ? '1px solid #e5e7eb' : 'none'
+        backgroundColor: colorValue,
+        border: borderStyle
       };
     }
   }
