@@ -5,9 +5,9 @@
     <div class="main-content" :class="{ 'expanded': !isSidebarExpanded }">
       <div class="header">
         <h1>Sistemas</h1>
-        <div class="actions">
+        <div class="header-buttons">
           <button class="btn-add" @click="showModal = true">
-            <img src="/icons/adicao.svg" alt="Adicionar" class="icon icon-add" />
+            <img src="/icons/adicao.svg" alt="Adicionar" class="icon-add" />
             Novo Sistema
           </button>
         </div>
@@ -24,10 +24,24 @@
               <th>URL</th>
               <th>Contatos</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th class="actions-column">Ações</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody v-if="loading">
+            <tr>
+              <td colspan="7" class="loading-cell">
+                <div class="loading-indicator">Carregando sistemas...</div>
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else-if="sistemas.length === 0">
+            <tr>
+              <td colspan="7" class="no-data-cell">
+                Nenhum sistema encontrado
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
             <tr v-for="sistema in sistemas" :key="sistema.id">
               <td>{{ getSetorNome(sistema.setor_id) }}</td>
               <td>{{ sistema.nome }}</td>
@@ -51,25 +65,20 @@
                 </span>
               </td>
               <td class="actions-cell">
-                <div class="action-buttons" :class="{ 'admin': isAdmin }">
+                <div class="acoes-container" :class="{ 'is-admin': isAdmin }">
                   <!-- Botão editar - disponível para todos -->
-                  <button class="btn-action edit" @click="editSistema(sistema)">
-                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
+                  <button class="btn-icon edit" title="Editar sistema" @click="editSistema(sistema)">
+                    <i class="fas fa-edit"></i>
                   </button>
 
                   <!-- Botão ativar/inativar - apenas para admin -->
                   <button 
-                    v-if="isAdmin"  
-                    class="btn-action" 
+                    class="btn-icon" 
                     :class="sistema.status === 'ACTIVE' ? 'delete' : 'edit'"
                     @click="sistema.status === 'ACTIVE' ? inativarSistema(sistema) : ativarSistema(sistema)"
                     :title="sistema.status === 'ACTIVE' ? 'Inativar Sistema' : 'Ativar Sistema'"
                   >
-                    <img 
-                      :src="sistema.status === 'ACTIVE' ? '/icons/disable.svg' : '/icons/enable.svg'"
-                      :alt="sistema.status === 'ACTIVE' ? 'Inativar' : 'Ativar'" 
-                      class="icon" 
-                    />
+                    <i class="fas" :class="sistema.status === 'ACTIVE' ? 'fa-ban' : 'fa-check'"></i>
                   </button>
                 </div>
               </td>
@@ -78,61 +87,68 @@
         </table>
       </div>
 
-      <!-- Modal de Cadastro/Edição com as classes padronizadas -->
-      <div v-if="showModal" class="modal-cfg-usuarios">
-        <div class="modal-content-cfg-usuarios">
-          <h2 class="modal-title-cfg-usuarios">{{ editingId ? 'Editar' : 'Novo' }} Sistema</h2>
-          <form @submit.prevent="handleSubmit" class="form-cfg-usuarios">
-            <div class="form-group-cfg-usuarios">
-              <label class="label-cfg-usuarios">Setor*</label>
-              <div class="setor-container">
-                <select v-model="formData.setor_id" required class="input-cfg-usuarios">
-                  <option value="">Selecione o setor...</option>
-                  <option v-for="setor in setores" :key="setor.id" :value="setor.id">
-                    {{ setor.nome }}
-                  </option>
-                </select>
-                <button type="button" class="btn-add-cfg-usuarios" @click="showSetorModal = true">
-                  <img src="/icons/adicao.svg" alt="Adicionar Setor" class="icon-cfg-usuarios" />
-                </button>
+      <!-- Modal de Cadastro/Edição -->
+      <div v-if="showModal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>{{ editingId ? 'Editar' : 'Novo' }} Sistema</h3>
+            <button class="btn-close" @click="closeModal">&times;</button>
+          </div>
+          <form @submit.prevent="handleSubmit" class="form-grid">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Setor*</label>
+                <div class="setor-container">
+                  <select v-model="formData.setor_id" required class="form-control">
+                    <option value="">Selecione o setor...</option>
+                    <option v-for="setor in setores" :key="setor.id" :value="setor.id">
+                      {{ setor.nome }}
+                    </option>
+                  </select>
+                  <button type="button" class="btn-icon edit" @click="showSetorModal = true">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Nome do Sistema*</label>
+                <input v-model="formData.nome" required type="text" class="form-control" />
               </div>
             </div>
 
-            <div class="form-group-cfg-usuarios">
-              <label class="label-cfg-usuarios">Nome do Sistema*</label>
-              <input v-model="formData.nome" required type="text" class="input-cfg-usuarios" />
-            </div>
-
-            <div class="form-group-cfg-usuarios">
-              <label class="label-cfg-usuarios">Descrição</label>
-              <textarea v-model="formData.descricao" rows="3" class="input-cfg-usuarios"></textarea>
-            </div>
-
-            <div class="form-group-cfg-usuarios">
-              <label class="label-cfg-usuarios">URL</label>
-              <input v-model="formData.url" type="url" class="input-cfg-usuarios" />
+            <div class="form-row">
+              <div class="form-group">
+                <label>Descrição</label>
+                <textarea v-model="formData.descricao" rows="3" class="form-control"></textarea>
+              </div>
+              <div class="form-group">
+                <label>URL</label>
+                <input v-model="formData.url" type="url" class="form-control" />
+              </div>
             </div>
 
             <!-- Seção de Contatos -->
-            <div class="form-group-cfg-usuarios">
-              <h3 class="sub-title-cfg-usuarios">Contatos</h3>
-              <div v-for="(contato, index) in formData.contatos" :key="index" class="contato-form-cfg-usuarios">
-                <input v-model="contato.nome" placeholder="Nome" class="input-cfg-usuarios" />
-                <input v-model="contato.telefone" placeholder="Telefone" class="input-cfg-usuarios" />
-                <button type="button" @click="removeContato(index)" class="btn-action-cfg-usuarios btn-delete-cfg-usuarios">
-                  <img src="/icons/lixeira.svg" alt="Remover" class="icon-delete-cfg-usuarios" />
+            <div class="form-row">
+              <div class="form-group">
+                <label>Contatos</label>
+                <div v-for="(contato, index) in formData.contatos" :key="index" class="contato-form">
+                  <input v-model="contato.nome" placeholder="Nome" class="form-control" />
+                  <input v-model="contato.telefone" placeholder="Telefone" class="form-control" />
+                  <button type="button" class="btn-icon delete" @click="removeContato(index)">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+                <button type="button" @click="addContato" class="btn-add-contato">
+                  <i class="fas fa-plus"></i> Adicionar Contato
                 </button>
               </div>
-              <button type="button" @click="addContato" class="btn-add-contato-cfg-usuarios">
-                + Adicionar Contato
-              </button>
             </div>
-
-            <div class="modal-actions-cfg-usuarios">
-              <button type="button" class="btn-cancel-cfg-usuarios" @click="closeModal">
+            
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel" @click="closeModal">
                 Cancelar
               </button>
-              <button type="submit" class="btn-confirm-cfg-usuarios" :disabled="loading">
+              <button type="submit" class="btn-salvar" :disabled="loading">
                 {{ loading ? 'Salvando...' : 'Salvar' }}
               </button>
             </div>
@@ -140,20 +156,23 @@
         </div>
       </div>
 
-      <!-- Modal de Novo Setor com classes padronizadas -->
-      <div v-if="showSetorModal" class="modal-cfg-usuarios">
-        <div class="modal-content-cfg-usuarios">
-          <h2 class="modal-title-cfg-usuarios">Novo Setor</h2>
-          <form @submit.prevent="handleAddSetor" class="form-cfg-usuarios">
-            <div class="form-group-cfg-usuarios">
-              <label class="label-cfg-usuarios">Nome do Setor*</label>
-              <input v-model="novoSetor.nome" type="text" required placeholder="Digite o nome do setor" class="input-cfg-usuarios" />
+      <!-- Modal de Novo Setor -->
+      <div v-if="showSetorModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+          <div class="modal-header">
+            <h3>Novo Setor</h3>
+            <button class="btn-close" @click="closeSetorModal">&times;</button>
+          </div>
+          <form @submit.prevent="handleAddSetor" class="form-grid">
+            <div class="form-group">
+              <label>Nome do Setor*</label>
+              <input v-model="novoSetor.nome" type="text" required placeholder="Digite o nome do setor" class="form-control" />
             </div>
-            <div class="modal-actions-cfg-usuarios">
-              <button type="button" class="btn-cancel-cfg-usuarios" @click="closeSetorModal">
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel" @click="closeSetorModal">
                 Cancelar
               </button>
-              <button type="submit" class="btn-confirm-cfg-usuarios">
+              <button type="submit" class="btn-salvar">
                 Salvar
               </button>
             </div>
@@ -161,20 +180,20 @@
         </div>
       </div>
 
-      <!-- Modal de confirmação com classes padronizadas -->
-      <div v-if="confirmDialog.show" class="dialog-overlay-cfg-usuarios">
-        <div class="confirm-dialog-cfg-usuarios">
-          <div class="confirm-content-cfg-usuarios">
-            <h3 class="dialog-title-cfg-usuarios">{{ confirmDialog.title }}</h3>
-            <p class="dialog-message-cfg-usuarios">{{ confirmDialog.message }}</p>
-            <p v-if="confirmDialog.warning" class="warning-text-cfg-usuarios">
+      <!-- Modal de confirmação -->
+      <div v-if="confirmDialog.show" class="modal-overlay">
+        <div class="confirm-dialog">
+          <div class="confirm-content">
+            <h3>{{ confirmDialog.title }}</h3>
+            <p>{{ confirmDialog.message }}</p>
+            <p v-if="confirmDialog.warning" class="warning-text">
               {{ confirmDialog.warning }}
             </p>
-            <div class="confirm-actions-cfg-usuarios">
-              <button class="btn-secondary-cfg-usuarios" @click="confirmDialog.show = false">
+            <div class="confirm-actions">
+              <button class="btn-cancel" @click="confirmDialog.show = false">
                 Cancelar
               </button>
-              <button class="btn-danger-cfg-usuarios" @click="confirmDialog.onConfirm">
+              <button class="btn-confirm delete" @click="confirmDialog.onConfirm">
                 {{ confirmDialog.confirmText }}
               </button>
             </div>
@@ -182,9 +201,9 @@
         </div>
       </div>
 
-      <!-- Toast notifications com classes padronizadas -->
+      <!-- Toast notifications -->
       <div v-for="toast in toasts" :key="toast.id" 
-           :class="['toast-cfg-usuarios', `toast-${toast.type}`]">
+           :class="['toast', `toast-${toast.type}`]">
         {{ toast.message }}
       </div>
     </div>
@@ -192,4 +211,13 @@
 </template>
 
 <script src="../views/SistemasView.js"></script>
-<style src="../assets/styles/SistemasView.css"></style>
+
+<!-- Importações CSS modularizadas -->
+<style src="../assets/styles/base/variables.css"></style>
+<style src="../assets/styles/layout/layout.css"></style>
+<style src="../assets/styles/components/buttons.css"></style>
+<style src="../assets/styles/components/tables.css"></style>
+<style src="../assets/styles/components/modals.css"></style>
+<style src="../assets/styles/components/forms.css"></style>
+<style src="../assets/styles/components/toast.css"></style>
+<style src="../assets/styles/pages/sistemas.css"></style>

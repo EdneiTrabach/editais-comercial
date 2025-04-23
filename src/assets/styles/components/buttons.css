@@ -19,8 +19,26 @@
 }
 
 .btn-add {
-  background: #193155;
+  background: var(--primary-color, #193155);
   color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-add:hover {
+  background: var(--primary-color-hover, #254677);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-add .icon-add {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+.btn-add:hover .icon-add {
+  transform: rotate(90deg);
 }
 
 .icon {
@@ -38,8 +56,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f4f600;
   transition: all 0.2s ease;
+}
+
+.btn-icon.edit {
+  background-color: var(--bg-edit-btn, #e8f5e9);
+  color: var(--text-edit-btn, #388e3c);
+}
+
+.btn-icon.delete {
+  background-color: var(--bg-delete-btn, #fee2e2);
+  color: var(--text-delete-btn, #d32f2f);
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon.edit:hover {
+  background-color: var(--bg-edit-btn-hover, #c8e6c9);
+}
+
+.btn-icon.delete:hover {
+  background-color: var(--bg-delete-btn-hover, #ffcdd2);
 }
 
 .btn-icon.delete:hover .icon {
@@ -63,12 +103,18 @@
 }
 
 .btn-cancel {
-  background: #e9ecef;
-  color: #495057;
+  background: var(--bg-button-secondary, #f3f4f6);
+  color: var(--text-button-secondary, #4b5563);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 8px;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-button-secondary-hover, #e5e7eb);
 }
 
 .btn-confirm.delete {
-  background: #dc3545;
+  background: var(--danger-color, #dc2626);
   color: white;
 }
 
@@ -78,17 +124,23 @@
 }
 
 .btn-confirm.delete:hover {
-  background: #c82333;
+  background: var(--danger-color-hover, #b91c1c);
 }
 
 .btn-confirm {
-  background: #193155;
+  background: var(--primary-color, #193155);
   color: white;
 }
 
+.btn-confirm:hover {
+  background: var(--primary-color-hover, #254677);
+}
+
 .btn-cancel {
-  background: #e9ecef;
-  color: #495057;
+  background: var(--bg-button-secondary, #f3f4f6);
+  color: var(--text-button-secondary, #4b5563);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 8px;
 }
 
 .btn-confirm:hover,
@@ -290,6 +342,16 @@
     width: 16px;
     height: 16px;
   }
+  
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* Estilização específica para o botão de filtro em tons de azul */
@@ -452,5 +514,74 @@
     width: 16px;
     height: 16px;
   }
+}
+
+.btn-salvar {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #193155);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-salvar:hover {
+  background: var(--primary-color-hover, #254677);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-close:hover {
+  color: var(--text-primary, #374151);
+}
+
+@media (max-width: 480px) {
+  .btn-cancel,
+  .btn-salvar,
+  .btn-confirm {
+    width: 100%;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+/* Suporte a tema escuro para botões */
+[data-theme="dark"] .btn-icon.edit {
+  background-color: var(--dark-bg-edit-btn, #132f1e);
+  color: var(--dark-text-edit-btn, #4ade80);
+}
+
+[data-theme="dark"] .btn-icon.delete {
+  background-color: var(--dark-bg-delete-btn, #471a1a);
+  color: var(--dark-text-delete-btn, #ef4444);
+}
+
+[data-theme="dark"] .btn-cancel {
+  background: var(--dark-bg-button-secondary, #334155);
+  color: var(--dark-text-button-secondary, #e2e8f0);
+  border-color: var(--dark-border-light, #475569);
+}
+
+[data-theme="dark"] .btn-cancel:hover {
+  background: var(--dark-bg-button-secondary-hover, #475569);
+}
+
+[data-theme="dark"] .btn-close {
+  color: var(--dark-text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .btn-close:hover {
+  color: var(--dark-text-primary, #e2e8f0);
 }
 

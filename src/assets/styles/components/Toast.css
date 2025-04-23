@@ -103,3 +103,50 @@
     font-size: 0.875rem;
   }
 }
+
+/* Estilos para notificações toast */
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  min-width: 300px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease, fadeOutRight 0.3s 2.7s ease forwards;
+  z-index: 1000;
+}
+
+.toast.success {
+  background: var(--success-color, #10B981);
+  color: white;
+}
+
+.toast.error {
+  background: var(--danger-color, #EF4444);
+  color: white;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

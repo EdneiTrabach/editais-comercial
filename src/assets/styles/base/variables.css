@@ -1,0 +1,78 @@
+:root {
+  /* Cores principais */
+  --primary-color: #193155;
+  --primary-color-hover: #254677;
+  --secondary-color: #64748b;
+  
+  /* Cores de fundo */
+  --bg-content: #f8f9fa;
+  --bg-card: white;
+  --bg-header: #f9fafb;
+  --bg-hover: #f9fafb;
+  --bg-input: #f9fafb;
+  --bg-light: #f8f9fa;
+  
+  /* Cores de botões */
+  --bg-button-secondary: #f3f4f6;
+  --bg-button-secondary-hover: #e5e7eb;
+  --text-button-secondary: #4b5563;
+  
+  /* Cores para botões de ação */
+  --bg-edit-btn: #e8f5e9;
+  --bg-edit-btn-hover: #c8e6c9;
+  --text-edit-btn: #388e3c;
+  
+  --bg-delete-btn: #fee2e2;
+  --bg-delete-btn-hover: #ffcdd2;
+  --text-delete-btn: #d32f2f;
+  
+  /* Cores de texto */
+  --text-title: #193155;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #6b7280;
+  --text-label: #4b5563;
+  --text-header: #374151;
+  
+  /* Cores de status */
+  --success-color: #10B981;
+  --success-light-color: #E6F7ED;
+  --danger-color: #EF4444;
+  --danger-light-color: #FEE2E2;
+  --warning-color: #F59E0B;
+  --warning-light-color: #FEF3C7;
+  
+  /* Bordas */
+  --border-light: #e5e7eb;
+  --border-input: #d1d5db;
+}
+
+/* Tema escuro */
+[data-theme="dark"] {
+  --dark-bg-content: #1a1a2e;
+  --dark-bg-card: #1e293b;
+  --dark-bg-header: #16213e;
+  --dark-bg-hover: #1e293b;
+  --dark-bg-input: #0f172a;
+  --dark-bg-light: #1e293b;
+  
+  --dark-text-title: #e2e8f0;
+  --dark-text-primary: #cbd5e1;
+  --dark-text-secondary: #94a3b8;
+  --dark-text-muted: #94a3b8;
+  --dark-text-label: #94a3b8;
+  --dark-text-header: #e2e8f0;
+  
+  --dark-border-light: #334155;
+  --dark-border-input: #334155;
+  
+  --dark-bg-button-secondary: #334155;
+  --dark-bg-button-secondary-hover: #475569;
+  --dark-text-button-secondary: #e2e8f0;
+  
+  --dark-bg-edit-btn: #132f1e;
+  --dark-text-edit-btn: #4ade80;
+  
+  --dark-bg-delete-btn: #471a1a;
+  --dark-text-delete-btn: #ef4444;
+}

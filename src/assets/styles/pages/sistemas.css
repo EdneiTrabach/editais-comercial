@@ -1,0 +1,206 @@
+/* Estilos específicos para a página de Sistemas */
+
+/* Container principal */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--bg-content, #f8f9fa);
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 280px; /* Valor padrão quando o sidebar está expandido */
+  overflow-x: auto;
+}
+
+.main-content.expanded {
+  margin-left: 80px; /* Quando o sidebar está recolhido */
+}
+
+/* Cabeçalho da página */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-light, #e9ecef);
+}
+
+.header h1 {
+  color: var(--text-title, #193155);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-buttons, .actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Botão para adicionar novo sistema */
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #193155);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-add:hover {
+  background: var(--primary-color-hover, #254677);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-add .icon-add {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+.btn-add:hover .icon-add {
+  transform: rotate(90deg);
+}
+
+/* Contatos na tabela */
+.contatos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contato-item {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  min-width: 80px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge.active {
+  background-color: var(--success-light-color, #E6F7ED);
+  color: var(--success-color, #10B981);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.inactive {
+  background-color: var(--danger-light-color, #FEE2E2);
+  color: var(--danger-color, #EF4444);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Setor container */
+.setor-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Contatos no modal */
+.contato-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.btn-add-contato {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-light, #f8f9fa);
+  color: var(--text-secondary, #4b5563);
+  border: 1px dashed var(--border-light, #e5e7eb);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-add-contato:hover {
+  background: var(--bg-hover, #f3f4f6);
+  border-color: var(--border-input, #d1d5db);
+}
+
+/* Ajustes responsivos */
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 80px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contato-form {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Suporte a tema escuro */
+[data-theme="dark"] .contato-item {
+  color: var(--dark-text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .btn-add-contato {
+  background: var(--dark-bg-light, #1e293b);
+  color: var(--dark-text-secondary, #94a3b8);
+  border-color: var(--dark-border-light, #334155);
+}
+
+[data-theme="dark"] .btn-add-contato:hover {
+  background: var(--dark-bg-hover, #293548);
+}
+
+/* Suporte a tema escuro para badges de status */
+[data-theme="dark"] .status-badge {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .status-badge.active {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+[data-theme="dark"] .status-badge.inactive {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}

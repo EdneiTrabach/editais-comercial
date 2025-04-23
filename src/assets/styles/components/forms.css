@@ -1,28 +1,86 @@
 /* Estilos para formulários */
-.form-row {
+
+/* Layout de formulário em grid */
+.form-grid {
   display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .form-group {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
 .form-group label {
-  font-size: 0.9em;
-  margin-bottom: 4px;
-  color: #555;
+  color: var(--text-label, #4b5563);
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group select {
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9em;
+/* Controles de formulário */
+.form-control {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-input, #d1d5db);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-primary, #1f2937);
+  background-color: var(--bg-input, #f9fafb);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color, #193155);
+  box-shadow: 0 0 0 3px rgba(25, 49, 85, 0.1);
+}
+
+/* Select */
+select.form-control {
+  appearance: auto;
+  background-color: var(--bg-input, #f9fafb);
+  cursor: pointer;
+}
+
+/* Ajustes responsivos para formulários */
+@media (max-width: 992px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Suporte a tema escuro para formulários */
+[data-theme="dark"] .form-group label {
+  color: var(--dark-text-label, #94a3b8);
+}
+
+[data-theme="dark"] .form-control {
+  background-color: var(--dark-bg-input, #0f172a);
+  border-color: var(--dark-border-input, #334155);
+  color: var(--dark-text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] select.form-control {
+  background-color: var(--dark-bg-input, #0f172a);
+  border-color: var(--dark-border-input, #334155);
+  color: var(--dark-text-primary, #e2e8f0);
 }
 
 .form-actions {

@@ -410,7 +410,12 @@ export default {
         return false
       }
     }
-    
+
+    // Classes CSS para fazer a transição de status mais elegante
+    const getStatusClass = (status) => {
+      return status.toLowerCase() === 'active' ? 'ativo' : 'inativo';
+    };
+
     return {
       sistemas,
       setores,
@@ -441,7 +446,8 @@ export default {
       handleSubmit,
       showToast,
       showConfirmDialog,
-      checkAdminStatus
+      checkAdminStatus,
+      getStatusClass
     }
   }
 }

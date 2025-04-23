@@ -1,0 +1,162 @@
+/* Estilos para tabelas */
+
+/* Container da tabela */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-card, white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+/* Estilização da tabela */
+.representante-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.representante-table th {
+  background-color: var(--bg-header, #f9fafb);
+  color: var(--text-header, #374151);
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border-light, #e5e7eb);
+  white-space: nowrap;
+}
+
+.representante-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-light, #e5e7eb);
+  color: var(--text-primary, #1f2937);
+}
+
+.representante-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.representante-table tbody tr:hover {
+  background-color: var(--bg-hover, #f9fafb);
+}
+
+/* Colunas específicas */
+.actions-column {
+  width: 100px;
+  text-align: center;
+}
+
+.actions-cell {
+  text-align: center;
+}
+
+/* Componente de ações padronizado */
+.acoes-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Estados de carregamento e tabela vazia */
+.loading-cell, .no-data-cell {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-style: italic;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  min-width: 80px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.status-ativo {
+  background-color: var(--success-light-color, #E6F7ED);
+  color: var(--success-color, #10B981);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-inativo {
+  background-color: var(--danger-light-color, #FEE2E2);
+  color: var(--danger-color, #EF4444);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-pendente {
+  background-color: var(--warning-light-color, #FEF3C7);
+  color: var(--warning-color, #F59E0B);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Ajustes responsivos para tabelas */
+@media (max-width: 480px) {
+  .representante-table th,
+  .representante-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Suporte a tema escuro para tabelas */
+[data-theme="dark"] .table-container {
+  background: var(--dark-bg-card, #1e293b);
+}
+
+[data-theme="dark"] .representante-table th {
+  background-color: var(--dark-bg-header, #16213e);
+  color: var(--dark-text-header, #e2e8f0);
+}
+
+[data-theme="dark"] .representante-table td {
+  color: var(--dark-text-primary, #cbd5e1);
+  border-bottom-color: var(--dark-border-light, #334155);
+}
+
+[data-theme="dark"] .representante-table tbody tr:hover {
+  background-color: var(--dark-bg-hover, #1e293b);
+}
+
+[data-theme="dark"] .loading-cell, 
+[data-theme="dark"] .no-data-cell {
+  color: var(--dark-text-muted, #94a3b8);
+}
+
+/* Suporte a tema escuro para badges de status */
+[data-theme="dark"] .status-badge {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .status-ativo {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+[data-theme="dark"] .status-inativo {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+[data-theme="dark"] .status-pendente {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.4);
+}
