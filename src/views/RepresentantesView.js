@@ -6,46 +6,44 @@ import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 
 export default {
+  name: 'RepresentantesView',
   components: {
     TheSidebar
   },
   
   setup() {
-    const router = useRouter()
     const isSidebarExpanded = ref(true)
     const representantes = ref([])
-    const isLoading = ref(false)
     const showModal = ref(false)
+    const isLoading = ref(true)
+    const editingId = ref(null)
     const formData = ref({
       nome: '',
       email: '',
       telefone: '',
-      cidade: '',
-      estado: '',
-      empresa: '',
-      observacoes: ''
+      regiao: '',
+      status: 'ATIVO'
     })
-    const isEditing = ref(false)
-    const currentId = ref(null)
-    
-    const editingId = ref(null)
-    
-    // Adicione o ref para o toast
+
+    const deleteConfirmDialog = ref({
+      show: false,
+      id: null,
+      nome: ''
+    })
+
     const toast = ref({
       show: false,
       message: '',
       type: 'success'
     })
-    
-    // Adicione este ref junto com os outros
-    const deleteConfirmDialog = ref({
-      show: false,
-      representante: null
-    })
-    
-    // Função para mostrar toast
+
     const showToast = (message, type = 'success') => {
-      toast.value = { show: true, message, type }
+      toast.value = {
+        show: true,
+        message,
+        type
+      }
+
       setTimeout(() => {
         toast.value.show = false
       }, 3000)
@@ -53,10 +51,11 @@ export default {
     
     const loadRepresentantes = async () => {
       try {
+        isLoading.value = true
+        // Modificando para buscar todos os representantes (incluindo inativos)
         const { data, error } = await supabase
           .from('representantes')
           .select('*')
-          .not('status', 'eq', 'INATIVO') // Filtra representantes inativos
           .order('nome')
         
         if (error) throw error
@@ -64,6 +63,8 @@ export default {
       } catch (error) {
         console.error('Erro ao carregar representantes:', error)
         showToast('Erro ao carregar representantes', 'error')
+      } finally {
+        isLoading.value = false
       }
     }
     
@@ -78,119 +79,121 @@ export default {
               updated_at: new Date().toISOString()
             })
             .eq('id', editingId.value)
-          
+
           if (error) throw error
-          showToast('Representante atualizado com sucesso!')
+          
+          showToast('Representante atualizado com sucesso')
         } 
-        // Novo cadastro
+        // Se estiver criando novo
         else {
           const { error } = await supabase
             .from('representantes')
             .insert({
               ...formData.value,
-              status: 'ACTIVE',
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             })
-          
+
           if (error) throw error
-          showToast('Representante cadastrado com sucesso!')
+          
+          showToast('Representante adicionado com sucesso')
         }
-        
+
+        // Recarregar representantes e fechar modal
         await loadRepresentantes()
         closeModal()
       } catch (error) {
-        console.error('Erro ao salvar:', error)
-        showToast(error.message || 'Erro ao salvar representante', 'error')
+        console.error('Erro ao salvar representante:', error)
+        showToast('Erro ao salvar. Por favor, tente novamente.', 'error')
       }
     }
-    
+
     const editRepresentante = (representante) => {
       editingId.value = representante.id
-      formData.value = { ...representante }
+      formData.value = { 
+        nome: representante.nome,
+        email: representante.email || '',
+        telefone: representante.telefone || '',
+        regiao: representante.regiao || '',
+        status: representante.status || 'ATIVO'
+      }
       showModal.value = true
     }
-    
+
     const deleteRepresentante = (representante) => {
       deleteConfirmDialog.value = {
         show: true,
-        representante
+        id: representante.id,
+        nome: representante.nome
       }
     }
-    
-    const hideDeleteDialog = () => {
-      deleteConfirmDialog.value = {
-        show: false,
-        representante: null
-      }
-    }
-    
+
     const confirmDelete = async () => {
       try {
         const { error } = await supabase
           .from('representantes')
           .update({ 
             status: 'INATIVO',
-            updated_at: new Date().toISOString() 
+            updated_at: new Date().toISOString()
           })
-          .eq('id', deleteConfirmDialog.value.representante.id)
-        
+          .eq('id', deleteConfirmDialog.value.id)
+
         if (error) throw error
-        
-        await loadRepresentantes()
-        showToast('Representante inativado com sucesso!')
+
+        showToast(`Representante inativado com sucesso`)
         hideDeleteDialog()
+        await loadRepresentantes()
       } catch (error) {
-        console.error('Erro ao inativar:', error)
-        showToast(error.message || 'Erro ao inativar representante', 'error')
+        console.error('Erro ao inativar representante:', error)
+        showToast('Erro ao inativar representante', 'error')
       }
     }
-    
+
+    const hideDeleteDialog = () => {
+      deleteConfirmDialog.value = {
+        show: false,
+        id: null,
+        nome: ''
+      }
+    }
+
     const closeModal = () => {
       showModal.value = false
       editingId.value = null
       formData.value = {
         nome: '',
-        documento: '',
         email: '',
-        telefone: ''
+        telefone: '',
+        regiao: '',
+        status: 'ATIVO'
       }
     }
-    
-    const handleSidebarToggle = (expanded) => {
-      isSidebarExpanded.value = expanded
+
+    const handleSidebarToggle = () => {
+      isSidebarExpanded.value = !isSidebarExpanded.value
     }
-    
-    const loadData = async () => {
-      await loadRepresentantes()
-    }
-    
-    // Use o composable
-    useConnectionManager(loadData)
-    
+
+    // Carregar representantes quando componente é montado
     onMounted(() => {
       loadRepresentantes()
     })
 
     return {
       isSidebarExpanded,
-      showModal,
-      editingId,
       representantes,
+      showModal,
+      isLoading,
+      editingId,
       formData,
-      toast,
       deleteConfirmDialog,
-      loadRepresentantes,
-      handleSubmit,
+      toast,
       editRepresentante,
       deleteRepresentante,
-      hideDeleteDialog,
       confirmDelete,
+      hideDeleteDialog,
+      handleSubmit,
       closeModal,
-      handleSidebarToggle,
-      showToast,
-      isLoading,
-      isEditing,
-      currentId
+      handleSidebarToggle
     }
   }
 }
