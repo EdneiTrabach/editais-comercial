@@ -1,12 +1,18 @@
-/* Arquivo principal com estilos para a visualização de Plataformas */
-
-/* Importações necessárias - apenas arquivos que existem */
+/* Arquivo principal que importa todos os componentes */
+@import './components/Header.css';
+@import './components/Table.css';
+@import './components/EmpresaSelector.css';
+@import './components/Modal.css';
+@import './components/Toast.css';
+@import './components/Status.css';
+@import './components/EmpresaTable.css';
+@import './components/ActionButtons.css';
 @import "./base/variables.css";
-@import "./components/Layout.css";
 @import "./components/buttons.css";
 @import "./components/tables.css";
 @import "./components/forms.css";
 @import "./components/modals.css";
+@import "./components/layout.css";
 
 /* Estilos específicos que não se encaixam nos componentes */
 .observacoes {
