@@ -43,7 +43,7 @@
       <div class="table-container">
         <table>
           <thead>
-            <tr>
+            <tr class="table-header-plataformas">
               <th>Nome</th>
               <th>URL</th>
               <!-- Colunas extras apenas quando uma empresa estiver selecionada -->
@@ -53,7 +53,7 @@
                 <th>Validade</th>
                 <th>Observações</th>
               </template>
-              <th class="actions-header" style="position: sticky; right: 0; z-index: 15; background: #f8f9fa;">Ações</th>
+              <th class="actions-header">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -228,14 +228,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Toast notifications (Padronizado) -->
-  <div 
-    v-if="showToast" 
-    :class="['toast-cfg-usuarios', `toast-${toastType}`]"
-  >
-    {{ toastMessage }}
   </div>
 </template>
 

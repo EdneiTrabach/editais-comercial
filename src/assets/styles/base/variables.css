@@ -45,8 +45,6 @@
   /* Bordas */
   --border-light: #e5e7eb;
   --border-input: #d1d5db;
-  
-  /* Bordas para input hover */
   --border-input-hover: #a3a8b8;
   
   /* Texto requerido */
@@ -71,6 +69,7 @@
   
   --dark-border-light: #334155;
   --dark-border-input: #334155;
+  --dark-border-input-hover: #475569;
   
   --dark-bg-button-secondary: #334155;
   --dark-bg-button-secondary-hover: #475569;
@@ -81,7 +80,4 @@
   
   --dark-bg-delete-btn: #471a1a;
   --dark-text-delete-btn: #ef4444;
-  
-  /* Bordas para input hover no tema escuro */
-  --dark-border-input-hover: #475569;
 }

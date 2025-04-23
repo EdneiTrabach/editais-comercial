@@ -121,7 +121,6 @@
   font-weight: 600;
 }
 
-
 .btn-add {
   display: flex;
   align-items: center;
@@ -497,7 +496,6 @@ textarea.detalhes {
   font-size: 0.95rem;
   color: #495057;
 }
-
 
 .btn-cancelar,
 .btn-salvar {
@@ -889,3 +887,76 @@ td.actions {
   gap: 0.8rem;
   /* margin: 1.5rem 0; */
 }
+
+/* Estilos para a visualização de Plataformas */
+
+/* Importar componentes compartilhados */
+@import "./base/variables.css";
+@import "./components/Layout.css";
+@import "./components/buttons.css";
+@import "./components/tables.css";
+@import "./components/forms.css";
+@import "./components/modals.css";
+
+/* Estilos específicos para plataformas */
+.plataforma-card {
+  background-color: var(--bg-card, white);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plataforma-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.plataforma-title {
+  color: var(--text-title, #193155);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.plataforma-descricao {
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 1rem;
+}
+
+.plataforma-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light, #e5e7eb);
+}
+
+.plataforma-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Suporte a tema escuro */
+[data-theme="dark"] .plataforma-card {
+  background-color: var(--dark-bg-card, #1e293b);
+}
+
+[data-theme="dark"] .plataforma-title {
+  color: var(--dark-text-title, #e2e8f0);
+}
+
+[data-theme="dark"] .plataforma-descricao {
+  color: var(--dark-text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .plataforma-footer {
+  border-top-color: var(--dark-border-light, #334155);
+}
+
+.table-header-plataformas {
+  height: 55px;
+}
+

@@ -2,6 +2,7 @@
 .layout {
   display: flex;
   min-height: 100vh;
+  position: relative;
 }
 
 /* Estilos de layout principal */
@@ -50,12 +51,17 @@
   background: var(--background-light);
   margin-left: auto;
   box-sizing: border-box;
+  background-color: var(--bg-content, #f8f9fa);
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 280px; /* Valor padrão quando o sidebar está expandido */
+  overflow-x: auto;
 }
 
 /* Quando o sidebar está recolhido */
 .main-content.expanded {
   width: calc(100% - var(--sidebar-collapsed-width));
   margin-left: var(--sidebar-collapsed-width);
+  margin-left: 80px; /* Quando o sidebar está recolhido */
 }
 
 /* Media query para telas menores */
@@ -97,4 +103,62 @@
   height: 21px;
   position: relative;
   bottom: 11px;
+}
+
+/* Cabeçalho da página */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-light, #e9ecef);
+}
+
+.header h1 {
+  color: var(--text-title, #193155);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-buttons, .actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 80px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-buttons, .actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 1rem;
+  }
+}
+
+/* Suporte a temas escuros */
+[data-theme="dark"] .main-content {
+  background-color: var(--dark-bg-content, #1a1a2e);
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: var(--dark-border-light, #334155);
 }

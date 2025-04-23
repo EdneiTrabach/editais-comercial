@@ -1,7 +1,7 @@
 /* Estilos para modais */
 
 /* Layout base de modais */
-.modal-overlay {
+.modal-overlay, .dialog-overlay, .dialog-overlay-cfg-usuarios {
   position: fixed;
   top: 0;
   left: 0;
@@ -26,7 +26,7 @@
 }
 
 /* Modal padrão */
-.modal-content {
+.modal-content, .modal-content-cfg-usuarios {
   background: var(--bg-card, white);
   padding: 1.75rem 2rem;
   border-radius: 12px;
@@ -59,8 +59,8 @@
   border-bottom: 1px solid var(--border-light, #e5e7eb);
 }
 
-.modal-header h3 {
-  color: white;
+.modal-header h3, .modal-title-cfg-usuarios {
+  color: var(--text-title, #193155);
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
@@ -95,7 +95,7 @@
   max-height: calc(90vh - 130px); /* Ajuste para garantir que o corpo tenha um tamanho máximo, considerando o header e footer */
 }
 
-.modal-actions {
+.modal-actions, .modal-actions-cfg-usuarios {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
@@ -105,7 +105,7 @@
 }
 
 /* Modal de confirmação */
-.confirm-dialog {
+.confirm-dialog, .confirm-dialog-cfg-usuarios {
   background: var(--bg-card, white);
   border-radius: 12px;
   padding: 2rem;
@@ -114,14 +114,14 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-.confirm-dialog h3 {
+.confirm-dialog h3, .dialog-title-cfg-usuarios {
   color: var(--text-title, #193155);
   font-size: 1.5rem;
   margin-top: 0;
   margin-bottom: 1rem;
 }
 
-.confirm-message {
+.confirm-message, .dialog-message-cfg-usuarios {
   color: var(--text-primary, #374151);
   margin-bottom: 2rem;
 }
@@ -131,13 +131,13 @@
   color: var(--text-title, #193155);
 }
 
-.confirm-actions {
+.confirm-actions, .confirm-actions-cfg-usuarios {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
 }
 
-.warning-text {
+.warning-text, .warning-text-cfg-usuarios {
   color: var(--danger-color, #dc2626);
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
@@ -155,13 +155,13 @@
 
 /* Ajustes responsivos para modais */
 @media (max-width: 992px) {
-  .modal-content {
+  .modal-content, .modal-content-cfg-usuarios {
     padding: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .modal-content {
+  .modal-content, .modal-content-cfg-usuarios {
     width: 95%;
     padding: 1.25rem;
   }
@@ -188,13 +188,23 @@
 
 /* Suporte a tema escuro para modais */
 [data-theme="dark"] .modal-content,
-[data-theme="dark"] .confirm-dialog {
+[data-theme="dark"] .modal-content-cfg-usuarios,
+[data-theme="dark"] .confirm-dialog,
+[data-theme="dark"] .confirm-dialog-cfg-usuarios {
   background: var(--dark-bg-card, #1e293b);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-actions,
+[data-theme="dark"] .modal-actions-cfg-usuarios {
+  border-color: var(--dark-border-light, #334155);
 }
 
 [data-theme="dark"] .modal-header h3,
-[data-theme="dark"] .confirm-dialog h3 {
+[data-theme="dark"] .modal-title-cfg-usuarios,
+[data-theme="dark"] .confirm-dialog h3,
+[data-theme="dark"] .dialog-title-cfg-usuarios {
   color: var(--dark-text-title, #e2e8f0);
 }
 
@@ -219,7 +229,7 @@
 }
 
 /* Botão de adicionar contato */
-.btn-add-contato {
+.btn-add-contato, .btn-add-contato-cfg-usuarios {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -237,15 +247,15 @@
   margin-top: 0.5rem;
 }
 
-.btn-add-contato:hover {
+.btn-add-contato:hover, .btn-add-contato-cfg-usuarios:hover {
   background: var(--bg-hover, #f3f4f6);
   border-color: var(--primary-color, #193155);
   transform: translateY(-1px);
 }
 
-.btn-add-contato i {
+.btn-add-contato i, .btn-add-contato-cfg-usuarios i {
   font-size: 0.9rem;
-  color: var(--primary-color, #193155);
+  color: var (--primary-color, #193155);
 }
 
 /* Estilo para campo obrigatório */
@@ -282,13 +292,15 @@ label::after {
   border-top-color: var(--dark-border-light, #334155);
 }
 
-[data-theme="dark"] .btn-add-contato {
+[data-theme="dark"] .btn-add-contato,
+[data-theme="dark"] .btn-add-contato-cfg-usuarios {
   background: var(--dark-bg-light, #1e293b);
   color: var(--dark-text-primary, #e2e8f0);
   border-color: var(--dark-border-light, #334155);
 }
 
-[data-theme="dark"] .btn-add-contato:hover {
+[data-theme="dark"] .btn-add-contato:hover,
+[data-theme="dark"] .btn-add-contato-cfg-usuarios:hover {
   background: var(--dark-bg-hover, #334155);
   border-color: var(--primary-color, #3b82f6);
 }
