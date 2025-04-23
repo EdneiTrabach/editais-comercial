@@ -13,16 +13,12 @@
 
 /* Container da tabela com rolagem horizontal */
 .table-container {
-  width: 100%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow-x: auto;
+  margin-bottom: 2rem;
   position: relative;
-  user-select: text;
-  flex: 1;
-  min-height: 300px;
-  overflow-x: auto; /* Habilita rolagem horizontal */
 }
 
 /* Ajustes para responsividade */
@@ -34,7 +30,7 @@
 
 /* Ajuste para modo escuro */
 [data-theme="dark"] .table-container {
-  background: var(--dark-bg-color, #1e293b);
+  background: var(--white);
 }
 
 .excel-table th {
@@ -72,9 +68,8 @@
 
 /* Tamanho padrão do scrollbar */
 .table-container::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-  transition: all 0.3s ease;
+  height: 8px;
+  width: 8px;
 }
 
 /* Aumenta o tamanho quando o mouse está sobre o container */
@@ -94,12 +89,12 @@
 }
 
 .table-container::-webkit-scrollbar-thumb {
-  background: #193155;
+  background: var(--primary-color);
   border-radius: 4px;
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
-  background: #254677;
+  background: var(--primary-hover);
 }
 
 .excel-table tbody tr:hover {
@@ -419,4 +414,150 @@ tbody tr:hover .row-number-cell {
 
 [data-theme="dark"] .excel-table thead {
   background-color: #2d3748;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+}
+
+th,
+td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+th {
+  background: var(--gray-100);
+  font-weight: 600;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.actions-header {
+  position: sticky;
+  right: 0;
+  z-index: 15;
+  background: var(--gray-100);
+}
+
+td {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-column {
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.url-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.url-link:hover {
+  text-decoration: underline;
+}
+
+.nome-column {
+  width: 200px;
+}
+
+.actions-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: var(--gray-100);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+}
+
+.btn-action.edit:hover {
+  background: rgba(62, 108, 160, 0.2);
+}
+
+.btn-action.delete:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+
+.btn-action .icon {
+  width: 16px;
+  height: 16px;
+  transition: all 0.3s ease;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+/* Temas escuros */
+[data-theme="dark"] th {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .actions-header {
+  background: var(--gray-100);
+}
+
+[data-theme="dark"] td {
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .url-link {
+  color: var(--primary-color);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .table-container {
+    border-radius: var(--border-radius);
+  }
+
+  th,
+  td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-action {
+    width: 32px;
+    height: 32px;
+  }
 }

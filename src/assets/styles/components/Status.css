@@ -1,0 +1,61 @@
+/* Estilos para indicadores de status (como validade) */
+.validade-expirada {
+  padding: 0.25rem 0.75rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.validade-proxima {
+  padding: 0.25rem 0.75rem;
+  background: #fffbeb;
+  color: #d97706;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.validade-ok {
+  padding: 0.25rem 0.75rem;
+  background: #f0fdf4;
+  color: #059669;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.validade-indefinida {
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-style: italic;
+  display: inline-block;
+}
+
+/* Tema escuro */
+[data-theme="dark"] .validade-expirada {
+  background: rgba(220, 38, 38, 0.2);
+  color: #f87171;
+}
+
+[data-theme="dark"] .validade-proxima {
+  background: rgba(217, 119, 6, 0.2);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .validade-ok {
+  background: rgba(5, 150, 105, 0.2);
+  color: #34d399;
+}
+
+[data-theme="dark"] .validade-indefinida {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}

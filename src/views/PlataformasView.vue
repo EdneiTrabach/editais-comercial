@@ -77,12 +77,14 @@
               </template>
               <td>
                 <div class="actions-buttons">
-                  <button class="btn-action edit" @click="editPlataforma(plataforma)">
-                    <img src="/icons/edicao.svg" alt="Editar" class="icon" />
-                  </button>
-                  <button class="btn-action delete" @click="confirmarExclusao(plataforma)">
-                    <img src="/icons/lixeira.svg" alt="Excluir" class="icon" />
-                  </button>
+                  <div class="acoes-container" title="Editar Item" @click="editPlataforma(plataforma)">
+                    <button class="btn-icon edit" title="Editar Item">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon delete" title="Excluir Item" @click="confirmarExclusao(plataforma)">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>

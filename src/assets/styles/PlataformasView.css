@@ -1,3 +1,58 @@
+/* Arquivo principal que importa todos os componentes */
+@import './components/Layout.css';
+@import './components/Header.css';
+@import './components/Table.css';
+@import './components/EmpresaSelector.css';
+@import './components/Modal.css';
+@import './components/Toast.css';
+@import './components/Status.css';
+@import './components/EmpresaTable.css';
+@import './components/ActionButtons.css';
+/* Adicionado o componente para botões de ação */
+
+/* Estilos específicos que não se encaixam nos componentes */
+.observacoes {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ajustes adicionais para responsividade */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .header {
+    padding: 1rem;
+  }
+
+  .table-container {
+    margin-bottom: 1rem;
+  }
+
+  th,
+  td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .actions-buttons {
+    gap: 0.25rem;
+  }
+
+  .btn-action {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-action .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
 
 .main-content {
   flex: 1;
@@ -294,6 +349,11 @@ th {
 .actions-buttons {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
 }
 
 .btn-action:hover {
@@ -638,6 +698,7 @@ table td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 10px;
 }
 
 td.actions {
@@ -667,7 +728,7 @@ td.actions {
   color: white;
 }
 
-[data-theme="dark"]  .empresas-grid {
+[data-theme="dark"] .empresas-grid {
   background: transparent;
 }
 
@@ -822,10 +883,9 @@ td.actions {
   background-color: #b91c1c;
 }
 
-.form-group-cfg-usuarios-plataformas{
+.form-group-cfg-usuarios-plataformas {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   /* margin: 1.5rem 0; */
 }
-

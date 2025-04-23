@@ -1,0 +1,144 @@
+/* Estilos específicos para tabela de empresas */
+.empresa-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 2rem;
+}
+
+.empresa-table th, 
+.empresa-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.empresa-table th {
+  background: var(--gray-100);
+  font-weight: 600;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.empresa-table tr:hover {
+  background-color: var(--gray-100);
+}
+
+/* Coluna de cor */
+.color-column {
+  width: 100px;
+  text-align: center;
+}
+
+.color-cell-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.color-hex {
+  font-size: 0.8rem;
+  color: var(--gray-600);
+}
+
+/* Coluna de ações */
+.actions-column {
+  width: 120px;
+  text-align: center;
+}
+
+.acoes-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Botões de ação */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: var(--gray-100);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+}
+
+.btn-icon.edit {
+  color: var(--primary-color);
+}
+
+.btn-icon.delete {
+  color: #dc2626;
+}
+
+.btn-icon.edit:hover {
+  background: rgba(25, 49, 85, 0.1);
+}
+
+.btn-icon.delete:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.btn-icon i {
+  font-size: 16px;
+}
+
+/* Tema escuro */
+[data-theme="dark"] .empresa-table th {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .color-hex {
+  color: var(--gray-500);
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .empresa-table {
+    min-width: 800px; /* Garante uma largura mínima para scroll horizontal */
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .empresa-table th,
+  .empresa-table td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .color-column {
+    width: 80px;
+  }
+  
+  .color-hex {
+    display: none; /* Oculta o código hexadecimal em telas menores */
+  }
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+}

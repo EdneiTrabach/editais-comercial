@@ -1,0 +1,83 @@
+/* Estilos para botões de ação nas tabelas */
+.acoes-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: var(--gray-100);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: var(--gray-700);
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+}
+
+.btn-icon.edit {
+  color: var(--primary-color);
+}
+
+.btn-icon.edit:hover {
+  background: rgba(25, 49, 85, 0.1);
+  color: var(--primary-color);
+}
+
+.btn-icon.delete {
+  color: #dc2626;
+}
+
+.btn-icon.delete:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+/* Ajuste para ícones Font Awesome */
+.btn-icon i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Tema escuro */
+[data-theme="dark"] .btn-icon {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .btn-icon.edit {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-icon.edit:hover {
+  background: rgba(62, 108, 160, 0.2);
+}
+
+[data-theme="dark"] .btn-icon.delete {
+  color: #f87171;
+}
+
+[data-theme="dark"] .btn-icon.delete:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .btn-icon i {
+    font-size: 14px;
+  }
+}
