@@ -160,10 +160,8 @@ const router = createRouter({
     {
       path: '/publicacoes-contratuais',
       name: 'publicacoes-contratuais',
-      component: () => import('@/views/PublicacoesContratuaisView.vue'),
-      meta: {
-        requiresAuth: true
-      }
+      // Atualize para o caminho correto do componente
+      component: () => import('../views/PublicacoesContratuais/PublicacoesContratuaisView.vue')
     },
     // Adicione esta rota
     {
