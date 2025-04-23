@@ -252,8 +252,6 @@
 </template>
 
 <script src="../views/SistemasView.js"></script>
-
-<!-- Importações CSS modularizadas -->
 <style src="@/assets/styles/base/variables.css"></style>
 <style src="@/assets/styles/layout/layout.css"></style>
 <style src="@/assets/styles/components/buttons.css"></style>
