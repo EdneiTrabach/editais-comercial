@@ -1,7 +1,7 @@
 @import './components/Header.css';
 @import './components/tables.css';
 @import './components/EmpresaSelector.css';
-@import './components/modals.css'; /* Corrigido: Modal.css → modals.css */
+@import './components/modals.css';
 @import './components/Toast.css';
 @import './components/Status.css';
 @import './components/EmpresaTable.css';

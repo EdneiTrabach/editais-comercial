@@ -254,11 +254,11 @@
 <script src="../views/SistemasView.js"></script>
 
 <!-- Importações CSS modularizadas -->
-<style src="../assets/styles/base/variables.css"></style>
-<style src="../assets/styles/layout/layout.css"></style>
-<style src="../assets/styles/components/buttons.css"></style>
-<style src="../assets/styles/components/tables.css"></style>
-<style src="../assets/styles/components/modals.css"></style>
-<style src="../assets/styles/components/forms.css"></style>
-<style src="../assets/styles/components/toast.css"></style>
-<style src="../assets/styles/pages/sistemas.css"></style>
+<style src="@/assets/styles/base/variables.css"></style>
+<style src="@/assets/styles/layout/layout.css"></style>
+<style src="@/assets/styles/components/buttons.css"></style>
+<style src="@/assets/styles/components/tables.css"></style>
+<style src="@/assets/styles/components/modals.css"></style>
+<style src="@/assets/styles/components/forms.css"></style>
+<style src="@/assets/styles/components/Toast.css"></style>
+<style src="@/assets/styles/pages/sistemas.css"></style>
