@@ -18,19 +18,19 @@
       
       <!-- Tabela de empresas -->
       <EmpresaTable
-        :empresas="empresasValue"
-        :isLoading="isLoadingValue"
-        :loadError="loadErrorValue"
+        :empresas="store.getEmpresas()"
+        :isLoading="store.getIsLoading()"
+        :loadError="store.getLoadError() || ''"
         @edit="editarEmpresa"
         @delete="prepararExclusao"
       />
 
       <!-- Modal de formulário -->
       <EmpresaForm
-        v-if="showModalValue"
-        :formData="formDataValue"
-        :isEditing="isEditingValue"
-        :editingId="editingIdValue"
+        v-if="store.getShowModal()"
+        :formData="store.getFormData()"
+        :isEditing="store.getIsEditing()"
+        :editingId="store.getEditingId()"
         @submit="salvarEmpresa"
         @cancel="resetarFormulario"
         @update:cnpjError="cnpjError = $event"
@@ -38,24 +38,24 @@
 
       <!-- Modal de confirmação de exclusão -->
       <EmpresaDeleteDialog
-        v-if="showDeleteDialogValue && empresaToDeleteValue"
-        :empresa="empresaToDeleteValue"
+        v-if="store.getShowDeleteDialog() && store.getEmpresaToDelete()"
+        :empresa="store.getEmpresaToDelete()"
         @confirm="confirmarExclusao"
         @cancel="fecharModalDelete"
       />
 
       <!-- Toast notifications -->
       <EmpresaToast
-        v-if="showToastValue"
-        :message="toastMessageValue"
-        :type="toastTypeValue"
+        v-if="store.getShowToast()"
+        :message="store.getToastMessage()"
+        :type="store.getToastType()"
       />
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import TheSidebar from '@/components/TheSidebar.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 import { useEmpresasStore } from './composables/useEmpresasStore'
@@ -78,20 +78,6 @@ export default {
     const cnpjError = ref('') 
     const store = useEmpresasStore()
     
-    // Computados para evitar passar refs diretamente
-    const empresasValue = computed(() => store.empresas || [])
-    const isLoadingValue = computed(() => !!store.isLoading)
-    const loadErrorValue = computed(() => store.loadError || null)
-    const showModalValue = computed(() => !!store.showModal)
-    const formDataValue = computed(() => store.formData || {})
-    const isEditingValue = computed(() => !!store.isEditing)
-    const editingIdValue = computed(() => store.editingId || null)
-    const showDeleteDialogValue = computed(() => !!store.showDeleteDialog)
-    const empresaToDeleteValue = computed(() => store.empresaToDelete || null)
-    const showToastValue = computed(() => !!store.showToast)
-    const toastMessageValue = computed(() => store.toastMessage || '')
-    const toastTypeValue = computed(() => store.toastType || 'success')
-    
     const handleSidebarToggle = (expanded) => {
       isSidebarExpanded.value = expanded
     }
@@ -103,7 +89,7 @@ export default {
     
     const abrirModalNovo = () => {
       store.resetForm()
-      store.showModal = true
+      store.showModal.value = true
     }
     
     const editarEmpresa = (empresa) => {
@@ -145,24 +131,9 @@ export default {
     })
     
     return {
-      // Refs e valores computados
       store,
       isSidebarExpanded,
       cnpjError,
-      empresasValue,
-      isLoadingValue,
-      loadErrorValue,
-      showModalValue,
-      formDataValue,
-      isEditingValue,
-      editingIdValue,
-      showDeleteDialogValue,
-      empresaToDeleteValue,
-      showToastValue,
-      toastMessageValue,
-      toastTypeValue,
-      
-      // Métodos
       handleSidebarToggle,
       recarregarDados,
       abrirModalNovo,
