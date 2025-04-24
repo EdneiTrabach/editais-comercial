@@ -20,46 +20,73 @@ export function gerarScriptsTemplate(timestamp) {
   return `
     <script>
       (function() {
-        // Este script será executado quando o documento for carregado no editor
-        setTimeout(function() {
-          console.log('CaracteristicasTemplate: Script carregado');
+        // Função para inicializar todos os componentes
+        function inicializarComponentes() {
+          console.log('Inicializando componentes do relatório...');
           
           // Pedidos de Esclarecimentos
+          inicializarEsclarecimentos();
+          
+          // Outros componentes
+          inicializarVisita();
+          inicializarDocumentos();
+          inicializarJulgamento();
+        }
+        
+        // Função para inicializar componentes de esclarecimentos
+        function inicializarEsclarecimentos() {
           const esclarecimentosSimRadio = document.getElementById('${esclarecimentosSimId}');
           const esclarecimentosNaoRadio = document.getElementById('${esclarecimentosNaoId}');
           const esclarecimentosContainer = document.getElementById('${esclarecimentosContainerId}');
           
+          console.log('Buscando elementos: ', 
+            '${esclarecimentosSimId}', 
+            '${esclarecimentosNaoId}', 
+            '${esclarecimentosContainerId}');
+            
+          console.log('Elementos encontrados: ', 
+            esclarecimentosSimRadio ? 'Sim' : 'Não', 
+            esclarecimentosNaoRadio ? 'Sim' : 'Não', 
+            esclarecimentosContainer ? 'Sim' : 'Não');
+          
           if (esclarecimentosSimRadio && esclarecimentosNaoRadio && esclarecimentosContainer) {
-            console.log('CaracteristicasTemplate: Elementos de esclarecimentos encontrados');
+            console.log('Configurando eventos para esclarecimentos');
             
             // Função para mostrar/esconder o campo de texto
             function toggleEsclarecimentosText() {
-              console.log('CaracteristicasTemplate: Toggle texto', esclarecimentosSimRadio.checked);
-              esclarecimentosContainer.style.display = esclarecimentosSimRadio.checked ? 'block' : 'none';
+              if (esclarecimentosSimRadio.checked) {
+                esclarecimentosContainer.style.display = 'block';
+                console.log('Mostrando textarea de esclarecimentos');
+              } else {
+                esclarecimentosContainer.style.display = 'none';
+                console.log('Escondendo textarea de esclarecimentos');
+              }
             }
             
             // Adiciona os event listeners
             esclarecimentosSimRadio.addEventListener('click', function() {
-              console.log('CaracteristicasTemplate: Sim clicado');
               this.checked = true;
               if (esclarecimentosNaoRadio) esclarecimentosNaoRadio.checked = false;
               toggleEsclarecimentosText();
+              console.log('Radio SIM clicado');
             });
             
             esclarecimentosNaoRadio.addEventListener('click', function() {
-              console.log('CaracteristicasTemplate: Não clicado');
               this.checked = true;
               if (esclarecimentosSimRadio) esclarecimentosSimRadio.checked = false;
               toggleEsclarecimentosText();
+              console.log('Radio NÃO clicado');
             });
             
             // Inicializa o estado
             toggleEsclarecimentosText();
           } else {
-            console.error('CaracteristicasTemplate: Elementos de esclarecimentos não encontrados');
+            console.error('Elementos de esclarecimentos não encontrados');
           }
-          
-          // Visita antes da Licitação
+        }
+        
+        // Função para inicializar visita antes da licitação
+        function inicializarVisita() {
           const visitaSimRadio = document.getElementById('${visitaSimId}');
           const visitaNaoRadio = document.getElementById('${visitaNaoId}');
           
@@ -74,8 +101,10 @@ export function gerarScriptsTemplate(timestamp) {
               if (visitaSimRadio) visitaSimRadio.checked = false;
             });
           }
-          
-          // Incluir documentos com preço
+        }
+        
+        // Função para inicializar incluir documentos com preço
+        function inicializarDocumentos() {
           const docsSimRadio = document.getElementById('${docsSimId}');
           const docsNaoRadio = document.getElementById('${docsNaoId}');
           
@@ -90,8 +119,10 @@ export function gerarScriptsTemplate(timestamp) {
               if (docsSimRadio) docsSimRadio.checked = false;
             });
           }
-          
-          // Julgamento por lances
+        }
+        
+        // Função para inicializar julgamento por lances
+        function inicializarJulgamento() {
           const julgamentoSimRadio = document.getElementById('${julgamentoSimId}');
           const julgamentoNaoRadio = document.getElementById('${julgamentoNaoId}');
           
@@ -106,7 +137,16 @@ export function gerarScriptsTemplate(timestamp) {
               if (julgamentoSimRadio) julgamentoSimRadio.checked = false;
             });
           }
-        }, 500);
+        }
+        
+        // Tenta inicializar os componentes assim que possível
+        setTimeout(inicializarComponentes, 100);
+        
+        // Se a primeira tentativa falhar, tenta novamente com um intervalo maior
+        setTimeout(inicializarComponentes, 500);
+        
+        // Uma última tentativa com intervalo ainda maior
+        setTimeout(inicializarComponentes, 1000);
       })();
     </script>
   `;
