@@ -9,7 +9,7 @@ export function gerarPedidosEsclarecimentosTemplate(processo, timestamp) {
   const esclarecimentosNaoId = `esclarecimentos-nao-${timestamp}`;
   const esclarecimentosTextId = `esclarecimentos-text-${timestamp}`;
   const esclarecimentosContainerId = `esclarecimentos-container-${timestamp}`;
-  
+
   return `
     <tr>
       <td style="width:40%; padding:8px; border-bottom:1px solid #ddd;"><strong>Pedidos de Esclarecimentos:</strong></td>
