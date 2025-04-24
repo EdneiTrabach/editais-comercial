@@ -1,0 +1,16 @@
+.relatorios-participar-container {
+  display: flex;
+  overflow: hidden;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: 80px;
+  padding: 20px;
+  transition: margin-left 0.3s;
+  overflow-y: auto;
+}
+
+.main-content.sidebar-expanded {
+  margin-left: 240px;
+}

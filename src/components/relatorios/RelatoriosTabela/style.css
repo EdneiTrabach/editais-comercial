@@ -1,0 +1,69 @@
+.table-container {
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-vamos-participar {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status-ganhamos {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+}
+
+.status-perdemos {
+  background-color: #ffebee;
+  color: #b71c1c;
+}
+
+.row-ganhamos {
+  background-color: #f0fff0;
+}
+
+.row-perdemos {
+  background-color: #fff0f0;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 30px;
+  font-size: 18px;
+  color: #666;
+}
+
+.no-data {
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  color: #666;
+}

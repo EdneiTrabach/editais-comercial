@@ -11,7 +11,7 @@ import ResponsaveisAdminView from '../views/ResponsaveisAdminView.vue'
 import LancesView from '../views/LancesView.vue'
 import PlanilhaValoresReadequada from '@/components/lances/PlanilhaValoresReadequada.vue'
 import BackupsView from '@/views/BackupsView.vue'
-import RelatoriosParticiparView from '../views/RelatoriosParticiparView.vue';
+import RelatoriosParticiparView from '@/views/RelatoriosParticiparView.vue';
 
 const requireAdmin = async (to, from, next) => {
   try {
