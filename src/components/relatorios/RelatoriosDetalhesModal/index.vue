@@ -29,6 +29,36 @@
               <strong>Sistemas:</strong> {{ getSistemasNomes(processo.sistemas_ativos) }}
             </div>
           </div>
+          
+          <div class="secao">
+            <h5>Informações Adicionais</h5>
+            <div class="info-adicional">
+              <div class="info-item">
+                <strong>Edital:</strong> {{ processo.edital || 'Não informado' }}
+              </div>
+              <div class="info-item">
+                <strong>Local Pregão:</strong> {{ processo.local_pregao || 'Não informado' }}
+              </div>
+              <div class="info-item">
+                <strong>Objeto Completo:</strong> {{ processo.objeto_completo || 'Não informado' }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="secao">
+            <h5>Observações</h5>
+            <p v-if="processo.campo_adicional1">{{ processo.campo_adicional1 }}</p>
+            <p v-else>Nenhuma observação registrada.</p>
+          </div>
+          
+          <div class="acoes">
+            <button class="btn btn-primary" @click="irParaRelatorio">
+              <i class="fas fa-file-alt"></i> Acessar Relatório
+            </button>
+          </div>
+        </div>
+        <div v-else class="sem-dados">
+          Nenhum dado disponível para este processo.
         </div>
       </div>
     </div>

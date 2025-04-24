@@ -255,7 +255,7 @@ export default {
     };
 
     const irParaProcesso = (processo) => {
-      router.push(`/processos/${processo.id}`);
+      router.push(`/processos/${processo.id}/relatorio`);
     };
 
     return {

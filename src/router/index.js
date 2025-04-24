@@ -201,10 +201,30 @@ const router = createRouter({
     {
       path: '/relatorios-participar',
       name: 'relatorios-participar',
-      component: RelatoriosParticiparView,
+      component: () => import('@/views/RelatoriosParticiparView.vue'),
       meta: { requiresAuth: true }
     },
-    
+    {
+      path: '/processos/:id/relatorio',
+      name: 'ProcessoRelatorio',
+      component: () => import('@/views/ProcessoRelatorioView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Relatório de Processo'
+      }
+    },
+    {
+      path: '/processos/:id/relatorio',
+      name: 'ProcessoRelatorio',
+      component: () => import('../views/ProcessoRelatorioView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/processos/:id/relatorio',
+      name: 'ProcessoRelatorio',
+      component: () => import('../views/ProcessoRelatorioView.vue'),
+      meta: { requiresAuth: true }
+    }
   ]
 })
 

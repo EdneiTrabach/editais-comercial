@@ -1,16 +1,25 @@
 .relatorios-participar-container {
   display: flex;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .main-content {
-  flex-grow: 1;
-  margin-left: 80px;
+  flex: 1;
   padding: 20px;
   transition: margin-left 0.3s;
-  overflow-y: auto;
+  margin-left: 250px;
+  background-color: #f7f9fc;
 }
 
 .main-content.sidebar-expanded {
-  margin-left: 240px;
+  margin-left: 250px;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 60px;
+}
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
 }

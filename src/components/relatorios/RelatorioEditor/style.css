@@ -1,0 +1,106 @@
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  min-height: 600px;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid #e1e1e1;
+  background-color: #f9f9f9;
+  border-radius: 8px 8px 0 0;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 5px;
+  padding: 0 5px;
+  border-right: 1px solid #e1e1e1;
+}
+
+.toolbar-group:last-child {
+  border-right: none;
+}
+
+.toolbar-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.toolbar-btn:hover {
+  background-color: #f0f0f0;
+  border-color: #ddd;
+}
+
+.toolbar-btn:active {
+  background-color: #e6e6e6;
+}
+
+.toolbar-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  color: #333;
+}
+
+.toolbar-color {
+  height: 30px;
+  width: 30px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.editor-wrapper {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.editor-content {
+  width: 100%;
+  min-height: 100%;
+  outline: none;
+  background-color: white;
+  padding: 20px 40px;
+  box-shadow: 0 0 0 1px #e1e1e1;
+  border-radius: 2px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.editor-content:focus {
+  box-shadow: 0 0 0 2px #4299e1;
+}
+
+.editor-content h1, .editor-content h2, .editor-content h3, .editor-content h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+}
+
+.editor-content p {
+  margin-bottom: 1em;
+}
+
+.editor-content ul, .editor-content ol {
+  margin-left: 2em;
+  margin-bottom: 1em;
+}

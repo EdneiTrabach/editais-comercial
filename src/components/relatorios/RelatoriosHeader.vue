@@ -1,3 +1,26 @@
+<template>
+  <div class="header-section">
+    <h1>Relatórios de Processos com Participação</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" @click="$emit('sincronizar')">
+        <i class="fas fa-sync"></i> Sincronizar Processos
+      </button>
+      <button class="btn btn-success" @click="$emit('exportar-excel')">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+      </button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'RelatoriosHeader',
+  
+  emits: ['sincronizar', 'exportar-excel']
+}
+</script>
+
+<style scoped>
 .header-section {
   display: flex;
   justify-content: space-between;
@@ -47,3 +70,4 @@
 .btn-success:hover {
   background-color: #218838;
 }
+</style>
