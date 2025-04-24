@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createAppService } from './services/appService'
+import { iniciarMonitoramentoProcessos } from './utils/processoStatusMonitor';
 // Importações de estilos
 import './assets/styles/themes/theme.css'
 import './assets/styles/themes/dark-mode.css'
@@ -43,5 +44,8 @@ app.component('EmpresaVencedoraColuna', EmpresaVencedoraColuna)
 
 // Configurar tratamento de visibilidade
 setupVisibilityHandling()
+
+// Após inicializar a aplicação Vue
+iniciarMonitoramentoProcessos();
 
 app.mount('#app')
