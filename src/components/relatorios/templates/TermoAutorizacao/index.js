@@ -25,15 +25,18 @@ import { gerarAssinaturas } from './AssinaturasTemplate';
 export async function gerarModeloRelatorio(processo) {
   if (!processo) return '';
   
+  // Timestamp único para evitar conflitos de IDs
+  const timestamp = Date.now();
+  
   // Combina todos os módulos em um único HTML
   return `
     ${gerarCabecalho(processo)}
     
     ${gerarDadosCliente(processo)}
     
-    ${gerarCaracteristicas(processo)}
+    ${gerarCaracteristicas(processo, timestamp)}
     
-    ${gerarValores(processo)}
+    ${gerarValores(processo, timestamp)}
     
     ${gerarImpedimentos(processo)}
     
@@ -61,6 +64,31 @@ export async function gerarModeloRelatorio(processo) {
     
     ${gerarParticipacao(processo)}
     
+    ${gerarAssinaturas(processo)}
+  `;
+}
+
+export function gerarRelatorio(processo) {
+  const timestamp = Date.now();
+  
+  return `
+    ${gerarCabecalho(processo)}
+    ${gerarDadosCliente(processo)}
+    ${gerarCaracteristicas(processo, timestamp)}
+    ${gerarValores(processo, timestamp)}
+    ${gerarImpedimentos(processo)}
+    ${gerarItensImpugnativeis(processo)}
+    ${gerarConcorrencia(processo)}
+    ${gerarInfoAdicionais(processo)}
+    ${gerarPeriodicidade(processo)}
+    ${gerarDemonstracao(processo)}
+    ${gerarMultas(processo)}
+    ${gerarPrazoImplantacao(processo)}
+    ${gerarSistemasImplantar(processo)}
+    ${gerarImplantacaoTreinamento(processo)}
+    ${gerarPrazoRecurso(processo)}
+    ${gerarCondicaoReajuste(processo)}
+    ${gerarParticipacao(processo)}
     ${gerarAssinaturas(processo)}
   `;
 }

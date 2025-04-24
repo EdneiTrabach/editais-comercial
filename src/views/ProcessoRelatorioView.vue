@@ -60,39 +60,41 @@ export default {
     const erroCarregamento = ref(false);
     
     // Carregar dados do processo
-    const carregarProcesso = async () => {
+    const carregarProcesso = async (id) => {
       try {
         loading.value = true;
         erroCarregamento.value = false;
         
-        const processoId = route.params.id;
+        const processoId = id || route.params.id;
         if (!processoId) {
           throw new Error('ID do processo não fornecido');
         }
         
-        // Consulta para obter os dados do processo
-        const { data, error } = await supabase
+        // Carregar dados do processo
+        const dadosProcesso = await supabase
           .from('processos')
-          .select(`
-            *,
-            responsaveis:responsaveis_processos!processos_responsavel_id_fkey(id, nome),
-            representante:representantes!processos_representante_id_fkey(id, nome),
-            empresa:empresas(id, nome, cnpj)
-          `)
+          .select('*')
           .eq('id', processoId)
           .single();
         
-        if (error) {
-          console.error('Erro ao carregar dados do processo:', error);
-          erroCarregamento.value = true;
-          throw error;
-        }
+        // Carregar dados de análise
+        const { data: analisesItens } = await supabase
+          .from('analises_itens')
+          .select(`
+            *,
+            sistemas:sistema_id (id, nome)
+          `)
+          .eq('processo_id', processoId)
+          .order('ordem_exibicao', { ascending: true, nullsLast: true });
         
-        processo.value = data;
+        // Agora passar ambos para gerar o relatório
+        const htmlRelatorio = await gerarModeloRelatorio(dadosProcesso.data, analisesItens);
+        
+        processo.value = dadosProcesso.data;
         
         if (processo.value) {
           // Gerar conteúdo inicial do relatório baseado nos dados do processo
-          conteudoRelatorio.value = await gerarModeloRelatorio(processo.value);
+          conteudoRelatorio.value = htmlRelatorio;
         } else {
           throw new Error('Processo não encontrado');
         }
