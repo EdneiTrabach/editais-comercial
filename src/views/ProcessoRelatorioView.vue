@@ -13,19 +13,28 @@
         <p>Carregando dados do processo...</p>
       </div>
       
-      <template v-else>
+      <template v-else-if="processo">
+        <!-- Conteúdo do Relatório -->
         <RelatorioEditor 
           :processo="processo" 
           :conteudo="conteudoRelatorio"
           @update:conteudo="conteudoRelatorio = $event"
         />
       </template>
+      
+      <div v-else class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h3>Erro ao carregar o processo</h3>
+        <p>Não foi possível carregar os dados do processo. Por favor, tente novamente.</p>
+        <button class="btn btn-primary" @click="recarregar">Tentar novamente</button>
+        <button class="btn btn-secondary" @click="voltar">Voltar</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabase';
 import { exportToPDF } from '@/utils/exportRelatorioUtils';
@@ -48,32 +57,48 @@ export default {
     const processo = ref(null);
     const loading = ref(true);
     const conteudoRelatorio = ref('');
+    const erroCarregamento = ref(false);
     
     // Carregar dados do processo
     const carregarProcesso = async () => {
       try {
-        const processoId = route.params.id;
         loading.value = true;
+        erroCarregamento.value = false;
         
+        const processoId = route.params.id;
+        if (!processoId) {
+          throw new Error('ID do processo não fornecido');
+        }
+        
+        // Consulta para obter os dados do processo
         const { data, error } = await supabase
           .from('processos')
           .select(`
             *,
             responsaveis:responsaveis_processos!processos_responsavel_id_fkey(id, nome),
-            representante:representantes(id, nome),
+            representante:representantes!processos_representante_id_fkey(id, nome),
             empresa:empresas(id, nome, cnpj)
           `)
           .eq('id', processoId)
           .single();
-          
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Erro ao carregar dados do processo:', error);
+          erroCarregamento.value = true;
+          throw error;
+        }
         
         processo.value = data;
         
-        // Gerar conteúdo inicial do relatório baseado nos dados do processo
-        conteudoRelatorio.value = await gerarModeloRelatorio(processo.value);
+        if (processo.value) {
+          // Gerar conteúdo inicial do relatório baseado nos dados do processo
+          conteudoRelatorio.value = await gerarModeloRelatorio(processo.value);
+        } else {
+          throw new Error('Processo não encontrado');
+        }
       } catch (error) {
         console.error('Erro ao carregar dados do processo:', error);
+        erroCarregamento.value = true;
         alert('Erro ao carregar dados do processo');
       } finally {
         loading.value = false;
@@ -85,32 +110,44 @@ export default {
       router.back();
     };
     
+    // Função para tentar recarregar os dados
+    const recarregar = () => {
+      carregarProcesso();
+    };
+    
     // Função para exportar o relatório como PDF
     const exportarPDF = async () => {
       try {
-        if (!processo.value) return;
+        if (!processo.value) {
+          alert('Não há processo carregado para exportar');
+          return;
+        }
         
         await exportToPDF({
           conteudo: conteudoRelatorio.value,
           processo: processo.value,
           nomeArquivo: `Relatorio_${processo.value.numero_processo.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`
         });
+        
+        alert('Relatório exportado com sucesso!');
       } catch (error) {
         console.error('Erro ao exportar relatório:', error);
-        alert('Erro ao exportar relatório para PDF');
+        alert('Erro ao exportar o relatório para PDF: ' + error.message);
       }
     };
     
-    // Carregar dados do processo ao montar o componente
-    onMounted(async () => {
-      await carregarProcesso();
+    // Carregar dados ao montar o componente
+    onMounted(() => {
+      carregarProcesso();
     });
     
     return {
       processo,
       loading,
       conteudoRelatorio,
+      erroCarregamento,
       voltar,
+      recarregar,
       exportarPDF
     };
   }
@@ -140,6 +177,39 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.error-container h3 {
+  color: #d32f2f;
+  margin-bottom: 10px;
+}
+
+.error-container button {
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  margin-left: 10px;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
 }
 
 .spinner {

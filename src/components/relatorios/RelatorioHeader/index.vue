@@ -44,12 +44,13 @@ export default {
     loading: {
       type: Boolean,
       default: false
-    }
+    },
+    titulo: String
   },
   
   emits: ['voltar', 'exportar'],
   
-  setup(props) {
+  setup(props, { emit }) {
     // Obter nome do responsável
     const getResponsavelNome = (id) => {
       if (!id || !props.processo || !props.processo.responsaveis) return 'Não definido';
@@ -216,6 +217,16 @@ h1 {
 
 .btn-success:hover {
   background-color: #218838;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #333;
+  border: 1px solid #333;
+}
+
+.btn-outline:hover {
+  background-color: #f8f9fa;
 }
 
 .btn:disabled {

@@ -214,7 +214,7 @@ export default {
 }
 
 .editor-content {
-  width: 100%;
+  width: 95%;
   min-height: 100%;
   outline: none;
   background-color: white;

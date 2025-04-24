@@ -224,6 +224,13 @@ const router = createRouter({
       name: 'ProcessoRelatorio',
       component: () => import('../views/ProcessoRelatorioView.vue'),
       meta: { requiresAuth: true }
+    },
+    // Adicione a nova rota no array de rotas
+    {
+      path: '/processos/:id/termo-autorizacao',
+      name: 'ProcessoTermoAutorizacao',
+      component: () => import('../views/RelatorioTermoAutorizacaoView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
