@@ -207,12 +207,6 @@ export default {
   cursor: pointer;
 }
 
-.editor-wrapper {
-  flex: 1;
-  overflow: auto;
-  padding: 20px;
-}
-
 .editor-content {
   width: 95%;
   min-height: 100%;
