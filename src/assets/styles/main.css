@@ -13,11 +13,12 @@
 :root {
   --sidebar-bg-light: linear-gradient(180deg, #193155 0%, #0f1f35 100%);
   --sidebar-bg-dark: linear-gradient(180deg, #111827 0%, #1f2937 100%);
-  --company-red: #ff0000; /* Substitua pela sua cor */
+  --company-red: #ff0000;
+  /* Substitua pela sua cor */
 }
 
 /* Garantir que html e body tenham altura total */
-html, 
+html,
 body {
   height: 100%;
   min-height: 100vh;
@@ -36,24 +37,28 @@ body.dark-mode {
   display: flex;
   min-height: 100vh;
   width: 100%;
-  max-width: 100%;  /* Remove limite máximo */
+  max-width: 100%;
+  /* Remove limite máximo */
   margin: 0;
   padding: 0;
   font-weight: normal;
-  overflow: hidden; /* Previne scrollbars */
+  overflow: hidden;
+  /* Previne scrollbars */
 }
 
 /* Container principal */
 .main-content {
   flex: 1;
   min-height: 100vh;
-  margin-left: 260px; /* Largura da sidebar */
+  margin-left: 260px;
+  /* Largura da sidebar */
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (min-width: 1536px) {
   .main-content {
-    margin-left: 280px; /* Ajusta para nova largura da sidebar */
+    margin-left: 280px;
+    /* Ajusta para nova largura da sidebar */
   }
 }
 
