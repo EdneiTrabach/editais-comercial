@@ -796,12 +796,74 @@ export default {
       try {
         isLoading.value = true;
 
+        // Consulta original
         const { data, error } = await supabase
           .from('processos')
           .select('*')
           .order('data_pregao', { ascending: true });
 
         if (error) throw error;
+
+        // Buscar dados de empresa atual prestadora para todos os processos
+        if (data && data.length > 0) {
+          const processosIds = data.map(p => p.id);
+          
+          // Buscar todas as empresas atuais prestadoras em uma única consulta
+          const { data: empresasAtuais, error: empresasAtuaisError } = await supabase
+            .from('processos_empresa_atual_prestadora')
+            .select('*')
+            .in('processo_id', processosIds);
+          
+          if (!empresasAtuaisError && empresasAtuais && empresasAtuais.length > 0) {
+            // Extrair IDs de empresas que são UUIDs válidos
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const empresasIdsNecessarias = empresasAtuais
+              .filter(ea => ea.empresa_id && uuidRegex.test(ea.empresa_id))
+              .map(ea => ea.empresa_id);
+            
+            // Lidar com nomes de empresas diretamente no campo empresa_id
+            empresasAtuais.forEach(ea => {
+              if (ea.empresa_id && !uuidRegex.test(ea.empresa_id) && !ea.empresa_nome) {
+                ea.empresa_nome = ea.empresa_id;
+              }
+            });
+            
+            // Se houver empresas para buscar
+            if (empresasIdsNecessarias.length > 0) {
+              // Buscar dados das empresas separadamente
+              const { data: empresasData, error: empresasError } = await supabase
+                .from('empresas')
+                .select('id, nome')
+                .in('id', empresasIdsNecessarias);
+              
+              if (!empresasError && empresasData) {
+                // Criar mapeamento de ID para nome da empresa
+                const empresaNomeMap = {};
+                empresasData.forEach(empresa => {
+                  empresaNomeMap[empresa.id] = empresa.nome;
+                });
+                
+                // Adicionar nome da empresa a cada registro
+                empresasAtuais.forEach(ea => {
+                  if (ea.empresa_id && uuidRegex.test(ea.empresa_id) && empresaNomeMap[ea.empresa_id]) {
+                    ea.empresa_nome = empresaNomeMap[ea.empresa_id];
+                  }
+                });
+              }
+            }
+            
+            // Criar mapeamento para facilitar o acesso por processo_id
+            const empresasAtuaisPorProcesso = {};
+            empresasAtuais.forEach(ea => {
+              empresasAtuaisPorProcesso[ea.processo_id] = ea;
+            });
+            
+            // Adicionar dados de empresa atual a cada processo
+            data.forEach(processo => {
+              processo._empresa_atual_prestadora = empresasAtuaisPorProcesso[processo.id] || null;
+            });
+          }
+        }
 
         await processarProcessos(data);
 

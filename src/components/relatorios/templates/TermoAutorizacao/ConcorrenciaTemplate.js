@@ -9,23 +9,44 @@ export function gerarConcorrencia(processo, timestamp) {
   console.log('Dados do processo completo:', processo);
 
   // Obter dados do prestador atual
-  // Note: aqui estamos buscando os dados na estrutura correta do objeto processo
-  const empresaAtualData = processo.empresa_atual_prestadora || {};
   let empresaAtualNome = '';
   let empresaAtualContrato = '';
   
-  // Extrair dados da empresa atual prestadora
-  if (typeof empresaAtualData === 'string' && empresaAtualData.includes('{')) {
-    try {
-      const parsedData = JSON.parse(empresaAtualData);
-      empresaAtualNome = parsedData.empresa_nome || parsedData.nomeEmpresa || '';
-      empresaAtualContrato = parsedData.numero_contrato || parsedData.numeroContrato || '';
-    } catch (e) {
+  // Se existir a propriedade _empresa_atual_prestadora (adicionada via join)
+  if (processo._empresa_atual_prestadora) {
+    const dadosAtualPrestadora = processo._empresa_atual_prestadora;
+    
+    // Verificar por ordem de prioridade os campos possíveis para o nome da empresa
+    if (dadosAtualPrestadora.empresa_nome) {
+      empresaAtualNome = dadosAtualPrestadora.empresa_nome;
+    } else if (dadosAtualPrestadora.empresa_id && !isUUID(dadosAtualPrestadora.empresa_id)) {
+      // Se empresa_id não for um UUID, provavelmente é um nome de empresa
+      empresaAtualNome = dadosAtualPrestadora.empresa_id;
+    } else if (dadosAtualPrestadora.empresa_id && processo._empresas && processo._empresas[dadosAtualPrestadora.empresa_id]) {
+      empresaAtualNome = processo._empresas[dadosAtualPrestadora.empresa_id].nome || '';
+    }
+    
+    empresaAtualContrato = dadosAtualPrestadora.numero_contrato || '';
+  } 
+  // Usar o formato legado se existir
+  else if (processo.empresa_atual_prestadora) {
+    const empresaAtualData = processo.empresa_atual_prestadora;
+    
+    // Extrair dados da empresa atual prestadora
+    if (typeof empresaAtualData === 'string' && empresaAtualData.includes('{')) {
+      try {
+        const parsedData = JSON.parse(empresaAtualData);
+        empresaAtualNome = parsedData.empresa_nome || parsedData.nomeEmpresa || '';
+        empresaAtualContrato = parsedData.numero_contrato || parsedData.numeroContrato || '';
+      } catch (e) {
+        empresaAtualNome = empresaAtualData;
+      }
+    } else if (typeof empresaAtualData === 'object') {
+      empresaAtualNome = empresaAtualData.empresa_nome || empresaAtualData.nomeEmpresa || '';
+      empresaAtualContrato = empresaAtualData.numero_contrato || empresaAtualData.numeroContrato || '';
+    } else if (typeof empresaAtualData === 'string') {
       empresaAtualNome = empresaAtualData;
     }
-  } else if (typeof empresaAtualData === 'object') {
-    empresaAtualNome = empresaAtualData.empresa_nome || empresaAtualData.nomeEmpresa || '';
-    empresaAtualContrato = empresaAtualData.numero_contrato || empresaAtualData.numeroContrato || '';
   }
 
   // Verificar se também existe campo específico para nome e contrato
@@ -203,4 +224,11 @@ export function gerarConcorrencia(processo, timestamp) {
       </tr>
     </table>
   `;
+}
+
+// Função auxiliar para verificar se uma string é um UUID válido
+function isUUID(str) {
+  if (!str) return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
 }
