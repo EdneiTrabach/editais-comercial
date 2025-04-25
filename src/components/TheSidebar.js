@@ -215,39 +215,28 @@ export default {
     
     // Toggle do sidebar (expandir/recolher)
     const toggleSidebar = () => {
-      // Não permitir fechar a sidebar durante o tour
       if (isTourActive.value) {
-        isActive.value = true
-        isPinned.value = true
-        saveSidebarState()
-        adjustMainContent()
-        emit('sidebarToggle', true) // Emite o evento com o estado atual
-        return
-      }
-      
-      // Lógica simplificada para evitar comportamento inconsistente
-      if (isActive.value) {
-        // Se já estiver ativo, alternar entre fixo/não-fixo
-        isPinned.value = !isPinned.value
-        
-        // Se desafixar, não feche imediatamente o sidebar
-        // Deixe isso para o click outside handler
-        
-        // Emitir o evento apenas se o estado realmente mudar
-        emit('sidebarToggle', true) // Sidebar continua ativa
+        isActive.value = true;
+        isPinned.value = true;
+        saveSidebarState();
+      } else if (isActive.value) {
+        // Se já está ativo, toggle o estado fixado
+        isPinned.value = !isPinned.value;
+        saveSidebarState();
       } else {
-        // Se estiver inativo, ative-o
-        isActive.value = true
-        emit('sidebarToggle', true) // Sidebar agora está ativa
+        // Se não está ativo, ativar
+        isActive.value = true;
+        isPinned.value = true; // Quando ativamos manualmente, já fixa
+        saveSidebarState();
       }
-    
-      // Salvar estado e ajustar conteúdo
-      saveSidebarState()
       
-      // Ajustar conteúdo após pequeno delay para garantir que o DOM foi atualizado
+      // Emitir evento de toggle
+      emit('sidebarToggle', isActive.value);
+      
+      // Ajustar o conteúdo após uma breve espera
       setTimeout(() => {
-        adjustMainContent()
-      }, 10)
+        adjustMainContent();
+      }, 10);
     }
     
     // Salvar estado do sidebar no localStorage
@@ -258,33 +247,29 @@ export default {
     
     // Carregar estado do sidebar do localStorage
     const loadSidebarState = () => {
-      isActive.value = localStorage.getItem('sidebarState') === 'true'
-      isPinned.value = localStorage.getItem('sidebarPinned') === 'true'
+      const savedState = localStorage.getItem('sidebarState');
+      isActive.value = savedState === 'true';
+      isPinned.value = localStorage.getItem('sidebarPinned') === 'true';
+      
+      // Se não houver estado salvo, começa recolhido
+      if (savedState === null) {
+        isActive.value = false;
+        localStorage.setItem('sidebarState', 'false');
+      }
     }
 
     // Ajustar margens do conteúdo principal
     const adjustMainContent = () => {
       const mainContents = document.querySelectorAll('.main-content')
       mainContents.forEach(content => {
-        // Verifique se o elemento já possui a classe 'expanded'
-        const hasExpandedClass = content.classList.contains('expanded');
-        
-        // Ajuste as margens com base no estado do sidebar
-        if (isActive.value || isPinned.value) {
-          content.style.marginLeft = '330px';
-          // Se estiver expandido, remova a classe expanded
-          if (hasExpandedClass) {
-            content.classList.remove('expanded');
-          }
+        if (isActive.value) {
+          content.style.marginLeft = '280px';
+          content.classList.add('expanded');
         } else {
-          content.style.marginLeft = '0';
-          // Se não estiver expandido, adicione a classe expanded
-          if (!hasExpandedClass) {
-            content.classList.add('expanded');
-          }
+          content.style.marginLeft = '70px';
+          content.classList.remove('expanded');
         }
-        
-        content.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        content.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
       })
     }
 
@@ -393,7 +378,7 @@ export default {
         if (sidebar && trigger && 
             !sidebar.contains(e.target) && 
             !trigger.contains(e.target)) {
-          if (!isPinned.value) {
+          if (!isPinned.value && isActive.value) {
             isActive.value = false
             adjustMainContent()
             

@@ -6,9 +6,7 @@
       'pinned': isPinned
     }">
       <div class="sidebar-trigger" @click="toggleSidebar" :title="sidebarTriggerTooltip">
-        <span v-if="!isActive">▶</span>
-        <img v-else-if="isPinned" src="/icons/pin.svg" alt="Fixado" class="icon-pin" />
-        <span v-else>◀</span>
+        <!-- Removemos o span com as setas, agora usamos ::before para os ícones -->
       </div>
 
       <div class="sidebar-header">

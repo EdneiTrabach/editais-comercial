@@ -8,48 +8,98 @@
 /* Sidebar principal */
 .sidebar {
   position: fixed;
-  left: -330px;
+  left: 0;
+  /* Alterado de -330px para 0 */
   top: 0;
   height: 96%;
-  width: 260px;
+  width: 70px;
+  /* Largura recolhida */
   background: linear-gradient(135deg, #193155, #254677);
-  /* Bordô elegante */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  padding: 2rem 1rem;
+  padding: 2rem 0.5rem;
+  /* Menos padding horizontal */
   box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  /* Evita overflow durante a transição */
 }
 
-.sidebar.active,
-.sidebar.pinned {
-  left: 0;
-  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
+.sidebar.active {
+  width: 260px;
+  /* Largura expandida */
+  padding: 2rem 1rem;
 }
 
-/* Modifique a visibilidade do trigger */
-.sidebar.active:not(.pinned) .sidebar-trigger {
-  background: #2f3b72;
-  /* Mantém consistente com o sidebar */
+/* Mostrar/ocultar texto e título com base no estado do sidebar */
+.sidebar:not(.active) .link-text,
+.sidebar:not(.active) .sidebar-title {
+  display: none;
 }
 
-.sidebar.pinned .sidebar-trigger {
+/* Centralizar ícones quando a sidebar está recolhida */
+.sidebar:not(.active) .sidebar-menu-link {
+  justify-content: center;
+  padding: 0.9rem 0;
+}
+
+.sidebar:not(.active) .sidebar-logo {
+  margin: 0 auto;
+  left: -10px;
+  position: relative;
+}
+
+/* Ajuste o header para centralizar quando recolhido */
+.sidebar:not(.active) .sidebar-header {
+  justify-content: center;
+  gap: 0;
+}
+
+/* Ajuste botão de trigger */
+.sidebar-trigger {
+  position: absolute;
+  right: 0px;
+  top: 80px;
+  width: 25px;
+  height: 30px;
   background: linear-gradient(135deg, #193155, #254677);
-  ;
-  /* Tom mais escuro quando fixado */
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 999;
+  color: white;
+  border: none;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15);
 }
 
-/* Ajuste main-content */
+.sidebar-trigger:hover {
+  transform: scale(1.1);
+}
+
+/* Centralizar ícones no bottom section quando recolhido */
+.sidebar:not(.active) .bottom-section .sidebar-menu-link,
+.sidebar:not(.active) .theme-toggle,
+.sidebar:not(.active) .logout-btn {
+  justify-content: center;
+  padding: 0.9rem 0;
+}
+
+/* Ajustar conteúdo principal */
 :deep(.main-content) {
+  margin-left: 70px;
+  /* Margem para sidebar recolhida */
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-left: 0;
 }
 
 :deep(.main-content.expanded) {
   margin-left: 260px;
+  /* Margem para sidebar expandida */
 }
 
 @media (min-width: 1536px) {
@@ -65,33 +115,6 @@
 
 .sidebar.pinned {
   left: 0;
-}
-
-.sidebar-trigger {
-  position: absolute;
-  right: -32px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(135deg, #193155, #254677);
-  ;
-  /* Mesma cor do topo do sidebar */
-  width: 35px;
-  height: 75px;
-  border-radius: 0 8px 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: white;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
-  z-index: 999;
-}
-
-.sidebar-trigger:hover {
-  background: #8B4B52;
-  /* Tom mais claro para hover */
-  width: 40px;
 }
 
 .sidebar-header {
@@ -119,30 +142,6 @@
   font-size: 1.2rem;
   font-weight: 600;
   margin-right: 10px;
-}
-
-/* Ajuste do trigger */
-.sidebar-trigger {
-  position: absolute;
-  right: -32px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--company-red, #193155);
-  width: 35px;
-  height: 75px;
-  border-radius: 0 8px 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: white;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
-}
-
-.sidebar-trigger:hover {
-  background: #1f2937;
-  width: 40px;
 }
 
 /* Ajuste do menu para scroll */
@@ -215,9 +214,7 @@
   border-radius: 10px;
   transition: all 0.3s ease;
   white-space: nowrap;
-  /* Evita quebra de texto */
   width: 100%;
-  /* Alterado de 80% para 100% */
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,7 +244,6 @@
   border-top: 1px solid rgba(217, 142, 119, 0.2);
   /* Separador em cobre sutil */
   background: linear-gradient(135deg, #193155, #254677);
-  ;
   overflow-x: hidden;
   /* Previne scroll horizontal */
   width: 100%;
@@ -256,20 +252,7 @@
   /* Adiciona um pequeno padding */
   box-sizing: border-box;
   /* Inclui padding no cálculo da largura */
-}
-
-/* Ajuste os links dentro do bottom-section */
-.bottom-section .sidebar-menu-link {
-  width: 100%;
-  /* Faz os links ocuparem toda a largura */
-  box-sizing: border-box;
-  /* Inclui padding no cálculo */
-  white-space: nowrap;
-  /* Mantém texto em uma linha */
-  overflow: hidden;
-  /* Esconde overflow */
-  text-overflow: ellipsis;
-  /* Adiciona ... quando texto é muito longo */
+  left: -1px;
 }
 
 .theme-toggle,
@@ -310,20 +293,10 @@
   background: none;
   border: none;
   color: white;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
 }
 
 /* Media queries ajustadas */
 @media (min-width: 1536px) {
-  .sidebar {
-    width: 280px;
-    /* Aumenta levemente a largura */
-    padding: 2rem 1.5rem;
-    /* Mais espaço interno */
-  }
-
   .sidebar-menu-link {
     padding: 1rem 1.4rem;
     /* Mais espaço para itens */
@@ -373,16 +346,13 @@
 .tour-button {
   background: none;
   border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
   padding: 0;
-  margin-left: 5px;
   opacity: 0.7;
   transition: opacity 0.3s;
+  position: relative;
 }
 
 .tour-button:hover {
@@ -392,6 +362,7 @@
 .tour-button img {
   width: 18px;
   height: 18px;
+  position: relative;
 }
 
 /* Estilo para sidebar quando o tour está ativo */
@@ -403,6 +374,92 @@
 /* Garante que a sidebar fique visível mesmo durante transições do tour */
 .shepherd-enabled .sidebar.active {
   left: 0 !important;
+}
+
+/* Ajuste para o tour-button quando o sidebar está recolhido */
+.sidebar:not(.active) .tour-button img {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  left: -28px;
+  top: 45px;
+}
+
+/* Posicionamento do botão tour quando o sidebar está EXPANDIDO */
+.sidebar.active .tour-button {
+  background: none;
+  border: none;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-left: 0px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  position: relative;
+  left: -15px;
+  top: 0; /* Reset do top quando expandido */
+}
+
+/* Regra geral para o botão de tour (propriedades comuns) */
+.tour-button:hover {
+  opacity: 1;
+}
+
+/* Regra específica para a imagem dentro do botão tour quando o sidebar está EXPANDIDO */
+.sidebar.active .tour-button img {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  left: 0px;
+}
+
+/* Expandir sidebar automaticamente ao passar o mouse */
+.sidebar:not(.pinned):not(.active):hover {
+  width: 260px;
+  padding: 2rem 1rem;
+}
+
+/* Mostrar texto e título quando o mouse passa sobre o sidebar */
+.sidebar:not(.pinned):not(.active):hover .link-text,
+.sidebar:not(.pinned):not(.active):hover .sidebar-title {
+  display: block;
+}
+
+/* Ajustar o layout dos links quando expande com hover */
+.sidebar:not(.pinned):not(.active):hover .sidebar-menu-link {
+  justify-content: flex-start;
+  padding: 0.9rem 1.2rem;
+}
+
+/* Ajustar o layout do logo quando expande com hover */
+.sidebar:not(.pinned):not(.active):hover .sidebar-logo {
+  margin: 0;
+}
+
+/* Ajustar o header quando expande com hover */
+.sidebar:not(.pinned):not(.active):hover .sidebar-header {
+  justify-content: flex-start;
+  gap: 5rem;
+}
+
+/* Estilo melhorado para o botão de trigger/pin */
+.sidebar-trigger::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.92 5.92 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146zm.122 2.112v-.002zm0-.002v.002a.5.5 0 0 1-.122.51L6.293 6.878a.5.5 0 0 1-.511.12H5.78l-.014-.004a4.507 4.507 0 0 0-.288-.076 4.922 4.922 0 0 0-.765-.116c-.422-.028-.836.008-1.175.15l5.51 5.509c.141-.34.177-.753.149-1.175a4.924 4.924 0 0 0-.192-1.054l-.004-.013v-.001a.5.5 0 0 1 .12-.512l3.536-3.535a.5.5 0 0 1 .532-.115l.096.022c.087.017.208.034.344.034.114 0 .23-.011.343-.04L9.927 2.028c-.029.113-.04.23-.04.343a1.779 1.779 0 0 0 .062.46z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: rotate(45deg);
+}
+
+/* Ícone de pin quando fixado */
+.sidebar.pinned .sidebar-trigger::before {
+  transform: rotate(0);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A5.921 5.921 0 0 1 5 6.708V2.277a2.77 2.77 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354zm1.58 1.408l-.002-.001.002.001zm-.002-.001l.002.001A.5.5 0 0 1 6 2v5a.5.5 0 0 1-.276.447h-.002l-.012.007-.054.03a4.922 4.922 0 0 0-.827.58c-.318.278-.585.596-.725.936h7.792c-.14-.34-.407-.658-.725-.936a4.915 4.915 0 0 0-.881-.61l-.012-.006h-.002A.5.5 0 0 1 10 7V2a.5.5 0 0 1 .295-.458 1.775 1.775 0 0 0 .351-.271c.08-.08.155-.17.214-.271H5.14c.06.1.133.191.214.271a1.78 1.78 0 0 0 .37.282z'/%3E%3C/svg%3E");
 }
 
 /* Adicione estes estilos no final do arquivo */

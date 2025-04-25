@@ -31,9 +31,7 @@ export default {
 </script>
 
 <style scoped>
-.notifications-btn {
-  position: relative;
-}
+
 
 .notification-icon-wrapper {
   position: relative;
