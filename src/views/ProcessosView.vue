@@ -179,6 +179,7 @@
                         <AtualPrestadorColuna 
                           :processo="processo" 
                           @update="handleUpdate(processo)"
+                          :skip-confirmation="true"
                         />
                       </template>
                       <template #fallback>

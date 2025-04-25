@@ -2,30 +2,19 @@
   <div class="empresa-vencedora-coluna">
     <div v-if="isEditing" class="editing-mode">
       <div class="edit-container">
-        <select v-if="showEmpresaDropdown" v-model="selectedEmpresaId" class="empresa-select" @change="onEmpresaSelected">
-          <option value="">-- Selecione uma empresa --</option>
-          <option value="custom">Inserir nome da empresa manualmente</option>
-          <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
-            {{ empresa.nome }}
-          </option>
-        </select>
-        
-        <!-- Campo de texto para quando a empresa é inserida manualmente -->
-        <input 
-          v-if="!showEmpresaDropdown || selectedEmpresaId === 'custom'" 
+        <!-- Remover dropdown por padrão para simplificar a interface -->
+        <input
           v-model="selectedEmpresa" 
           class="empresa-input" 
           placeholder="Digite o nome da empresa"
           type="text" 
         />
-        
         <input 
           v-model="numeroContrato" 
           class="contrato-input" 
           placeholder="Nº do Contrato" 
           type="text" 
         />
-        
         <div class="edit-actions">
           <button @click="saveAtualPrestador" class="btn-save">Salvar</button>
           <button @click="cancelEdit" class="btn-cancel">Cancelar</button>
@@ -53,12 +42,15 @@ import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'AtualPrestadorColuna',
-  props: { processo: { type: Object, required: true } },
+  props: { 
+    processo: { type: Object, required: true },
+    skipConfirmation: { type: Boolean, default: false }
+  },
   emits: ['update'],
   setup(props, ctx) {
     console.log('Inicializando AtualPrestadorColuna para processo:', props.processo.id);
     
-    // Usar o composable para gerenciar estado de edição
+    // Use apenas o que precisamos do composable
     const {
       isEditing,
       startEdit,
@@ -69,7 +61,7 @@ export default {
     const empresas = ref([]);
     const selectedEmpresa = ref('');
     const selectedEmpresaId = ref(null);
-    const showEmpresaDropdown = ref(true);
+    const showEmpresaDropdown = ref(false); // Iniciar com input de texto por padrão
     const numeroContrato = ref('');
     const valorFinal = ref(null);
     const dataAssinatura = ref(null);
@@ -98,7 +90,7 @@ export default {
       // Prevenir que o evento de clique se propague para os handlers da tabela
       event.stopPropagation();
       
-      // Iniciar edição apenas em caso de duplo clique
+      // Se skipConfirmation for true, inicia edição em duplo clique sem confirmação
       if (event.detail === 2) {
         startEdit();
       }
@@ -108,14 +100,14 @@ export default {
     const dadosExibicao = computed(() => {
       if (isEditing.value) {
         return {
-          nome: getNomeEmpresaSelecionada(),
+          nome: selectedEmpresa.value,
           contrato: numeroContrato.value || ''
         };
       }
       
       if (dadosAtualPrestador.value) {
         return {
-          nome: dadosAtualPrestador.value.empresa_nome || '',
+          nome: dadosAtualPrestador.value.empresa_nome || dadosAtualPrestador.value.empresa_id || '',
           contrato: dadosAtualPrestador.value.numero_contrato || ''
         };
       }
@@ -154,15 +146,6 @@ export default {
       return { nome: '', contrato: '' };
     });
     
-    // Função para obter o nome da empresa selecionada
-    const getNomeEmpresaSelecionada = () => {
-      if (selectedEmpresaId.value && selectedEmpresaId.value !== 'custom') {
-        const empresa = empresas.value.find(e => e.id === selectedEmpresaId.value);
-        return empresa ? empresa.nome : selectedEmpresa.value;
-      }
-      return selectedEmpresa.value;
-    };
-    
     // Função para carregar dados
     const carregarDadosAtualPrestador = async () => {
       if (!props.processo.id) return;
@@ -192,8 +175,6 @@ export default {
           if (data.empresa_id && uuidRegex.test(data.empresa_id)) {
             // É um UUID válido - buscar o nome da empresa
             selectedEmpresaId.value = data.empresa_id;
-            selectedEmpresa.value = ''; // Será preenchido com o nome da empresa abaixo
-            showEmpresaDropdown.value = true;
             
             const { data: empresaData, error: empresaError } = await supabase
               .from('empresas')
@@ -203,13 +184,15 @@ export default {
               
             if (!empresaError && empresaData) {
               dadosAtualPrestador.value.empresa_nome = empresaData.nome;
+              selectedEmpresa.value = empresaData.nome;
+            } else {
+              selectedEmpresa.value = '';
             }
           } else {
             // Não é um UUID válido - usar o valor como nome da empresa
-            selectedEmpresaId.value = 'custom';
+            selectedEmpresaId.value = null;
             selectedEmpresa.value = data.empresa_id || '';
             dadosAtualPrestador.value.empresa_nome = data.empresa_id;
-            showEmpresaDropdown.value = false;
           }
           
           numeroContrato.value = data.numero_contrato || '';
@@ -223,47 +206,38 @@ export default {
       }
     };
     
-    // Evento para quando uma empresa é selecionada do dropdown
-    const onEmpresaSelected = (event) => {
-      const empresaId = selectedEmpresaId.value;
-      
-      if (empresaId === 'custom') {
-        // Usuário escolheu inserir nome manualmente
-        showEmpresaDropdown.value = false;
-        selectedEmpresa.value = '';
-      } else if (empresaId) {
-        // Empresa selecionada do dropdown
-        const empresa = empresas.value.find(e => e.id === empresaId);
-        selectedEmpresa.value = empresa ? empresa.nome : '';
-      }
-    };
-    
     // Função para salvar
     const saveAtualPrestador = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
-        // Determinar o valor para empresa_id
+        // Verificar se o que temos é um UUID válido ou texto
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         let empresaId = null;
-        let empresaNome = null;
         
-        if (selectedEmpresaId.value === 'custom' || !showEmpresaDropdown.value) {
-          // Se é personalizado ou o dropdown está oculto, usamos o texto como empresa_id
-          if (selectedEmpresa.value) {
-            empresaId = selectedEmpresa.value;
-            empresaNome = selectedEmpresa.value;
-          }
-        } else if (selectedEmpresaId.value) {
-          // Se é um ID de empresa selecionado do dropdown
+        // Se temos um ID de empresa selecionado e é UUID válido
+        if (selectedEmpresaId.value && uuidRegex.test(selectedEmpresaId.value)) {
           empresaId = selectedEmpresaId.value;
-          const empresa = empresas.value.find(e => e.id === empresaId);
-          empresaNome = empresa ? empresa.nome : null;
+        } 
+        // Se não temos ID mas temos um nome digitado
+        else if (selectedEmpresa.value) {
+          // Verificar se o nome corresponde a uma empresa cadastrada
+          const empresaEncontrada = empresas.value.find(
+            e => e.nome.toLowerCase() === selectedEmpresa.value.toLowerCase()
+          );
+          
+          if (empresaEncontrada) {
+            // Se encontramos uma empresa com esse nome, usamos seu ID
+            empresaId = empresaEncontrada.id;
+          } else {
+            // Se não encontramos, usamos o texto digitado como o ID
+            empresaId = selectedEmpresa.value;
+          }
         }
         
         const payload = {
           processo_id: props.processo.id,
-          empresa_id: empresaId,
-          empresa_nome: empresaNome,
+          empresa_id: empresaId,  // Será o UUID se encontrado, ou o texto se não
           numero_contrato: numeroContrato.value || null,
           valor_final: valorFinal.value || null,
           data_assinatura: dataAssinatura.value || null,
@@ -312,8 +286,7 @@ export default {
       cancelEdit,
       saveAtualPrestador,
       handleClick,
-      onEmpresaSelected,
-      getNomeEmpresaSelecionada
+      onEmpresaSelected: () => {} // Função vazia para manter compatibilidade com as props retornadas
     };
   }
 };

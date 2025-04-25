@@ -1313,27 +1313,33 @@ export default {
     }
 
     const handleDblClick = async (field, processo, event) => {
+      // Ignorar completamente o clique na coluna empresa_atual_prestadora
+      // pois o componente gerencia seu próprio estado de edição
+      if (field === 'empresa_atual_prestadora') {
+        return;
+      }
+    
       if (field === 'impugnacoes') {
         showImpugnacaoDialog(processo);
         return;
       }
-
+    
       if (editingCell.value.id === processo.id && editingCell.value.field === field) {
         return;
       }
-
+    
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
+    
       if (field === 'sistemas_ativos') {
         editingCell.value = {
           id: processo.id,
           field,
           value: Array.isArray(processo[field]) ? [...processo[field]] : []
         };
-
+    
         sistemasDialog.value = {
           show: true,
           position: {
@@ -1344,17 +1350,17 @@ export default {
         };
         return;
       }
-
+    
       if (field === 'representante_id') {
         console.log('Clicked on representative field');
         debugRepresentantes();
-
+    
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
-
+    
           debugRepresentantes();
-
+    
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
             alert('Could not load the list of representatives.');
@@ -1362,15 +1368,15 @@ export default {
           }
         }
       }
-
+    
       if (field === 'responsavel_id') {
-
+    
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
-
+    
           debugRepresentantes();
-
+    
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
             alert('Could not load the list of representatives.');
@@ -1378,14 +1384,14 @@ export default {
           }
         }
       }
-
+    
       if (field === 'responsavel_id') {
         console.log('Clicked on responsável field');
-
+    
         if (responsaveisProcessos.value.length === 0) {
           console.log('Loading responsáveis on demand...');
           await loadResponsaveisProcessos();
-
+    
           if (responsaveisProcessos.value.length === 0) {
             console.error('Could not load responsáveis.');
             alert('Não foi possível carregar a lista de responsáveis.');
@@ -1393,7 +1399,7 @@ export default {
           }
         }
       }
-
+    
       confirmDialog.value = {
         show: true,
         position: {
