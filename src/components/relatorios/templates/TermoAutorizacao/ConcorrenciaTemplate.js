@@ -5,104 +5,51 @@
  * @returns {String} HTML da seção de concorrência
  */
 export function gerarConcorrencia(processo, timestamp) {
-  // Verificar todos os dados possíveis do processo para debug
-  console.log('Dados do processo completo:', processo);
-
-  // Obter dados do prestador atual
+  console.log('Dados do processo completo para debug:', processo);
+  
+  // Obter dados do atual prestador - diretamente da tabela relacionada
   let empresaAtualNome = '';
   let empresaAtualContrato = '';
   
-  // Se existir a propriedade _empresa_atual_prestadora (adicionada via join)
+  // 1. Verificar se existe o objeto _empresa_atual_prestadora (vindo da tabela relacionada)
   if (processo._empresa_atual_prestadora) {
-    const dadosAtualPrestadora = processo._empresa_atual_prestadora;
+    empresaAtualNome = processo._empresa_atual_prestadora.empresa_id || '';
+    empresaAtualContrato = processo._empresa_atual_prestadora.numero_contrato || '';
     
-    // Verificar por ordem de prioridade os campos possíveis para o nome da empresa
-    if (dadosAtualPrestadora.empresa_nome) {
-      empresaAtualNome = dadosAtualPrestadora.empresa_nome;
-    } else if (dadosAtualPrestadora.empresa_id && !isUUID(dadosAtualPrestadora.empresa_id)) {
-      // Se empresa_id não for um UUID, provavelmente é um nome de empresa
-      empresaAtualNome = dadosAtualPrestadora.empresa_id;
-    } else if (dadosAtualPrestadora.empresa_id && processo._empresas && processo._empresas[dadosAtualPrestadora.empresa_id]) {
-      empresaAtualNome = processo._empresas[dadosAtualPrestadora.empresa_id].nome || '';
-    }
-    
-    empresaAtualContrato = dadosAtualPrestadora.numero_contrato || '';
+    console.log('Dados encontrados em _empresa_atual_prestadora:', {
+      nome: empresaAtualNome,
+      contrato: empresaAtualContrato
+    });
   } 
-  // Usar o formato legado se existir
+  // 2. Se não existir, verificar no formato antigo
   else if (processo.empresa_atual_prestadora) {
-    const empresaAtualData = processo.empresa_atual_prestadora;
-    
-    // Extrair dados da empresa atual prestadora
-    if (typeof empresaAtualData === 'string' && empresaAtualData.includes('{')) {
-      try {
-        const parsedData = JSON.parse(empresaAtualData);
-        empresaAtualNome = parsedData.empresa_nome || parsedData.nomeEmpresa || '';
-        empresaAtualContrato = parsedData.numero_contrato || parsedData.numeroContrato || '';
-      } catch (e) {
-        empresaAtualNome = empresaAtualData;
-      }
-    } else if (typeof empresaAtualData === 'object') {
-      empresaAtualNome = empresaAtualData.empresa_nome || empresaAtualData.nomeEmpresa || '';
-      empresaAtualContrato = empresaAtualData.numero_contrato || empresaAtualData.numeroContrato || '';
-    } else if (typeof empresaAtualData === 'string') {
-      empresaAtualNome = empresaAtualData;
-    }
-  }
-
-  // Verificar se também existe campo específico para nome e contrato
-  if (!empresaAtualNome && processo.empresa_atual_prestadora_nome) {
-    empresaAtualNome = processo.empresa_atual_prestadora_nome;
-  }
-  
-  if (!empresaAtualContrato && processo.empresa_atual_prestadora_contrato) {
-    empresaAtualContrato = processo.empresa_atual_prestadora_contrato;
-  }
-  
-  // Log para debug
-  console.log('Dados do prestador atual extraídos:', { 
-    empresaAtualNome, 
-    empresaAtualContrato 
-  });
-  
-  // Obter dados da empresa vencedora
-  let empresaVencedoraNome = '';
-  let empresaVencedoraContrato = '';
-  
-  // Verificar se existe empresa vencedora e extrair informações
-  if (processo.empresa_vencedora) {
     try {
-      // Tentar como JSON (formato novo)
-      if (typeof processo.empresa_vencedora === 'string' && processo.empresa_vencedora.includes('{')) {
-        const dadosEmpresa = JSON.parse(processo.empresa_vencedora);
-        empresaVencedoraNome = dadosEmpresa.nomeEmpresa || dadosEmpresa.empresa_nome || '';
-        empresaVencedoraContrato = dadosEmpresa.numeroContrato || dadosEmpresa.numero_contrato || '';
-      } else {
-        // Formato antigo ou direto como string
-        empresaVencedoraNome = processo.empresa_vencedora;
+      if (typeof processo.empresa_atual_prestadora === 'string') {
+        if (processo.empresa_atual_prestadora.startsWith('{')) {
+          // Tentar parsear como JSON
+          const dados = JSON.parse(processo.empresa_atual_prestadora);
+          empresaAtualNome = dados.empresa_nome || dados.nomeEmpresa || dados.empresa_id || '';
+          empresaAtualContrato = dados.numero_contrato || dados.numeroContrato || '';
+        } else {
+          // É apenas uma string com o nome
+          empresaAtualNome = processo.empresa_atual_prestadora;
+        }
+      } else if (typeof processo.empresa_atual_prestadora === 'object') {
+        // É um objeto JavaScript
+        empresaAtualNome = processo.empresa_atual_prestadora.empresa_nome || 
+                        processo.empresa_atual_prestadora.nomeEmpresa ||
+                        processo.empresa_atual_prestadora.empresa_id || '';
+        empresaAtualContrato = processo.empresa_atual_prestadora.numero_contrato || 
+                             processo.empresa_atual_prestadora.numeroContrato || '';
       }
+      
+      console.log('Dados encontrados em empresa_atual_prestadora:', {
+        nome: empresaAtualNome,
+        contrato: empresaAtualContrato
+      });
     } catch (e) {
-      // Se falhar ao parsear como JSON, usar o valor como string
-      empresaVencedoraNome = processo.empresa_vencedora;
+      console.error('Erro ao processar empresa_atual_prestadora:', e);
     }
-  }
-  
-  // Priorizar dados da empresa atual, já que é o que queremos mostrar neste campo
-  const concorrenteNome = empresaAtualNome || empresaVencedoraNome || '';
-  const concorrenteContrato = empresaAtualContrato || empresaVencedoraContrato || '';
-  
-  // Obter distâncias formatadas (se disponíveis)
-  let distanciasTexto = '';
-  
-  if (processo._distancias && processo._distancias.length > 0) {
-    // Se tiver múltiplas distâncias no formato novo
-    distanciasTexto = processo._distancias.map(d => {
-      if (d.texto_completo) return d.texto_completo;
-      return `${d.distancia_km} km${d.ponto_referencia_cidade ? ` de ${d.ponto_referencia_cidade}/${d.ponto_referencia_uf}` : ''}`;
-    }).join(', ');
-  } else if (processo.distancia_km) {
-    // Se tiver apenas uma distância no formato antigo
-    distanciasTexto = `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
-      ` de ${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf}` : ''}`;
   }
   
   // IDs únicos para os elementos
@@ -110,13 +57,18 @@ export function gerarConcorrencia(processo, timestamp) {
   const concorrenteNomeId = `concorrente-nome-input-${timestamp}`;
   const habitantesId = `habitantes-input-${timestamp}`;
   
-  // Debug para verificar os valores
-  console.log('Dados para concorrente final:', {
-    empresaAtualNome,
-    empresaAtualContrato,
-    concorrenteNome,
-    concorrenteContrato
-  });
+  // Obter distâncias formatadas (se disponíveis)
+  let distanciasTexto = '';
+  
+  if (processo._distancias && processo._distancias.length > 0) {
+    distanciasTexto = processo._distancias.map(d => {
+      if (d.texto_completo) return d.texto_completo;
+      return `${d.distancia_km} km${d.ponto_referencia_cidade ? ` de ${d.ponto_referencia_cidade}/${d.ponto_referencia_uf}` : ''}`;
+    }).join(', ');
+  } else if (processo.distancia_km) {
+    distanciasTexto = `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
+      ` de ${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf}` : ''}`;
+  }
   
   // Script para formatação monetária (semelhante ao ValoresTemplate)
   const scriptInicializador = `
@@ -184,10 +136,10 @@ export function gerarConcorrencia(processo, timestamp) {
             id="${concorrenteNomeId}" 
             style="width: 98%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: inherit; font-size: inherit;"
             placeholder="Digite o nome do concorrente..."
-            value="${concorrenteNome}"
+            value="${empresaAtualNome}"
           />
-          ${concorrenteContrato ? 
-            `<div style="font-size: 0.9em; color: #555; margin-top: 5px;">Contrato: ${concorrenteContrato}</div>` 
+          ${empresaAtualContrato ? 
+            `<div style="font-size: 0.9em; color: #555; margin-top: 5px;">Contrato: ${empresaAtualContrato}</div>` 
             : ''}
         </td>
       </tr>

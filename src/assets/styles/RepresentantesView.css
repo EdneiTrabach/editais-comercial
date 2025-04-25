@@ -306,13 +306,6 @@
   color: var(--text-primary, #374151);
 }
 
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-}
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -625,13 +618,6 @@
   border-color: rgba(251, 191, 36, 0.4);
 }
 
-/* Melhorando o layout do formulário em grid */
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-}
 
 .form-row {
   display: grid;

@@ -1,13 +1,3 @@
-/* Estilos para formulários */
-
-/* Layout de formulário em grid */
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
