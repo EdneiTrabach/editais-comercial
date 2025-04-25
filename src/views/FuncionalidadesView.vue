@@ -49,6 +49,9 @@ import FeatureCard from '@/components/FeatureCard.vue'
 import Shepherd from '@/components/Shepherd.vue'
 import { useConnectionManager } from '@/composables/useConnectionManager'
 
+// Declare os eventos que o componente pode emitir
+defineEmits(['sidebarToggle']);
+
 const router = useRouter()
 const isSidebarExpanded = ref(true)
 const tourGuide = ref(null)
@@ -78,12 +81,12 @@ const features = [
     description: 'Visualize e gerencie análises de processos',
     route: '/analises'
   },
-  // {
-  //   icon: '/icons/edicao.svg',
-  //   title: 'Declarações',
-  //   description: 'Visualize e gerencie declarações de processos',
-  //   route: '/declaracoes'
-  // },
+  {
+    icon: '/icons/file-chart-fill.svg',
+    title: 'Relatórios de Participação',
+    description: 'Visualize e gerencie relatórios de participação',
+    route: '/relatorios-participar'
+  },
     {
     icon: '/icons/app.svg',
     title: 'Sistemas',
