@@ -5,10 +5,10 @@
  */
 export function gerarImpedimentos(processo) {
   return `
-    <h3 style="margin-bottom: 20px;">4. IMPEDIMENTOS PARA PARTICIPAÇÃO</h3>
-    <h4 style="margin-bottom: 10px;">4.1 Documental</h4>
+    <h3 style="margin-bottom: 20px;">xxx. IMPEDIMENTOS PARA PARTICIPAÇÃO</h3>
+    <h4 style="margin-bottom: 10px;">xxx.1 Documental</h4>
     <p style="margin-bottom: 20px;">_______________________________________________________________</p>
-    <h4 style="margin-bottom: 10px;">4.2 Técnica</h4>
+    <h4 style="margin-bottom: 10px;">xxx.2 Técnica</h4>
     <p style="margin-bottom: 20px;">_______________________________________________________________</p>
   `;
 }

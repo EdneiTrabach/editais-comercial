@@ -38,11 +38,11 @@ export async function gerarModeloRelatorio(processo) {
     
     ${gerarValores(processo, timestamp)}
     
-    ${gerarImpedimentos(processo)}
-    
     ${gerarItensImpugnativeis(processo)}
     
     ${gerarConcorrencia(processo)}
+    
+    ${gerarImpedimentos(processo)}
     
     ${gerarInfoAdicionais(processo)}
     
@@ -76,8 +76,8 @@ export function gerarRelatorio(processo) {
     ${gerarDadosCliente(processo)}
     ${gerarCaracteristicas(processo, timestamp)}
     ${gerarValores(processo, timestamp)}
-    ${gerarImpedimentos(processo)}
     ${gerarItensImpugnativeis(processo)}
+    ${gerarImpedimentos(processo)}
     ${gerarConcorrencia(processo)}
     ${gerarInfoAdicionais(processo)}
     ${gerarPeriodicidade(processo)}
