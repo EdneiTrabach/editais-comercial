@@ -13,7 +13,18 @@ export function gerarConcorrencia(processo, timestamp) {
   
   // 1. Verificar se existe o objeto _empresa_atual_prestadora (vindo da tabela relacionada)
   if (processo._empresa_atual_prestadora) {
-    empresaAtualNome = processo._empresa_atual_prestadora.empresa_id || '';
+    // Se empresa_id não for um UUID válido, é o próprio nome da empresa
+    const empresa_id = processo._empresa_atual_prestadora.empresa_id || '';
+    
+    // Se o empresa_id não for um UUID válido, consideramos que é o próprio nome da empresa
+    if (!isUUID(empresa_id)) {
+      empresaAtualNome = empresa_id;
+    } else {
+      // Aqui você teria que buscar o nome da empresa pelo ID, mas como não temos acesso ao banco
+      // vamos usar o ID como nome por enquanto (isso seria ajustado na implementação real)
+      empresaAtualNome = empresa_id;
+    }
+    
     empresaAtualContrato = processo._empresa_atual_prestadora.numero_contrato || '';
     
     console.log('Dados encontrados em _empresa_atual_prestadora:', {
@@ -51,6 +62,12 @@ export function gerarConcorrencia(processo, timestamp) {
       console.error('Erro ao processar empresa_atual_prestadora:', e);
     }
   }
+  
+  // Log para diagnóstico
+  console.log('Dados finais do prestador atual:', {
+    nome: empresaAtualNome,
+    contrato: empresaAtualContrato
+  });
   
   // IDs únicos para os elementos
   const valorConcorrenteId = `valor-concorrente-input-${timestamp}`;

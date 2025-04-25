@@ -179,7 +179,6 @@ export default {
 .modal-header h3 {
   margin: 0;
   font-size: 1.3rem;
-  color: #193155;
 }
 
 .btn-close {

@@ -288,7 +288,6 @@
 }
 
 .modal-header h3 {
-  color: var(--text-title, #193155);
   font-size: 1.5rem;
   margin: 0;
 }

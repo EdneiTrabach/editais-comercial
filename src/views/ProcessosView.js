@@ -3472,7 +3472,12 @@ export default {
         // Remover propriedades que não devem ser copiadas/duplicadas
         delete dadosBase.id;
         delete dadosBase._distancias; // Remover o campo virtual que causa erro
+        delete dadosBase._empresa_atual_prestadora; // Remover o campo virtual que causa erro
         delete dadosBase.updated_by;
+        delete dadosBase.representantes; // Remover outros campos virtuais possíveis
+        delete dadosBase.profiles;
+        delete dadosBase.responsaveis;
+        delete dadosBase.empresa;
         
         // Definir timestamps para o novo registro
         dadosBase.created_at = new Date().toISOString();
@@ -3731,96 +3736,99 @@ export default {
       return statusMap[status] || status;
     };
 
-    async function updateProcesso(processo) {
-      console.log('updateProcesso chamado', { 
-        id: processo.id, 
-        numero: processo.numero_processo,
-        responsavel_id: processo.responsavel_id
-      });
-      
-      try {
-        // Criar uma cópia do objeto para não modificar o original
-        const processToUpdate = { ...processo };
-        
-        // Removendo propriedades temporárias/virtuais que não existem no banco de dados
-        delete processToUpdate._distancias;
-        delete processToUpdate.representantes;
-        delete processToUpdate.profiles;
-        
-        // Garantir que campos com valor null sejam enviados explicitamente
-        // para o banco como null e não sejam ignorados na atualização
-        if (processo.responsavel_id === null) {
-          console.log('Enviando responsavel_id como NULL explicitamente');
-          processToUpdate.responsavel_id = null;
-        }
-        
-        // Registrar a atualização para histórico de ações
-        if (undoHistory.value) {
-          const currentProcess = processos.value.find(p => p.id === processo.id);
-          if (currentProcess) {
-            undoHistory.value.push({
-              type: 'update',
-              id: processo.id,
-              oldData: { ...currentProcess },
-              newData: { ...processToUpdate }
-            });
-            // Limpar o redo history quando uma nova ação é executada
-            redoHistory.value = [];
-          }
-        }
-        
-        // Adicionar timestamp e usuário de atualização
-        processToUpdate.updated_at = new Date().toISOString();
-        
-        // Se estiver disponível, adicionar o usuário que fez a alteração
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          processToUpdate.updated_by = user.id;
-        }
-        
-        console.log('Enviando dados para atualização:', processToUpdate);
-        
-        // Realizar a atualização no banco de dados
-        const { error } = await supabase
-          .from('processos')
-          .update(processToUpdate)
-          .eq('id', processo.id);
-        
-        if (error) {
-          console.error('Erro na atualização do processo:', error);
-          showToast(`Erro ao atualizar o processo: ${error.message}`, 'error');
-          throw error;
-        }
-        
-        console.log('Processo atualizado com sucesso:', processo.id);
-        
-        // Atualizar o processo na lista local
-        const index = processos.value.findIndex(p => p.id === processo.id);
-        if (index !== -1) {
-          // Mantém as propriedades virtuais do objeto original
-          if (processos.value[index]._distancias) {
-            processToUpdate._distancias = processos.value[index]._distancias;
-          }
-          
-          processos.value[index] = { ...processToUpdate };
-        }
-        
-        // Registrar a alteração no log do sistema
-        await logSystemAction({
-          tipo: 'update',
-          tabela: 'processos',
-          registro_id: processo.id,
-          dados_anteriores: JSON.stringify(processos.value.find(p => p.id === processo.id)),
-          dados_novos: JSON.stringify(processToUpdate)
+    /**
+ * Atualiza um processo no banco de dados
+ * @param {Object} processo - Dados do processo a ser atualizado
+ * @returns {Promise<boolean>} - Resultado da operação
+ */
+async function updateProcesso(processo) {
+  console.log('updateProcesso chamado', { 
+    id: processo.id, 
+    numero: processo.numero_processo,
+    responsavel_id: processo.responsavel_id
+  });
+  
+  try {
+    // Criar uma cópia do objeto para não modificar o original
+    const processToUpdate = { ...processo };
+    
+    // Remover campos virtuais e propriedades que não existem no banco de dados
+    delete processToUpdate._empresa_atual_prestadora; // Esta linha é crucial para corrigir o erro
+    delete processToUpdate._distancias;
+    delete processToUpdate.representantes;
+    delete processToUpdate.profiles;
+    delete processToUpdate.responsaveis;
+    delete processToUpdate.empresa;
+    
+    // Registrar a atualização para histórico de ações
+    if (undoHistory.value) {
+      const currentProcess = processos.value.find(p => p.id === processo.id);
+      if (currentProcess) {
+        undoHistory.value.push({
+          type: 'update',
+          id: processo.id,
+          oldData: { ...currentProcess },
+          newData: { ...processToUpdate }
         });
-        
-        return true;
-      } catch (error) {
-        console.error('Erro na atualização:', error);
-        showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
-        return false;
+        // Limpar o redo history quando uma nova ação é executada
+        redoHistory.value = [];
       }
     }
+    
+    // Adicionar timestamp e usuário de atualização
+    processToUpdate.updated_at = new Date().toISOString();
+    
+    // Se estiver disponível, adicionar o usuário que fez a alteração
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      processToUpdate.updated_by = user.id;
+    }
+    
+    console.log('Enviando dados para atualização:', processToUpdate);
+    
+    // Realizar a atualização no banco de dados
+    const { error } = await supabase
+      .from('processos')
+      .update(processToUpdate)
+      .eq('id', processo.id);
+    
+    if (error) {
+      console.error('Erro na atualização do processo:', error);
+      showToast(`Erro ao atualizar o processo: ${error.message}`, 'error');
+      throw error;
+    }
+    
+    console.log('Processo atualizado com sucesso:', processo.id);
+    
+    // Atualizar o processo na lista local
+    const index = processos.value.findIndex(p => p.id === processo.id);
+    if (index !== -1) {
+      // Mantém as propriedades virtuais do objeto original
+      if (processos.value[index]._distancias) {
+        processToUpdate._distancias = processos.value[index]._distancias;
+      }
+      if (processos.value[index]._empresa_atual_prestadora) {
+        processToUpdate._empresa_atual_prestadora = processos.value[index]._empresa_atual_prestadora;
+      }
+      processos.value[index] = { ...processToUpdate };
+    }
+    
+    // Registrar a alteração no log do sistema
+    await logSystemAction({
+      tipo: 'update',
+      tabela: 'processos',
+      registro_id: processo.id,
+      dados_anteriores: JSON.stringify(processos.value.find(p => p.id === processo.id)),
+      dados_novos: JSON.stringify(processToUpdate)
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Erro na atualização:', error);
+    showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
+    return false;
+  }
+}
 
     const showDuplicateDialog = (processo) => {
       duplicateDialog.value.processo = { ...processo };
