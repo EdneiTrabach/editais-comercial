@@ -4,7 +4,7 @@
   align-items: center;
   min-height: 100vh;
   min-width: 100vw;
-  background: linear-gradient(135deg, #193155 0%, #254677 100%);
+  background: linear-gradient(135deg, #1931557a 0%, #254677 100%);
   position: relative;
   overflow: hidden;
   margin: 0;
@@ -84,7 +84,7 @@
 /* Left side with illustration */
 .login-illustration {
   flex: 1;
-  background: linear-gradient(135deg, #3b4d71 0%, #193155 100%);
+  background: linear-gradient(135deg, #3b4d7161 0%, #19315578 100%);
   display: flex;
   align-items: center;
   justify-content: center;
