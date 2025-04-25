@@ -225,13 +225,36 @@ export default {
       try {
         testando.value = true;
         
-        let mensagemSucesso = 'Conexão estabelecida com sucesso!';
         let provedor = configuracoes.value.modelo_ia;
+        console.log("Testando provedor:", provedor);
         
         if (provedor === 'local') {
           // Para Ollama, usamos o testarConexaoOllama
           await testarConexaoOllama();
           return;
+        }
+        
+        // Caso especial para Gemini
+        if (provedor === 'gemini') {
+          try {
+            console.log("Testando conexão Gemini com chave:", configuracoes.value.gemini_api_key.substring(0, 5) + "...");
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${configuracoes.value.gemini_api_key}`;
+            
+            const response = await axios.post(url, {
+              contents: [{
+                parts: [{ text: 'Teste de conexão' }]
+              }]
+            });
+            
+            console.log("Resposta Gemini:", response.status);
+            if (response.status === 200) {
+              exibirMensagem(`Conexão com GEMINI estabelecida com sucesso!`, 'success');
+            }
+            return;
+          } catch (geminiError) {
+            console.error("Erro específico do Gemini:", geminiError);
+            throw geminiError;
+          }
         }
         
         // Verificar se a chave API está configurada
@@ -260,6 +283,8 @@ export default {
         if (error.response) {
           if (error.response.status === 401) {
             exibirMensagem('Chave API inválida. Verifique e tente novamente.', 'error');
+          } else if (error.response.status === 429) {
+            exibirMensagem('Limite de requisições excedido (429 Too Many Requests). Aguarde um momento e tente novamente.', 'error');
           } else if (error.response.data && error.response.data.error) {
             exibirMensagem(`Erro da API: ${error.response.data.error.message}`, 'error');
           } else {

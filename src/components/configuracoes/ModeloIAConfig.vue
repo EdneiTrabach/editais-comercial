@@ -27,12 +27,12 @@
         v-model="modeloConfig.modelo_ia" 
         class="full-width"
       >
+        <option value="gemini">Google Gemini</option>
         <option value="openai">OpenAI (GPT-4/GPT-3.5)</option>
         <option value="local">Modelo Local (Ollama)</option>
         <option value="mistral">Mistral AI</option>
         <option value="claude">Anthropic Claude</option>
         <option value="deepseek">DeepSeek</option>
-        <option value="gemini">Google Gemini</option>
         <option value="copilot">Microsoft Copilot</option>
         <option value="together">Together.ai</option>
       </select>
@@ -390,6 +390,12 @@ export default {
         // Verificar silenciosamente se o Ollama está disponível
         const modelos = await ollamaService.getModelos();
         ollamaConectado.value = modelos && modelos.length > 0;
+        
+        // Mover os console.log para dentro do onMounted
+        console.log("Configurações ao testar conexão:", {
+          modeloSelecionado: props.configuracoes.modelo_ia,
+          geminiApiKey: props.configuracoes.gemini_api_key ? "Configurada" : "Não configurada"
+        });
       } catch (error) {
         console.log('Ollama ainda não está conectado:', error);
         ollamaConectado.value = false;

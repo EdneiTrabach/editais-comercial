@@ -18,17 +18,28 @@ export class IAService {
   }
 
   /**
-   * Obtém o cliente apropriado para o provedor especificado
-   * @param {string} provedor - Nome do provedor (openai, claude, etc)
-   * @param {Object} config - Configurações do provedor
-   * @returns {Object} Cliente do provedor
+   * Obtém o provedor de IA correto com base na seleção
+   * @param {string} provedor - O provedor selecionado
+   * @param {Object} config - As configurações do provedor
+   * @returns {Object} Cliente do provedor selecionado
    */
   getProvedor(provedor, config) {
-    if (!this.provedores[provedor]) {
-      throw new Error(`Provedor não suportado: ${provedor}`);
+    switch(provedor) {
+      case 'openai':
+        return this.criarOpenAIClient(config);
+      case 'claude':
+        return this.criarClaudeClient(config);
+      case 'gemini':
+        return this.criarGeminiClient(config);
+      case 'mistral':
+        return this.criarMistralClient(config);
+      case 'deepseek':
+        return this.criarDeepseekClient(config);
+      case 'local':
+        return this.criarOllamaClient(config);
+      default:
+        return this.criarOpenAIClient(config);
     }
-    
-    return this.provedores[provedor](config);
   }
 
   /**
@@ -203,7 +214,9 @@ export class IAService {
           contents: [{
             parts: [{ text: 'Teste de conexão' }]
           }],
-          maxOutputTokens: 5
+          generationConfig: {
+            maxOutputTokens: 5
+          }
         });
         
         return response.status === 200;
