@@ -28,77 +28,48 @@
       </div>
     </div>
     
-    <div v-else-if="result.content" class="success-result">
+    <div v-else-if="hasContent" class="success-result">
       <!-- Metadados do documento -->
       <div class="document-metadata">
         <h4>Informações do Documento</h4>
         <div class="metadata-grid">
           <div class="metadata-item">
-            <strong>Título:</strong> {{ result.metadata?.title || 'Sem título' }}
+            <strong>Arquivo:</strong> {{ result.metadata?.filename || 'Documento sem título' }}
           </div>
           <div class="metadata-item">
-            <strong>Tipo:</strong> {{ result.metadata?.file_type?.toUpperCase() || 'Desconhecido' }}
+            <strong>Páginas:</strong> {{ result.metadata?.pages || '1' }}
           </div>
-          <div class="metadata-item">
-            <strong>Páginas:</strong> {{ result.metadata?.pages || 'N/A' }}
-          </div>
-          <div class="metadata-item">
-            <strong>OCR:</strong> {{ result.metadata?.processing_options?.ocr_enabled ? 'Ativado' : 'Desativado' }}
-          </div>
+          <!-- Outros metadados se disponíveis -->
         </div>
       </div>
-      
-      <!-- Abas para navegar entre diferentes tipos de conteúdo -->
-      <div class="content-tabs">
-        <div 
-          class="tab" 
-          :class="{ active: activeTab === 'text' }"
+
+      <!-- Abas de navegação -->
+      <div class="tabs">
+        <button 
+          :class="['tab-button', { active: activeTab === 'text' }]" 
           @click="activeTab = 'text'"
-        >
-          <i class="fas fa-align-left"></i> Texto
-        </div>
-        
-        <div 
-          v-if="hasTables" 
-          class="tab" 
-          :class="{ active: activeTab === 'tables' }"
+        >Texto</button>
+        <button 
+          :class="['tab-button', { active: activeTab === 'tables' }]" 
           @click="activeTab = 'tables'"
-        >
-          <i class="fas fa-table"></i> Tabelas ({{ tablesCount }})
-        </div>
-        
-        <div 
-          v-if="hasImages" 
-          class="tab" 
-          :class="{ active: activeTab === 'images' }"
+        >Tabelas</button>
+        <button 
+          :class="['tab-button', { active: activeTab === 'images' }]" 
           @click="activeTab = 'images'"
-        >
-          <i class="fas fa-image"></i> Imagens ({{ imagesCount }})
-        </div>
-        
-        <div 
-          class="tab" 
-          :class="{ active: activeTab === 'raw' }"
+        >Imagens</button>
+        <button 
+          :class="['tab-button', { active: activeTab === 'raw' }]" 
           @click="activeTab = 'raw'"
-        >
-          <i class="fas fa-code"></i> JSON
-        </div>
+        >JSON</button>
       </div>
       
       <!-- Conteúdo das abas -->
       <div class="tab-content">
-        <!-- Conteúdo de Texto -->
+        <!-- Texto -->
         <div v-if="activeTab === 'text'" class="text-content">
-          <div v-if="hasText" class="text-blocks">
-            <div v-for="(block, index) in result.content.text_blocks" :key="index" class="text-block">
-              <div class="block-header">
-                <span class="page-indicator">Página {{ block.page }}</span>
-                <span v-if="block.confidence !== null" class="confidence-indicator" 
-                  :class="getConfidenceClass(block.confidence)">
-                  Confiança: {{ Math.round(block.confidence * 100) }}%
-                </span>
-              </div>
-              <p>{{ block.text }}</p>
+          <div v-if="hasText" class="text-wrapper">
+            <div class="text-content-inner">
+              <p v-if="textContent">{{ textContent }}</p>
             </div>
           </div>
           <div v-else class="no-content">
@@ -119,8 +90,7 @@
                 <table class="extracted-table">
                   <tbody>
                     <tr v-for="(row, rowIndex) in table.cells" :key="rowIndex">
-                      <td v-for="(cell, cellIndex) in row" :key="cellIndex"
-                          :rowspan="cell.row_span" :colspan="cell.col_span">
+                      <td v-for="(cell, cellIndex) in row" :key="cellIndex">
                         {{ cell.text }}
                       </td>
                     </tr>
@@ -133,7 +103,7 @@
             <i class="fas fa-info-circle"></i>
             <p>Nenhuma tabela foi detectada neste documento.</p>
             <p class="suggestion">
-              Certifique-se de que a opção "Incluir tabelas" esteja ativada nas configurações.
+              Certifique-se de que a opção "Incluir Tabelas" esteja ativada nas configurações.
             </p>
           </div>
         </div>
@@ -141,28 +111,17 @@
         <!-- Imagens -->
         <div v-if="activeTab === 'images'" class="images-content">
           <div v-if="hasImages" class="images-wrapper">
-            <div v-for="image in result.content.pictures" :key="image.id" class="image-item">
-              <h5>Imagem {{ image.id }} <span v-if="image.page">(Página {{ image.page }})</span></h5>
-              <div class="image-container">
-                <img v-if="image.image_base64" :src="`data:image/jpeg;base64,${image.image_base64}`" alt="Imagem extraída">
-                <div v-else class="no-image-preview">
-                  <i class="fas fa-image"></i>
-                  <p>Prévia da imagem não disponível</p>
-                </div>
-              </div>
-              <div v-if="image.description" class="image-description">
-                <strong>Descrição:</strong> {{ image.description }}
-              </div>
-              <div v-if="image.classification" class="image-classification">
-                <strong>Classificação:</strong> {{ image.classification }}
-              </div>
+            <div v-for="(image, index) in result.content.images" :key="index" class="image-item">
+              <h5>Imagem {{ index + 1 }} <span v-if="image.page">(Página {{ image.page }})</span></h5>
+              <img :src="image.dataUrl || image.url" :alt="`Imagem ${index + 1}`" />
+              <p v-if="image.caption" class="image-caption">{{ image.caption }}</p>
             </div>
           </div>
           <div v-else class="no-content">
             <i class="fas fa-info-circle"></i>
             <p>Nenhuma imagem foi detectada neste documento.</p>
             <p class="suggestion">
-              Certifique-se de que a opção "Incluir imagens" esteja ativada nas configurações.
+              Certifique-se de que a opção "Incluir Imagens" esteja ativada nas configurações.
             </p>
           </div>
         </div>
@@ -200,38 +159,32 @@ export default {
   },
   data() {
     return {
-      showDetails: false,
-      activeTab: 'text'
-    }
+      activeTab: 'text',
+      showDetails: false
+    };
   },
   computed: {
+    hasContent() {
+      return this.result && this.result.content;
+    },
     hasText() {
-      return this.result.content?.text_blocks?.length > 0;
+      return this.result?.content?.text && this.result.content.text !== "Sem texto extraído";
     },
     hasTables() {
-      return this.result.content?.tables?.length > 0;
+      return this.result?.content?.tables && this.result.content.tables.length > 0;
     },
     hasImages() {
-      return this.result.content?.pictures?.length > 0;
+      return this.result?.content?.images && this.result.content.images.length > 0;
     },
-    tablesCount() {
-      return this.result.content?.tables?.length || 0;
-    },
-    imagesCount() {
-      return this.result.content?.pictures?.length || 0;
+    textContent() {
+      // Retornar o texto extraído, garantindo que seja uma string
+      return this.result?.content?.text || '';
     }
   },
   methods: {
     toggleDetails() {
       this.showDetails = !this.showDetails;
-    },
-    getConfidenceClass(confidence) {
-      if (!confidence) return '';
-      
-      if (confidence >= 0.9) return 'high-confidence';
-      if (confidence >= 0.7) return 'medium-confidence';
-      return 'low-confidence';
     }
   }
-}
+};
 </script>

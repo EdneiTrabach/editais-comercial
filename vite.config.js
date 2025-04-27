@@ -9,8 +9,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '/icons': fileURLToPath(new URL('./public/icons', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
   build: {
@@ -31,10 +30,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/docling/, ''),
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('Proxy error:', err);
+          proxy.on('error', (err) => {
+            console.log('Erro no proxy:', err);
           });
-          proxy.on('proxyReq', (proxyReq, req) => {
+          proxy.on('proxyReq', (_, req) => {
             console.log(`Proxy request: ${req.method} ${req.url}`);
           });
           proxy.on('proxyRes', (proxyRes, req) => {

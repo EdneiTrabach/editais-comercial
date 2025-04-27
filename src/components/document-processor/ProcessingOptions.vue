@@ -21,42 +21,34 @@
     <div class="options-grid">
       <div class="option-item">
         <label>
-          <input type="checkbox" v-model="localOptions.enableOcr">
-          <span>Ativar OCR</span>
+          <input type="checkbox" v-model="localOptions.enableOcr" @change="emitUpdate">
+          Ativar OCR
         </label>
-        <div class="option-description">
-          Reconhecimento ótico de caracteres para extrair texto de imagens e PDFs digitalizados
-        </div>
+        <span class="option-description">Reconhecimento ótico de caracteres para extrair texto de imagens e PDFs digitalizados</span>
       </div>
       
       <div class="option-item">
         <label>
-          <input type="checkbox" v-model="localOptions.forceOcr">
-          <span>Forçar OCR</span>
+          <input type="checkbox" v-model="localOptions.forceOcr" @change="emitUpdate">
+          Forçar OCR
         </label>
-        <div class="option-description">
-          Forçar OCR mesmo quando o PDF já contém texto (útil para PDFs com problemas)
-        </div>
+        <span class="option-description">Forçar OCR mesmo quando o PDF já contém texto (útil para PDFs com problemas)</span>
       </div>
       
       <div class="option-item">
         <label>
-          <input type="checkbox" v-model="localOptions.includeImages">
-          <span>Incluir Imagens</span>
+          <input type="checkbox" v-model="localOptions.includeImages" @change="emitUpdate">
+          Incluir Imagens
         </label>
-        <div class="option-description">
-          Extrair e processar imagens encontradas no documento
-        </div>
+        <span class="option-description">Extrair e processar imagens encontradas no documento</span>
       </div>
       
       <div class="option-item">
         <label>
-          <input type="checkbox" v-model="localOptions.includeTables">
-          <span>Incluir Tabelas</span>
+          <input type="checkbox" v-model="localOptions.includeTables" @change="emitUpdate">
+          Incluir Tabelas
         </label>
-        <div class="option-description">
-          Detectar e estruturar tabelas encontradas no documento
-        </div>
+        <span class="option-description">Detectar e estruturar tabelas encontradas no documento</span>
       </div>
     </div>
     
@@ -73,7 +65,6 @@
 
 <script>
 export default {
-  name: 'ProcessingOptions',
   props: {
     options: {
       type: Object,
@@ -92,23 +83,22 @@ export default {
   data() {
     return {
       localOptions: { ...this.options }
-    }
+    };
   },
   watch: {
-    localOptions: {
-      handler(newOptions) {
-        this.$emit('update:options', { ...newOptions });
-      },
-      deep: true
-    },
     options: {
       handler(newOptions) {
         this.localOptions = { ...newOptions };
       },
       deep: true
     }
+  },
+  methods: {
+    emitUpdate() {
+      this.$emit('update:options', { ...this.localOptions });
+    }
   }
-}
+};
 </script>
 
 <style scoped>
