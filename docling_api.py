@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import tempfile
@@ -44,7 +44,7 @@ try:
     
     # Verificar se o Tesseract está instalado
     tesseract_cmd = shutil.which('tesseract')
-    if tesseract_cmd:
+    if (tesseract_cmd):
         pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
         TESSERACT_AVAILABLE = True
         logger.info(f"✅ Tesseract OCR encontrado: {tesseract_cmd}")
@@ -175,8 +175,9 @@ def extract_text_using_tesseract(pdf_path):
         logger.error(f"Erro ao extrair texto com Tesseract: {str(e)}")
         return None
 
+# Adicionar esta função para extrair imagens e tabelas no método process_document
 @app.post("/process")
-async def process_document(file: UploadFile = File(...)):
+async def process_document(request: Request, file: UploadFile = File(...)):
     """Endpoint para processar documentos"""
     
     # Verificar se o Docling está disponível
@@ -190,6 +191,29 @@ async def process_document(file: UploadFile = File(...)):
     tmp_path = None
     
     try:
+        # Obter as opções de processamento da requisição
+        form = await request.form()
+        options_json = form.get("options")
+        
+        # Inicializar options com valores padrão
+        options = {
+            "enableOcr": True,
+            "forceOcr": False,
+            "includeImages": True,
+            "includeTables": True
+        }
+        
+        # Se existirem opções enviadas, faça o parse do JSON
+        if options_json:
+            try:
+                import json
+                user_options = json.loads(options_json)
+                # Atualizar as opções padrão com as enviadas pelo usuário
+                options.update(user_options)
+                logger.info(f"Opções recebidas: {options}")
+            except Exception as e:
+                logger.error(f"Erro ao processar opções da requisição: {str(e)}")
+
         # Salvar o arquivo temporariamente
         suffix = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -301,26 +325,88 @@ async def process_document(file: UploadFile = File(...)):
             else:
                 logger.info(f"Texto extraído com sucesso: {len(text_content)} caracteres")
             
-            # Criar uma resposta simplificada
+            # Extrair tabelas se solicitado nas opções
+            tables = []
+            if options.get('includeTables', True):
+                try:
+                    # Verificar se há tabelas no documento
+                    if hasattr(doc, "tables"):
+                        for i, table in enumerate(doc.tables):
+                            table_data = []
+                            # Processar linhas e colunas da tabela
+                            if hasattr(table, "rows") and table.rows:
+                                for row in table.rows:
+                                    row_data = []
+                                    if hasattr(row, "cells") and row.cells:
+                                        for cell in row.cells:
+                                            if hasattr(cell, "text") and cell.text:
+                                                row_data.append(cell.text)
+                                            else:
+                                                row_data.append("")
+                                    table_data.append(row_data)
+                            
+                            # Adicionar a tabela ao resultado
+                            tables.append({
+                                "id": i+1,
+                                "page": getattr(table, "page_number", None),
+                                "data": table_data,
+                            })
+                            logger.info(f"Tabela {i+1} extraída com {len(table_data)} linhas")
+                except Exception as table_error:
+                    logger.error(f"Erro ao extrair tabelas: {str(table_error)}")
+            
+            # Extrair imagens se solicitado nas opções
+            images = []
+            if options.get('includeImages', True):
+                try:
+                    # Verificar se há imagens no documento
+                    if hasattr(doc, "images"):
+                        for i, image in enumerate(doc.images):
+                            try:
+                                # Converter imagem para base64 (se possível)
+                                import base64
+                                from io import BytesIO
+                                from PIL import Image as PILImage
+                                
+                                if hasattr(image, "image") and image.image:
+                                    buf = BytesIO()
+                                    pil_image = PILImage.fromarray(image.image)
+                                    pil_image.save(buf, format="PNG")
+                                    img_str = base64.b64encode(buf.getvalue()).decode('utf-8')
+                                    dataUrl = f"data:image/png;base64,{img_str}"
+                                else:
+                                    dataUrl = None
+                                
+                                # Adicionar a imagem ao resultado
+                                images.append({
+                                    "id": i+1,
+                                    "page": getattr(image, "page_number", None),
+                                    "dataUrl": dataUrl,
+                                    "description": getattr(image, "caption", None) or getattr(image, "description", None),
+                                    "type": getattr(image, "type", None)
+                                })
+                                logger.info(f"Imagem {i+1} extraída e convertida")
+                            except Exception as img_error:
+                                logger.error(f"Erro ao processar imagem {i+1}: {str(img_error)}")
+                except Exception as img_extract_error:
+                    logger.error(f"Erro ao extrair imagens: {str(img_extract_error)}")
+            
+            # Atualizar a resposta para incluir tabelas e imagens
             response_data = {
                 "success": True,
                 "metadata": {
                     "filename": file.filename,
-                    "pages": 1,  # Valor padrão
+                    "pages": len(doc.pages) if hasattr(doc, "pages") else 0,
                     "file_type": suffix.lstrip('.').upper() if suffix else "PDF"
                 },
                 "content": {
                     "text": text_content,
-                    "tables": [],  # Incluir lista vazia para tabelas
-                    "images": []   # Incluir lista vazia para imagens
+                    "tables": tables,
+                    "images": images
                 }
             }
             
-            # Se temos informação de páginas do Docling, atualizar
-            if DOCLING_AVAILABLE and 'doc' in locals() and hasattr(doc, "pages"):
-                response_data["metadata"]["pages"] = len(doc.pages)
-            
-            logger.info("Retornando resposta simplificada bem-sucedida")
+            logger.info(f"Retornando resposta completa com {len(tables)} tabelas e {len(images)} imagens")
             return JSONResponse(content=response_data)
             
         except Exception as e:

@@ -264,7 +264,29 @@ export default {
       error.value = null;
       
       try {
-        const result_data = await processDocument(file.value, processingOptions.value);
+        // Mapear as opções de processamento para o formato esperado pelo API
+        const processOptions = {
+          enableOcr: processingOptions.value.enableOcr,
+          forceOcr: processingOptions.value.forceOcr,
+          includeImages: processingOptions.value.includeImages,
+          includeTables: processingOptions.value.includeTables
+        };
+        
+        console.log("Iniciando processamento com opções:", processOptions);
+        
+        const result_data = await processDocument(file.value, processOptions);
+        
+        // Verificar se temos conteúdo válido
+        if (!result_data || !result_data.content) {
+          throw new Error("O servidor retornou uma resposta vazia ou inválida");
+        }
+        
+        console.log("Conteúdo extraído:", {
+          textLength: result_data.content.text ? result_data.content.text.length : 0,
+          tables: result_data.content.tables ? result_data.content.tables.length : 0,
+          images: result_data.content.images ? result_data.content.images.length : 0
+        });
+        
         result.value = result_data;
         showOptions.value = false;
       } catch (err) {

@@ -879,3 +879,135 @@
 [data-theme="dark"] .btn-try-again:hover {
   background-color: #dc2626;
 }
+
+/* Adicione estas regras ao final do seu arquivo CSS existente */
+
+/* Estilo para tabelas extraídas */
+.extracted-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+
+.extracted-table tbody tr:nth-child(odd) {
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.extracted-table td, .extracted-table th {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.extracted-table th {
+  background-color: #f1f5f9;
+  font-weight: 600;
+}
+
+/* Estilo para grids de imagens */
+.images-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.image-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+}
+
+.image-container {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  cursor: pointer;
+}
+
+.image-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.image-description, .image-type {
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Dark mode */
+[data-theme="dark"] .tabs {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .tab-button {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tab-button.active {
+  color: #e2e8f0;
+  border-bottom-color: #60a5fa;
+}
+
+[data-theme="dark"] .text-wrapper {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .text-actions, 
+[data-theme="dark"] .raw-actions {
+  background-color: #0f172a;
+  border-color: #1e293b;
+}
+
+[data-theme="dark"] .btn-action {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .btn-action:hover {
+  background-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .page-header {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .extracted-table tbody tr:nth-child(odd) {
+  background-color: rgba(30, 41, 59, 0.7);
+}
+
+[data-theme="dark"] .extracted-table td, 
+[data-theme="dark"] .extracted-table th {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .extracted-table th {
+  background-color: #1e293b;
+}
+
+[data-theme="dark"] .image-item {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .image-container {
+  background-color: #0f172a;
+}
+
+[data-theme="dark"] .image-description, 
+[data-theme="dark"] .image-type {
+  border-top-color: #1e293b;
+}

@@ -103,15 +103,20 @@ export async function processDocument(file, options = {}) {
     formData.append("file", file);
     
     // Adicionar opções se fornecidas
-    if (options.ocr) {
-      formData.append("options", JSON.stringify({ ocr: options.ocr }));
+    if (Object.keys(options).length > 0) {
+      formData.append("options", JSON.stringify({
+        enableOcr: options.enableOcr === undefined ? true : options.enableOcr,
+        forceOcr: options.forceOcr === undefined ? false : options.forceOcr,
+        includeImages: options.includeImages === undefined ? true : options.includeImages,
+        includeTables: options.includeTables === undefined ? true : options.includeTables
+      }));
     }
     
-    console.log("Enviando requisição para API local");
+    console.log("Enviando requisição para API local com opções:", options);
     
     // Enviar a requisição com um timeout de 60 segundos
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); 
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     
     try {
       const response = await fetch("/api/docling/process", {
@@ -139,6 +144,8 @@ export async function processDocument(file, options = {}) {
       throw fetchError;
     }
   } catch (error) {
+    console.error("Erro ao processar documento:", error);
+    
     // Melhorar mensagem de erro para ser mais específica e útil
     if (error.message.includes('Failed to fetch') || !navigator.onLine) {
       throw new Error("Não foi possível conectar ao servidor de processamento. Verifique sua conexão com a internet e se o servidor Python está rodando.");
