@@ -238,6 +238,15 @@ const router = createRouter({
       name: 'documentos',
       component: DocumentProcessor,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/document-processor',
+      name: 'DocumentProcessor',
+      component: DocumentProcessor,
+      meta: {
+        requiresAuth: true,
+        title: 'Processador de Documentos'
+      }
     }
   ]
 })

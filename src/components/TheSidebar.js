@@ -219,6 +219,19 @@ export default {
       { path: '/responsaveis', name: 'Responsáveis', icon: '/icons/responsavel.svg' }
     ]
 
+    const navLinks = ref([
+      { path: '/processos', name: 'Processos', icon: '/icons/processo.svg' },
+      { path: '/editais', name: 'Edital', icon: '/icons/edital.svg' },
+      { path: '/analises', name: 'Análises', icon: '/icons/analise.svg' },
+      { path: '/documentos', name: 'Documentos', icon: '/icons/documento.svg' },
+      { path: '/relatorios-participar', name: 'Relatórios', icon: '/icons/relatorio.svg' },
+      { path: '/plataformas', name: 'Plataformas', icon: '/icons/plataforma.svg' },
+      { path: '/sistemas', name: 'Sistemas', icon: '/icons/sistema.svg' },
+      { path: '/empresas', name: 'Empresas', icon: '/icons/empresa.svg' },
+      { path: '/document-processor', name: 'Processador', icon: '/icons/pdf.svg' }, // Nova rota
+      { path: '/responsaveis', name: 'Responsáveis', icon: '/icons/responsavel.svg' }
+    ])
+
     // ===== GERENCIAMENTO DO SIDEBAR =====
     
     // Toggle do sidebar (expandir/recolher)
@@ -573,6 +586,7 @@ export default {
       notificationPanelPosition,
       currentTheme,
       showThemeSelector,
+      navLinks,
       
       // Métodos
       toggleSidebar,
