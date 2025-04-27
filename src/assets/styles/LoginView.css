@@ -4,7 +4,7 @@
   align-items: center;
   min-height: 100vh;
   min-width: 100vw;
-  background: linear-gradient(135deg, #1931557a 0%, #254677 100%);
+  background: linear-gradient(135deg, #1931557a 0%, #25467799 100%);
   position: relative;
   overflow: hidden;
   margin: 0;
@@ -73,12 +73,13 @@
   display: flex;
   width: 90%;
   max-width: 1000px;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: rgb(255 255 255 / 36%);
   border-radius: 20px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
   position: relative;
   z-index: 2;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 /* Left side with illustration */
@@ -148,10 +149,6 @@ h1.titulo-login {
   position: relative;
   z-index: 3;
   transition: all 0.3s ease;
-}
-
-.card-login:hover {
-  transform: translateY(-5px);
 }
 
 .icon-black-login {

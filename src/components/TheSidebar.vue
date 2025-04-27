@@ -126,6 +126,12 @@
               <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
+          <li class="sidebar-menu-item">
+            <router-link to="/documentos" class="sidebar-menu-link" @click="logNavigation">
+              <i class="fas fa-file-alt"></i>
+              <span class="link-text">Processador de Documentos</span>
+            </router-link>
+          </li>
         </ul>
 
         <div class="bottom-section">

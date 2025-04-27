@@ -3,11 +3,10 @@ import path from 'path'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), VueDevTools()],
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -25,4 +24,24 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    proxy: {
+      '/api/docling': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/docling/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log(`Proxy request: ${req.method} ${req.url}`);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log(`Proxy response: ${proxyRes.statusCode} ${req.url}`);
+          });
+        }
+      }
+    }
+  }
 })

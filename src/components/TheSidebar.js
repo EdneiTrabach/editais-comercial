@@ -24,6 +24,14 @@ export default {
   },
   emits: ['sidebarToggle'],
   
+  methods: {
+    // Adicione o método logNavigation aqui
+    logNavigation() {
+      console.log('Navegando para o processador de documentos');
+    }
+    // ...outros métodos do TheSidebar.js
+  },
+  
   setup(props, { emit }) {
     const router = useRouter()
     const isTourActive = ref(false)

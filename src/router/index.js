@@ -12,6 +12,7 @@ import LancesView from '../views/LancesView.vue'
 import PlanilhaValoresReadequada from '@/components/lances/PlanilhaValoresReadequada.vue'
 import BackupsView from '@/views/BackupsView.vue'
 import RelatoriosParticiparView from '@/views/RelatoriosParticiparView.vue';
+import DocumentProcessor from '@/components/DocumentProcessor.vue';
 
 const requireAdmin = async (to, from, next) => {
   try {
@@ -230,6 +231,12 @@ const router = createRouter({
       path: '/processos/:id/termo-autorizacao',
       name: 'ProcessoTermoAutorizacao',
       component: () => import('../views/RelatorioTermoAutorizacaoView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/documentos',
+      name: 'documentos',
+      component: DocumentProcessor,
       meta: { requiresAuth: true }
     }
   ]
