@@ -63,40 +63,65 @@ export async function markUpdateAsRead(updateId) {
 }
 
 /**
- * Cria uma nova atualização do sistema (apenas para administradores)
+ * Carrega as atualizações do sistema
+ */
+export async function loadSystemUpdates() {
+  try {
+    const { data, error } = await supabase
+      .from("system_updates")
+      .select("*")
+      .order("release_date", { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Erro ao carregar atualizações do sistema:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Cria uma nova atualização do sistema
  */
 export async function createUpdate(updateData) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user) return { success: false, message: 'Usuário não autenticado' };
-    
-    // Verificar se o usuário é admin (opcional)
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profileError) {
-      console.log('Erro ao verificar papel do usuário, prosseguindo sem verificação');
-    } else if (profile && profile.role !== 'admin') {
-      return { success: false, message: 'Somente administradores podem criar atualizações' };
-    }
+    // Adicionar o usuário atual como criador
+    const fullUpdateData = {
+      ...updateData,
+      created_by: user?.id || null,
+      created_at: new Date().toISOString()
+    };
     
     const { data, error } = await supabase
-      .from('system_updates')
-      .insert({
-        ...updateData,
-        created_by: user.id
-      })
+      .from("system_updates")
+      .insert([fullUpdateData])
       .select();
     
     if (error) throw error;
-    
     return { success: true, data: data[0] };
   } catch (error) {
     console.error('Erro ao criar atualização do sistema:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Atualiza uma atualização existente
+ */
+export async function updateSystemUpdate(id, updateData) {
+  try {
+    const { data, error } = await supabase
+      .from("system_updates")
+      .update(updateData)
+      .eq("id", id)
+      .select();
+    
+    if (error) throw error;
+    return { success: true, data: data[0] };
+  } catch (error) {
+    console.error('Erro ao atualizar informação do sistema:', error);
     return { success: false, message: error.message };
   }
 }

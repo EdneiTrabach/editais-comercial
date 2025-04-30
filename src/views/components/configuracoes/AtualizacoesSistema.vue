@@ -60,6 +60,26 @@
         <div class="atualizacao-descricao" v-html="formatarDescricao(atualizacao.descricao)"></div>
       </div>
     </div>
+
+    <div class="atualizacoes-container">
+      <div v-for="atualizacao in atualizacoes" :key="atualizacao.id" class="update-item">
+        <div class="update-header">
+          <h3>{{ atualizacao.title }}</h3>
+          <div class="update-badge" :class="'importance-' + atualizacao.importance">
+            {{ formatImportance(atualizacao.importance) }}
+          </div>
+        </div>
+        <div class="update-info">
+          <div class="update-date">{{ formatarData(atualizacao.release_date) }}</div>
+          <div v-if="atualizacao.version" class="update-version">Versão: {{ atualizacao.version }}</div>
+        </div>
+        <div class="update-content" v-html="formatarDescricao(atualizacao.description)"></div>
+      </div>
+      
+      <div v-if="atualizacoes.length === 0" class="no-updates">
+        <p>Nenhuma atualização cadastrada.</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -69,7 +89,10 @@ export default {
   props: {
     systemUpdates: Array,
     loading: Boolean,
-    atualizacoes: Array
+    atualizacoes: {
+      type: Array,
+      default: () => []
+    }
   },
   emits: ['voltar', 'add-update', 'preview-update', 'edit-update'],
   methods: {
@@ -77,8 +100,13 @@ export default {
       return new Date(date).toLocaleDateString("pt-BR");
     },
     formatImportance(importance) {
-      return importance === 'alta' ? 'Alta' : 
-             importance === 'media' ? 'Média' : 'Baixa';
+      const map = {
+        'baixa': 'Baixa',
+        'media': 'Média',
+        'alta': 'Alta',
+        'critica': 'Crítica'
+      };
+      return map[importance] || importance;
     },
     formatarData(data) {
       if (!data) return '';
@@ -211,6 +239,83 @@ export default {
 .atualizacao-descricao {
   color: #1e293b;
   line-height: 1.5;
+}
+
+.atualizacoes-container {
+  margin-top: 20px;
+}
+
+.update-item {
+  background-color: var(--card-bg-color, #ffffff);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.update-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.update-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-color, #333);
+}
+
+.update-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.importance-baixa {
+  background-color: #e6f4ff;
+  color: #0057b8;
+}
+
+.importance-media {
+  background-color: #e6f8e6;
+  color: #097969;
+}
+
+.importance-alta {
+  background-color: #fff8e6;
+  color: #d97706;
+}
+
+.importance-critica {
+  background-color: #ffece6;
+  color: #dc2626;
+}
+
+.update-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--secondary-text-color, #666);
+}
+
+.update-date {
+  margin-right: 16px;
+}
+
+.update-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-color, #333);
+  white-space: pre-line;
+}
+
+.no-updates {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--secondary-text-color, #666);
 }
 
 /* Tema escuro */

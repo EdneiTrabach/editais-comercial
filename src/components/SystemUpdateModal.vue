@@ -10,8 +10,11 @@
           class="update-item"
         >
           <h3>{{ update.title }}</h3>
-          <div class="update-date">{{ formatDate(update.created_at) }}</div>
-          <div class="update-content" v-html="update.content"></div>
+          <div class="update-date">{{ formatDate(update.release_date) }}</div>
+          <!-- Aqui corrigimos a exibição da descrição -->
+          <div class="update-content" v-html="formatarDescricao(update.description)"></div>
+          <!-- Exibir versão caso exista -->
+          <div v-if="update.version" class="update-version">Versão: {{ update.version }}</div>
         </div>
       </div>
       <div v-else class="no-updates">
@@ -60,6 +63,25 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       });
+    },
+    
+    // Adicionar o método de formatação da descrição
+    formatarDescricao(texto) {
+      if (!texto) return '';
+      
+      // Converte ** para negrito
+      texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // Converte * para itálico 
+      texto = texto.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      
+      // Converte [texto](url) para links
+      texto = texto.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+      
+      // Converte quebras de linha
+      texto = texto.replace(/\n/g, '<br>');
+      
+      return texto;
     },
     
     confirmRead() {
@@ -133,6 +155,17 @@ h2 {
 
 .update-content {
   line-height: 1.6;
+  font-size: 14px;
+  padding: 10px 0;
+  white-space: pre-line;
+  color: var(--text-color, #333);
+}
+
+.update-version {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
 }
 
 .modal-actions {
