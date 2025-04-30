@@ -3059,11 +3059,21 @@ export default {
           .eq('id', processo.id);
 
         if (error) throw error;
-
+        
         // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
         if (isAnaliseStatus) {
+          console.log(`Status alterado para "em_analise", registrando processo ${processo.id} na tabela de análises`);
           await registrarProcessoParaAnalise(processo);
         }
+
+        await logSystemAction({
+          tipo: 'atualizacao',
+          tabela: 'processos',
+          registro_id: processo.id,
+          campo_alterado: 'status',
+          dados_anteriores: processo.status,
+          dados_novos: newStatus
+        });
 
         await loadProcessos();
         
@@ -4097,48 +4107,64 @@ async function updateProcesso(processo) {
       try {
         console.log('Registrando processo para análise:', processo.id);
         
-        // Garantir que temos os dados atualizados do processo
-        const { data: processoAtualizado, error: processoError } = await supabase
-          .from('processos')
-          .select('*')
-          .eq('id', processo.id)
+        // Verificar primeiro se já existem registros para este processo
+        const { data: existentes, error: existentesError } = await supabase
+          .from('analises_itens')
+          .select('count')
+          .eq('processo_id', processo.id)
           .single();
         
-        if (processoError) throw processoError;
+        if (existentesError && existentesError.code !== 'PGRST116') throw existentesError;
         
-        // Extrair sistemas_ativos e garantir que é um array
-        const sistemasAtivos = Array.isArray(processoAtualizado.sistemas_ativos) 
-          ? processoAtualizado.sistemas_ativos 
-          : (typeof processoAtualizado.sistemas_ativos === 'string' 
-              ? JSON.parse(processoAtualizado.sistemas_ativos || '[]') 
-              : (processoAtualizado.sistemas_ativos || []));
+        // Se já existem registros, podemos apenas verificar se precisamos sincronizar sistemas
+        if (existentes && existentes.count > 0) {
+          console.log(`Processo já tem ${existentes.count} registros na tabela analises_itens`);
+          
+          // Opcionalmente, podemos sincronizar os sistemas aqui
+          // await atualizarAnalisesAposMudancaSistemas(processo.id, sistemasAtivos);
+          
+          showToast('Processo já registrado para análise', 'info');
+          return true;
+        }
+        
+        // Se chegou aqui, não há registros, então vamos criar
+        console.log('Criando registros para processo na tabela analises_itens');
+        
+        // Extrair sistemas_ativos do processo
+        let sistemasAtivos = [];
+        try {
+          if (processo.sistemas_ativos) {
+            if (Array.isArray(processo.sistemas_ativos)) {
+              sistemasAtivos = processo.sistemas_ativos;
+            } else if (typeof processo.sistemas_ativos === 'string') {
+              try {
+                sistemasAtivos = JSON.parse(processo.sistemas_ativos);
+              } catch (e) {
+                console.error('Erro ao processar sistemas_ativos como string JSON:', e);
+              }
+            } else {
+              console.warn('sistemas_ativos não é um array nem uma string JSON:', processo.sistemas_ativos);
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao processar sistemas_ativos:', e);
+          // Continuar com array vazio
+        }
         
         console.log('Sistemas ativos encontrados:', sistemasAtivos);
         
-        // Verificar registros existentes na tabela analises_itens
-        const { data: existentes, error: existentesError } = await supabase
-          .from('analises_itens')
-          .select('id, sistema_id')
-          .eq('processo_id', processo.id);
+        // Variável para controlar se registros foram criados
+        let registroCriado = false;
         
-        if (existentesError) throw existentesError;
-        
-        // Mapear sistemas que já estão registrados
-        const sistemasRegistrados = existentes ? existentes.map(item => item.sistema_id) : [];
-        
-        // Encontrar sistemas que precisam ser adicionados (estão em sistemas_ativos mas não em sistemasRegistrados)
-        const sistemasParaAdicionar = sistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
-        
-        console.log('Sistemas para adicionar:', sistemasParaAdicionar);
-        
-        if (sistemasParaAdicionar.length > 0) {
-          // Criar um registro para cada sistema novo
-          const registros = sistemasParaAdicionar.map(sistemaId => ({
+        // Se tiver sistemas ativos, criar um registro para cada sistema
+        if (sistemasAtivos && sistemasAtivos.length > 0) {
+          const registros = sistemasAtivos.map(sistemaId => ({
             processo_id: processo.id,
             sistema_id: sistemaId,
             total_itens: 0,
             nao_atendidos: 0,
             obrigatorio: false,
+            percentual_minimo: 70,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }));
@@ -4148,36 +4174,46 @@ async function updateProcesso(processo) {
             .insert(registros);
           
           if (insertError) {
-            console.error('Erro ao inserir novos registros:', insertError);
+            console.error('Erro ao inserir registros de sistemas:', insertError);
             throw insertError;
           }
           
-          console.log('Registros de sistemas inseridos com sucesso');
-          showToast('Processo registrado para análise com sucesso', 'success');
-        } else if (existentes && existentes.length > 0) {
-          console.log('Processo já está registrado para análise e sistemas estão atualizados');
-          showToast('Processo já registrado para análise', 'info');
-        } else if (sistemasAtivos.length === 0) {
-          // Se não tiver sistemas ativos, criar registro vazio
+          console.log(`${registros.length} registros de sistemas inseridos com sucesso`);
+          registroCriado = true;
+        }
+        
+        // Se não tiver sistemas ou algo deu errado, criar pelo menos um registro de anotação
+        if (!registroCriado) {
+          console.log('Criando registro de anotação para o processo');
+          
           const { error: insertError } = await supabase
             .from('analises_itens')
             .insert({
               processo_id: processo.id,
+              is_custom_line: true,
+              sistema_nome_personalizado: 'Anotações',
+              total_itens: 0,
+              nao_atendidos: 0,
+              obrigatorio: false,
+              percentual_minimo: 70,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
           
           if (insertError) {
-            console.error('Erro ao inserir registro vazio:', insertError);
+            console.error('Erro ao inserir registro de anotação:', insertError);
             throw insertError;
           }
           
-          console.log('Registro vazio inserido com sucesso');
-          showToast('Processo registrado para análise', 'success');
+          console.log('Registro de anotação inserido com sucesso');
         }
+        
+        showToast('Processo registrado para análise com sucesso', 'success');
+        return true;
       } catch (error) {
         console.error('Erro ao registrar processo para análise:', error);
-        showToast('Erro ao registrar processo para análise', 'error');
+        showToast('Erro ao registrar processo para análise: ' + error.message, 'error');
+        return false;
       }
     };
 

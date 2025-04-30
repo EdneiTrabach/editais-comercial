@@ -83,6 +83,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useAnaliseExport } from '@/composables/useAnaliseExport'
+import { useResponsaveis } from '@/composables/useResponsaveis'
 
 const props = defineProps({
   data: {
@@ -116,6 +117,8 @@ const {
   exportChartToExcel,
   exportChartToTXT
 } = useAnaliseExport()
+
+const { responsaveis, getResponsavelNome } = useResponsaveis()
 
 const isOpen = ref(false)
 
@@ -175,7 +178,16 @@ const handleExportToExcel = () => {
 };
 
 const handleExportToPDF = () => {
-  exportToPDF(props.data, props.processo, {
+  // Clonar o processo para não modificar o original
+  const processoParaExportar = { ...props.processo };
+  
+  // Se tiver ID mas não nome, adicionar o nome
+  if (processoParaExportar.responsavel_id && !processoParaExportar.responsavel_nome) {
+    processoParaExportar.responsavel_nome = getResponsavelNome(processoParaExportar.responsavel_id);
+  }
+  
+  // Chamar função de exportação com o processo modificado
+  exportToPDF(props.data, processoParaExportar, {
     percentualMinimoGeral: props.percentualMinimoGeral,
     percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
   });

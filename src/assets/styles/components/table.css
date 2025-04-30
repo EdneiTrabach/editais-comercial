@@ -217,7 +217,7 @@ tbody tr:hover .row-number-cell {
 .resizable-column {
   position: relative;
   user-select: none;
-  min-width: 100px;
+  min-width: 10px;
   position: relative;
   z-index: 1;
 }

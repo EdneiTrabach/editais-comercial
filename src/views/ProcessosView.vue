@@ -2006,6 +2006,74 @@ export default {
         this.loading = false;
       }
     },
+
+    async exportarTabela() {
+      try {
+        this.exportLoading = true;
+        
+        // Construir a query para buscar os dados completos
+        let query = this.supabase
+          .from('processos')
+          .select(`
+            *,
+            responsavel:responsavel_id(id, nome),
+            representante:representante_id(id, nome)
+          `);
+        
+        // Adicionar filtros aplicados, se houver
+        // (manter os mesmos filtros da tabela atual)
+        if (this.currentFilters) {
+          // Aplicar filtros aqui...
+        }
+        
+        // Executar a consulta
+        const { data, error } = await query;
+        
+        if (error) throw new Error(error.message);
+        
+        if (!data || data.length === 0) {
+          this.showToast('Não há dados para exportar', 'warning');
+          this.exportLoading = false;
+          return;
+        }
+        
+        // Processar os dados antes da exportação
+        const processedData = data.map(processo => {
+          // Garantir que todos os campos necessários existam
+          return {
+            'Número': processo.numero_processo || '-',
+            'Órgão': processo.orgao || '-',
+            'Modalidade': this.formatModalidade(processo.modalidade) || '-',
+            'Data de Abertura': processo.data_pregao ? this.formatarData(processo.data_pregao) : '-',
+            'Status': this.formatStatus(processo.status) || '-',
+            'UF': processo.estado || '-',
+            'Valor Estimado': processo.valor_estimado ? this.formatarMoeda(processo.valor_estimado) : '-',
+            'Representante': processo.representante?.nome || '-',
+            'Responsável': processo.responsavel?.nome || 
+                          processo.responsavel_nome || 
+                          (typeof processo.responsavel === 'string' ? processo.responsavel : '-'),
+            'Ano': processo.ano || '-',
+            'Sistemas Ativos': Array.isArray(processo.sistemas_ativos) ? processo.sistemas_ativos.length : '-'
+          };
+        });
+    
+        // Exportar para Excel
+        const worksheet = XLSX.utils.json_to_sheet(processedData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Processos');
+        
+        // Obter data atual formatada
+        const today = new Date().toISOString().slice(0, 10);
+        
+        XLSX.writeFile(workbook, `processos_${today}.xlsx`);
+        this.showToast('Tabela exportada com sucesso', 'success');
+      } catch (error) {
+        console.error('Erro ao exportar tabela:', error);
+        this.showToast(`Erro ao exportar tabela: ${error.message}`, 'error');
+      } finally {
+        this.exportLoading = false;
+      }
+    }
   },
   
 }

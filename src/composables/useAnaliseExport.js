@@ -181,6 +181,39 @@ export function useAnaliseExport() {
       }
     })
     
+// Substitua o código nas linhas ~185-195 por:
+
+const exportToPDF = (data, processo = {}, parametros = { percentualMinimoGeral: 92, percentualMinimoObrigatorio: 100 }) => {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    alert('Sem dados para exportar')
+    return
+  }
+  
+  // Converter dados para o formato esperado pela função avançada
+  const sistemasNormalizados = data.map(item => {
+    return {
+      nome: item.sistema_nome_personalizado || (item.sistemas?.nome || 'Sistema sem nome'),
+      totalItens: item.total_itens || 0,
+      naoAtendidos: item.nao_atendidos || 0,
+      obrigatorio: item.obrigatorio || false,
+      percentual_minimo: item.percentual_minimo || parametros.percentualMinimoObrigatorio
+    }
+  })
+  
+  try {
+    // Usar a exportação avançada
+    exportToPDFAdvanced(sistemasNormalizados, processo, {
+      percentualMinimoGeral: parametros.percentualMinimoGeral,
+      percentualMinimoObrigatorio: parametros.percentualMinimoObrigatorio
+    })
+  } catch (error) {
+    console.error("Erro ao exportar PDF avançado:", error)
+    
+    // Fallback para formato básico em caso de erro
+    // ... resto do código de fallback ...
+  }
+}
+
     try {
       // Usar a exportação avançada
       exportToPDFAdvanced(sistemasNormalizados, processo, {
@@ -975,6 +1008,19 @@ export function useAnaliseExport() {
     document.body.removeChild(link)
   }
   
+  const handleExportToPDF = () => {
+    try {
+      exportToPDF(props.data, props.processo, {
+        percentualMinimoGeral: props.percentualMinimoGeral,
+        percentualMinimoObrigatorio: props.percentualMinimoObrigatorio
+      });
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      // Opcionalmente, mostrar algum feedback para o usuário
+      alert('Erro ao exportar PDF: ' + error.message);
+    }
+  };
+
   return {
     showExportDropdown,
     exportToExcel,
