@@ -157,9 +157,8 @@
 .analise-resumo {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: var(--bg-summary, linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%));
+  background: var(--bg-summary, linear-gradient(135deg, #f8fafc 0%, #e7e7e7 100%));
   border-radius: 10px;
-  border-left: 5px solid var(--border-summary, #3b82f6);
   transition: all 0.3s;
 }
 
