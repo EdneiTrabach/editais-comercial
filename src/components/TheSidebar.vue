@@ -52,12 +52,12 @@
             </router-link>
           </li> -->
         
-          <!-- <li class="sidebar-menu-item">
+          <li class="sidebar-menu-item">
             <router-link to="/analises" class="sidebar-menu-link">
               <img src="/icons/analises.svg" alt="Análises" class="icon" />
               <span class="link-text">Análises</span>
             </router-link>
-          </li> -->
+          </li>
 
           <!-- <li class="sidebar-menu-item">
             <router-link to="/relatorios-participar" class="sidebar-menu-link">
