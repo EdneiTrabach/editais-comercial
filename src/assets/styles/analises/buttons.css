@@ -132,6 +132,7 @@
 .acoes-principais .btn-info {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
+  width: 100%;
 }
 
 .acoes-principais .btn-info:hover {
