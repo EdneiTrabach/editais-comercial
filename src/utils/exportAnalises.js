@@ -231,18 +231,14 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   let yPos = 45; // Aumentado para dar mais espaço após a logo
   const lineHeight = 7;
 
-  // Adicione este log para depuração
   console.log("Processo recebido para exportação:", processo);
 
-  // CORREÇÃO: Usar os dados do processo diretamente, sem depender da função getProcessField
   // Garantir que temos dados válidos ou usar fallbacks
-  const numeroProcesso =
-    processo.numero_processo || processo.numero || "Não informado";
-
-  const orgao =
-    processo.orgao && typeof processo.orgao === "object"
-      ? processo.orgao.nome || "Não informado"
-      : processo.orgao || processo.orgao_nome || "Não informado";
+  const numeroProcesso = processo.numero_processo || processo.numero || "Não informado";
+  
+  const orgao = processo.orgao && typeof processo.orgao === "object"
+    ? processo.orgao.nome || "Não informado"
+    : processo.orgao || processo.orgao_nome || "Não informado";
 
   const data = processo.data_pregao || processo.data || processo.data_sessao;
   const dataFormatada = data
@@ -252,36 +248,6 @@ export const exportToPDF = (sistemas, processo, parametros) => {
         year: "numeric",
       })
     : "Não informada";
-
-  // Função auxiliar para obter o nome do responsável considerando diferentes formatos
-  const getResponsavelNome = (processo) => {
-    // Se tiver o objeto completo do responsável
-    if (processo.responsavel && processo.responsavel.nome) {
-      return processo.responsavel.nome;
-    }
-    
-    // Se tiver apenas o nome do responsável em uma propriedade específica
-    if (processo.responsavel_nome) {
-      return processo.responsavel_nome;
-    }
-    
-    // Se o campo responsável for uma string (nome direto)
-    if (typeof processo.responsavel === 'string' && processo.responsavel) {
-      return processo.responsavel;
-    }
-    
-    // Se tiver apenas o ID do responsável, buscar o nome em responsaveis_processos
-    if (processo.responsavel_id) {
-      // Em vez de mostrar o UUID completo, exibe de forma mais amigável
-      return "Responsável atribuído"; // ou "Responsável designado"
-    }
-    
-    // Se nada for encontrado
-    return 'Não informado';
-  };
-  
-  // E então, use essa função:
-  const responsavel = getResponsavelNome(processo);
 
   const codigo = processo.codigo_analise || processo.codigo || "Não informado";
 
@@ -303,7 +269,7 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     const nome = sistema.nome || sistema.sistemas?.nome || "Sistema sem nome";
     const total = sistema.totalItens || 0;
 
-    // Verificar se o sistema foi analisado - modificar esta verificação
+    // Verificar se o sistema foi analisado
     const naoAtendidos =
       sistema.naoAtendidos !== undefined &&
       sistema.naoAtendidos !== null &&
@@ -311,15 +277,11 @@ export const exportToPDF = (sistemas, processo, parametros) => {
         ? sistema.naoAtendidos
         : "";
 
-    // Importante: string vazia significa não analisado
     const hasValidNaoAtendidos = naoAtendidos !== "";
-
-    // Calcular valores apenas se tiver sido analisado
     const atendidos = hasValidNaoAtendidos ? total - naoAtendidos : "";
-    const percentual =
-      hasValidNaoAtendidos && total > 0
-        ? (((total - naoAtendidos) / total) * 100).toFixed(2)
-        : "";
+    const percentual = hasValidNaoAtendidos && total > 0
+      ? (((total - naoAtendidos) / total) * 100).toFixed(2)
+      : "";
 
     // Determinar status e cor
     let status;
@@ -355,6 +317,7 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     };
   });
 
+  // 1. MELHORIA: Incluir grades nas colunas e linhas da tabela
   autoTable(doc, {
     startY: yPos + 10,
     head: [
@@ -382,6 +345,19 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     styles: {
       fontSize: 9,
       cellPadding: 4,
+    },
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: 255,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    theme: 'grid', // Adicionando grades completas
+    columnStyles: {
+      0: { cellWidth: 40 }, // Coluna do nome do sistema (mais larga)
+      4: { halign: "center" }, // Centralizar percentual
+      5: { halign: "center" }, // Centralizar obrigatório
+      7: { halign: "center" }, // Centralizar status
     },
     rowPageBreak: "auto",
     bodyStyles: {
@@ -417,6 +393,54 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     },
   });
 
+  // 2. MELHORIA: Adicionar resumo abaixo da tabela
+  const finalY = doc.lastAutoTable?.finalY || yPos + 150;
+  
+  // Adicionar título para o resumo
+  yPos = finalY + 15;
+  doc.setFontSize(14);
+  doc.setTextColor(...corPrimaria);
+  doc.text("Resumo de Atendimento por Sistema", 15, yPos);
+  
+  // Lista de resumo dos sistemas
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(...corSecundaria);
+  
+  // Para cada sistema, mostrar o nome e percentual de atendimento
+  sistemas.forEach((sistema, index) => {
+    const nome = sistema.nome || sistema.sistemas?.nome || "Sistema sem nome";
+    const total = sistema.totalItens || 0;
+    const naoAtendidos = sistema.naoAtendidos || 0;
+    
+    // Calcular percentual
+    let percentual = 0;
+    let statusText = "";
+    
+    if (total > 0) {
+      percentual = ((total - naoAtendidos) / total) * 100;
+      statusText = `${percentual.toFixed(2)}% de atendimento`;
+    } else {
+      statusText = "Não analisado";
+    }
+    
+    // Determine a cor com base no percentual
+    if (percentual >= parametros.percentualMinimoGeral) {
+      doc.setTextColor(...corAtende); // Verde para atende
+    } else if (percentual > 0) {
+      doc.setTextColor(...corNaoAtende); // Vermelho para não atende
+    } else {
+      doc.setTextColor(...corNaoAnalisado); // Laranja para não analisado
+    }
+    
+    // Escrever linha com nome do sistema e percentual
+    yPos += 7;
+    doc.text(`${nome} - ${statusText}`, 15, yPos);
+    
+    // Resetar cor para o próximo item
+    doc.setTextColor(...corSecundaria);
+  });
+
   // Rodapé
   const addFooter = () => {
     const pageCount = doc.internal.getNumberOfPages();
@@ -443,12 +467,11 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   addFooter();
 
   // Corrigir nome do arquivo para garantir que nunca fique "sem-numero"
-  const numeroProcessoLimpo =
-    numeroProcesso
-      .toString()
-      .replace(/[\/\\:*?"<>|]/g, "-")
-      .replace(/\s+/g, "_")
-      .substring(0, 40) || "relatorio";
+  const numeroProcessoLimpo = numeroProcesso
+    .toString()
+    .replace(/[\/\\:*?"<>|]/g, "-")
+    .replace(/\s+/g, "_")
+    .substring(0, 40) || "relatorio";
 
   const fileName = `RelatorioAnalises-${numeroProcessoLimpo}.pdf`;
   doc.save(fileName);
