@@ -4162,7 +4162,7 @@ async function updateProcesso(processo) {
             processo_id: processo.id,
             sistema_id: sistemaId,
             total_itens: 0,
-            nao_atendidos: 0,
+            nao_atendidos: null,
             obrigatorio: false,
             percentual_minimo: 70,
             created_at: new Date().toISOString(),

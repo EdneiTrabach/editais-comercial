@@ -269,33 +269,50 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     const nome = sistema.nome || sistema.sistemas?.nome || "Sistema sem nome";
     const total = sistema.totalItens || 0;
 
-    // Verificar se o sistema foi analisado
-    const naoAtendidos =
-      sistema.naoAtendidos !== undefined &&
-      sistema.naoAtendidos !== null &&
-      sistema.naoAtendidos !== ""
-        ? sistema.naoAtendidos
-        : "";
+    // Verificar se o sistema foi analisado - distinção crucial entre valor 0 inserido e campo vazio
+    const temValorNaoAtendidos = 
+      sistema.naoAtendidos !== undefined && 
+      sistema.naoAtendidos !== null && 
+      sistema.naoAtendidos !== "";
 
-    const hasValidNaoAtendidos = naoAtendidos !== "";
-    const atendidos = hasValidNaoAtendidos ? total - naoAtendidos : "";
-    const percentual = hasValidNaoAtendidos && total > 0
-      ? (((total - naoAtendidos) / total) * 100).toFixed(2)
-      : "";
+    // Verificar se tem um valor explícito ou se o campo é realmente vazio
+    let naoAtendidos;
+    let foiAnalisado;
+
+    // Se tem um valor (mesmo que seja 0) e esse valor veio de um input do usuário
+    if (temValorNaoAtendidos) {
+      // Converter para número
+      naoAtendidos = parseInt(sistema.naoAtendidos);
+      // Verificar se a análise foi realizada explicitamente (mesmo que zero)
+      foiAnalisado = true;
+    } else {
+      // Não foi analisado (valor NULL)
+      naoAtendidos = null;
+      foiAnalisado = false;
+    }
+
+    // Calcular valores apenas se tiver sido analisado
+    const atendidos = foiAnalisado ? total - naoAtendidos : null;
+    const percentual = foiAnalisado && total > 0 ? 
+      (((total - naoAtendidos) / total) * 100).toFixed(2) : 
+      "";
 
     // Determinar status e cor
     let status;
     let statusColor;
 
-    if (hasValidNaoAtendidos) {
+    if (foiAnalisado) {
       const validacao = validarConformidadeSistema(
-        sistema,
+        {
+          ...sistema,
+          naoAtendidos: naoAtendidos // Usar o valor já tratado
+        },
         parametros.percentualMinimoObrigatorio,
         parametros.percentualMinimoGeral
       );
-      status = validacao.atende
-        ? "Atende"
-        : `Não Atende (Min: ${validacao.percentualMinimo}%)`;
+      status = validacao.atende ? 
+        "Atende" : 
+        `Não Atende (Min: ${validacao.percentualMinimo}%)`;
       statusColor = validacao.atende ? corAtende : corNaoAtende;
     } else {
       status = "NÃO ANALISADO";
@@ -411,13 +428,21 @@ export const exportToPDF = (sistemas, processo, parametros) => {
   sistemas.forEach((sistema, index) => {
     const nome = sistema.nome || sistema.sistemas?.nome || "Sistema sem nome";
     const total = sistema.totalItens || 0;
-    const naoAtendidos = sistema.naoAtendidos || 0;
+    
+    // Verificar EXPLICITAMENTE se o campo naoAtendidos contém um valor numérico (inclusive 0)
+    const temValorNaoAtendidos = 
+      sistema.naoAtendidos !== undefined && 
+      sistema.naoAtendidos !== null && 
+      sistema.naoAtendidos !== "";
+    
+    const naoAtendidos = temValorNaoAtendidos ? parseInt(sistema.naoAtendidos) : null;
     
     // Calcular percentual
     let percentual = 0;
     let statusText = "";
     
-    if (total > 0) {
+    // Verificar se o sistema foi analisado (tem um valor no campo naoAtendidos)
+    if (temValorNaoAtendidos && total > 0) {
       percentual = ((total - naoAtendidos) / total) * 100;
       statusText = `${percentual.toFixed(2)}% de atendimento`;
     } else {
@@ -425,9 +450,9 @@ export const exportToPDF = (sistemas, processo, parametros) => {
     }
     
     // Determine a cor com base no percentual
-    if (percentual >= parametros.percentualMinimoGeral) {
+    if (temValorNaoAtendidos && percentual >= parametros.percentualMinimoGeral) {
       doc.setTextColor(...corAtende); // Verde para atende
-    } else if (percentual > 0) {
+    } else if (temValorNaoAtendidos && percentual > 0) {
       doc.setTextColor(...corNaoAtende); // Vermelho para não atende
     } else {
       doc.setTextColor(...corNaoAnalisado); // Laranja para não analisado

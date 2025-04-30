@@ -4,18 +4,18 @@
  */
 
 /**
- * Verifica se um sistema específico atende ao percentual mínimo exigido
- * @param {Object} sistema - Objeto com dados do sistema
+ * Verifica se um sistema específico atende aos requisitos de conformidade
+ * @param {Object} sistema - Sistema a ser validado
  * @param {number} percentualMinimoObrigatorio - Percentual mínimo para sistemas obrigatórios
- * @param {number} percentualMinimoGeral - Percentual mínimo geral
- * @returns {Object} - Objeto com status de conformidade
+ * @param {number} percentualMinimoGeral - Percentual mínimo para sistemas não obrigatórios
+ * @returns {Object} - Objeto com o resultado da validação
  */
 export const validarConformidadeSistema = (sistema, percentualMinimoObrigatorio, percentualMinimoGeral) => {
-  // Verificar se o sistema tem dados para análise
-  // A diferença importante é que agora verificamos se naoAtendidos === '' (string vazia)
-  // mas não consideramos 0 como "não analisado"
-  if (!sistema.totalItens || sistema.naoAtendidos === undefined || 
-      sistema.naoAtendidos === null || sistema.naoAtendidos === '') {
+  // Se não há total de itens, ou o sistema não foi analisado (naoAtendidos é null, undefined ou string vazia)
+  if (!sistema.totalItens || 
+      sistema.naoAtendidos === undefined || 
+      sistema.naoAtendidos === null || 
+      sistema.naoAtendidos === '') {
     return {
       atende: false,
       percentualAtingido: 0,
@@ -24,8 +24,12 @@ export const validarConformidadeSistema = (sistema, percentualMinimoObrigatorio,
     };
   }
   
+  // Garantir que naoAtendidos seja tratado como número
+  const naoAtendidos = parseInt(sistema.naoAtendidos);
+  
   // Calcular percentual de atendimento
-  const percentualAtendimento = calcularPercentualAtendimento(sistema);
+  const atendidos = sistema.totalItens - naoAtendidos;
+  const percentualAtendimento = (atendidos / sistema.totalItens) * 100;
   
   // Determinar o percentual mínimo exigido com base na obrigatoriedade
   const percentualMinimo = sistema.obrigatorio ? percentualMinimoObrigatorio : percentualMinimoGeral;
