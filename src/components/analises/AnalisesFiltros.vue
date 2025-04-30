@@ -17,7 +17,7 @@
             id="orgao" 
             v-model="filtros.orgao" 
             placeholder="Nome do órgão"
-            @input="aplicarFiltros"
+            @input="buscarPorOrgao"
           />
         </div>
         
@@ -27,7 +27,7 @@
             type="date" 
             id="data" 
             v-model="filtros.data" 
-            @change="aplicarFiltros"
+            @change="buscarPorData"
           />
         </div>
         
@@ -38,7 +38,7 @@
             id="numero" 
             v-model="filtros.numeroProcesso" 
             placeholder="Ex: 001/2024"
-            @input="aplicarFiltros"
+            @input="buscarPorNumeroProcesso"
           />
         </div>
         
@@ -49,7 +49,7 @@
             id="codigo-gpi" 
             v-model="filtros.codigoGpi" 
             placeholder="Código GPI"
-            @input="aplicarFiltros"
+            @input="buscarPorCodigoGpi"
           />
         </div>
         
@@ -58,7 +58,7 @@
           <select 
             id="sistema" 
             v-model="filtros.sistema" 
-            @change="aplicarFiltros"
+            @change="buscarPorSistema"
           >
             <option value="">Todos os sistemas</option>
             <option v-for="sistema in sistemasList" :key="sistema.id" :value="sistema.id">
@@ -71,7 +71,7 @@
           <button class="btn-limpar" @click="limparFiltros">
             <i class="fas fa-eraser"></i> Limpar
           </button>
-          <button class="btn-aplicar" @click="aplicarFiltros">
+          <button class="btn-aplicar" @click="aplicarFiltrosCompletos">
             <i class="fas fa-search"></i> Filtrar
           </button>
         </div>
@@ -81,6 +81,9 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+import { supabase } from '@/lib/supabase';
+
 export default {
   name: 'AnalisesFiltros',
   props: {
@@ -89,6 +92,7 @@ export default {
       default: () => []
     }
   },
+  emits: ['filtrar', 'carregando'],
   data() {
     return {
       filtrosVisivel: false,
@@ -98,7 +102,8 @@ export default {
         numeroProcesso: '',
         codigoGpi: '',
         sistema: ''
-      }
+      },
+      timeout: null
     }
   },
   computed: {
@@ -110,9 +115,285 @@ export default {
     toggleFiltros() {
       this.filtrosVisivel = !this.filtrosVisivel;
     },
-    aplicarFiltros() {
-      this.$emit('filtrar', { ...this.filtros });
+    
+    // Método para buscar por órgão com debounce
+    buscarPorOrgao() {
+      // Limpar timeout anterior para implementar debounce
+      if (this.timeout) clearTimeout(this.timeout);
+      
+      // Definir novo timeout (aguardar 300ms após o usuário parar de digitar)
+      this.timeout = setTimeout(async () => {
+        if (this.filtros.orgao.length < 2 && this.filtros.orgao.length > 0) return;
+        
+        this.$emit('carregando', true);
+        
+        try {
+          // Buscar processos no banco que correspondem ao termo de busca
+          const { data, error } = await supabase
+            .from('processos')
+            .select('id, orgao')
+            .ilike('orgao', `%${this.filtros.orgao}%`)
+            .limit(50);
+            
+          if (error) throw error;
+          
+          // Emitir IDs dos processos encontrados para o componente pai
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: data ? data.map(item => item.id) : []
+          });
+          
+        } catch (err) {
+          console.error('Erro ao buscar órgãos:', err);
+        } finally {
+          this.$emit('carregando', false);
+        }
+      }, 300); // 300ms de debounce
     },
+    
+    // Método para buscar por data
+    buscarPorData() {
+      if (this.timeout) clearTimeout(this.timeout);
+      
+      this.timeout = setTimeout(async () => {
+        if (!this.filtros.data) {
+          // Se não houver data, limpar o filtro
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: null
+          });
+          return;
+        }
+        
+        this.$emit('carregando', true);
+        
+        try {
+          // Formatar a data para o formato do banco (YYYY-MM-DD)
+          const dataFiltro = this.filtros.data;
+          
+          // Buscar processos no banco com a data selecionada
+          const { data, error } = await supabase
+            .from('processos')
+            .select('id, data_pregao')
+            .eq('data_pregao', dataFiltro + 'T00:00:00')
+            .limit(50);
+            
+          if (error) throw error;
+          
+          // Emitir IDs dos processos encontrados para o componente pai
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: data ? data.map(item => item.id) : []
+          });
+          
+        } catch (err) {
+          console.error('Erro ao buscar por data:', err);
+        } finally {
+          this.$emit('carregando', false);
+        }
+      }, 300);
+    },
+    
+    // Método para buscar por número de processo
+    buscarPorNumeroProcesso() {
+      if (this.timeout) clearTimeout(this.timeout);
+      
+      this.timeout = setTimeout(async () => {
+        if (this.filtros.numeroProcesso.length < 2 && this.filtros.numeroProcesso.length > 0) return;
+        
+        this.$emit('carregando', true);
+        
+        try {
+          const { data, error } = await supabase
+            .from('processos')
+            .select('id, numero_processo')
+            .ilike('numero_processo', `%${this.filtros.numeroProcesso}%`)
+            .limit(50);
+            
+          if (error) throw error;
+          
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: data ? data.map(item => item.id) : []
+          });
+          
+        } catch (err) {
+          console.error('Erro ao buscar processos:', err);
+        } finally {
+          this.$emit('carregando', false);
+        }
+      }, 300);
+    },
+    
+    // Método para buscar por código GPI (versão corrigida)
+    buscarPorCodigoGpi() {
+      if (this.timeout) clearTimeout(this.timeout);
+      
+      this.timeout = setTimeout(async () => {
+        if (this.filtros.codigoGpi.length < 2 && this.filtros.codigoGpi.length > 0) return;
+        
+        this.$emit('carregando', true);
+        
+        try {
+          const { data, error } = await supabase
+            .from('processos')
+            .select('id, codigo_analise')
+            .ilike('codigo_analise', `%${this.filtros.codigoGpi}%`)
+            .limit(50);
+            
+          if (error) throw error;
+          
+          // Emitir IDs dos processos encontrados para o componente pai
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: data ? data.map(item => item.id) : []
+          });
+          
+        } catch (err) {
+          console.error('Erro ao buscar códigos GPI:', err);
+        } finally {
+          this.$emit('carregando', false);
+        }
+      }, 300);
+    },
+    
+    // Método para buscar por sistema
+    buscarPorSistema() {
+      if (this.timeout) clearTimeout(this.timeout);
+      
+      this.timeout = setTimeout(async () => {
+        if (!this.filtros.sistema) {
+          // Se não houver sistema selecionado, limpar o filtro
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: null
+          });
+          return;
+        }
+        
+        this.$emit('carregando', true);
+        
+        try {
+          // Buscar itens de análise que usam este sistema
+          const { data: analiseItens, error: analiseErro } = await supabase
+            .from('analises_itens')
+            .select('processo_id')
+            .eq('sistema_id', this.filtros.sistema);
+            
+          if (analiseErro) throw analiseErro;
+          
+          // Se não houver itens, retornar lista vazia
+          if (!analiseItens || analiseItens.length === 0) {
+            this.$emit('filtrar', { 
+              ...this.filtros,
+              resultadosBusca: []
+            });
+            return;
+          }
+          
+          // Extrair IDs dos processos únicos
+          const processosIds = [...new Set(analiseItens.map(item => item.processo_id))];
+          
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: processosIds
+          });
+          
+        } catch (err) {
+          console.error('Erro ao buscar por sistema:', err);
+        } finally {
+          this.$emit('carregando', false);
+        }
+      }, 300);
+    },
+    
+    // Aplicar todos os filtros de uma vez
+    aplicarFiltrosCompletos() {
+      // Se houver algum filtro preenchido, realizar busca combinada
+      if (this.temAlgumFiltroPreenchido()) {
+        this.buscarCombinado();
+      } else {
+        // Se não houver filtros, limpar resultados
+        this.$emit('filtrar', { 
+          ...this.filtros,
+          resultadosBusca: null
+        });
+      }
+    },
+    
+    // Verificar se há algum filtro preenchido
+    temAlgumFiltroPreenchido() {
+      return this.filtros.orgao ||
+             this.filtros.data ||
+             this.filtros.numeroProcesso ||
+             this.filtros.codigoGpi ||
+             this.filtros.sistema;
+    },
+    
+    // Busca combinada com todos os filtros
+    async buscarCombinado() {
+      this.$emit('carregando', true);
+      
+      try {
+        // Iniciar a consulta
+        let query = supabase.from('processos').select('id');
+        
+        // Adicionar filtros se existirem
+        if (this.filtros.orgao) {
+          query = query.ilike('orgao', `%${this.filtros.orgao}%`);
+        }
+        
+        if (this.filtros.data) {
+          query = query.eq('data_pregao', this.filtros.data + 'T00:00:00');
+        }
+        
+        if (this.filtros.numeroProcesso) {
+          query = query.ilike('numero_processo', `%${this.filtros.numeroProcesso}%`);
+        }
+        
+        if (this.filtros.codigoGpi) {
+          query = query.ilike('codigo_analise', `%${this.filtros.codigoGpi}%`);
+        }
+        
+        // Executar a consulta
+        const { data, error } = await query.limit(50);
+        
+        if (error) throw error;
+        
+        // Se temos o filtro de sistema, precisamos filtrar os resultados por sistema
+        if (this.filtros.sistema && data && data.length > 0) {
+          // Obter IDs de processos que correspondem ao filtro de sistema
+          const { data: sistemaData, error: sistemaError } = await supabase
+            .from('analises_itens')
+            .select('processo_id')
+            .eq('sistema_id', this.filtros.sistema)
+            .in('processo_id', data.map(p => p.id));
+            
+          if (sistemaError) throw sistemaError;
+          
+          const processosIdsFiltradosPorSistema = sistemaData.map(item => item.processo_id);
+          
+          // Emitir IDs dos processos que passaram por todos os filtros
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: processosIdsFiltradosPorSistema
+          });
+        } else {
+          // Emitir IDs dos processos encontrados para o componente pai
+          this.$emit('filtrar', { 
+            ...this.filtros,
+            resultadosBusca: data ? data.map(item => item.id) : []
+          });
+        }
+        
+      } catch (err) {
+        console.error('Erro ao aplicar filtros combinados:', err);
+      } finally {
+        this.$emit('carregando', false);
+      }
+    },
+    
+    // Método para limpar todos os filtros
     limparFiltros() {
       this.filtros = {
         orgao: '',
@@ -121,7 +402,9 @@ export default {
         codigoGpi: '',
         sistema: ''
       };
-      this.$emit('filtrar', { ...this.filtros });
+      
+      // Emitir evento para limpar filtros
+      this.$emit('filtrar', { ...this.filtros, resultadosBusca: null });
     }
   }
 }

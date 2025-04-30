@@ -167,7 +167,7 @@
   display: flex;
   gap: 1rem;
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-top: 0.5rem;
   flex-direction: row;
 }
@@ -232,7 +232,7 @@
 
 .processo-header-section {
   background-color: rgba(255, 255, 255, 0.288);
-  border-radius: var(--   -radius-md, 8px);
+  border-radius: var(-- -radius-md, 8px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -353,19 +353,19 @@
   .filtros-grid {
     grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
   }
-  
+
   .filtros-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
     padding: 1rem;
   }
-  
+
   .btn-toggle-filtros {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .filtro-acoes {
     flex-direction: column;
     width: 100%;
@@ -374,13 +374,13 @@
     margin-top: 0.5rem;
     flex-direction: row;
   }
-  
+
   .btn-limpar,
   .btn-aplicar {
     width: 100%;
     justify-content: center;
   }
-  
+
   .filtros-content {
     padding: 1rem;
   }
@@ -388,18 +388,21 @@
 
 /* Adicionando suporte a toque em dispositivos móveis */
 @media (hover: none) {
+
   .btn-toggle-filtros,
   .btn-limpar,
   .btn-aplicar {
-    padding: 0.85rem 1rem; /* Botões maiores para toque */
+    padding: 0.85rem 1rem;
+    /* Botões maiores para toque */
   }
-  
+
   .filtro-item input,
   .filtro-item select {
     padding: 0.85rem;
-    font-size: 1rem; /* Texto maior para melhor visualização */
+    font-size: 1rem;
+    /* Texto maior para melhor visualização */
   }
-  
+
   /* Estado de toque */
   .btn-limpar:active,
   .btn-aplicar:active,
@@ -413,23 +416,23 @@
   .filtros-container {
     border: 2px solid #000000;
   }
-  
+
   .filtros-header {
     border-bottom: 2px solid #000000;
   }
-  
+
   .filtro-item input,
   .filtro-item select {
     border: 2px solid #000000;
   }
-  
+
   .btn-limpar,
   .btn-aplicar,
   .btn-toggle-filtros {
     border: 2px solid #000000;
     color: #000000;
   }
-  
+
   .btn-aplicar {
     background: #3b82f6;
     color: #ffffff;

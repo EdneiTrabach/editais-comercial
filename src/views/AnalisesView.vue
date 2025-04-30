@@ -359,6 +359,7 @@ import ToastMessages from '@/components/ToastMessages.vue'
 import { useToast } from '@/composables/useToast'
 import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
 import SimpleNavButton from '@/components/navigation/SimpleNavButton.vue'
+import AnalisesFiltros from '@/components/analises/AnalisesFiltros.vue';
 
 export default {
   name: 'AnalisesView',
@@ -371,6 +372,7 @@ export default {
     ToastMessages,
     AnaliseExportMenu,
     SimpleNavButton,    
+    AnalisesFiltros,
   },
   
   // Adicione esta declaração de emits
@@ -400,6 +402,7 @@ export default {
     const percentualMinimoObrigatorios = ref(''); 
     const { toasts, showToast } = useToast();
     const modoVisualizacao = ref('grid'); // 'grid' ou 'lista'
+    const loading = ref(false); // Adicione esta linha para definir o estado de loading
 
     const {
       step,
@@ -1901,23 +1904,23 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       const processosFiltrados = processos.value.filter(processo => {
         let atendeFiltro = true;
         
-        if (filtros.orgao && !processo.orgao?.toLowerCase().includes(filtros.orgao.toLowerCase())) {
+        if (filtros.orgao && processo.orgao && !processo.orgao.toLowerCase().includes(filtros.orgao.toLowerCase())) {
           atendeFiltro = false;
         }
         
-        if (filtros.data) {
+        if (filtros.data && processo.data_pregao) {
           const dataFiltro = new Date(filtros.data);
-          const dataProcesso = processo.data_pregao ? new Date(processo.data_pregao) : null;
-          if (!dataProcesso || dataProcesso.toDateString() !== dataFiltro.toDateString()) {
+          const dataProcesso = new Date(processo.data_pregao);
+          if (dataProcesso.toDateString() !== dataFiltro.toDateString()) {
             atendeFiltro = false;
           }
         }
         
-        if (filtros.numeroProcesso && !processo.numero_processo?.includes(filtros.numeroProcesso)) {
+        if (filtros.numeroProcesso && processo.numero_processo && !processo.numero_processo.includes(filtros.numeroProcesso)) {
           atendeFiltro = false;
         }
         
-        if (filtros.codigoGpi && !processo.codigo_analise?.includes(filtros.codigoGpi)) {
+        if (filtros.codigoGpi && processo.codigo_analise && !processo.codigo_analise.includes(filtros.codigoGpi)) {
           atendeFiltro = false;
         }
         
@@ -1925,17 +1928,9 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
           atendeFiltro = false;
         }
         
-        if (filtros.estado && processo.estado !== filtros.estado) {
+        if (filtros.responsavel && processo.responsavel && !processo.responsavel.toLowerCase().includes(filtros.responsavel.toLowerCase())) {
           atendeFiltro = false;
-        }
-        
-        if (filtros.status && processo.status !== filtros.status) {
-          atendeFiltro = false;
-        }
-        
-        // Adicionar filtro para responsável
-        if (filtros.responsavel && (!processo.responsavel || 
-            !processo.responsavel.toLowerCase().includes(filtros.responsavel.toLowerCase()))) {
+        } else if (filtros.responsavel && !processo.responsavel) {
           atendeFiltro = false;
         }
         
@@ -2052,7 +2047,11 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
       processoSelectionRef,
       abrirModalCriarProcesso,
       modoVisualizacao,
-      mudarVisualizacaoProcessos
+      mudarVisualizacaoProcessos,
+      // setLoading,
+      // processarFiltros,
+      // carregarAnalisesFiltradas,
+      // filtrarProcessosLocalmente
     }
   },
   methods: {
@@ -2096,6 +2095,62 @@ const aplicarPercentualObrigatoriosTodasLinhas = async () => {
     criarNovoProcesso() {
       // Navegação para a rota de criação de processo
       this.$router.push('/editais');
+    },
+    setLoading(isLoading) {
+      this.loading = isLoading;
+    },
+    
+    processarFiltros(filtros) {
+      this.loading = true;
+      
+      // Se temos resultados específicos da busca de órgãos
+      if (filtros.resultadosBusca) {
+        // Carregar análises apenas para os processos encontrados
+        this.carregarAnalisesFiltradas(filtros.resultadosBusca);
+      } else {
+        // Caso contrário, aplicar filtros localmente nos dados já carregados
+        this.filtrarProcessosLocalmente(filtros);
+      }
+    },
+    
+    async carregarAnalisesFiltradas(processoIds) {
+      if (!processoIds || processoIds.length === 0) {
+        // Se não houver IDs, carregar todos os processos ou limpar a busca
+        await this.carregarAnalises();
+        this.loading = false;
+        return;
+      }
+      
+      try {
+        // Buscar análises apenas para os processos encontrados
+        const { data, error } = await supabase
+          .from('analises_itens')
+          .select(`
+            id, processo_id, sistema_id, total_itens, nao_atendidos,
+            obrigatorio, percentual_minimo, sistema_nome_personalizado,
+            is_custom_line, processos:processo_id(id, orgao, data_pregao, 
+            numero_processo, codigo_analise, status, responsavel_id,
+            responsavel:responsavel_id(nome))
+          `)
+          .in('processo_id', processoIds);
+          
+        if (error) throw error;
+        
+        // Processar os dados obtidos
+        this.processarDadosAnalise(data);
+        
+      } catch (err) {
+        console.error('Erro ao carregar análises filtradas:', err);
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    filtrarProcessosLocalmente(filtros) {
+      // Seu código existente de filtro local que já estava implementado
+      // ...
+      
+      this.loading = false;
     }
   }
 }

@@ -48,17 +48,18 @@
   </div>
 
   <!-- List view (tabela) -->
-  <div v-else class="processos-lista">
-    <table class="table-processos">
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Órgão</th>
-          <th>Modalidade</th>
-          <th>Estado</th>
-          <th>Código</th>
-          <th>Status</th>
-          <th>Responsável</th>
+  <div v-else class="processos-lista" role="region" aria-label="Lista de processos">
+    <table class="table-processos" role="grid">
+      <caption class="sr-only">Lista de processos licitatórios</caption>
+      <thead class="thead-light">
+        <tr class="table-header" role="row">
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-numero">Número</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-orgao">Órgão</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-modalidade">Modalidade</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-estado">Estado</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-codigo">Código</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-status">Status</th>
+          <th class="coluna-tabela-analises" role="columnheader" scope="col" id="col-responsavel">Responsável</th>
         </tr>
       </thead>
       <tbody>
@@ -66,7 +67,12 @@
           v-for="processo in processos" 
           :key="processo.id"
           @click="$emit('select-processo', processo)"
+          @keydown.enter="$emit('select-processo', processo)"
+          @keydown.space.prevent="$emit('select-processo', processo)"
           class="processo-row"
+          role="row"
+          tabindex="0"
+          :aria-selected="selectedProcesso === processo.id"
           :class="{ 
             'selected': selectedProcesso === processo.id,
             'not-in-analysis': !isStillInAnalysis(processo),
@@ -76,17 +82,20 @@
           }"
           :data-current-status="formatStatus(processo.status)"
         >
-          <td class="numero-processo">{{ processo.numero_processo }}</td>
-          <td>{{ processo.orgao }}</td>
-          <td>{{ formatarModalidade(processo.modalidade) }}</td>
-          <td>{{ processo.estado || 'N/A' }}</td>
-          <td>{{ processo.codigo_analise || 'N/A' }}</td>
-          <td>
+          <td class="numero-processo" role="cell" :headers="col-numero">{{ processo.numero_processo }}</td>
+          <td role="cell" :headers="col-orgao">{{ processo.orgao }}</td>
+          <td role="cell" :headers="col-modalidade">{{ formatarModalidade(processo.modalidade) }}</td>
+          <td role="cell" :headers="col-estado">{{ processo.estado || 'N/A' }}</td>
+          <td role="cell" :headers="col-codigo">{{ processo.codigo_analise || 'N/A' }}</td>
+          <td role="cell" :headers="col-status">
             <span class="status-badge" :class="'status-' + processo.status?.toLowerCase()?.replace(/[_\s]/g, '-')">
               {{ formatStatus(processo.status) }}
             </span>
           </td>
-          <td>{{ getResponsavel(processo) }}</td>
+          <td role="cell" :headers="col-responsavel">{{ getResponsavel(processo) }}</td>
+        </tr>
+        <tr v-if="processos.length === 0" class="empty-row">
+          <td colspan="7" class="empty-message">Nenhum processo encontrado</td>
         </tr>
       </tbody>
     </table>
@@ -547,89 +556,248 @@ export default {
   border-top: 1px dashed #eee;
 }
 
-/* Estilos para visualização em lista (tabela) */
+/* Estilos para visualização em lista (tabela) com suporte a temas */
 .processos-lista {
   margin-top: 20px;
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: var(--bg-card, #ffffff);
+  position: relative;
+}
+
+/* Indicador de rolagem horizontal em telas pequenas */
+.processos-lista::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 40px;
+  background: linear-gradient(to right, transparent, var(--bg-card, #ffffff));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+@media (max-width: 768px) {
+  .processos-lista:not(.scrolled)::after {
+    opacity: 1;
+    animation: pulse 1.5s infinite alternate;
+  }
+}
+
+/* Animação para indicador de rolagem */
+@keyframes pulse {
+  from { opacity: 0.2; }
+  to { opacity: 0.8; }
 }
 
 .table-processos {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
   border-spacing: 0;
-  background-color: #fff;
+  min-width: 800px;
+  color: var(--text-primary, #333333);
 }
 
-.table-processos thead th {
-  background-color: #f8f9fa;
-  padding: 12px;
-  text-align: left;
+/* Cabeçalho fixo */
+.table-processos thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--bg-header, #f8f9fa);
+}
+
+.table-processos th {
+  color: var(--text-header, #1e293b);
   font-weight: 600;
-  border-bottom: 2px solid #ddd;
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 2px solid var(--border-header, #e2e8f0);
+  transition: background-color 0.3s;
   white-space: nowrap;
+  font-size: 0.9rem;
 }
 
-.processo-row {
-  cursor: pointer;
-  transition: all 0.2s;
+.table-processos td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
+  transition: all 0.2s ease;
+  vertical-align: middle;
 }
 
-.processo-row td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
+.table-processos tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
 }
 
-.processo-row:hover {
-  background-color: #f5f9ff;
+.table-processos tbody tr:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.table-processos tbody tr:focus,
+.table-processos tbody tr:focus-within {
+  outline: 2px solid var(--color-focus, #4285f4);
+  outline-offset: -2px;
 }
 
 .processo-row.selected {
-  background-color: #e0f0ff;
+  background-color: var(--bg-selected, #e0f2fe);
 }
 
-.processo-row.not-in-analysis td:first-child {
-  border-left: 4px solid orange;
+/* Status de análise para linhas da tabela com suporte a temas */
+.processo-row.analise-status-atende td:first-child {
+  border-left: 4px solid var(--color-success, #28a745);
+}
+
+.processo-row.analise-status-nao-atende td:first-child {
+  border-left: 4px solid var(--color-danger, #dc3545);
+}
+
+.processo-row.analise-status-nao-analisado td:first-child {
+  border-left: 4px solid var(--color-warning, #fd7e14);
+}
+
+/* Estilos para os badges de status com suporte a temas */
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.status-em-analise {
+  background-color: var(--color-warning-bg, #fff3e0);
+  color: var(--color-warning-text, #33291a);
+}
+
+.status-ganhamos {
+  background-color: var(--color-success-bg, #e6f7ed);
+  color: var(--color-success-text, #1d4731);
+}
+
+.status-perdemos {
+  background-color: var(--color-danger-bg, #fdedef);
+  color: var(--color-danger-text, #581b23);
+}
+
+.status-cancelado {
+  background-color: var(--color-neutral-bg, #f0f0f0);
+  color: var(--color-neutral-text, #666666);
+}
+
+.status-aguardando {
+  background-color: var(--color-info-bg, #e3f2fd);
+  color: var(--color-info-text, #0d3c61);
 }
 
 .numero-processo {
   font-weight: 600;
+  color: var(--text-accent, #2563eb);
 }
 
-/* Estilos para os badges de status */
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  color: white;
+.empty-message {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted, #64748b);
+  font-style: italic;
 }
 
-.status-em-analise {
-  background-color: #ffb74d;
-  color: #33291a;
+/* Classe para acessibilidade */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-.status-ganhamos {
-  background-color: #66bb6a;
-  color: white;
+/* Suporte a tema escuro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-card: #1e293b;
+    --bg-header: #0f172a;
+    --text-primary: #e2e8f0;
+    --text-header: #f8fafc;
+    --border-header: #334155;
+    --border-light: #334155;
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-selected: #1e4a76;
+    --text-accent: #60a5fa;
+    --text-muted: #94a3b8;
+    
+    /* Status colors */
+    --color-warning-bg: #422006;
+    --color-warning-text: #fdba74;
+    --color-success-bg: #052e16;
+    --color-success-text: #86efac;
+    --color-danger-bg: #450a0a;
+    --color-danger-text: #fca5a5;
+    --color-neutral-bg: #27272a;
+    --color-neutral-text: #d4d4d8;
+    --color-info-bg: #082f49;
+    --color-info-text: #7dd3fc;
+  }
 }
 
-.status-perdemos {
-  background-color: #ef5350;
-  color: white;
+/* Acessibilidade: preferências de redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .status-badge,
+  .table-processos tbody tr,
+  .processos-lista::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
-.status-cancelado {
-  background-color: #9e9e9e;
-  color: white;
+/* Responsividade aprimorada */
+@media (max-width: 768px) {
+  .table-processos {
+    font-size: 0.85rem;
+  }
+  
+  .table-processos th,
+  .table-processos td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
 }
 
-.status-aguardando {
-  background-color: #42a5f5;
-  color: white;
+/* Acréscimo para impressão */
+@media print {
+  .processos-lista {
+    box-shadow: none;
+  }
+  
+  .table-processos {
+    width: 100%;
+  }
+  
+  .table-processos th {
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
+  }
+  
+  .status-badge {
+    border: 1px solid #ddd;
+  }
 }
 
 /* Responsividade */
