@@ -21,45 +21,50 @@
 
       <div class="sidebar-menu">
         <ul class="nav-links">
+
           <li class="sidebar-menu-item">
             <router-link to="/processos" class="sidebar-menu-link">
               <img src="/icons/pasta.svg" alt="Processos" class="icon" />
               <span class="link-text">Processos</span>
             </router-link>
           </li>
+
           <li class="sidebar-menu-item">
             <router-link to="/funcionalidades" class="sidebar-menu-link">
               <img src="/icons/configuracoes.svg" alt="Funcionalidades" class="icon" />
               <span class="link-text">Funcionalidades</span>
             </router-link>
           </li>
+
           <li class="sidebar-menu-item">
             <router-link to="/editais" class="sidebar-menu-link">
               <img src="/icons/nova-pasta.svg" alt="Editais" class="icon" />
               <span class="link-text">Novo Processo</span>
             </router-link>
           </li>
+
           <!-- Novo item de menu para Lances -->
-          <li class="sidebar-menu-item">
+           
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/lances" class="sidebar-menu-link">
               <img src="/icons/calculadora.svg" alt="Lances" class="icon" />
               <span class="link-text">Lances</span>
             </router-link>
-          </li>
+          </li> -->
         
-          <li class="sidebar-menu-item">
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/analises" class="sidebar-menu-link">
               <img src="/icons/analises.svg" alt="Análises" class="icon" />
               <span class="link-text">Análises</span>
             </router-link>
-          </li>
+          </li> -->
 
-          <li class="sidebar-menu-item">
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/relatorios-participar" class="sidebar-menu-link">
               <img src="/icons/file-chart-fill.svg" alt="Relatórios de Participação" class="icon" onerror="this.src='/icons/file-chart-line.svg'" />
               <span class="link-text">Relatórios de Participação</span>
             </router-link>
-          </li>
+          </li> -->
 
           <li>
             <router-link to="/sistemas" class="sidebar-menu-link" v-slot="{ isActive }">
@@ -67,51 +72,60 @@
               <span class="link-text">Sistemas</span>
             </router-link>
           </li>
-          <li class="sidebar-menu-item">
+
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/dashboard" class="sidebar-menu-link">
               <img src="/icons/grafico.svg" alt="Dashboard" class="icon" />
               <span class="link-text">Dashboard</span>
             </router-link>
-          </li>
+          </li> -->
+
           <li class="sidebar-menu-item">
             <router-link to="/representantes" class="sidebar-menu-link">
               <img src="/icons/cartao-usuario.svg" alt="Representantes" class="icon" />
               <span class="link-text">Representantes</span>
             </router-link>
           </li>
+
           <li class="sidebar-menu-item">
             <router-link to="/plataformas" class="sidebar-menu-link">
               <img src="/icons/links.svg" alt="Plataformas" class="icon" />
               <span class="link-text">Plataformas</span>
             </router-link>
           </li>
+
           <li class="sidebar-menu-item">
             <router-link to="/empresas" class="sidebar-menu-link">
               <img src="/icons/empresa.svg" alt="Empresas" class="icon" />
               <span class="link-text">Empresas</span>
             </router-link>
           </li>
+
           <!-- <li class="sidebar-menu-item">
             <router-link to="/relatorios" class="sidebar-menu-link">
               <img src="/icons/check.svg" alt="Relatórios" class="icon" />
               <span class="link-text">Relatórios</span>
             </router-link>
           </li> -->
+          
           <!-- Novo item de menu para Publicações Contratuais -->
-          <li class="sidebar-menu-item">
+
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/publicacoes-contratuais" class="sidebar-menu-link">
               <img src="/icons/contract.svg" alt="Publicações Contratuais" class="icon" />
               <span class="link-text">Publicações Contratuais</span>
             </router-link>
-          </li>
+          </li> -->
           
           <!-- Adicione este item ao menu do TheSidebar.vue -->
-          <li class="sidebar-menu-item" v-if="isAdmin">
+
+          <!-- <li class="sidebar-menu-item" v-if="isAdmin">
             <router-link to="/configuracoes-ia" class="sidebar-menu-link">
               <img src="/icons/settings-ia.svg" alt="Configurações IA" class="icon" />
               <span class="link-text">Configurações IA</span>
             </router-link>
-          </li>
+          </li> -->
+
           <li class="sidebar-menu-item">
             <router-link to="/responsaveis" class="sidebar-menu-link" v-slot="{ isActive }"
               :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
@@ -119,6 +133,7 @@
               <span class="link-text">Responsáveis</span>
             </router-link>
           </li>
+
           <li class="sidebar-menu-item">
             <router-link to="/configuracoes" class="sidebar-menu-link" v-slot="{ isActive }"
               :class="{ 'disabled': !isAdmin }" @click.prevent="handleAdminClick">
@@ -126,12 +141,14 @@
               <span class="link-text">Admin. de Usuários</span>
             </router-link>
           </li>
-          <li class="sidebar-menu-item">
+
+          <!-- <li class="sidebar-menu-item">
             <router-link to="/documentos" class="sidebar-menu-link" @click="logNavigation">
               <i class="fas fa-file-alt"></i>
               <span class="link-text">Processador de Documentos</span>
             </router-link>
-          </li>
+          </li> -->
+
         </ul>
 
         <div class="bottom-section">
@@ -198,10 +215,10 @@
           </div>
 
           <!-- Botão de notificações substituído pelo componente -->
-          <NotificationButton 
+          <!-- <NotificationButton 
             :count="unreadNotifications" 
             @click="toggleNotifications" 
-          />
+          /> -->
 
           <button @click="handleLogout" class="logout-btn sidebar-menu-link">
             <img src="/icons/sair.svg" alt="Sair" class="icon" />

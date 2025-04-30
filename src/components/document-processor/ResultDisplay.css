@@ -544,11 +544,6 @@ pre {
   transition: all 0.2s ease;
 }
 
-.tab-button.active {
-  color: #193155;
-  border-bottom-color: #193155;
-}
-
 .tab-button:hover:not(.active) {
   color: #334155;
   background-color: #f8fafc;

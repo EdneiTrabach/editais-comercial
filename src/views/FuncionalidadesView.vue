@@ -69,36 +69,36 @@ const features = [
     description: 'Cadastre e gerencie processos licitatórios',
     route: '/editais'
   },
-  {
-    icon: '/icons/calculadora.svg',
-    title: 'Lances',
-    description: 'Registre e gerencie lances de processos',
-    route: '/lances'
-  },
-  {
-    icon: '/icons/analises.svg',
-    title: 'Análises',
-    description: 'Visualize e gerencie análises de processos',
-    route: '/analises'
-  },
-  {
-    icon: '/icons/file-chart-fill.svg',
-    title: 'Relatórios de Participação',
-    description: 'Visualize e gerencie relatórios de participação',
-    route: '/relatorios-participar'
-  },
+  // {
+  //   icon: '/icons/calculadora.svg',
+  //   title: 'Lances',
+  //   description: 'Registre e gerencie lances de processos',
+  //   route: '/lances'
+  // },
+  // {
+  //   icon: '/icons/analises.svg',
+  //   title: 'Análises',
+  //   description: 'Visualize e gerencie análises de processos',
+  //   route: '/analises'
+  // },
+  // {
+  //   icon: '/icons/file-chart-fill.svg',
+  //   title: 'Relatórios de Participação',
+  //   description: 'Visualize e gerencie relatórios de participação',
+  //   route: '/relatorios-participar'
+  // },
     {
     icon: '/icons/app.svg',
     title: 'Sistemas',
     description: 'Conheça nossos sistemas e soluções',
     route: '/sistemas'
   },
-  {
-    icon: '/icons/grafico.svg',
-    title: 'Dashboard',
-    description: 'Visualize estatísticas e indicadores',
-    route: '/Dashboard'
-  },
+  // {
+  //   icon: '/icons/grafico.svg',
+  //   title: 'Dashboard',
+  //   description: 'Visualize estatísticas e indicadores',
+  //   route: '/Dashboard'
+  // },
   {
     icon: '/icons/cartao-usuario.svg',
     title: 'Representantes',
@@ -117,30 +117,30 @@ const features = [
     description: 'Cadastre e gerencie empresas',
     route: '/empresas'
   },
-  {
-    icon: '/icons/check.svg',
-    title: 'Relatórios',
-    description: 'Visualize relatórios e estatísticas',
-    route: '/relatorios'
-  },
+  // {
+  //   icon: '/icons/check.svg',
+  //   title: 'Relatórios',
+  //   description: 'Visualize relatórios e estatísticas',
+  //   route: '/relatorios'
+  // },
   {
     icon: '/icons/responsavel.svg',
     title: 'Responsáveis',
     description: 'Gerencie responsáveis e permissões',
     route: '/responsaveis'
   },
-  {
-    icon: '/icons/contract.svg',
-    title: 'Publicações Contratuais',
-    description: 'Envie publicações contratuais com auxilio das IA',
-    route: '/publicacoes-contratuais'
-  },
-  {
-    icon: '/icons/settings-ia.svg',
-    title: 'Configurações de IA',
-    description: 'Gerencie configurações de Inteligência Artificial',
-    route: '/configuracoes-ia'
-  },
+  // {
+  //   icon: '/icons/contract.svg',
+  //   title: 'Publicações Contratuais',
+  //   description: 'Envie publicações contratuais com auxilio das IA',
+  //   route: '/publicacoes-contratuais'
+  // },
+  // {
+  //   icon: '/icons/settings-ia.svg',
+  //   title: 'Configurações de IA',
+  //   description: 'Gerencie configurações de Inteligência Artificial',
+  //   route: '/configuracoes-ia'
+  // },
   {
     icon: '/icons/config-usuario.svg',
     title: 'Admin. de Usuários',
