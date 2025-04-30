@@ -304,7 +304,7 @@
           </table>
 
           <!-- Adicione esta classe para a div com a porcentagem geral -->
-          <div class="analise-resumo">
+          <!-- <div class="analise-resumo">
             <div class="percentual-geral" :class="getStatusGeralClass">
               <span>
                 <template v-if="getStatusGeral !== 'Não Analisado'">
@@ -318,7 +318,16 @@
                 {{ getStatusGeral }}
               </span>
             </div>
-          </div>
+          </div> -->
+          
+          <!-- Na view principal -->
+          <AnaliseResumo 
+            :sistemasAnalise="sistemasAnalise" 
+            :porcentagemGeralAtendimento="porcentagemGeralAtendimento"
+            :getStatusGeral="getStatusGeral"
+            :percentualMinimoGeral="percentualMinimoGeral"
+            :formatarPercentual="formatarPercentual"
+          />
         </div>
 
         <!-- Modal de Confirmação -->
@@ -360,6 +369,7 @@ import { useToast } from '@/composables/useToast'
 import AnaliseExportMenu from '@/components/analises/AnaliseExportMenu.vue'
 import SimpleNavButton from '@/components/navigation/SimpleNavButton.vue'
 import AnalisesFiltros from '@/components/analises/AnalisesFiltros.vue';
+import AnaliseResumo from '@/components/analises/AnaliseResumo.vue'  
 
 export default {
   name: 'AnalisesView',
@@ -373,6 +383,7 @@ export default {
     AnaliseExportMenu,
     SimpleNavButton,    
     AnalisesFiltros,
+    AnaliseResumo, 
   },
   
   // Adicione esta declaração de emits
