@@ -1,3 +1,4 @@
+@import '../assets/styles/analises/variables.css';
 @import '../assets/styles/analises/buttons.css';
 @import '../assets/styles/analises/drag-drop.css';
 @import '../assets/styles/analises/editable.css';
@@ -7,3 +8,6 @@
 @import '../assets/styles/analises/modal.css';
 @import '../assets/styles/analises/status.css';
 @import '../assets/styles/analises/table.css';
+@import '../assets/styles/analises/filtros.css';
+@import '../assets/styles/analises/processo-lista.css';  /* Nova importação */
+@import '../assets/styles/analises.css';

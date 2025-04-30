@@ -53,155 +53,386 @@
 /* Container de filtros */
 .filtros-container {
   width: 100%;
-  border-radius: 6px;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background-color: var(--bg-card, #ffffff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-light, #e2e8f0);
 }
 
+/* Cabeçalho dos filtros */
 .filtros-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .filtros-header h3 {
   font-size: 1.1rem;
   margin: 0;
-  color: #4b5563;
+  color: var(--text-title, #1e293b);
+  font-weight: 600;
+  transition: color 0.3s;
 }
 
+/* Botão para mostrar/ocultar filtros */
 .btn-toggle-filtros {
   display: flex;
   align-items: center;
-  background: none;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  padding: 0.4rem 0.8rem;
-  color: #4b5563;
+  gap: 0.5rem;
+  background: var(--btn-secondary, #f1f5f9);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.5rem 0.875rem;
+  color: var(--text-secondary, #64748b);
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-toggle-filtros i {
-  margin-left: 0.5rem;
-  transition: transform 0.2s;
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+  opacity: 0.8;
+}
+
+.btn-toggle-filtros:hover {
+  background: var(--btn-secondary-hover, #e2e8f0);
+  color: var(--text-primary, #334155);
 }
 
 .btn-toggle-filtros.active i {
   transform: rotate(180deg);
 }
 
-.btn-toggle-filtros:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
-}
-
 /* Conteúdo dos filtros */
 .filtros-content {
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  padding: 1.25rem;
+  background-color: var(--bg-secondary, #f8fafc);
+  transition: all 0.3s ease;
 }
 
+/* Grid responsivo para os filtros */
 .filtros-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
 }
 
+/* Estilo para cada item do filtro */
 .filtro-item {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
 .filtro-item label {
-  margin-bottom: 0.4rem;
+  color: var(--text-secondary, #64748b);
   font-size: 0.9rem;
-  color: #4b5563;
   font-weight: 500;
+  transition: color 0.3s;
 }
 
 .filtro-item input,
 .filtro-item select {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background-color: #fff;
-  color: #1f2937;
+  padding: 0.75rem;
+  border: 1px solid var(--border-input, #cbd5e1);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: var(--bg-input, #ffffff);
+  color: var(--text-input, #334155);
+  transition: all 0.2s ease;
 }
 
 .filtro-item input:focus,
 .filtro-item select:focus {
+  border-color: var(--border-focus, #3b82f6);
   outline: none;
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.filtro-item input::placeholder {
+  color: var(--text-placeholder, #94a3b8);
+  opacity: 0.8;
+}
+
+/* Botões de ações do filtro */
 .filtro-acoes {
   display: flex;
+  gap: 1rem;
   align-items: flex-end;
-  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
   flex-direction: row;
-  justify-content: flex-start;
-  align-content: center;
-  flex-wrap: nowrap;
 }
 
 .btn-limpar,
 .btn-aplicar {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
   font-weight: 500;
-  transition: all 0.2s;
+  font-size: 0.925rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-limpar {
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #d1d5db;
+  background-color: var(--btn-secondary, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  border: 1px solid var(--border-light, #e2e8f0);
 }
 
 .btn-limpar:hover {
-  background-color: #e5e7eb;
+  background-color: var(--btn-secondary-hover, #e2e8f0);
+  transform: translateY(-1px);
+}
+
+.btn-limpar:active {
+  transform: translateY(0);
 }
 
 .btn-aplicar {
-  background-color: #3b82f6;
-  color: #fff;
+  background: linear-gradient(135deg, var(--action-primary, #3b82f6) 0%, var(--action-primary-dark, #2563eb) 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-aplicar:hover {
-  background-color: #2563eb;
+  background: linear-gradient(135deg, var(--action-primary-dark, #2563eb) 0%, var(--action-primary-darker, #1d4ed8) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
 }
 
+.btn-aplicar:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+/* Ícones nos botões */
 .btn-limpar i,
 .btn-aplicar i {
-  margin-right: 0.4rem;
+  font-size: 0.875rem;
 }
 
-/* Responsividade */
+/* Animação para expandir/recolher os filtros */
+.filtros-container:not(.expanded) .filtros-content {
+  display: none;
+}
+
+
+.processo-header-section {
+  background-color: rgba(255, 255, 255, 0.288);
+  border-radius: var(--   -radius-md, 8px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .processo-header-section h2 {
+  color: var(--text-title-dark, #f8fafc);
+}
+
+
+/* Suporte ao tema escuro */
+[data-theme="dark"] .filtros-container {
+  background-color: var(--bg-card-dark, #1e293b);
+  border-color: var(--border-dark, #334155);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .filtros-header {
+  border-bottom-color: var(--border-dark, #334155);
+}
+
+[data-theme="dark"] .filtros-header h3 {
+  color: var(--text-title-dark, #f8fafc);
+}
+
+[data-theme="dark"] .btn-toggle-filtros {
+  background: var(--btn-secondary-dark, #334155);
+  border-color: var(--border-dark, #475569);
+  color: var(--text-secondary-dark, #cbd5e1);
+}
+
+[data-theme="dark"] .btn-toggle-filtros:hover {
+  background: var(--btn-secondary-hover-dark, #475569);
+  color: var(--text-primary-dark, #f1f5f9);
+}
+
+[data-theme="dark"] .filtros-content {
+  background-color: var(--bg-secondary-dark, #0f172a);
+}
+
+[data-theme="dark"] .filtro-item label {
+  color: var(--text-secondary-dark, #cbd5e1);
+}
+
+[data-theme="dark"] .filtro-item input,
+[data-theme="dark"] .filtro-item select {
+  background-color: var(--bg-input-dark, #1e293b);
+  border-color: var(--border-input-dark, #475569);
+  color: var(--text-input-dark, #f1f5f9);
+}
+
+[data-theme="dark"] .filtro-item input:focus,
+[data-theme="dark"] .filtro-item select:focus {
+  border-color: var(--border-focus-dark, #60a5fa);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+[data-theme="dark"] .filtro-item input::placeholder {
+  color: var(--text-placeholder-dark, #64748b);
+}
+
+[data-theme="dark"] .btn-limpar {
+  background-color: var(--btn-secondary-dark, #334155);
+  color: var(--text-secondary-dark, #cbd5e1);
+  border-color: var(--border-dark, #475569);
+}
+
+[data-theme="dark"] .btn-limpar:hover {
+  background-color: var(--btn-secondary-hover-dark, #475569);
+}
+
+/* Tema vermelho */
+[data-theme="red"] .btn-toggle-filtros:hover {
+  border-color: var(--action-primary-red, #ef4444);
+}
+
+[data-theme="red"] .filtro-item input:focus,
+[data-theme="red"] .filtro-item select:focus {
+  border-color: var(--border-focus-red, #ef4444);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="red"] .btn-aplicar {
+  background: linear-gradient(135deg, var(--action-primary-red, #ef4444) 0%, var(--action-primary-dark-red, #dc2626) 100%);
+}
+
+[data-theme="red"] .btn-aplicar:hover {
+  background: linear-gradient(135deg, var(--action-primary-dark-red, #dc2626) 0%, var(--action-primary-darker-red, #b91c1c) 100%);
+}
+
+/* Tema roxo */
+[data-theme="purple"] .btn-toggle-filtros:hover {
+  border-color: var(--action-primary-purple, #8b5cf6);
+}
+
+[data-theme="purple"] .filtro-item input:focus,
+[data-theme="purple"] .filtro-item select:focus {
+  border-color: var(--border-focus-purple, #8b5cf6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+[data-theme="purple"] .btn-aplicar {
+  background: linear-gradient(135deg, var(--action-primary-purple, #8b5cf6) 0%, var(--action-primary-dark-purple, #7c3aed) 100%);
+}
+
+[data-theme="purple"] .btn-aplicar:hover {
+  background: linear-gradient(135deg, var(--action-primary-dark-purple, #7c3aed) 0%, var(--action-primary-darker-purple, #6d28d9) 100%);
+}
+
+/* Responsividade para telas médias */
+@media (max-width: 992px) {
+  .filtros-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Responsividade para telas pequenas */
 @media (max-width: 768px) {
   .filtros-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
   }
-
+  
+  .filtros-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .btn-toggle-filtros {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
   .filtro-acoes {
     flex-direction: column;
     width: 100%;
+    align-items: flex-end;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    flex-direction: row;
   }
-
+  
   .btn-limpar,
   .btn-aplicar {
     width: 100%;
     justify-content: center;
+  }
+  
+  .filtros-content {
+    padding: 1rem;
+  }
+}
+
+/* Adicionando suporte a toque em dispositivos móveis */
+@media (hover: none) {
+  .btn-toggle-filtros,
+  .btn-limpar,
+  .btn-aplicar {
+    padding: 0.85rem 1rem; /* Botões maiores para toque */
+  }
+  
+  .filtro-item input,
+  .filtro-item select {
+    padding: 0.85rem;
+    font-size: 1rem; /* Texto maior para melhor visualização */
+  }
+  
+  /* Estado de toque */
+  .btn-limpar:active,
+  .btn-aplicar:active,
+  .btn-toggle-filtros:active {
+    opacity: 0.8;
+  }
+}
+
+/* Adicionando suporte a alto contraste e acessibilidade */
+@media (prefers-contrast: high) {
+  .filtros-container {
+    border: 2px solid #000000;
+  }
+  
+  .filtros-header {
+    border-bottom: 2px solid #000000;
+  }
+  
+  .filtro-item input,
+  .filtro-item select {
+    border: 2px solid #000000;
+  }
+  
+  .btn-limpar,
+  .btn-aplicar,
+  .btn-toggle-filtros {
+    border: 2px solid #000000;
+    color: #000000;
+  }
+  
+  .btn-aplicar {
+    background: #3b82f6;
+    color: #ffffff;
   }
 }
 

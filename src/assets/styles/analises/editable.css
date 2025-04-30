@@ -6,7 +6,6 @@
   transition: all 0.2s ease;
   height: 20px;
   width: 100%;
-
 }
 
 .editable:hover,
@@ -64,4 +63,149 @@
 /* Campo de nome/título editável nos campos personalizados */
 .custom-line td:first-child:hover {
   background-color: rgba(255, 193, 7, 0.3);
+}
+
+/* Estilos para células editáveis nas tabelas de análise */
+
+.editable-cell {
+  position: relative;
+  min-height: 24px;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editable-cell:hover {
+  background-color: var(--bg-editable-hover, rgba(59, 130, 246, 0.1));
+  border-color: var(--border-editable-hover, #cbd5e1);
+}
+
+.editable-cell::after {
+  content: '✎';
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0;
+  color: var(--icon-edit, #64748b);
+  transition: opacity 0.2s ease;
+}
+
+.editable-cell:hover::after {
+  opacity: 0.7;
+}
+
+/* Estilo para célula em edição */
+.editable-cell.editing {
+  background-color: var(--bg-editing, #e0f2fe);
+  border-color: var(--border-editing, #3b82f6);
+  padding: 0;
+}
+
+.editable-cell.editing::after {
+  display: none;
+}
+
+.editable-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.editable-input:focus {
+  outline: none;
+}
+
+/* Status de validação */
+.validacao-pendente .editable-cell,
+tr.validacao-pendente td:not(.drag-handle-column) {
+  background-color: var(--bg-validation-pending, rgba(234, 179, 8, 0.08));
+}
+
+.validacao-pendente .editable-cell:hover {
+  background-color: var(--bg-validation-pending-hover, rgba(234, 179, 8, 0.15));
+}
+
+/* Status de atendimento */
+.atende-status-forte .editable-cell,
+tr.atende-status-forte td:not(.drag-handle-column) {
+  background-color: var(--bg-conform, rgba(22, 163, 74, 0.08));
+}
+
+.atende-status-forte .editable-cell:hover {
+  background-color: var(--bg-conform-hover, rgba(22, 163, 74, 0.15));
+}
+
+.nao-atende-status-forte .editable-cell,
+tr.nao-atende-status-forte td:not(.drag-handle-column) {
+  background-color: var(--bg-non-conform, rgba(220, 38, 38, 0.08));
+}
+
+.nao-atende-status-forte .editable-cell:hover {
+  background-color: var(--bg-non-conform-hover, rgba(220, 38, 38, 0.15));
+}
+
+/* Células calculadas (não editáveis) */
+.calculated-field {
+  display: inline-block;
+  padding: 0.4rem 0.6rem;
+  background-color: var(--bg-calc, rgba(100, 116, 139, 0.08));
+  border-radius: 4px;
+  font-style: italic;
+  color: var(--text-calc, #475569);
+}
+
+/* Adaptação para temas escuros */
+[data-theme="dark"] .editable-cell:hover {
+  background-color: var(--bg-editable-hover-dark, rgba(59, 130, 246, 0.2));
+  border-color: var(--border-editable-hover-dark, #475569);
+}
+
+[data-theme="dark"] .editable-cell::after {
+  color: var(--icon-edit-dark, #94a3b8);
+}
+
+[data-theme="dark"] .editable-cell.editing {
+  background-color: var(--bg-editing-dark, #0c4a6e);
+  border-color: var(--border-editing-dark, #0ea5e9);
+}
+
+[data-theme="dark"] .validacao-pendente .editable-cell,
+[data-theme="dark"] tr.validacao-pendente td:not(.drag-handle-column) {
+  background-color: var(--bg-validation-pending-dark, rgba(234, 179, 8, 0.12));
+}
+
+[data-theme="dark"] .validacao-pendente .editable-cell:hover {
+  background-color: var(--bg-validation-pending-hover-dark, rgba(234, 179, 8, 0.25));
+}
+
+[data-theme="dark"] .atende-status-forte .editable-cell,
+[data-theme="dark"] tr.atende-status-forte td:not(.drag-handle-column) {
+  background-color: var(--bg-conform-dark, rgba(22, 163, 74, 0.12));
+}
+
+[data-theme="dark"] .atende-status-forte .editable-cell:hover {
+  background-color: var(--bg-conform-hover-dark, rgba(22, 163, 74, 0.25));
+}
+
+[data-theme="dark"] .nao-atende-status-forte .editable-cell,
+[data-theme="dark"] tr.nao-atende-status-forte td:not(.drag-handle-column) {
+  background-color: var(--bg-non-conform-dark, rgba(220, 38, 38, 0.12));
+}
+
+[data-theme="dark"] .nao-atende-status-forte .editable-cell:hover {
+  background-color: var(--bg-non-conform-hover-dark, rgba(220, 38, 38, 0.25));
+}
+
+[data-theme="dark"] .calculated-field {
+  background-color: var(--bg-calc-dark, rgba(100, 116, 139, 0.15));
+  color: var(--text-calc-dark, #cbd5e1);
 }

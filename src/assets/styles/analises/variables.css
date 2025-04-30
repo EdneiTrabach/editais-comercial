@@ -1,0 +1,205 @@
+:root {
+  /* Cores principais */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-success: #15803d;
+  --color-danger: #b91c1c;
+  --color-warning: #b45309;
+  --color-info: #3b82f6;
+  
+  /* Backgrounds */
+  --bg-card: #ffffff;
+  --bg-header: #f8fafc;
+  --bg-secondary: #f8fafc;
+  --bg-hover: rgba(0, 0, 0, 0.02);
+  --bg-input: #ffffff;
+  --bg-hint: #f8fafc;
+  --bg-summary: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  --bg-validation-pending: rgba(234, 179, 8, 0.08);
+  --bg-validation-pending-hover: rgba(234, 179, 8, 0.15);
+  --bg-conform: rgba(22, 163, 74, 0.08);
+  --bg-conform-hover: rgba(22, 163, 74, 0.15);
+  --bg-non-conform: rgba(220, 38, 38, 0.08);
+  --bg-non-conform-hover: rgba(220, 38, 38, 0.15);
+  --bg-calc: rgba(100, 116, 139, 0.08);
+  --bg-editable-hover: rgba(59, 130, 246, 0.1);
+  --bg-editing: #e0f2fe;
+  --bg-success: rgba(22, 163, 74, 0.15);
+  --bg-danger: rgba(220, 38, 38, 0.15);
+  
+  /* Texto */
+  --text-title: #1e293b;
+  --text-primary: #334155;
+  --text-secondary: #64748b;
+  --text-header: #1e293b;
+  --text-input: #334155;
+  --text-calc: #475569;
+  --text-success: #15803d;
+  --text-danger: #b91c1c;
+  --text-btn-secondary: #475569;
+  --text-percent-pass: #15803d;
+  --text-percent-fail: #b91c1c;
+  --text-placeholder: #94a3b8;
+  
+  /* Bordas */
+  --border-light: #e2e8f0;
+  --border-header: #e2e8f0;
+  --border-input: #cbd5e1;
+  --border-focus: #3b82f6;
+  --border-checkbox: #cbd5e1;
+  --border-editable-hover: #cbd5e1;
+  --border-editing: #3b82f6;
+  --border-summary: #3b82f6;
+  
+  /* Status */
+  --status-atende: #15803d;
+  --status-nao-atende: #b91c1c;
+  --status-nao-analisado: #b45309;
+  
+  /* Ícones */
+  --icon-drag: #64748b;
+  --icon-edit: #64748b;
+  
+  /* Botões */
+  --btn-secondary: #f1f5f9;
+  --btn-secondary-hover: #e2e8f0;
+  --btn-danger: #ef4444;
+  --checkbox-bg: #f8fafc;
+  --checkbox-checked: #3b82f6;
+  
+  /* Variáveis gerais compartilhadas entre temas */
+  --border-radius-sm: 6px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  /* Ações */
+  --action-primary: #3b82f6;
+  --action-primary-dark: #2563eb;
+  --action-primary-darker: #1d4ed8;
+  
+  /* Tema vermelho */
+  --action-primary-red: #ef4444;
+  --action-primary-dark-red: #dc2626;
+  --action-primary-darker-red: #b91c1c;
+  --border-focus-red: #ef4444;
+  
+  /* Tema roxo */
+  --action-primary-purple: #8b5cf6;
+  --action-primary-dark-purple: #7c3aed;
+  --action-primary-darker-purple: #6d28d9;
+  --border-focus-purple: #8b5cf6;
+
+  /* Variáveis para a lista de processos */
+  --bg-filter: #f9fafb;
+  --bg-selected: #e0f2fe;
+  --text-accent: #2563eb;
+  --bg-checkbox: #e2e8f0;
+  --bg-checkbox-hover: #cbd5e1;
+  --checkbox-checked: #3b82f6;
+  
+  /* Variações para tema escuro */
+  --bg-filter-dark: #0f172a;
+  --bg-selected-dark: rgba(59, 130, 246, 0.15);
+  --text-accent-dark: #60a5fa;
+  --bg-checkbox-dark: #334155;
+  --bg-checkbox-hover-dark: #475569;
+  --checkbox-checked-dark: #3b82f6;
+  
+  /* Variações para tema vermelho */
+  --text-accent-red: #ef4444;
+  --checkbox-checked-red: #ef4444;
+  
+  /* Variações para tema roxo */
+  --text-accent-purple: #8b5cf6;
+  --checkbox-checked-purple: #8b5cf6;
+
+  /* Status badges */
+  --badge-em-analise-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --badge-ganhamos-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --badge-perdemos-bg: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --badge-cancelado-bg: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  --badge-aguardando-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* Tema escuro */
+[data-theme="dark"] {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  
+  /* Backgrounds */
+  --bg-card-dark: #1e293b;
+  --bg-header-dark: #0f172a;
+  --bg-secondary-dark: #0f172a;
+  --bg-hover-dark: rgba(255, 255, 255, 0.03);
+  --bg-input-dark: #1e293b;
+  --bg-hint-dark: #0f172a;
+  --bg-validation-pending-dark: rgba(234, 179, 8, 0.12);
+  --bg-validation-pending-hover-dark: rgba(234, 179, 8, 0.25);
+  --bg-conform-dark: rgba(22, 163, 74, 0.12);
+  --bg-conform-hover-dark: rgba(22, 163, 74, 0.25);
+  --bg-non-conform-dark: rgba(220, 38, 38, 0.12);
+  --bg-non-conform-hover-dark: rgba(220, 38, 38, 0.25);
+  --bg-calc-dark: rgba(100, 116, 139, 0.15);
+  --bg-editable-hover-dark: rgba(59, 130, 246, 0.2);
+  --bg-editing-dark: #0c4a6e;
+  
+  /* Texto */
+  --text-title-dark: #f8fafc;
+  --text-primary-dark: #f1f5f9;
+  --text-secondary-dark: #cbd5e1;
+  --text-header-dark: #f8fafc;
+  --text-input-dark: #f1f5f9;
+  --text-calc-dark: #cbd5e1;
+  --text-placeholder-dark: #64748b;
+  
+  /* Bordas */
+  --border-light-dark: #334155;
+  --border-header-dark: #334155;
+  --border-input-dark: #475569;
+  --border-editable-hover-dark: #475569;
+  --border-editing-dark: #0ea5e9;
+  --border-dark: #334155;
+  --border-focus-dark: #60a5fa;
+  
+  /* Ícones */
+  --icon-drag-dark: #94a3b8;
+  --icon-edit-dark: #94a3b8;
+  
+  /* Botões */
+  --btn-secondary-dark: #334155;
+  --btn-secondary-hover-dark: #475569;
+  --btn-danger-dark: #f87171;
+  --checkbox-bg-dark: #1e293b;
+  --border-checkbox-dark: #475569;
+  --checkbox-checked-dark: #2563eb;
+}
+
+/* Tema vermelho */
+[data-theme="red"] {
+  --color-primary: #ef4444;
+  --color-primary-dark: #dc2626;
+  --border-focus: #ef4444;
+  --checkbox-checked: #ef4444;
+  --border-summary: #ef4444;
+  --border-editing: #ef4444;
+}
+
+/* Tema roxo */
+[data-theme="purple"] {
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --border-focus: #8b5cf6;
+  --checkbox-checked: #8b5cf6;
+  --border-summary: #8b5cf6;
+  --border-editing: #8b5cf6;
+}
+
+/* Suporte a usuários com preferência por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,31 +1,42 @@
+/* Importações de submódulos */
+@import 'analises/variables.css'; /* Nova importação para variáveis CSS */
+@import 'analises/buttons.css';
+@import 'analises/filtros.css';
+@import 'analises/header.css';
+@import 'analises/modal.css';
+@import 'analises/editable.css';
+@import 'analises/theme-support.css';
+@import 'analises/table.css';
+@import 'analises/container.css'; /* Nova importação para o container de análises */
+
 /* Estilos para status de análise nos elementos da tela de análises */
 
 /* Classes para bordas dos cartões e linhas */
 .analise-status-atende {
-  border-left: 4px solid #28a745 !important; /* Verde para atende */
+  border-left: 4px solid var(--status-atende, #28a745) !important;
 }
 
 .analise-status-nao-atende {
-  border-left: 4px solid #dc3545 !important; /* Vermelho para não atende */
+  border-left: 4px solid var(--status-nao-atende, #dc3545) !important;
 }
 
 .analise-status-nao-analisado {
-  border-left: 4px solid #fd7e14 !important; /* Laranja para não analisado */
+  border-left: 4px solid var(--status-nao-analisado, #fd7e14) !important;
 }
 
 /* Aplicação nas linhas da tabela */
 tr.analise-status-atende td:first-child {
-  border-left: 4px solid #28a745 !important;
+  border-left: 4px solid var(--status-atende, #28a745) !important;
   padding-left: 8px;
 }
 
 tr.analise-status-nao-atende td:first-child {
-  border-left: 4px solid #dc3545 !important;
+  border-left: 4px solid var(--status-nao-atende, #dc3545) !important;
   padding-left: 8px;
 }
 
 tr.analise-status-nao-analisado td:first-child {
-  border-left: 4px solid #fd7e14 !important;
+  border-left: 4px solid var(--status-nao-analisado, #fd7e14) !important;
   padding-left: 8px;
 }
 
@@ -37,31 +48,41 @@ tr.analise-status-nao-analisado td:first-child {
 
 /* Estilos para status textual */
 .status-nao-analisado {
-  color: #fd7e14;
+  color: var(--status-nao-analisado, #fd7e14);
   font-weight: bold;
 }
 
 .status-atende {
-  color: #28a745;
+  color: var(--status-atende, #28a745);
   font-weight: bold;
 }
 
 .status-nao-atende {
-  color: #dc3545;
+  color: var(--status-nao-atende, #dc3545);
   font-weight: bold;
 }
 
 /* Classes para o status geral de análise */
 .status-geral-atende {
-  color: #28a745;
+  color: var(--status-atende, #28a745);
 }
 
 .status-geral-nao-atende {
-  color: #dc3545;
+  color: var(--status-nao-atende, #dc3545);
 }
 
 /* Percentual geral */
 .percentual-geral {
   margin-top: 10px;
   font-weight: 600;
+}
+
+.analise-container {
+  padding: 1rem;
+  /* Conteúdo existente... */
+}
+
+/* Ajuste de espaçamento para botões */
+button.btn.btn-info.mt-2.ml-2 {
+  margin-left: 1rem;
 }

@@ -1,0 +1,430 @@
+/* Estilização para a lista de processos com suporte a temas */
+
+/* Container principal da lista de processos */
+.processos-lista {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--bg-card, #ffffff);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+/* Tabela de processos */
+.table-processos {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 800px; /* Assegura que a tabela tenha uma largura mínima */
+}
+
+/* Cabeçalho da tabela */
+.table-processos thead {
+  background: var(--bg-header, #f8fafc);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-processos th {
+  color: var(--text-header, #1e293b);
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 2px solid var(--border-header, #e2e8f0);
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.table-processos th:first-child {
+  border-top-left-radius: 10px;
+  padding-left: 1.5rem;
+}
+
+.table-processos th:last-child {
+  border-top-right-radius: 10px;
+}
+
+/* Linhas da tabela */
+.table-processos tbody tr {
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
+  transition: all 0.2s ease;
+}
+
+.table-processos tbody tr:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.table-processos tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Células da tabela */
+.table-processos td {
+  padding: 1rem;
+  color: var(--text-primary, #334155);
+  transition: all 0.3s;
+  vertical-align: middle;
+}
+
+.table-processos td:first-child {
+  padding-left: 1.5rem;
+}
+
+/* Número do processo */
+.numero-processo {
+  font-weight: 600;
+  color: var(--text-accent, #2563eb);
+}
+
+/* Badges de status */
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Status específicos */
+.status-em-analise {
+  background: var(--badge-em-analise-bg, linear-gradient(135deg, #f59e0b 0%, #d97706 100%));
+}
+
+.status-ganhamos {
+  background: var(--badge-ganhamos-bg, linear-gradient(135deg, #10b981 0%, #059669 100%));
+}
+
+.status-perdemos {
+  background: var(--badge-perdemos-bg, linear-gradient(135deg, #ef4444 0%, #dc2626 100%));
+}
+
+.status-cancelado {
+  background: var(--badge-cancelado-bg, linear-gradient(135deg, #6b7280 0%, #4b5563 100%));
+}
+
+.status-aguardando {
+  background: var(--badge-aguardando-bg, linear-gradient(135deg, #3b82f6 0%, #2563eb 100%));
+}
+
+.status-adiado {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #ffedd5;
+}
+
+.status-suspenso {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ede9fe;
+}
+
+.status-revogado {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: #fce7f3;
+}
+
+.status-demonstracao {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: #cffafe;
+}
+
+/* Aplicando cursor de mão para células interativas */
+.custom-cursor-on-hover {
+  cursor: pointer;
+}
+
+/* Estilo para linhas selecionadas */
+.processo-row.selected {
+  background-color: var(--bg-selected, #e0f2fe);
+}
+
+/* Estilo para linha vazia */
+.empty-message {
+  text-align: center;
+  padding: 2rem 1rem !important;
+  color: var(--text-secondary, #64748b);
+}
+
+.no-data-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-style: italic;
+}
+
+.no-data-message i {
+  color: var(--text-accent, #3b82f6);
+}
+
+/* Filtros adicionais */
+.filter-options {
+  padding: 1rem;
+  background-color: var(--bg-filter, #f9fafb);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+  border: 1px solid var(--border-light, #e2e8f0);
+  transition: all 0.3s ease;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+}
+
+.form-check-input {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.form-check-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Variação para a checkbox customizada */
+.custom-checkbox {
+  position: relative;
+  padding-left: 28px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 18px;
+  width: 18px;
+  background-color: var(--bg-checkbox, #e2e8f0);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+  background-color: var(--bg-checkbox-hover, #cbd5e1);
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: var(--checkbox-checked, #3b82f6);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Suporte ao tema escuro */
+[data-theme="dark"] .processos-lista {
+  background-color: var(--bg-card-dark, #1e293b);
+  border-color: var(--border-dark, #334155);
+}
+
+[data-theme="dark"] .table-processos th {
+  background-color: var(--bg-header-dark, #0f172a);
+  color: var(--text-header-dark, #f8fafc);
+  border-bottom-color: var(--border-dark, #334155);
+}
+
+[data-theme="dark"] .table-processos tbody tr {
+  border-bottom-color: var(--border-dark, #334155);
+}
+
+[data-theme="dark"] .table-processos tbody tr:hover {
+  background-color: var(--bg-hover-dark, rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .table-processos td {
+  color: var(--text-primary-dark, #f1f5f9);
+}
+
+[data-theme="dark"] .numero-processo {
+  color: var(--text-accent-dark, #60a5fa);
+}
+
+[data-theme="dark"] .filter-options {
+  background-color: var(--bg-filter-dark, #0f172a);
+  border-color: var(--border-dark, #334155);
+}
+
+[data-theme="dark"] .form-check-label {
+  color: var(--text-secondary-dark, #cbd5e1);
+}
+
+[data-theme="dark"] .checkmark {
+  background-color: var(--bg-checkbox-dark, #334155);
+}
+
+[data-theme="dark"] .custom-checkbox:hover input ~ .checkmark {
+  background-color: var(--bg-checkbox-hover-dark, #475569);
+}
+
+[data-theme="dark"] .custom-checkbox input:checked ~ .checkmark {
+  background-color: var(--checkbox-checked-dark, #3b82f6);
+}
+
+[data-theme="dark"] .processo-row.selected {
+  background-color: var(--bg-selected-dark, rgba(59, 130, 246, 0.15));
+}
+
+/* Tema vermelho */
+[data-theme="red"] .numero-processo {
+  color: var(--text-accent-red, #ef4444);
+}
+
+[data-theme="red"] .custom-checkbox input:checked ~ .checkmark {
+  background-color: var(--checkbox-checked-red, #ef4444);
+}
+
+[data-theme="red"] .status-em-analise {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Tema roxo */
+[data-theme="purple"] .numero-processo {
+  color: var(--text-accent-purple, #8b5cf6);
+}
+
+[data-theme="purple"] .custom-checkbox input:checked ~ .checkmark {
+  background-color: var(--checkbox-checked-purple, #8b5cf6);
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .table-processos th,
+  .table-processos td {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .processos-lista {
+    border-radius: 8px;
+  }
+  
+  .processos-lista::after {
+    content: '→';
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 40px;
+    height: 40px;
+    background: var(--bg-card, #ffffff);
+    color: var(--text-accent, #2563eb);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    animation: pulseHint 2s infinite;
+    pointer-events: none;
+    opacity: 0.7;
+    z-index: 100;
+  }
+  
+  .processos-lista.scrolled::after {
+    display: none;
+  }
+  
+  @keyframes pulseHint {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+  }
+  
+  [data-theme="dark"] .processos-lista::after {
+    background: var(--bg-card-dark, #1e293b);
+    color: var(--text-accent-dark, #60a5fa);
+  }
+  
+  .table-processos th,
+  .table-processos td {
+    padding: 0.75rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  
+  .status-badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  
+  .filter-options {
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+  }
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .status-badge,
+  .table-processos tbody tr,
+  .processos-lista::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Alto contraste */
+@media (prefers-contrast: high) {
+  .table-processos {
+    border: 2px solid #000;
+  }
+  
+  .table-processos th,
+  .table-processos td {
+    border: 1px solid #000;
+  }
+  
+  .status-badge {
+    border: 2px solid #000;
+    background: transparent !important;
+    color: #000 !important;
+    font-weight: bold;
+  }
+  
+  .status-em-analise {
+    background: #ff8c00 !important;
+  }
+  
+  .status-ganhamos {
+    background: #008000 !important;
+  }
+  
+  .status-perdemos {
+    background: #ff0000 !important;
+  }
+}
