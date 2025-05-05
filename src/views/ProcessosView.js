@@ -1,4 +1,4 @@
-import { ref, onMounted, computed, nextTick, onUnmounted, watch } from 'vue'
+import { ref, onMounted, computed, nextTick, onUnmounted, watch, onUpdated } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import TheSidebar from '@/components/TheSidebar.vue'
@@ -2165,6 +2165,7 @@ export default {
       } catch (error) {
         console.error('Error in component initialization:', error)
       }
+      fixTableScroll();
     })
 
     onUnmounted(() => {
@@ -2179,6 +2180,10 @@ export default {
 
       document.removeEventListener('keydown', handleKeyDown);
     })
+
+    onUpdated(() => {
+      fixTableScroll();
+    });
 
     useConnectionManager(loadProcessos)
 
@@ -4415,6 +4420,25 @@ const isRecurringStatus = (processo) => {
   if (!processo || !processo.status) return false;
   return ['suspenso', 'adiado', 'demonstracao'].includes(processo.status.toLowerCase());
 };
+
+    const fixTableScroll = () => {
+      nextTick(() => {
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+          // Forçar recálculo da largura
+          const totalWidth = Array.from(document.querySelectorAll('.resizable-column'))
+            .reduce((sum, th) => sum + th.offsetWidth, 0) + 100; // 100px extra para a coluna de ações
+            
+          const table = tableContainer.querySelector('.excel-table');
+          if (table) {
+            table.style.minWidth = `${totalWidth}px`;
+          }
+          
+          // Garantir que o overflow esteja ativado
+          tableContainer.style.overflowX = 'auto';
+        }
+      });
+    };
 
     return {
       handleStatusUpdate,

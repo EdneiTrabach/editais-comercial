@@ -1,10 +1,7 @@
 /* Estilos da tabela */
 .excel-table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #e9ecef;
-  min-width: 1406px;
+  width: 100%;
+  min-width: 2500px; /* Ajuste para garantir que a tabela seja mais larga que o container */
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -13,12 +10,15 @@
 
 /* Container da tabela com rolagem horizontal */
 .table-container {
+  width: 100%;
+  overflow-x: auto;  /* Garante rolagem horizontal */
+  overflow-y: visible;
+  position: relative;
+  max-height: calc(100vh - 230px); /* Ajuste conforme necessário */
   background: var(--white);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  overflow-x: auto;
   margin-bottom: 2rem;
-  position: relative;
 }
 
 /* Ajustes para responsividade */
