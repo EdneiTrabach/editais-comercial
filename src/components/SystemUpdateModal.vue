@@ -9,12 +9,31 @@
           :key="update.id" 
           class="update-item"
         >
-          <h3>{{ update.title }}</h3>
-          <div class="update-date">{{ formatDate(update.release_date) }}</div>
-          <!-- Aqui corrigimos a exibição da descrição -->
-          <div class="update-content" v-html="formatarDescricao(update.description)"></div>
-          <!-- Exibir versão caso exista -->
-          <div v-if="update.version" class="update-version">Versão: {{ update.version }}</div>
+          <div class="update-header" @click="toggleExpand(update.id)">
+            <h3>{{ update.title }}</h3>
+            <button class="toggle-btn">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                :class="{ 'rotate-180': expandedItems.includes(update.id) }"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+          
+          <div v-show="expandedItems.includes(update.id)" class="update-details">
+            <div class="update-date">{{ formatDate(update.release_date) }}</div>
+            <div class="update-content" v-html="formatarDescricao(update.description)"></div>
+            <div v-if="update.version" class="update-version">Versão: {{ update.version }}</div>
+          </div>
         </div>
       </div>
       <div v-else class="no-updates">
@@ -52,20 +71,53 @@ export default {
     }
   },
   
+  data() {
+    return {
+      expandedItems: [] // Array para armazenar IDs dos itens expandidos
+    }
+  },
+  
   methods: {
-    formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    toggleExpand(id) {
+      // Se já estiver na lista, remove (recolhe); se não, adiciona (expande)
+      const index = this.expandedItems.indexOf(id);
+      if (index > -1) {
+        this.expandedItems.splice(index, 1);
+      } else {
+        this.expandedItems.push(id);
+      }
     },
     
-    // Adicionar o método de formatação da descrição
+    formatDate(dateString) {
+      if (!dateString) return '';
+      
+      try {
+        // Criar objeto de data a partir da string UTC
+        const date = new Date(dateString);
+        
+        // Verificar se a data é válida
+        if (isNaN(date.getTime())) {
+          console.error('Data inválida:', dateString);
+          return 'Data inválida';
+        }
+        
+        // Opções para formatação com o fuso horário de Brasília (BRT: UTC-3)
+        const options = {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Sao_Paulo'  // Fuso horário de Brasília
+        };
+        
+        return new Intl.DateTimeFormat('pt-BR', options).format(date);
+      } catch (error) {
+        console.error('Erro ao formatar data:', error, dateString);
+        return 'Erro ao formatar data';
+      }
+    },
+    
     formatarDescricao(texto) {
       if (!texto) return '';
       
@@ -137,14 +189,59 @@ h2 {
 }
 
 .update-item {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
 }
 
 .update-item:last-child {
   border-bottom: none;
-  margin-bottom: 0;
+}
+
+.update-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.update-header:hover {
+  background-color: #f9f9f9;
+}
+
+.update-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+.update-details {
+  padding: 0.5rem 1rem 1rem;
+  border-top: 1px solid #f0f0f0;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .update-date {
