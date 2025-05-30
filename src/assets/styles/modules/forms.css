@@ -52,10 +52,6 @@ textarea {
   min-height: 120px;
 }
 
-/* Campos específicos */
-input.custom-cursor-default-hover {
-  width: 95%;
-}
 
 input.input-descricao {
   width: 98%;

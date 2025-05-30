@@ -129,7 +129,8 @@
 }
 
 /* Estados de carregamento e tabela vazia */
-.loading-cell, .no-data-cell {
+.loading-cell,
+.no-data-cell {
   padding: 3rem 1rem;
   text-align: center;
   color: var(--text-muted, #6b7280);
@@ -308,6 +309,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -319,6 +321,7 @@
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
     transform: translateX(100%);
     opacity: 0;
@@ -328,29 +331,39 @@
 /* Suporte a tema escuro - Versão melhorada */
 [data-theme="dark"] {
   /* Cores base */
-  --bg-content: #0f172a;  /* Fundo mais escuro para melhor contraste */
-  --bg-card: #1e293b;     /* Cards com azul escuro mais moderno */
+  --bg-content: #0f172a;
+  /* Fundo mais escuro para melhor contraste */
+  --bg-card: #1e293b;
+  /* Cards com azul escuro mais moderno */
   --bg-header: #1e293b;
-  --border-light: #334155; /* Bordas mais visíveis */
-  --text-title: #f8fafc;   /* Textos de títulos mais claros */
-  --text-primary: #e2e8f0; /* Texto primário ligeiramente mais claro */
+  --border-light: #334155;
+  /* Bordas mais visíveis */
+  --text-title: #f8fafc;
+  /* Textos de títulos mais claros */
+  --text-primary: #e2e8f0;
+  /* Texto primário ligeiramente mais claro */
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-header: #f8fafc;
-  --bg-hover: #334155;    /* Hover mais destacado */
-  
+  --bg-hover: #334155;
+  /* Hover mais destacado */
+
   /* Cores de botões */
   --bg-button-secondary: #334155;
   --bg-button-secondary-hover: #475569;
   --text-button-secondary: #f1f5f9;
-  
+
   /* Botões de ação */
-  --bg-edit-btn: rgba(56, 142, 60, 0.15);  /* Fundo mais sutil */
-  --text-edit-btn: #4ade80;                /* Verde mais vibrante */
+  --bg-edit-btn: rgba(56, 142, 60, 0.15);
+  /* Fundo mais sutil */
+  --text-edit-btn: #4ade80;
+  /* Verde mais vibrante */
   --bg-edit-btn-hover: rgba(56, 142, 60, 0.25);
-  
-  --bg-delete-btn: rgba(220, 38, 38, 0.15); /* Fundo mais sutil */
-  --text-delete-btn: #f87171;              /* Vermelho mais vibrante */
+
+  --bg-delete-btn: rgba(220, 38, 38, 0.15);
+  /* Fundo mais sutil */
+  --text-delete-btn: #f87171;
+  /* Vermelho mais vibrante */
   --bg-delete-btn-hover: rgba(220, 38, 38, 0.25);
 }
 
@@ -378,7 +391,8 @@
   background-color: var(--bg-card);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
-  overflow: hidden; /* Garante que o border-radius seja aplicado ao conteúdo interno */
+  overflow: hidden;
+  /* Garante que o border-radius seja aplicado ao conteúdo interno */
 }
 
 /* Cabeçalhos de tabela com gradiente sutil */
@@ -456,7 +470,6 @@
   color: var(--text-primary);
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  width: 100%;
   transition: all 0.3s ease;
 }
 
@@ -633,7 +646,7 @@
   .main-content {
     padding: 1.5rem;
   }
-  
+
   .header h1 {
     font-size: 1.6rem;
   }
@@ -644,30 +657,30 @@
     margin-left: 80px;
     padding: 1rem;
   }
-  
+
   .main-content.expanded {
     margin-left: 0;
   }
-  
+
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-buttons {
     width: 100%;
   }
-  
+
   .btn-add {
     width: 100%;
     justify-content: center;
   }
-  
+
   .empresa-table {
     min-width: 720px;
   }
-  
+
   .toast {
     left: 1rem;
     right: 1rem;
@@ -675,12 +688,12 @@
     min-width: unset;
     width: calc(100% - 2rem);
   }
-  
+
   .confirm-actions {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .btn-cancel,
   .btn-confirm {
     width: 100%;
@@ -691,17 +704,17 @@
   .main-content {
     padding: 0.75rem;
   }
-  
+
   .header h1 {
     font-size: 1.4rem;
   }
-  
+
   .table-container {
     border-radius: 8px;
     margin: 0 -0.75rem;
     width: calc(100% + 1.5rem);
   }
-  
+
   .confirm-dialog {
     padding: 1.5rem;
   }
