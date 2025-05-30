@@ -4,7 +4,8 @@
       <h3>Filtro Avançado</h3>
       <button class="btn-close" @click="closeFilter" aria-label="Fechar">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z"></path>
+          <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z">
+          </path>
         </svg>
       </button>
     </div>
@@ -29,12 +30,7 @@
       <div class="filter-section estados-section">
         <h4>Estados</h4>
         <div class="select-container">
-          <select 
-            v-model="filters.estados" 
-            class="filter-select modern-select"
-            multiple
-            @change="updateFilters"
-          >
+          <select v-model="filters.estados" class="filter-select modern-select" multiple @change="updateFilters">
             <option v-for="estado in estados" :key="estado.uf" :value="estado.uf">
               {{ estado.nome }} ({{ estado.uf }})
             </option>
@@ -47,13 +43,8 @@
         <h4>Modalidade</h4>
         <div class="checkbox-group">
           <div v-for="modalidade in modalidadeOptions" :key="modalidade.valor" class="checkbox-item">
-            <input 
-              type="checkbox" 
-              :id="`modalidade-${modalidade.valor}`" 
-              :value="modalidade.valor" 
-              v-model="filters.modalidade"
-              @change="updateFilters"
-            />
+            <input type="checkbox" :id="`modalidade-${modalidade.valor}`" :value="modalidade.valor"
+              v-model="filters.modalidade" @change="updateFilters" />
             <label :for="`modalidade-${modalidade.valor}`" class="checkbox-label">{{ modalidade.texto }}</label>
           </div>
         </div>
@@ -63,15 +54,10 @@
       <div class="filter-section status-section">
         <h4>Status</h4>
         <div class="checkbox-group">
-          <div v-for="status in statusOptions" :key="status.value" class="checkbox-item">
-            <input 
-              type="checkbox" 
-              :id="`status-${status.value}`" 
-              :value="status.value" 
-              v-model="filters.status"
-              @change="updateFilters"
-            />
-            <label :for="`status-${status.value}`" class="checkbox-label">{{ status.label }}</label>
+          <div v-for="option in statusOptions" :key="option.value" class="checkbox-item">
+            <input type="checkbox" :id="'status-' + option.value" :value="option.value" v-model="filters.status"
+              @change="updateFilters" class="custom-cursor-on-hover">
+            <label :for="'status-' + option.value" class="checkbox-label">{{ option.text }}</label>
           </div>
         </div>
       </div>
@@ -80,12 +66,7 @@
       <div class="filter-section responsaveis-section">
         <h4>Responsáveis</h4>
         <div class="select-container">
-          <select 
-            v-model="filters.responsavel" 
-            class="filter-select modern-select"
-            multiple
-            @change="updateFilters"
-          >
+          <select v-model="filters.responsavel" class="filter-select modern-select" multiple @change="updateFilters">
             <option v-for="resp in responsaveis" :key="resp.id" :value="resp.id">
               {{ resp.nome }}
             </option>
@@ -101,26 +82,16 @@
             <label for="valor-min">Mínimo</label>
             <div class="input-money">
               <span class="prefix">R$</span>
-              <input
-                type="text" 
-                id="valor-min" 
-                v-model="filters.valorMin"
-                placeholder="0,00"
-                @input="formatCurrency($event, 'valorMin')"
-              />
+              <input type="text" id="valor-min" v-model="filters.valorMin" placeholder="0,00"
+                @input="formatCurrency($event, 'valorMin')" />
             </div>
           </div>
           <div class="range-field">
             <label for="valor-max">Máximo</label>
             <div class="input-money">
               <span class="prefix">R$</span>
-              <input
-                type="text" 
-                id="valor-max" 
-                v-model="filters.valorMax"
-                placeholder="0,00"
-                @input="formatCurrency($event, 'valorMax')"
-              />
+              <input type="text" id="valor-max" v-model="filters.valorMax" placeholder="0,00"
+                @input="formatCurrency($event, 'valorMax')" />
             </div>
           </div>
         </div>
@@ -130,11 +101,7 @@
     <div class="active-filters" v-if="hasActiveFilters">
       <h4>Filtros Ativos</h4>
       <div class="filter-tags">
-        <span 
-          v-for="(tag, index) in activeTags" 
-          :key="index" 
-          class="filter-tag"
-        >
+        <span v-for="(tag, index) in activeTags" :key="index" class="filter-tag">
           {{ tag.label }}
           <button @click="removeFilter(tag)" class="btn-remove" aria-label="Remover filtro">×</button>
         </span>
@@ -180,7 +147,7 @@ export default {
     }
   },
   emits: ['close', 'update-filters', 'apply-filters', 'clear-filters'],
-  
+
   setup(props, { emit }) {
     const filters = reactive({
       dataInicio: props.initialFilters.dataInicio || '',
@@ -214,48 +181,48 @@ export default {
           filters[key] = '';
         }
       });
-      
+
       emit('clear-filters');
     };
 
     // Função para formatação de valores monetários
     const formatCurrency = (event, field) => {
       let value = event.target.value;
-      
+
       // Remove todos os caracteres não numéricos, exceto vírgula
       value = value.replace(/[^\d,]/g, '');
-      
+
       // Garantir apenas uma vírgula
       const parts = value.split(',');
       if (parts.length > 2) {
         value = parts[0] + ',' + parts.slice(1).join('');
       }
-      
+
       // Limitar a 2 casas decimais após a vírgula
       if (parts.length > 1 && parts[1].length > 2) {
         value = parts[0] + ',' + parts[1].substring(0, 2);
       }
-      
+
       // Atualizar o valor no modelo
       filters[field] = value;
     };
 
     const hasActiveFilters = computed(() => {
       return (
-        filters.dataInicio || 
-        filters.dataFim || 
+        filters.dataInicio ||
+        filters.dataFim ||
         filters.status.length > 0 ||
         filters.modalidade.length > 0 ||
         filters.responsavel.length > 0 ||
         filters.estados.length > 0 ||
-        filters.valorMin || 
+        filters.valorMin ||
         filters.valorMax
       );
     });
 
     const activeTags = computed(() => {
       const tags = [];
-      
+
       if (filters.dataInicio) {
         tags.push({
           type: 'dataInicio',
@@ -263,7 +230,7 @@ export default {
           value: filters.dataInicio
         });
       }
-      
+
       if (filters.dataFim) {
         tags.push({
           type: 'dataFim',
@@ -271,18 +238,18 @@ export default {
           value: filters.dataFim
         });
       }
-      
+
       filters.status.forEach(statusVal => {
         const statusObj = props.statusOptions.find(s => s.value === statusVal);
         if (statusObj) {
           tags.push({
             type: 'status',
-            label: `Status: ${statusObj.label}`,
+            label: `Status: ${statusObj.text}`, // Alterado de statusObj.label para statusObj.text
             value: statusVal
           });
         }
       });
-      
+
       filters.modalidade.forEach(modalidadeVal => {
         const modalidadeObj = props.modalidadeOptions.find(m => m.valor === modalidadeVal);
         if (modalidadeObj) {
@@ -293,7 +260,7 @@ export default {
           });
         }
       });
-      
+
       filters.responsavel.forEach(respId => {
         const resp = props.responsaveis.find(r => r.id === respId);
         if (resp) {
@@ -304,7 +271,7 @@ export default {
           });
         }
       });
-      
+
       filters.estados.forEach(estadoUf => {
         const estado = props.estados.find(e => e.uf === estadoUf);
         if (estado) {
@@ -315,7 +282,7 @@ export default {
           });
         }
       });
-      
+
       if (filters.valorMin) {
         tags.push({
           type: 'valorMin',
@@ -323,7 +290,7 @@ export default {
           value: filters.valorMin
         });
       }
-      
+
       if (filters.valorMax) {
         tags.push({
           type: 'valorMax',
@@ -331,13 +298,13 @@ export default {
           value: filters.valorMax
         });
       }
-      
+
       return tags;
     });
 
     const formatDateTag = (dateString) => {
       if (!dateString) return '';
-      
+
       const [year, month, day] = dateString.split('-');
       return `${day}/${month}/${year}`;
     };
@@ -369,7 +336,7 @@ export default {
           filters.valorMax = '';
           break;
       }
-      
+
       updateFilters();
     };
 
@@ -628,7 +595,8 @@ export default {
   z-index: 5;
 }
 
-.btn-clear, .btn-apply {
+.btn-clear,
+.btn-apply {
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 13px;

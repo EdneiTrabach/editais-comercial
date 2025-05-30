@@ -73,14 +73,6 @@
           />
         </div>
 
-        <!-- Active Filters -->
-        <div class="filtros-ativos" v-if="temFiltrosAtivos || activeAdvancedFiltersCount > 0">
-          <span>Filtros ativos:</span>
-          <button @click="limparTodosFiltros" class="btn-limpar-filtros">
-            Limpar todos os filtros
-          </button>
-        </div>
-
         <!-- Data Table -->
         <div class="table-container">
           <table class="excel-table resizable">
