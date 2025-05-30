@@ -391,8 +391,6 @@
   background-color: var(--bg-card);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
-  overflow: hidden;
-  /* Garante que o border-radius seja aplicado ao conteúdo interno */
 }
 
 /* Cabeçalhos de tabela com gradiente sutil */
