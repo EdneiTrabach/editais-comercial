@@ -1,0 +1,21 @@
+/* Estilos para tabelas com colunas redimensionáveis */
+body.resizing {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.resizing * {
+  user-select: none !important;
+}
+
+/* Linhas temporárias de guia para redimensionamento */
+.resize-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #2563eb;
+  z-index: 1000;
+  opacity: 0.5;
+  pointer-events: none;
+}
