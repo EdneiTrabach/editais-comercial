@@ -98,3 +98,25 @@
   background-color: #f8f9fa;
   color: #6c757d;
 }
+
+/* Novo estilo para o cursor personalizado */
+.custom-cursor-on-hover {
+  position: relative;
+}
+
+.custom-cursor-on-hover::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background-color: #4299e1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s ease;
+}
+
+.custom-cursor-on-hover:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}

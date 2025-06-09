@@ -198,20 +198,6 @@
       </form>
     </div>
   </div>
-
-  <div class="filter-options mt-3">
-    <div class="form-check">
-      <input 
-        class="form-check-input" 
-        type="checkbox" 
-        id="showOnlyInAnalysis" 
-        v-model="showOnlyInAnalysis"
-      >
-      <label class="form-check-label" for="showOnlyInAnalysis">
-        Mostrar apenas processos com status atual "Em Análise"
-      </label>
-    </div>
-  </div>
 </template>
 
 <script>
