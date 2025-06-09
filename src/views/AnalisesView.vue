@@ -95,7 +95,6 @@
         
         <div v-if="step === 1">
           <ProcessoSelection
-            ref="processoSelectionRef"
             :processos="processosFiltrados"
             :selectedProcesso="selectedProcesso"
             :modoVisualizacao="modoVisualizacao"
@@ -1749,7 +1748,9 @@ export default {
         const promessas = sistemasAnalise.value.map(async (sistema) => {
           // Determinar qual percentual padrão aplicar com base na obrigatoriedade
           const percentualPadrao = sistema.obrigatorio 
-            ? percentualMinimoObrigatorios.value 
+            ? (percentualMinimoObrigatorios.value 
+               ? percentualMinimoObrigatorios.value 
+               : percentualMinimoGeral.value)
             : percentualMinimoGeral.value;
             
           // Atualizar valores locais
