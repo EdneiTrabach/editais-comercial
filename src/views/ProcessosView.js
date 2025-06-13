@@ -144,7 +144,7 @@ export default {
       valor_estimado: '150px',
       status: '150px',
       responsavel_id: '200px',
-      distancia_km: '200px', 
+      distancia_km: '200px',
       site_pregao: '180px',
       representante_id: '200px',
       campo_adicional1: '300px',
@@ -220,8 +220,8 @@ export default {
     const ordenarColunas = computed(() => {
       return colunasOrder.value.length > 0
         ? colunasOrder.value
-            .map(campo => colunas.find(coluna => coluna.campo === campo))
-            .filter(coluna => coluna && coluna.campo !== 'acoes')
+          .map(campo => colunas.find(coluna => coluna.campo === campo))
+          .filter(coluna => coluna && coluna.campo !== 'acoes')
         : colunas.filter(coluna => coluna.campo !== 'acoes');
     })
 
@@ -345,7 +345,7 @@ export default {
 
     const anosDisponiveis = computed(() => {
       const anos = new Set();
-      
+
       processos.value.forEach(processo => {
         if (processo.data_pregao) {
           const ano = new Date(processo.data_pregao).getFullYear();
@@ -355,7 +355,7 @@ export default {
           anos.add(parseInt(processo.ano));
         }
       });
-    
+
       return Array.from(anos).sort((a, b) => b - a);
     })
 
@@ -376,7 +376,7 @@ export default {
         .filter(processo => {
           const anoPregao = processo.data_pregao ? new Date(processo.data_pregao).getFullYear() : null;
           const anoProcesso = processo.ano ? parseInt(processo.ano) : null;
-          
+
           return anoPregao === anoSelecionado.value || anoProcesso === anoSelecionado.value;
         })
         .filter(processo => {
@@ -425,42 +425,42 @@ export default {
             if (!processo.data_pregao) return false;
             if (processo.data_pregao < advancedFilters.value.dataInicio) return false;
           }
-          
+
           if (advancedFilters.value.dataFim) {
             if (!processo.data_pregao) return false;
             if (processo.data_pregao > advancedFilters.value.dataFim) return false;
           }
-          
+
           if (advancedFilters.value.status && advancedFilters.value.status.length > 0) {
             if (!advancedFilters.value.status.includes(processo.status)) return false;
           }
-          
+
           if (advancedFilters.value.modalidade && advancedFilters.value.modalidade.length > 0) {
             if (!advancedFilters.value.modalidade.includes(processo.modalidade)) return false;
           }
-          
+
           if (advancedFilters.value.responsavel && advancedFilters.value.responsavel.length > 0) {
             if (!processo.responsavel_id || !advancedFilters.value.responsavel.includes(processo.responsavel_id)) return false;
           }
-          
+
           if (advancedFilters.value.estados && advancedFilters.value.estados.length > 0) {
             if (!processo.estado || !advancedFilters.value.estados.includes(processo.estado)) return false;
           }
-          
+
           if (advancedFilters.value.valorMin) {
             const valorMin = parseFloat(advancedFilters.value.valorMin.replace(',', '.'));
             const valorProcesso = parseFloat(processo.valor_estimado) || 0;
-            
+
             if (valorProcesso < valorMin) return false;
           }
-          
+
           if (advancedFilters.value.valorMax) {
             const valorMax = parseFloat(advancedFilters.value.valorMax.replace(',', '.'));
             const valorProcesso = parseFloat(processo.valor_estimado) || 0;
-            
+
             if (valorProcesso > valorMax) return false;
           }
-          
+
           return true;
         });
     });
@@ -646,15 +646,15 @@ export default {
 
     const getLightColor = (hexColor) => {
       if (!hexColor) return "#f5f5f5";
-      
+
       // Remove o # se existir
       hexColor = hexColor.replace('#', '');
-      
+
       // Converte para RGB
       const r = parseInt(hexColor.substr(0, 2), 16);
       const g = parseInt(hexColor.substr(2, 2), 16);
       const b = parseInt(hexColor.substr(4, 2), 16);
-      
+
       // Calcula a versão mais clara (similar aos status)
       // Garantindo que a cor seja clara o suficiente para ser usada como fundo
       return `rgba(${r}, ${g}, ${b}, 0.15)`;
@@ -662,15 +662,15 @@ export default {
 
     const getContrastColorForEmpresa = (hexColor) => {
       if (!hexColor || hexColor === '#FFFFFF') return '#000000';
-      
+
       hexColor = hexColor.replace('#', '');
-      
+
       const r = parseInt(hexColor.substr(0, 2), 16);
       const g = parseInt(hexColor.substr(2, 2), 16);
       const b = parseInt(hexColor.substr(4, 2), 16);
-      
+
       const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-      
+
       return (yiq >= 128) ? '#000000' : '#FFFFFF';
     };
 
@@ -692,25 +692,25 @@ export default {
 
     const formatarDistancia = (processo) => {
       if (!processo) return '-';
-      
+
       // Verifica se há múltiplas distâncias
       if (processo._distancias && processo._distancias.length > 0) {
         return processo._distancias.map(d => {
           if (d.texto_completo) {
             return d.texto_completo;
           } else {
-            return `${d.distancia_km} km${d.ponto_referencia_cidade ? 
+            return `${d.distancia_km} km${d.ponto_referencia_cidade ?
               ` (${d.ponto_referencia_cidade}/${d.ponto_referencia_uf})` : ''}`;
           }
         }).join('\n');
       }
-    
+
       // Caso tenha apenas uma distância no formato antigo
       if (processo.distancia_km) {
-        return `${processo.distancia_km} km${processo.ponto_referencia_cidade ? 
+        return `${processo.distancia_km} km${processo.ponto_referencia_cidade ?
           ` (${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf})` : ''}`;
       }
-    
+
       return '-';
     };
 
@@ -739,7 +739,7 @@ export default {
             .select('*')
             .eq('processo_id', processo.id)
             .order('created_at');
-          
+
           // Se não há distâncias na tabela específica mas existe no formato antigo
           if ((!distancias || distancias.length === 0) && processo.distancia_km) {
             // Migrar distância do formato antigo para o novo formato
@@ -751,13 +751,13 @@ export default {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
-            
+
             // Inserir a distância na tabela específica
             const { data: novaDist, error } = await supabase
               .from('processo_distancias')
               .insert([novaDistancia])
               .select();
-              
+
             if (error) {
               console.error(`Erro ao migrar distância para o processo ${processo.id}:`, error);
             } else {
@@ -768,11 +768,11 @@ export default {
             // Usar as distâncias já existentes na tabela processo_distancias
             processo._distancias = distancias || [];
           }
-          
+
         } catch (err) {
           console.error(`Erro ao carregar distâncias para processo ${processo.id}:`, err);
           processo._distancias = [];
-          
+
           // Se ocorreu erro mas tem dados no formato antigo, usar esses dados
           if (processo.distancia_km) {
             processo._distancias = [{
@@ -807,27 +807,27 @@ export default {
         // Buscar dados de empresa atual prestadora para todos os processos
         if (data && data.length > 0) {
           const processosIds = data.map(p => p.id);
-          
+
           // Buscar todas as empresas atuais prestadoras em uma única consulta
           const { data: empresasAtuais, error: empresasAtuaisError } = await supabase
             .from('processos_empresa_atual_prestadora')
             .select('*')
             .in('processo_id', processosIds);
-          
+
           if (!empresasAtuaisError && empresasAtuais && empresasAtuais.length > 0) {
             // Extrair IDs de empresas que são UUIDs válidos
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             const empresasIdsNecessarias = empresasAtuais
               .filter(ea => ea.empresa_id && uuidRegex.test(ea.empresa_id))
               .map(ea => ea.empresa_id);
-            
+
             // Lidar com nomes de empresas diretamente no campo empresa_id
             empresasAtuais.forEach(ea => {
               if (ea.empresa_id && !uuidRegex.test(ea.empresa_id) && !ea.empresa_nome) {
                 ea.empresa_nome = ea.empresa_id;
               }
             });
-            
+
             // Se houver empresas para buscar
             if (empresasIdsNecessarias.length > 0) {
               // Buscar dados das empresas separadamente
@@ -835,14 +835,14 @@ export default {
                 .from('empresas')
                 .select('id, nome')
                 .in('id', empresasIdsNecessarias);
-              
+
               if (!empresasError && empresasData) {
                 // Criar mapeamento de ID para nome da empresa
                 const empresaNomeMap = {};
                 empresasData.forEach(empresa => {
                   empresaNomeMap[empresa.id] = empresa.nome;
                 });
-                
+
                 // Adicionar nome da empresa a cada registro
                 empresasAtuais.forEach(ea => {
                   if (ea.empresa_id && uuidRegex.test(ea.empresa_id) && empresaNomeMap[ea.empresa_id]) {
@@ -851,13 +851,13 @@ export default {
                 });
               }
             }
-            
+
             // Criar mapeamento para facilitar o acesso por processo_id
             const empresasAtuaisPorProcesso = {};
             empresasAtuais.forEach(ea => {
               empresasAtuaisPorProcesso[ea.processo_id] = ea;
             });
-            
+
             // Adicionar dados de empresa atual a cada processo
             data.forEach(processo => {
               processo._empresa_atual_prestadora = empresasAtuaisPorProcesso[processo.id] || null;
@@ -977,13 +977,13 @@ export default {
 
     const getDistancias = (processo) => {
       if (!processo) return '-';
-      
+
       // Verifica se há múltiplas distâncias
       if (processo._distancias && processo._distancias.length > 0) {
         return processo._distancias.map(d => {
           // Primeiro verificamos se há valor de distância
           const distanciaValor = d.distancia_km ? `${d.distancia_km} km` : '';
-          
+
           if (d.texto_completo && d.texto_completo.includes('km')) {
             // Se o texto_completo já contém "km", retornamos ele diretamente
             return d.texto_completo;
@@ -1002,13 +1002,13 @@ export default {
           }
         }).join('\n');
       }
-    
+
       // Caso tenha apenas uma distância no formato antigo
       if (processo.distancia_km) {
-        return `${processo.distancia_km} km ${processo.ponto_referencia_cidade ? 
+        return `${processo.distancia_km} km ${processo.ponto_referencia_cidade ?
           `de ${processo.ponto_referencia_cidade}/${processo.ponto_referencia_uf}` : ''}`;
       }
-    
+
       return '-';
     };
 
@@ -1060,13 +1060,13 @@ export default {
           console.warn('Dados de log incompletos');
           return;
         }
-    
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           console.warn('Usuário não autenticado para logging');
           return;
         }
-    
+
         const logData = {
           usuario_id: user.id,
           usuario_email: user.email,
@@ -1078,12 +1078,12 @@ export default {
           dados_novos: dados.dados_novos || null,
           data_hora: new Date().toISOString()
         };
-    
+
         try {
           const { error } = await supabase
             .from('system_logs')
             .insert(logData);
-            
+
           if (error && error.message && error.message.includes('does not exist')) {
             console.warn('Tabela system_logs não encontrada. Logging desativado.');
             return;
@@ -1179,10 +1179,10 @@ export default {
     const limparTodosFiltros = () => {
       // Limpar filtros normais
       limparFiltros();
-      
+
       // Limpar filtros avançados
       clearAdvancedFilters();
-      
+
       showToast('Todos os filtros foram removidos', 'info');
     };
 
@@ -1194,9 +1194,9 @@ export default {
           if (field === 'data_pregao') {
             const dateA = new Date(a[field] || '1900-01-01');
             const dateB = new Date(b[field] || '1900-01-01');
-            
+
             const comparison = dateA - dateB;
-            
+
             return direction === 'desc' ? -comparison : comparison;
           }
           return 0;
@@ -1283,15 +1283,15 @@ export default {
         const savedWidths = localStorage.getItem('table-columns-width')
         if (savedWidths) {
           colunasWidth.value = JSON.parse(savedWidths)
-          
-          if (!colunasWidth.value['objeto_completo'] || 
-              parseInt(colunasWidth.value['objeto_completo']) < 700) {
+
+          if (!colunasWidth.value['objeto_completo'] ||
+            parseInt(colunasWidth.value['objeto_completo']) < 700) {
             colunasWidth.value['objeto_completo'] = '700px'
           }
         } else {
           resetColumnWidths();
         }
-        
+
         saveColumnWidths()
       } catch (error) {
         console.error('Error loading column widths:', error)
@@ -1318,28 +1318,28 @@ export default {
       if (field === 'empresa_atual_prestadora') {
         return;
       }
-    
+
       if (field === 'impugnacoes') {
         showImpugnacaoDialog(processo);
         return;
       }
-    
+
       if (editingCell.value.id === processo.id && editingCell.value.field === field) {
         return;
       }
-    
+
       const cell = event.target.closest('td');
       const rect = cell.getBoundingClientRect();
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
+
       if (field === 'sistemas_ativos') {
         editingCell.value = {
           id: processo.id,
           field,
           value: Array.isArray(processo[field]) ? [...processo[field]] : []
         };
-    
+
         sistemasDialog.value = {
           show: true,
           position: {
@@ -1350,17 +1350,17 @@ export default {
         };
         return;
       }
-    
+
       if (field === 'representante_id') {
         console.log('Clicked on representative field');
         debugRepresentantes();
-    
+
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
-    
+
           debugRepresentantes();
-    
+
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
             alert('Could not load the list of representatives.');
@@ -1368,15 +1368,15 @@ export default {
           }
         }
       }
-    
+
       if (field === 'responsavel_id') {
-    
+
         if (representantes.value.length === 0) {
           console.log('Loading representatives on demand...');
           await loadRepresentantes();
-    
+
           debugRepresentantes();
-    
+
           if (representantes.value.length === 0) {
             console.error('Could not load representatives.');
             alert('Could not load the list of representatives.');
@@ -1384,14 +1384,14 @@ export default {
           }
         }
       }
-    
+
       if (field === 'responsavel_id') {
         console.log('Clicked on responsável field');
-    
+
         if (responsaveisProcessos.value.length === 0) {
           console.log('Loading responsáveis on demand...');
           await loadResponsaveisProcessos();
-    
+
           if (responsaveisProcessos.value.length === 0) {
             console.error('Could not load responsáveis.');
             alert('Não foi possível carregar a lista de responsáveis.');
@@ -1399,7 +1399,7 @@ export default {
           }
         }
       }
-    
+
       confirmDialog.value = {
         show: true,
         position: {
@@ -1487,7 +1487,7 @@ export default {
           tipo: 'update_impugnacao',
           tabela: 'processos',
           registro_id: processo.id,
-          dados_anteriores: { 
+          dados_anteriores: {
             impugnacao_data_limite: processo.impugnacao_data_limite,
             impugnacao_itens: processo.impugnacao_itens,
             impugnacao_forma_envio: processo.impugnacao_forma_envio,
@@ -1562,10 +1562,10 @@ export default {
         if (editingCell.value.field === 'data_pregao') {
           const anoAntigo = new Date(processo.data_pregao).getFullYear();
           const anoNovo = new Date(editingCell.value.value).getFullYear();
-          
+
           if (anoAntigo !== anoNovo) {
             console.log(`Mudança de ano detectada: ${anoAntigo} -> ${anoNovo}`);
-            
+
             const updateData = {
               data_pregao: editingCell.value.value,
               ano: anoNovo,
@@ -1587,7 +1587,7 @@ export default {
             }
 
             showToast(`Processo movido para o ano ${anoNovo}`, 'success');
-            
+
             cancelEdit();
             return;
           }
@@ -1663,19 +1663,19 @@ export default {
 
           case 'distancia_km':
             const distanciaNum = parseFloat(editingCell.value.value.replace(/[^\d.,]/g, '').replace(',', '.'));
-            
+
             if (isNaN(distanciaNum)) {
               alert('A distância deve ser um número válido');
               cancelEdit();
               return;
             }
-            
+
             const { data: existingDistancia } = await supabase
               .from('processo_distancias')
               .select('*')
               .eq('processo_id', processo.id)
               .single();
-          
+
             if (existingDistancia) {
               const { error } = await supabase
                 .from('processo_distancias')
@@ -1684,7 +1684,7 @@ export default {
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', existingDistancia.id);
-          
+
               if (error) throw error;
             } else {
               const { error } = await supabase
@@ -1694,10 +1694,10 @@ export default {
                   distancia_km: distanciaNum,
                   created_at: new Date().toISOString()
                 });
-          
+
               if (error) throw error;
             }
-          
+
             updateValue = distanciaNum;
             break;
         }
@@ -1709,7 +1709,7 @@ export default {
           try {
             // Para empresa atual prestadora, salvar na tabela específica em vez da tabela processos
             const { data: { user } } = await supabase.auth.getUser()
-            
+
             // Preparar payload para salvar na tabela específica
             const payload = {
               processo_id: processo.id,
@@ -1717,14 +1717,14 @@ export default {
               updated_at: new Date().toISOString(),
               updated_by: user?.id || null
             }
-            
+
             // Usar upsert para inserir ou atualizar
             const { error } = await supabase
               .from('processos_empresa_atual_prestadora')
               .upsert(payload, { onConflict: 'processo_id' });
-              
+
             if (error) throw error;
-            
+
             await loadProcessos();
             console.log('Atual Prestador atualizado com sucesso');
             cancelEdit();
@@ -1774,10 +1774,10 @@ export default {
 
         redoHistory.value = [];
 
-        if (editingCell.value.field === 'status' && 
-            ['suspenso', 'adiado', 'demonstracao'].includes(updateValue) && 
-            processo.status !== updateValue) {
-          
+        if (editingCell.value.field === 'status' &&
+          ['suspenso', 'adiado', 'demonstracao'].includes(updateValue) &&
+          processo.status !== updateValue) {
+
           cancelEdit();
           abrirReagendamentoDialog(processo, updateValue);
           return;
@@ -1850,7 +1850,7 @@ export default {
 
         const processo = sistemasDialog.value.processo;
         const novosSistemasAtivos = editingCell.value.value;
-        
+
         const updateData = {
           sistemas_ativos: novosSistemasAtivos,
           updated_at: new Date().toISOString()
@@ -2158,7 +2158,7 @@ export default {
         }
 
         await checkPendingNotifications();
-        
+
         setInterval(checkPendingNotifications, 3600000);
 
         await loadSystemUpdates();
@@ -2634,7 +2634,7 @@ export default {
     const showToast = (message, type = 'success', duration = 3000) => {
       const id = Date.now();
       toasts.value.push({ id, message, type });
-      
+
       setTimeout(() => {
         toasts.value = toasts.value.filter(t => t.id !== id);
       }, duration);
@@ -2785,7 +2785,7 @@ export default {
       loading.value = false;
       return;
     }
-    
+
     const limparFiltroColuna = (coluna) => {
       if (filtros.value[coluna]) {
         filtros.value[coluna] = [];
@@ -2821,7 +2821,7 @@ export default {
     const abrirReagendamentoDialog = (processo, status) => {
       const dataProcesso = processo.data_pregao ? new Date(processo.data_pregao) : new Date();
       const dataOriginal = dataProcesso.toISOString().split('T')[0];
-      
+
       reagendamentoDialog.value = {
         show: true,
         processo: processo,
@@ -2877,7 +2877,7 @@ export default {
         });
 
         await loadProcessos();
-        
+
         showToast(`Status atualizado para ${formatStatus(status)}`, 'success');
       } catch (error) {
         console.error('Erro ao atualizar status:', error);
@@ -2889,23 +2889,23 @@ export default {
       let valido = true;
       reagendamentoDialog.value.dataError = '';
       reagendamentoDialog.value.horaError = '';
-      
+
       if (!reagendamentoDialog.value.novaData) {
         reagendamentoDialog.value.dataError = 'Data é obrigatória';
         valido = false;
       } else {
         const novaData = new Date(reagendamentoDialog.value.novaData);
         const dataOriginal = new Date(reagendamentoDialog.value.dataOriginal);
-        
+
         novaData.setHours(0, 0, 0, 0);
         dataOriginal.setHours(0, 0, 0, 0);
-        
+
         if (novaData < dataOriginal) {
           reagendamentoDialog.value.dataError = 'A nova data deve ser posterior à data original do processo';
           valido = false;
         }
       }
-      
+
       if (!reagendamentoDialog.value.novaHora) {
         reagendamentoDialog.value.horaError = 'Hora é obrigatória';
         valido = false;
@@ -2916,183 +2916,160 @@ export default {
           valido = false;
         }
       }
-      
+
       return valido;
     };
 
-    const handleStatusUpdate = async (processo, newStatus) => {
-      try {
-        console.log('Atualizando status para:', newStatus);
-        
-        if (newStatus === processo.status) return;
-        
-        // Verificar se o status é "em_analise" (considerando variações)
-        const isAnaliseStatus = ['em_analise', 'em analise', 'EM_ANALISE'].includes(newStatus.toLowerCase());
-        
-        // Atualizar status na tabela de processos
-        const updateData = {
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        };
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          updateData.updated_by = user.id;
-        }
-
-        const { error } = await supabase
-          .from('processos')
-          .update(updateData)
-          .eq('id', processo.id);
-
-        if (error) throw error;
-
-        // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
-        if (isAnaliseStatus) {
-          // Verificar se já existe registro para esse processo
-          const { data: existingItem, error: checkError } = await supabase
-            .from('analises_itens')
-            .select('id')
-            .eq('processo_id', processo.id)
-            .limit(1);
-            
-          if (checkError) console.error('Erro ao verificar existência de registro em analises_itens:', checkError);
-          
-          // Se não existir nenhum registro, criar um
-          if (!existingItem || existingItem.length === 0) {
-            console.log('Criando registro em analises_itens para o processo:', processo.id);
-            
-            // Buscar sistemas ativos do processo para adicionar na análise
-            let sistemasAtivos = [];
-            try {
-              if (processo.sistemas_ativos) {
-                if (typeof processo.sistemas_ativos === 'string') {
-                  sistemasAtivos = JSON.parse(processo.sistemas_ativos);
-                } else if (Array.isArray(processo.sistemas_ativos)) {
-                  sistemasAtivos = processo.sistemas_ativos;
-                }
-              }
-            } catch (e) {
-              console.error('Erro ao processar sistemas_ativos:', e);
-            }
-            
-            // Se tiver sistemas ativos, criar um registro para cada sistema
-            if (sistemasAtivos && sistemasAtivos.length > 0) {
-              const registros = sistemasAtivos.map(sistemaId => ({
-                processo_id: processo.id,
-                sistema_id: sistemaId,
-                total_itens: 0,
-                nao_atendidos: 0,
-                obrigatorio: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }));
-              
-              const { error: insertError } = await supabase
-                .from('analises_itens')
-                .insert(registros);
-              
-              if (insertError) {
-                console.error('Erro ao criar registros em analises_itens:', insertError);
-              } else {
-                console.log('Registros criados com sucesso em analises_itens:', registros.length);
-              }
-            } else {
-              // Se não tiver sistemas ativos, criar pelo menos um registro vazio
-              // para que o processo apareça na tela de análises
-              const { error: insertError } = await supabase
-                .from('analises_itens')
-                .insert({
-                  processo_id: processo.id,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                  is_custom_line: true,
-                  sistema_nome_personalizado: 'Anotações'
-                });
-                
-              if (insertError) {
-                console.error('Erro ao criar registro vazio em analises_itens:', insertError);
-              } else {
-                console.log('Registro vazio criado com sucesso em analises_itens');
-              }
-            }
-          }
-        }
-
-        await logSystemAction({
-          tipo: 'atualizacao',
-          tabela: 'processos',
-          registro_id: processo.id,
-          campo_alterado: 'status',
-          dados_anteriores: processo.status,
-          dados_novos: newStatus
-        });
-
-        await loadProcessos();
-        
-        showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
-      } catch (error) {
-        console.error('Erro ao atualizar status:', error);
-        showToast('Erro ao atualizar status do processo', 'error');
-      }
-    };
-
-    const handleStatusChange = async (processo, event) => {
-      try {
-        const newStatus = event.target.value;
-        console.log('Atualizando status para:', newStatus);
-        
-        if (newStatus === processo.status) return;
-        
-        // Verificar se o status é "em_analise" (considerando variações)
-        const isAnaliseStatus = ['em_analise', 'em analise', 'EM_ANALISE'].includes(newStatus.toLowerCase());
-        
-        // Atualizar status na tabela de processos
-        const updateData = {
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        };
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          updateData.updated_by = user.id;
-        }
-
-        const { error } = await supabase
-          .from('processos')
-          .update(updateData)
-          .eq('id', processo.id);
-
-        if (error) throw error;
-        
-        // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
-        if (isAnaliseStatus) {
-          console.log(`Status alterado para "em_analise", registrando processo ${processo.id} na tabela de análises`);
-          await registrarProcessoParaAnalise(processo);
-        }
-
-        await logSystemAction({
-          tipo: 'atualizacao',
-          tabela: 'processos',
-          registro_id: processo.id,
-          campo_alterado: 'status',
-          dados_anteriores: processo.status,
-          dados_novos: newStatus
-        });
-
-        await loadProcessos();
-        
-        showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
-      } catch (error) {
-        console.error('Erro ao atualizar status:', error);
-        showToast('Erro ao atualizar status do processo', 'error');
-      }
-    };
+    const registrarProcessoParaLances = async (processo) => {
+  try {
+    console.log('Registrando processo para lances:', processo.id);
     
+    // Verificar primeiro se já existem registros para este processo
+    const { data: existentes, error: existentesError } = await supabase
+      .from('lances_processos')
+      .select('id')
+      .eq('processo_id', processo.id);
+    
+    if (existentesError) {
+      console.error('Erro ao verificar registros existentes:', existentesError);
+      throw existentesError;
+    }
+    
+    // Se já existem registros, retornar
+    if (existentes && existentes.length > 0) {
+      console.log(`Processo já tem ${existentes.length} registros na tabela lances_processos`);
+      showToast('Processo já registrado para lances', 'info');
+      return true;
+    }
+    
+    // Se chegou aqui, não há registros, então vamos criar
+    console.log('Criando registro para processo na tabela lances_processos');
+    
+    // Inserir o registro na tabela lances_processos - APENAS com processo_id e timestamps
+    const { error: insertError } = await supabase
+      .from('lances_processos')
+      .insert({
+        processo_id: processo.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    
+    if (insertError) {
+      console.error('Erro ao inserir registro de lances:', insertError);
+      throw insertError;
+    }
+    
+    console.log('Registro de lances inserido com sucesso');
+    showToast('Processo registrado para lances com sucesso', 'success');
+    return true;
+  } catch (error) {
+    console.error('Erro ao registrar processo para lances:', error);
+    showToast('Erro ao registrar processo para lances: ' + error.message, 'error');
+    return false;
+  }
+};
+
+
+      const handleStatusUpdate = async (processo, newStatus) => {
+    try {
+      console.log('[DIAGNÓSTICO] Atualizando status para:', newStatus);
+      
+      if (newStatus === processo.status) return;
+      
+      // Verificação mais abrangente de status
+      const normalizedStatus = (newStatus || '').toLowerCase().replace(/[\s-_]/g, '');
+      const isParticiparStatus = normalizedStatus === 'vamosparticipar' || 
+                                normalizedStatus === 'participar' ||
+                                normalizedStatus.includes('particip');
+      
+      console.log('[DIAGNÓSTICO] Status normalizado:', normalizedStatus);
+      console.log('[DIAGNÓSTICO] É status de participar?', isParticiparStatus);
+      
+      // ...resto do código...
+      
+      // Se o status for "vamos_participar", registrar automaticamente na tabela lances_processos
+      if (isParticiparStatus) {
+        console.log(`[DIAGNÓSTICO] Status alterado para participação, registrando processo ${processo.id} na tabela de lances`);
+        await registrarProcessoParaLances(processo);
+      }
+      
+      // ...resto do código...
+    } catch (error) {
+      console.error('[DIAGNÓSTICO] Erro ao atualizar status:', error);
+      showToast('Erro ao atualizar status: ' + error.message, 'error');
+    }
+  };
+
+  const handleStatusChange = async (processo, event) => {
+  try {
+    const newStatus = event.target.value;
+    console.log('Atualizando status para:', newStatus);
+
+    if (newStatus === processo.status) return;
+
+    // Verificar se o status é "em_analise" (considerando variações)
+    const isAnaliseStatus = ['em_analise', 'em analise', 'EM_ANALISE'].includes(newStatus.toLowerCase());
+    
+    // Verificar se o status é "vamos_participar" (nova verificação)
+    // Verificação mais abrangente incluindo variações
+    const isParticiparStatus = newStatus.toLowerCase().includes('vamos_participar') || 
+                              newStatus.toLowerCase().includes('vamos participar') || 
+                              newStatus.toLowerCase() === 'participar';
+    
+    console.log('É status para participar?', isParticiparStatus);
+
+    // Atualizar status na tabela de processos
+    const updateData = {
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      updateData.updated_by = user.id;
+    }
+
+    const { error } = await supabase
+      .from('processos')
+      .update(updateData)
+      .eq('id', processo.id);
+
+    if (error) throw error;
+
+    // Se o status for "em_analise", registrar automaticamente na tabela analises_itens
+    if (isAnaliseStatus) {
+      console.log(`Status alterado para "em_analise", registrando processo ${processo.id} na tabela de análises`);
+      await registrarProcessoParaAnalise(processo);
+    }
+    
+    // Se o status for "vamos_participar", registrar automaticamente na tabela lances_processos
+    if (isParticiparStatus) {
+      console.log(`Status alterado para "vamos_participar", registrando processo ${processo.id} na tabela de lances`);
+      await registrarProcessoParaLances(processo);
+    }
+
+    await logSystemAction({
+      tipo: 'atualizacao',
+      tabela: 'processos',
+      registro_id: processo.id,
+      campo_alterado: 'status',
+      dados_anteriores: processo.status,
+      dados_novos: newStatus
+    });
+
+    await loadProcessos();
+    
+    showToast(`Status atualizado para ${formatStatus(newStatus)}`, 'success');
+  } catch (error) {
+    console.error('Erro ao atualizar status:', error);
+    showToast('Erro ao atualizar status do processo', 'error');
+  }
+};
+
     const loadNextNotificationDate = async (processoId, status) => {
       try {
         nextNotificationDateMap.value[processoId] = 'calculando...';
-        
+
         const { data, error } = await supabase
           .from('notification_schedules')
           .select('next_notification')
@@ -3101,9 +3078,9 @@ export default {
           .order('next_notification', { ascending: true })
           .limit(1)
           .single();
-          
+
         if (error) throw error;
-        
+
         if (data) {
           const date = new Date(data.next_notification);
           nextNotificationDateMap.value[processoId] = date.toLocaleDateString('pt-BR');
@@ -3115,13 +3092,13 @@ export default {
         nextNotificationDateMap.value[processoId] = 'Não disponível';
       }
     };
-    
+
     const loadProcessosAno = async (ano) => {
       processos.value.forEach(processo => {
         if (!selectedStatusMap.value[processo.id]) {
           selectedStatusMap.value[processo.id] = processo.status;
         }
-        
+
         if (['SUSPENSO', 'ADIADO', 'DEMONSTRACAO'].includes(processo.status)) {
           loadNextNotificationDate(processo.id, processo.status);
         }
@@ -3140,10 +3117,10 @@ export default {
 
     const showStatusInfo = (processo, event) => {
       if (!isRecurringStatus(processo)) return;
-      
+
       const x = event.clientX;
       const y = event.clientY;
-      
+
       statusInfoBalloon.value = {
         show: true,
         processo: processo,
@@ -3188,8 +3165,8 @@ export default {
           return;
         }
 
-        const prazoFormatado = analiseDialog.value.prazoResposta instanceof Date 
-          ? analiseDialog.value.prazoResposta.toISOString().split('T')[0] 
+        const prazoFormatado = analiseDialog.value.prazoResposta instanceof Date
+          ? analiseDialog.value.prazoResposta.toISOString().split('T')[0]
           : analiseDialog.value.prazoResposta;
 
         const updateData = {
@@ -3240,9 +3217,9 @@ export default {
         });
 
         await loadProcessos();
-        
+
         hideAnaliseDialog();
-        
+
         showToast(`Análise registrada com sucesso! Código GPI: ${analiseDialog.value.codigoGPI}. Notificação agendada para ${formatDate(prazoFormatado)}`, 'success', 5000);
       } catch (error) {
         console.error('Erro ao salvar análise:', error);
@@ -3253,7 +3230,7 @@ export default {
     const checkPendingNotifications = async () => {
       try {
         const today = new Date().toISOString();
-        
+
         const { data, error } = await supabase
           .from('notification_schedules')
           .select('*, processos(*)')
@@ -3261,13 +3238,13 @@ export default {
           .eq('status', 'pending')
           .lte('next_notification', today)
           .order('next_notification', { ascending: true });
-    
+
         if (error) throw error;
-    
+
         for (const notification of data) {
           try {
             await showToast(notification.mensagem, 'warning', 10000);
-            
+
             await supabase
               .from('notification_schedules')
               .update({
@@ -3275,10 +3252,10 @@ export default {
                 updated_at: new Date().toISOString()
               })
               .eq('id', notification.id);
-    
+
           } catch (notifError) {
             console.error('Erro ao processar notificação:', notifError);
-            
+
             await supabase
               .from('notification_schedules')
               .update({
@@ -3317,9 +3294,9 @@ export default {
           .from('system_updates')
           .select('*')
           .order('release_date', { ascending: false });
-        
+
         if (error) throw error;
-        
+
         systemUpdates.value = data;
       } catch (error) {
         console.error('Erro ao carregar atualizações:', error);
@@ -3330,14 +3307,14 @@ export default {
     const createNewUpdate = async () => {
       try {
         loading.value = true;
-        
+
         const result = await createUpdate(newUpdate.value);
-        
+
         if (result.success) {
           showToastMessage('Atualização criada com sucesso!');
           showNewUpdateForm.value = false;
           await loadSystemUpdates();
-          
+
           newUpdate.value = {
             title: '',
             description: '',
@@ -3385,7 +3362,7 @@ export default {
       const rect = cell.getBoundingClientRect();
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-      
+
       sistemasImplantacaoDialog.value = {
         show: true,
         position: {
@@ -3408,13 +3385,13 @@ export default {
       if (!dados || !dados.sistemas_ids || dados.sistemas_ids.length === 0) {
         return dados?.informacoes_adicionais || '-';
       }
-      
+
       const nomesSistemas = dados.sistemas_ids.map(id => getSistemaNome(id)).join(', ');
-      
+
       if (dados.informacoes_adicionais) {
         return `${nomesSistemas} (${dados.informacoes_adicionais})`;
       }
-      
+
       return nomesSistemas;
     };
 
@@ -3427,9 +3404,9 @@ export default {
             updated_at: new Date().toISOString()
           })
           .eq('id', processo.id);
-          
+
         if (error) throw error;
-        
+
         await logSystemAction({
           tipo: 'atualizacao',
           tabela: 'processos',
@@ -3438,11 +3415,11 @@ export default {
           dados_anteriores: JSON.stringify(processo.sistemas_implantacao || {}),
           dados_novos: JSON.stringify(dados)
         });
-        
+
         await loadProcessos();
-        
+
         hideSistemasImplantacaoDialog();
-        
+
         showToast('Sistemas a implantar atualizados com sucesso', 'success');
       } catch (error) {
         console.error('Erro ao atualizar sistemas a implantar:', error);
@@ -3452,18 +3429,18 @@ export default {
 
     const formatarMoeda = (valor) => {
       if (!valor) return '-';
-      
+
       let valorNumerico;
-      
+
       if (typeof valor === 'string') {
         const valorLimpo = valor.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
         valorNumerico = parseFloat(valorLimpo);
       } else {
         valorNumerico = parseFloat(valor);
       }
-      
+
       if (isNaN(valorNumerico) || valorNumerico === 0) return '-';
-      
+
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -3475,15 +3452,15 @@ export default {
         if (!validarDataHora()) {
           return;
         }
-    
+
         const processo = reagendamentoDialog.value.processo;
         const novoStatus = reagendamentoDialog.value.status;
         const novaData = reagendamentoDialog.value.novaData;
         const novaHora = reagendamentoDialog.value.novaHora;
-    
+
         // Criar uma cópia do processo original para o novo processo
         const dadosBase = { ...processo };
-        
+
         // Remover propriedades que não devem ser copiadas/duplicadas
         delete dadosBase.id;
         delete dadosBase._distancias; // Remover o campo virtual que causa erro
@@ -3493,11 +3470,11 @@ export default {
         delete dadosBase.profiles;
         delete dadosBase.responsaveis;
         delete dadosBase.empresa;
-        
+
         // Definir timestamps para o novo registro
         dadosBase.created_at = new Date().toISOString();
         dadosBase.updated_at = new Date().toISOString();
-    
+
         switch (novoStatus.toLowerCase()) {
           case 'adiado':
           case 'suspenso': {
@@ -3507,27 +3484,27 @@ export default {
               hora_pregao: novaHora,
               status: '' // Status em branco por padrão para o novo processo
             };
-    
+
             const updateOriginal = {
               status: novoStatus,
               updated_at: new Date().toISOString()
             };
-    
+
             // Adicionar o usuário que está fazendo a alteração
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.id) {
               updateOriginal.updated_by = user.id;
               novoProcesso.updated_by = user.id;
             }
-    
+
             const [insertResult, updateResult] = await Promise.all([
               supabase.from('processos').insert([novoProcesso]).select().single(),
               supabase.from('processos').update(updateOriginal).eq('id', processo.id)
             ]);
-    
+
             if (insertResult.error) throw insertResult.error;
             if (updateResult.error) throw updateResult.error;
-    
+
             await agendarNotificacao({
               processo_id: insertResult.data.id,
               data: novaData,
@@ -3537,7 +3514,7 @@ export default {
             });
             break;
           }
-    
+
           case 'demonstracao': {
             const novoProcesso = {
               ...dadosBase,
@@ -3545,21 +3522,21 @@ export default {
               hora_pregao: novaHora,
               status: '' // Status em branco por padrão para o novo processo
             };
-    
+
             // Adicionar o usuário que está fazendo a alteração
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.id) {
               novoProcesso.updated_by = user.id;
             }
-    
+
             const { data, error } = await supabase
               .from('processos')
               .insert([novoProcesso])
               .select()
               .single();
-    
+
             if (error) throw error;
-    
+
             await Promise.all([
               agendarNotificacao({
                 processo_id: processo.id,
@@ -3579,7 +3556,7 @@ export default {
             break;
           }
         }
-    
+
         await loadProcessos();
         hideReagendamentoDialog();
         showToast(`Processo ${formatStatus(novoStatus)} registrado com sucesso. Novo processo criado para ${formatDate(novaData)}`, 'success');
@@ -3588,11 +3565,11 @@ export default {
         showToast('Erro ao reagendar processo: ' + error.message, 'error');
       }
     };
-    
+
     const agendarNotificacao = async ({ processo_id, data, hora, tipo, mensagem }) => {
       try {
         const dataHora = new Date(`${data}T${hora}`);
-        
+
         const notificacaoData = {
           processo_id,
           tipo,
@@ -3603,16 +3580,16 @@ export default {
           active: true,
           status: 'pending'
         };
-    
+
         const { error } = await supabase
           .from('notification_schedules')
           .insert([notificacaoData]);
-    
+
         if (error) {
           console.error('Erro ao inserir notificação:', error);
           throw error;
         }
-    
+
         console.log('Notificação agendada com sucesso');
         return true;
       } catch (error) {
@@ -3639,10 +3616,10 @@ export default {
       valorMin: '',
       valorMax: ''
     });
-    
+
     const activeAdvancedFiltersCount = computed(() => {
       let count = 0;
-      
+
       if (advancedFilters.value.dataInicio) count++;
       if (advancedFilters.value.dataFim) count++;
       if (advancedFilters.value.status.length) count += advancedFilters.value.status.length;
@@ -3651,13 +3628,13 @@ export default {
       if (advancedFilters.value.estados.length) count += advancedFilters.value.estados.length;
       if (advancedFilters.value.valorMin) count++;
       if (advancedFilters.value.valorMax) count++;
-      
+
       return count;
     });
-    
+
     const toggleAdvancedFilter = () => {
       showAdvancedFilter.value = !showAdvancedFilter.value;
-      
+
       // Se o filtro estiver sendo aberto, rolar para cima para garantir visibilidade
       if (showAdvancedFilter.value) {
         nextTick(() => {
@@ -3670,24 +3647,24 @@ export default {
           }
         });
       }
-      
+
       // Se estiver fechando o filtro e houver filtros ativos, mostrar feedback
       if (!showAdvancedFilter.value && activeAdvancedFiltersCount.value > 0) {
         showToast(`${activeAdvancedFiltersCount.value} filtros avançados aplicados`, 'info');
       }
     };
-    
+
     const updateAdvancedFilters = (filters) => {
       advancedFilters.value = { ...filters };
     };
-    
+
     const applyAdvancedFilters = (filters) => {
       advancedFilters.value = { ...filters };
       showAdvancedFilter.value = false;
-      
+
       showToast(`${activeAdvancedFiltersCount.value} filtros aplicados com sucesso`, 'success');
     };
-    
+
     const clearAdvancedFilters = () => {
       advancedFilters.value = {
         dataInicio: '',
@@ -3699,37 +3676,37 @@ export default {
         valorMin: '',
         valorMax: ''
       };
-      
+
       showToast('Filtros avançados removidos', 'info');
     };
 
     // Função para verificar se o processo tem dados de impugnação
     const hasImpugnacaoData = (processo) => {
-      return processo.impugnacao_data_limite || 
-             processo.impugnacao_status || 
-             processo.impugnacao_forma_envio || 
-             processo.impugnacao_itens || 
-             processo.impugnacoes;
+      return processo.impugnacao_data_limite ||
+        processo.impugnacao_status ||
+        processo.impugnacao_forma_envio ||
+        processo.impugnacao_itens ||
+        processo.impugnacoes;
     };
 
     // Função para verificar se um processo tem dados relevantes de impugnação para exibição
     const hasRelevantImpugnacaoData = (processo) => {
       if (!processo) return false;
-      
+
       // Verifica se algum dos campos tem valor significativo
       return (
         // Tem data limite definida
         (processo.impugnacao_data_limite && processo.impugnacao_data_limite !== '-') ||
-        
+
         // Tem itens a serem impugnados
         (processo.impugnacao_itens && processo.impugnacao_itens.trim() !== '' && processo.impugnacao_itens !== '-') ||
-        
+
         // Tem observações de impugnação 
         (processo.impugnacoes && processo.impugnacoes.trim() !== '' && processo.impugnacoes !== '-') ||
-        
+
         // Tem forma de envio definida
         (processo.impugnacao_forma_envio && processo.impugnacao_forma_envio !== '-') ||
-        
+
         // Status diferente do padrão "não iniciado"
         (processo.impugnacao_status && processo.impugnacao_status !== 'nao_iniciado')
       );
@@ -3738,7 +3715,7 @@ export default {
     // Função para formatar o status de impugnação
     const formatImpugnacaoStatus = (status) => {
       if (!status) return 'Não iniciado';
-      
+
       const statusMap = {
         'nao_iniciado': 'Não iniciado',
         'em_andamento': 'Em andamento',
@@ -3747,7 +3724,7 @@ export default {
         'aprovado': 'Aprovado',
         'rejeitado': 'Rejeitado'
       };
-      
+
       return statusMap[status] || status;
     };
 
@@ -3756,94 +3733,94 @@ export default {
  * @param {Object} processo - Dados do processo a ser atualizado
  * @returns {Promise<boolean>} - Resultado da operação
  */
-async function updateProcesso(processo) {
-  console.log('updateProcesso chamado', { 
-    id: processo.id, 
-    numero: processo.numero_processo,
-    responsavel_id: processo.responsavel_id
-  });
-  
-  try {
-    // Criar uma cópia do objeto para não modificar o original
-    const processToUpdate = { ...processo };
-    
-    // Remover campos virtuais e propriedades que não existem no banco de dados
-    delete processToUpdate._empresa_atual_prestadora; // Esta linha é crucial para corrigir o erro
-    delete processToUpdate._distancias;
-    delete processToUpdate.representantes;
-    delete processToUpdate.profiles;
-    delete processToUpdate.responsaveis;
-    delete processToUpdate.empresa;
-    
-    // Registrar a atualização para histórico de ações
-    if (undoHistory.value) {
-      const currentProcess = processos.value.find(p => p.id === processo.id);
-      if (currentProcess) {
-        undoHistory.value.push({
-          type: 'update',
-          id: processo.id,
-          oldData: { ...currentProcess },
-          newData: { ...processToUpdate }
+    async function updateProcesso(processo) {
+      console.log('updateProcesso chamado', {
+        id: processo.id,
+        numero: processo.numero_processo,
+        responsavel_id: processo.responsavel_id
+      });
+
+      try {
+        // Criar uma cópia do objeto para não modificar o original
+        const processToUpdate = { ...processo };
+
+        // Remover campos virtuais e propriedades que não existem no banco de dados
+        delete processToUpdate._empresa_atual_prestadora; // Esta linha é crucial para corrigir o erro
+        delete processToUpdate._distancias;
+        delete processToUpdate.representantes;
+        delete processToUpdate.profiles;
+        delete processToUpdate.responsaveis;
+        delete processToUpdate.empresa;
+
+        // Registrar a atualização para histórico de ações
+        if (undoHistory.value) {
+          const currentProcess = processos.value.find(p => p.id === processo.id);
+          if (currentProcess) {
+            undoHistory.value.push({
+              type: 'update',
+              id: processo.id,
+              oldData: { ...currentProcess },
+              newData: { ...processToUpdate }
+            });
+            // Limpar o redo history quando uma nova ação é executada
+            redoHistory.value = [];
+          }
+        }
+
+        // Adicionar timestamp e usuário de atualização
+        processToUpdate.updated_at = new Date().toISOString();
+
+        // Se estiver disponível, adicionar o usuário que fez a alteração
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          processToUpdate.updated_by = user.id;
+        }
+
+        console.log('Enviando dados para atualização:', processToUpdate);
+
+        // Realizar a atualização no banco de dados
+        const { error } = await supabase
+          .from('processos')
+          .update(processToUpdate)
+          .eq('id', processo.id);
+
+        if (error) {
+          console.error('Erro na atualização do processo:', error);
+          showToast(`Erro ao atualizar o processo: ${error.message}`, 'error');
+          throw error;
+        }
+
+        console.log('Processo atualizado com sucesso:', processo.id);
+
+        // Atualizar o processo na lista local
+        const index = processos.value.findIndex(p => p.id === processo.id);
+        if (index !== -1) {
+          // Mantém as propriedades virtuais do objeto original
+          if (processos.value[index]._distancias) {
+            processToUpdate._distancias = processos.value[index]._distancias;
+          }
+          if (processos.value[index]._empresa_atual_prestadora) {
+            processToUpdate._empresa_atual_prestadora = processos.value[index]._empresa_atual_prestadora;
+          }
+          processos.value[index] = { ...processToUpdate };
+        }
+
+        // Registrar a alteração no log do sistema
+        await logSystemAction({
+          tipo: 'update',
+          tabela: 'processos',
+          registro_id: processo.id,
+          dados_anteriores: JSON.stringify(processos.value.find(p => p.id === processo.id)),
+          dados_novos: JSON.stringify(processToUpdate)
         });
-        // Limpar o redo history quando uma nova ação é executada
-        redoHistory.value = [];
+
+        return true;
+      } catch (error) {
+        console.error('Erro na atualização:', error);
+        showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
+        return false;
       }
     }
-    
-    // Adicionar timestamp e usuário de atualização
-    processToUpdate.updated_at = new Date().toISOString();
-    
-    // Se estiver disponível, adicionar o usuário que fez a alteração
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.id) {
-      processToUpdate.updated_by = user.id;
-    }
-    
-    console.log('Enviando dados para atualização:', processToUpdate);
-    
-    // Realizar a atualização no banco de dados
-    const { error } = await supabase
-      .from('processos')
-      .update(processToUpdate)
-      .eq('id', processo.id);
-    
-    if (error) {
-      console.error('Erro na atualização do processo:', error);
-      showToast(`Erro ao atualizar o processo: ${error.message}`, 'error');
-      throw error;
-    }
-    
-    console.log('Processo atualizado com sucesso:', processo.id);
-    
-    // Atualizar o processo na lista local
-    const index = processos.value.findIndex(p => p.id === processo.id);
-    if (index !== -1) {
-      // Mantém as propriedades virtuais do objeto original
-      if (processos.value[index]._distancias) {
-        processToUpdate._distancias = processos.value[index]._distancias;
-      }
-      if (processos.value[index]._empresa_atual_prestadora) {
-        processToUpdate._empresa_atual_prestadora = processos.value[index]._empresa_atual_prestadora;
-      }
-      processos.value[index] = { ...processToUpdate };
-    }
-    
-    // Registrar a alteração no log do sistema
-    await logSystemAction({
-      tipo: 'update',
-      tabela: 'processos',
-      registro_id: processo.id,
-      dados_anteriores: JSON.stringify(processos.value.find(p => p.id === processo.id)),
-      dados_novos: JSON.stringify(processToUpdate)
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Erro na atualização:', error);
-    showToast(`Erro ao atualizar dados: ${error.message}`, 'error');
-    return false;
-  }
-}
 
     const showDuplicateDialog = (processo) => {
       duplicateDialog.value.processo = { ...processo };
@@ -3862,35 +3839,35 @@ async function updateProcesso(processo) {
       try {
         // Inicia o indicador de carregamento
         duplicateDialog.value.loading = true;
-        
+
         const { processoOriginal, novaData, novaHora, opcoes } = dadosDuplicacao;
-        
+
         // Criar uma cópia do processo original
         const novoProcesso = { ...processoOriginal };
-        
+
         // Remover o ID para criar um novo registro e qualquer campo virtual que não existe no banco
         delete novoProcesso.id;
         delete novoProcesso._distancias; // Removendo campo virtual que não existe no banco de dados
-        
+
         // Atualizar data e hora
         novoProcesso.data_pregao = novaData;
         novoProcesso.hora_pregao = novaHora;
-        
+
         // Definir status com base nas opções
         if (!opcoes.manterStatus) {
           novoProcesso.status = 'em_analise'; // Status padrão para novos processos
         }
-        
+
         // Limpar dados que não devem ser copiados
         if (!opcoes.copiarResponsaveis) {
           novoProcesso.responsavel_id = null;
         }
-        
+
         if (!opcoes.copiarObservacoes) {
           novoProcesso.campo_adicional1 = null;
           novoProcesso.campo_adicional2 = null;
         }
-        
+
         if (!opcoes.copiarImpugnacoes) {
           novoProcesso.impugnacoes = null;
           novoProcesso.impugnacao_data_limite = null;
@@ -3898,32 +3875,32 @@ async function updateProcesso(processo) {
           novoProcesso.impugnacao_forma_envio = null;
           novoProcesso.impugnacao_status = 'nao_iniciado';
         }
-        
+
         // Atualizar campos de data de criação e atualização
         novoProcesso.created_at = new Date().toISOString();
         novoProcesso.updated_at = new Date().toISOString();
-        
+
         // Adicionar o usuário que está criando o duplicado
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           novoProcesso.updated_by = user.id;
         }
-        
+
         // Inserir o novo processo duplicado
         const { data: novoProcessoInserido, error } = await supabase
           .from('processos')
           .insert(novoProcesso)
           .select()
           .single();
-        
+
         if (error) throw error;
-        
+
         // Buscar as distâncias associadas ao processo original para duplicá-las
         const { data: distanciasOriginais, error: errorDistancias } = await supabase
           .from('processo_distancias')
           .select('*')
           .eq('processo_id', processoOriginal.id);
-        
+
         // Se houver distâncias e não houver erro, duplicar as distâncias
         if (distanciasOriginais && distanciasOriginais.length > 0 && !errorDistancias) {
           const distanciasNovas = distanciasOriginais.map(distancia => {
@@ -3935,15 +3912,15 @@ async function updateProcesso(processo) {
             novaDistancia.updated_at = new Date().toISOString();
             return novaDistancia;
           });
-          
+
           // Inserir as novas distâncias
           const { error: distanciasError } = await supabase
             .from('processo_distancias')
             .insert(distanciasNovas);
-          
+
           if (distanciasError) console.error('Erro ao duplicar distâncias:', distanciasError);
         }
-        
+
         // Registrar no log do sistema
         await logSystemAction({
           tipo: 'duplicate',
@@ -3952,16 +3929,16 @@ async function updateProcesso(processo) {
           dados_anteriores: { id: processoOriginal.id, numero_processo: processoOriginal.numero_processo },
           dados_novos: novoProcessoInserido
         });
-        
+
         // Recarregar os processos
         await loadProcessos();
-        
+
         // Fechar o diálogo
         hideDuplicateDialog();
-        
+
         // Mostrar mensagem de sucesso
         showToast(`Processo duplicado com sucesso para ${formatDate(novaData)}`, 'success');
-        
+
       } catch (error) {
         console.error('Erro ao duplicar processo:', error);
         showToast(`Erro ao duplicar processo: ${error.message}`, 'error');
@@ -4027,7 +4004,7 @@ async function updateProcesso(processo) {
     const isJsonObject = (str) => {
       if (!str) return false;
       if (typeof str === 'object') return true;
-      
+
       try {
         const obj = JSON.parse(str);
         return typeof obj === 'object' && obj !== null;
@@ -4041,7 +4018,7 @@ async function updateProcesso(processo) {
      */
     const getEmpresaVencedoraNome = (valor) => {
       if (!valor) return '';
-      
+
       try {
         const dados = typeof valor === 'object' ? valor : JSON.parse(valor);
         return dados.nomeEmpresa || 'Empresa sem nome';
@@ -4055,7 +4032,7 @@ async function updateProcesso(processo) {
      */
     const getEmpresaVencedoraContrato = (valor) => {
       if (!valor) return '';
-      
+
       try {
         const dados = typeof valor === 'object' ? valor : JSON.parse(valor);
         return dados.numeroContrato || '';
@@ -4067,12 +4044,12 @@ async function updateProcesso(processo) {
     // Função para obter a contagem de sistemas a implantar de um processo
     const getSistemasImplantacaoCount = (processo) => {
       if (!processo.sistemas_implantacao) return 0;
-      
+
       try {
         const dadosSistemas = typeof processo.sistemas_implantacao === 'object'
           ? processo.sistemas_implantacao
           : JSON.parse(processo.sistemas_implantacao);
-          
+
         return dadosSistemas.sistemas_ids ? dadosSistemas.sistemas_ids.length : 0;
       } catch (error) {
         console.error('Erro ao obter contagem de sistemas a implantar:', error);
@@ -4084,10 +4061,10 @@ async function updateProcesso(processo) {
       try {
         // Resetar a ordem das colunas para o padrão
         resetColumnOrder();
-        
+
         // Resetar a largura das colunas para o padrão
         resetColumnWidths();
-        
+
         showToast('Configurações da tabela foram resetadas com sucesso!', 'success');
       } catch (error) {
         console.error('Erro ao resetar configurações da tabela:', error);
@@ -4097,13 +4074,13 @@ async function updateProcesso(processo) {
 
     async function buildProcessosQuery() {
       let query = supabase.from('processos').select('*');
-      
+
       // Adicionar filtros conforme necessário
       // ...
-      
+
       // Sempre aplicar estas ordenações ao final
       query = query.order('created_at', { ascending: true })
-                   .order('id', { ascending: true });
+        .order('id', { ascending: true });
       3
       return query;
     }
@@ -4111,30 +4088,30 @@ async function updateProcesso(processo) {
     const registrarProcessoParaAnalise = async (processo) => {
       try {
         console.log('Registrando processo para análise:', processo.id);
-        
+
         // Verificar primeiro se já existem registros para este processo
         const { data: existentes, error: existentesError } = await supabase
           .from('analises_itens')
           .select('count')
           .eq('processo_id', processo.id)
           .single();
-        
+
         if (existentesError && existentesError.code !== 'PGRST116') throw existentesError;
-        
+
         // Se já existem registros, podemos apenas verificar se precisamos sincronizar sistemas
         if (existentes && existentes.count > 0) {
           console.log(`Processo já tem ${existentes.count} registros na tabela analises_itens`);
-          
+
           // Opcionalmente, podemos sincronizar os sistemas aqui
           // await atualizarAnalisesAposMudancaSistemas(processo.id, sistemasAtivos);
-          
+
           showToast('Processo já registrado para análise', 'info');
           return true;
         }
-        
+
         // Se chegou aqui, não há registros, então vamos criar
         console.log('Criando registros para processo na tabela analises_itens');
-        
+
         // Extrair sistemas_ativos do processo
         let sistemasAtivos = [];
         try {
@@ -4155,12 +4132,12 @@ async function updateProcesso(processo) {
           console.error('Erro ao processar sistemas_ativos:', e);
           // Continuar com array vazio
         }
-        
+
         console.log('Sistemas ativos encontrados:', sistemasAtivos);
-        
+
         // Variável para controlar se registros foram criados
         let registroCriado = false;
-        
+
         // Se tiver sistemas ativos, criar um registro para cada sistema
         if (sistemasAtivos && sistemasAtivos.length > 0) {
           const registros = sistemasAtivos.map(sistemaId => ({
@@ -4173,24 +4150,24 @@ async function updateProcesso(processo) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }));
-          
+
           const { error: insertError } = await supabase
             .from('analises_itens')
             .insert(registros);
-          
+
           if (insertError) {
             console.error('Erro ao inserir registros de sistemas:', insertError);
             throw insertError;
           }
-          
+
           console.log(`${registros.length} registros de sistemas inseridos com sucesso`);
           registroCriado = true;
         }
-        
+
         // Se não tiver sistemas ou algo deu errado, criar pelo menos um registro de anotação
         if (!registroCriado) {
           console.log('Criando registro de anotação para o processo');
-          
+
           const { error: insertError } = await supabase
             .from('analises_itens')
             .insert({
@@ -4204,15 +4181,15 @@ async function updateProcesso(processo) {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
-          
+
           if (insertError) {
             console.error('Erro ao inserir registro de anotação:', insertError);
             throw insertError;
           }
-          
+
           console.log('Registro de anotação inserido com sucesso');
         }
-        
+
         showToast('Processo registrado para análise com sucesso', 'success');
         return true;
       } catch (error) {
@@ -4224,23 +4201,23 @@ async function updateProcesso(processo) {
 
     // Adicione esta função em algum lugar adequado no arquivo, por volta da linha 570, próximo a outras funções relacionadas a status
 
-const getStatusClass = (status) => {
-  const statusClassMap = {
-    'vamos_participar': 'status-vamos-participar',
-    'em_analise': 'status-em-analise',
-    'em_andamento': 'status-em-andamento',
-    'ganhamos': 'status-ganhamos',
-    'perdemos': 'status-perdemos',
-    'suspenso': 'status-suspenso',
-    'revogado': 'status-revogado',
-    'adiado': 'status-adiado',
-    'demonstracao': 'status-demonstracao',
-    'cancelado': 'status-cancelado',
-    'nao_participar': 'status-nao-participar'
-  };
-  
-  return statusClassMap[status] || 'status-desconhecido';
-};
+    const getStatusClass = (status) => {
+      const statusClassMap = {
+        'vamos_participar': 'status-vamos-participar',
+        'em_analise': 'status-em-analise',
+        'em_andamento': 'status-em-andamento',
+        'ganhamos': 'status-ganhamos',
+        'perdemos': 'status-perdemos',
+        'suspenso': 'status-suspenso',
+        'revogado': 'status-revogado',
+        'adiado': 'status-adiado',
+        'demonstracao': 'status-demonstracao',
+        'cancelado': 'status-cancelado',
+        'nao_participar': 'status-nao-participar'
+      };
+
+      return statusClassMap[status] || 'status-desconhecido';
+    };
 
     // Adicione esta função ao ProcessosView.js ou ajuste a existente
     // para ser chamada quando for necessário atualizar o campo empresa_atual_prestadora
@@ -4250,7 +4227,7 @@ const getStatusClass = (status) => {
         // Validação para garantir que é um UUID válido ou null
         // Se não for um UUID válido, defina como null
         let empresaId = null;
-        
+
         if (novoValor) {
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (uuidRegex.test(novoValor)) {
@@ -4265,24 +4242,24 @@ const getStatusClass = (status) => {
             }
           }
         }
-        
+
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         const payload = {
           processo_id: processo.id,
           empresa_id: empresaId,  // Agora garante que é null ou UUID válido
           updated_at: new Date().toISOString(),
           updated_by: user?.id || null
         };
-        
+
         console.log("Enviando payload para atualização:", payload);
-        
+
         const { error } = await supabase
           .from('processos_empresa_atual_prestadora')
           .upsert(payload, { onConflict: 'processo_id' });
-          
+
         if (error) throw error;
-        
+
         return true;
       } catch (error) {
         console.error('Erro ao atualizar empresa atual:', error);
@@ -4298,14 +4275,14 @@ const getStatusClass = (status) => {
           .from('analises_itens')
           .select('*')
           .eq('processo_id', processo.id);
-          
+
         if (error) throw error;
-        
+
         console.log('Registros na tabela analises_itens para o processo:', data);
-        
+
         if (!data || data.length === 0) {
           showToast('Processo não está registrado na tabela de análises', 'warning');
-          
+
           if (confirm('Deseja registrar este processo para análise agora?')) {
             await forcarRegistroAnalise(processo);
           }
@@ -4327,12 +4304,12 @@ const getStatusClass = (status) => {
           .from('analises_itens')
           .delete()
           .eq('processo_id', processo.id);
-          
+
         // Agora registrar novamente
         await registrarProcessoParaAnalise(processo);
-        
+
         showToast('Processo forçado para análise com sucesso!', 'success');
-        
+
         // Opcionalmente, redirecionar para a tela de análises
         router.push('/analises');
       } catch (error) {
@@ -4349,9 +4326,9 @@ const getStatusClass = (status) => {
           .select('status')
           .eq('id', processoId)
           .single();
-          
+
         if (processoError) throw processoError;
-        
+
         // Se o status for "Em Análise", atualizar registros de análise
         if (processo.status === 'em_analise' || processo.status === 'EM_ANALISE') {
           // Buscar registros existentes
@@ -4359,18 +4336,18 @@ const getStatusClass = (status) => {
             .from('analises_itens')
             .select('id, sistema_id')
             .eq('processo_id', processoId);
-            
+
           if (registrosError) throw registrosError;
-          
+
           // Extrair IDs de sistemas já registrados
           const sistemasRegistrados = registrosExistentes.map(item => item.sistema_id);
-          
+
           // Identificar sistemas para adicionar e remover
           const sistemasParaAdicionar = novosSistemasAtivos.filter(id => !sistemasRegistrados.includes(id));
           const sistemasParaRemover = sistemasRegistrados.filter(id => !novosSistemasAtivos.includes(id));
-          
+
           const promises = [];
-          
+
           // Adicionar novos sistemas
           if (sistemasParaAdicionar.length > 0) {
             const registros = sistemasParaAdicionar.map(sistemaId => ({
@@ -4382,12 +4359,12 @@ const getStatusClass = (status) => {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }));
-            
+
             promises.push(
               supabase.from('analises_itens').insert(registros)
             );
           }
-          
+
           // Remover sistemas que não estão mais ativos
           if (sistemasParaRemover.length > 0) {
             promises.push(
@@ -4398,7 +4375,7 @@ const getStatusClass = (status) => {
                 .in('sistema_id', sistemasParaRemover)
             );
           }
-          
+
           // Executar todas as operações
           if (promises.length > 0) {
             await Promise.all(promises);
@@ -4406,7 +4383,7 @@ const getStatusClass = (status) => {
             return { adicionados: sistemasParaAdicionar.length, removidos: sistemasParaRemover.length };
           }
         }
-        
+
         return null;
       } catch (error) {
         console.error('Erro ao atualizar análises após mudança de sistemas:', error);
@@ -4416,10 +4393,10 @@ const getStatusClass = (status) => {
 
     // Adicione esta função próxima às outras funções relacionadas a status
 
-const isRecurringStatus = (processo) => {
-  if (!processo || !processo.status) return false;
-  return ['suspenso', 'adiado', 'demonstracao'].includes(processo.status.toLowerCase());
-};
+    const isRecurringStatus = (processo) => {
+      if (!processo || !processo.status) return false;
+      return ['suspenso', 'adiado', 'demonstracao'].includes(processo.status.toLowerCase());
+    };
 
     const fixTableScroll = () => {
       nextTick(() => {
@@ -4428,12 +4405,12 @@ const isRecurringStatus = (processo) => {
           // Forçar recálculo da largura
           const totalWidth = Array.from(document.querySelectorAll('.resizable-column'))
             .reduce((sum, th) => sum + th.offsetWidth, 0) + 100; // 100px extra para a coluna de ações
-            
+
           const table = tableContainer.querySelector('.excel-table');
           if (table) {
             table.style.minWidth = `${totalWidth}px`;
           }
-          
+
           // Garantir que o overflow esteja ativado
           tableContainer.style.overflowX = 'auto';
         }
@@ -4609,12 +4586,12 @@ const isRecurringStatus = (processo) => {
       formatarMoeda,
       calculateRows(text) {
         if (!text) return 10;
-        
+
         const charCount = text.length;
         const lineBreaks = (text.match(/\n/g) || []).length;
-        
+
         const estimatedLines = Math.ceil(charCount / 900) + lineBreaks;
-        
+
         return Math.min(Math.max(estimatedLines, 1), 100);
       },
       handleDelete,
