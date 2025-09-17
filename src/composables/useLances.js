@@ -12,10 +12,11 @@ export function useLances() {
   const anoSelecionado = ref(null)
   const alteracoesPendentes = ref(false)
   
+  const sistemas = ref([]) // Adicione esta linha antes de qualquer uso de sistemas
+
   // Importar funcionalidades de outros composables
   const {
     processos, 
-    sistemas,
     selectedProcesso,
     loadProcessos,
     loadSistemas

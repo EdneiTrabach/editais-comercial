@@ -287,6 +287,11 @@ h1 {
   color: #1e293b;
 }
 
+[data-theme="dark"] .header-section[data-v-c8128d64] {
+    background: var(--bg-card-dark, #1e293b);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -404,7 +409,6 @@ h1 {
 }
 
 .content-section {
-  background: white;
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -550,7 +554,6 @@ h1 {
 .processo-header-section {
   display: flex;
   flex-direction: column;
-  background-color: #f5f7fa;
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
