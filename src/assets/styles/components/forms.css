@@ -140,6 +140,12 @@ textarea.form-control {
   border-color: var(--dark-border-light, #334155);
 }
 
+[data-theme="dark"] .form-actions { 
+  background: none;
+}
+
+
+
 .form-actions {
   display: flex;
   gap: 8px;
